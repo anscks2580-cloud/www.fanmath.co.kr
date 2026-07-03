@@ -804,7 +804,7 @@ onAuthStateChanged(auth, async (user) => {
       // 중등이면 고등/기출/수리논술/보충 숨기기, 고등이면 중등 숨기기 등
       const isJunior = ['중1','중2','중3'].includes(grade);
       const hasSuriNonsul = (grade === '고3' || grade === 'N수');
-      const hasTeacher = !!allowedTags.teacherTag;
+      const hasTeacher = !!(allowedTags.teacherTags && allowedTags.teacherTags.length);
 
       // 각 버튼 표시 여부
       const btnRules = {
