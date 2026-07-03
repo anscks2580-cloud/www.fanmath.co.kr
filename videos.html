@@ -760,6 +760,11 @@ onAuthStateChanged(auth, async (user) => {
       }
 
       allowedTags = { subjectPrefixes, examPrefix, extraTags, teacherTags, grade, isJunior };
+
+      // 보충강의실 자동 선택용: 담당 선생님/관 정보 저장
+      if (teacherName && (branch === '평촌관' || branch === '산본관')) {
+        window.myStudentTeacherInfo = { branch, teacherName };
+      }
     }
 
     // videoGroups (그룹 표시 이름) 로드
@@ -974,6 +979,33 @@ window.selectMain = function(main, btn) {
     subEl.classList.add('open');
     subEl.querySelectorAll('.filter-btn').forEach((b,i) => b.classList.toggle('active', i===0));
   }
+
+  // 보충강의실: 학생이면 담당 선생님 강의를 자동으로 선택
+  if (main === '보충강의실' && window.myStudentTeacherInfo && subEl) {
+    const { branch, teacherName } = window.myStudentTeacherInfo;
+    const branchBtn = [...subEl.querySelectorAll('.filter-btn')]
+      .find(b => b.textContent.trim() === branch);
+
+    if (branchBtn) {
+      subEl.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      branchBtn.classList.add('active');
+      currentGrade = `보충-${branch}`;
+
+      const teacherSub = document.getElementById('sub-보충-' + branch);
+      if (teacherSub) {
+        teacherSub.classList.add('open');
+        const teacherBtn = [...teacherSub.querySelectorAll('.filter-btn')]
+          .find(b => b.textContent.trim() === `${teacherName}T`);
+
+        if (teacherBtn) {
+          teacherSub.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          teacherBtn.classList.add('active');
+          currentSub = `보충-${branch}-${teacherName}T`;
+        }
+      }
+    }
+  }
+
   renderVideos();
 };
 
