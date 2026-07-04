@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>상담 신청 | 송우찬수학학원</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .form-wrap { max-width: 720px; margin: 0 auto; padding: 40px 24px 80px; }
+  .form-header { text-align:center; margin-bottom: 36px; }
+  .form-header h1 { font-size: 26px; font-weight:700; margin-bottom:10px; }
+  .form-header p { font-size:13px; color:var(--muted); line-height:1.7; }
+
+  .f-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-soft);
+    border-radius: 14px;
+    padding: 22px 24px;
+    margin-bottom: 16px;
+  }
+  .f-label {
+    font-size: 13px; font-weight:600; color: var(--gold);
+    margin-bottom: 10px; display:flex; align-items:center; gap:6px;
+  }
+  .f-sub { font-size: 11px; color: var(--muted); font-weight:400; margin-left:4px; }
+
+  .f-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 10px; }
+  .f-row:last-child { margin-bottom:0; }
+  .f-field { flex:1; min-width: 140px; }
+  .f-field label { display:block; font-size:12px; color:var(--muted); margin-bottom:5px; }
+  .f-field input[type=text], .f-field input[type=tel], .f-field input[type=date], .f-field input[type=number] {
+    width:100%; padding:10px 12px; border-radius:8px;
+    background: rgba(255,255,255,0.04); border:1px solid var(--border-soft);
+    color: var(--off-white); font-size:13px; font-family:inherit;
+  }
+  .f-field input:focus { outline:none; border-color: var(--gold); }
+
+  .chip-group { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip-opt {
+    display:flex; align-items:center; gap:6px;
+    padding: 8px 14px; border-radius: 20px;
+    border:1px solid var(--border-soft); background: rgba(255,255,255,0.03);
+    font-size:12px; color: var(--muted); cursor:pointer; transition: all .15s;
+  }
+  .chip-opt input { display:none; }
+  .chip-opt:has(input:checked) {
+    border-color: var(--gold); color: var(--gold); background: var(--gold-glow);
+  }
+
+  .level-tabs { display:flex; gap:8px; margin-bottom: 4px; }
+  .level-tab {
+    flex:1; text-align:center; padding: 12px; border-radius:10px;
+    border:1px solid var(--border-soft); background: rgba(255,255,255,0.03);
+    font-size:14px; font-weight:600; color:var(--muted); cursor:pointer; transition: all .15s;
+  }
+  .level-tab.active { border-color: var(--gold); color: var(--gold); background: var(--gold-glow); }
+
+  .self-check { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+  .self-check:last-child { margin-bottom:0; }
+  .self-check span { font-size:12px; color: var(--off-white); flex:1; }
+  .self-check input[type=range] { flex:2; accent-color: var(--gold); }
+  .self-check .val { width:38px; text-align:right; font-size:13px; font-weight:700; color:var(--gold); }
+
+  .hidden { display:none !important; }
+
+  .submit-btn {
+    width:100%; padding:16px; margin-top: 8px;
+    background: var(--gold); color: var(--bg); font-weight:700; font-size:15px;
+    border:none; border-radius:10px; cursor:pointer; transition: opacity .15s;
+  }
+  .submit-btn:disabled { opacity:0.5; cursor:not-allowed; }
+  .submit-btn:hover:not(:disabled) { opacity:0.9; }
+
+  .result-box {
+    text-align:center; padding: 60px 24px;
+  }
+  .result-box .emoji { font-size: 44px; margin-bottom: 16px; }
+  .result-box h2 { font-size:20px; margin-bottom:10px; }
+  .result-box p { font-size:13px; color:var(--muted); line-height:1.7; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" class="nav-logo">
+    <div class="logo-mark">송</div>
+    <span class="logo-text">송우찬<em>수학학원</em></span>
+  </a>
+</nav>
+
+<div class="page">
+  <div class="form-wrap">
+    <div class="form-header">
+      <h1>상담 신청서</h1>
+      <p>방문 전 또는 방문 시 아래 내용을 작성해 주시면<br>더 정확한 상담을 도와드릴 수 있습니다.</p>
+    </div>
+
+    <form id="consultForm">
+
+      <!-- 기본 정보 -->
+      <div class="f-section">
+        <div class="f-label">상담 희망 지점</div>
+        <div class="chip-group" id="branchGroup">
+          <label class="chip-opt"><input type="radio" name="branch" value="평촌관" required>평촌관</label>
+          <label class="chip-opt"><input type="radio" name="branch" value="산본관">산본관</label>
+        </div>
+      </div>
+
+      <div class="f-section">
+        <div class="f-row">
+          <div class="f-field">
+            <label>성명</label>
+            <input type="text" name="studentName" required placeholder="학생 이름">
+          </div>
+          <div class="f-field">
+            <label>학교 / 학년</label>
+            <input type="text" name="schoolGrade" required placeholder="예: OO초 5학년">
+          </div>
+        </div>
+        <div class="f-row">
+          <div class="f-field">
+            <label>연락처 (학부모)</label>
+            <input type="tel" name="parentPhone" required placeholder="010-0000-0000">
+          </div>
+          <div class="f-field">
+            <label>연락처 (학생)</label>
+            <input type="tel" name="studentPhone" placeholder="010-0000-0000">
+          </div>
+        </div>
+      </div>
+
+      <!-- 방문 경로 -->
+      <div class="f-section">
+        <div class="f-label">방문 경로</div>
+        <div class="chip-group" id="visitPathGroup">
+          <label class="chip-opt"><input type="checkbox" value="인터넷 검색">인터넷 검색</label>
+          <label class="chip-opt"><input type="checkbox" value="광고">광고</label>
+          <label class="chip-opt"><input type="checkbox" value="지나가다 보고">지나가다 보고</label>
+          <label class="chip-opt"><input type="checkbox" value="주변 권유">주변 권유</label>
+          <label class="chip-opt"><input type="checkbox" value="우연히 찾아옴">우연히 찾아옴</label>
+        </div>
+        <div class="f-row" style="margin-top:10px;">
+          <div class="f-field">
+            <input type="text" name="visitPathEtc" placeholder="기타 (직접 입력)">
+          </div>
+        </div>
+      </div>
+
+      <!-- 과정 선택 -->
+      <div class="f-section">
+        <div class="f-label">과정 구분</div>
+        <div class="level-tabs" id="levelTabs">
+          <div class="level-tab active" data-level="초등">초등부</div>
+          <div class="level-tab" data-level="중등">중등부</div>
+          <div class="level-tab" data-level="고등">고등부</div>
+        </div>
+      </div>
+
+      <!-- 진도 상황: 초/중 -->
+      <div class="f-section" id="progressLower">
+        <div class="f-label">진도 상황</div>
+        <div class="f-row">
+          <div class="f-field">
+            <label id="progressSchoolLabel">초등학교 학년</label>
+            <input type="text" name="progressGrade" placeholder="예: 5학년">
+          </div>
+          <div class="f-field">
+            <label>학기</label>
+            <input type="text" name="progressSemester" placeholder="예: 2학기">
+          </div>
+          <div class="f-field">
+            <label>까지 진행</label>
+            <input type="text" name="progressUnit" placeholder="예: 분수의 나눗셈까지">
+          </div>
+        </div>
+      </div>
+
+      <!-- 진도 상황: 고등 -->
+      <div class="f-section hidden" id="progressHigh">
+        <div class="f-label">진도 상황 (과목)<span class="f-sub">복수 선택 가능</span></div>
+        <div class="chip-group" id="highSubjectGroup">
+          <label class="chip-opt"><input type="checkbox" value="공통수학1">공통수학1</label>
+          <label class="chip-opt"><input type="checkbox" value="공통수학2">공통수학2</label>
+          <label class="chip-opt"><input type="checkbox" value="대수">대수</label>
+          <label class="chip-opt"><input type="checkbox" value="미적분1">미적분1</label>
+          <label class="chip-opt"><input type="checkbox" value="확률과 통계">확률과 통계</label>
+          <label class="chip-opt"><input type="checkbox" value="미적분2">미적분2</label>
+          <label class="chip-opt"><input type="checkbox" value="기하">기하</label>
+        </div>
+        <div class="f-label" style="margin-top:16px;">학습 난이도</div>
+        <div class="chip-group" id="highLevelGroup">
+          <label class="chip-opt"><input type="radio" name="highLevel" value="기본">기본</label>
+          <label class="chip-opt"><input type="radio" name="highLevel" value="응용">응용</label>
+          <label class="chip-opt"><input type="radio" name="highLevel" value="심화">심화</label>
+        </div>
+      </div>
+
+      <!-- 최근 시험 결과 -->
+      <div class="f-section">
+        <div class="f-label">최근 시험 결과<span class="f-sub">대략적 점수대 기입 가능, 선택 입력</span></div>
+        <div class="f-row">
+          <div class="f-field"><label>1회</label><input type="text" name="exam1" placeholder="점수"></div>
+          <div class="f-field"><label>2회</label><input type="text" name="exam2" placeholder="점수"></div>
+        </div>
+        <div class="f-row">
+          <div class="f-field"><label>3회</label><input type="text" name="exam3" placeholder="점수"></div>
+          <div class="f-field"><label>4회</label><input type="text" name="exam4" placeholder="점수"></div>
+        </div>
+      </div>
+
+      <!-- 성취도 높은 영역 -->
+      <div class="f-section">
+        <div class="f-label">성취도 높은 학습 영역<span class="f-sub">복수 선택 가능</span></div>
+        <div class="chip-group" id="highAreaGroup">
+          <label class="chip-opt"><input type="checkbox" value="수와 연산">수와 연산</label>
+          <label class="chip-opt"><input type="checkbox" value="문자와 식">문자와 식</label>
+          <label class="chip-opt"><input type="checkbox" value="함수">함수</label>
+          <label class="chip-opt"><input type="checkbox" value="기하">기하</label>
+          <label class="chip-opt"><input type="checkbox" value="확률과 통계">확률과 통계</label>
+        </div>
+      </div>
+
+      <!-- 성취도 낮은 영역 -->
+      <div class="f-section">
+        <div class="f-label">성취도 낮은 학습 영역<span class="f-sub">복수 선택 가능</span></div>
+        <div class="chip-group" id="lowAreaGroup">
+          <label class="chip-opt"><input type="checkbox" value="수와 연산">수와 연산</label>
+          <label class="chip-opt"><input type="checkbox" value="문자와 식">문자와 식</label>
+          <label class="chip-opt"><input type="checkbox" value="함수">함수</label>
+          <label class="chip-opt"><input type="checkbox" value="기하">기하</label>
+          <label class="chip-opt"><input type="checkbox" value="확률과 통계">확률과 통계</label>
+        </div>
+      </div>
+
+      <!-- 학습 자가진단 -->
+      <div class="f-section">
+        <div class="f-label">학습 자가진단<span class="f-sub">본인 또는 학부모님이 생각하는 점수 (0~10)</span></div>
+        <div class="self-check">
+          <span>연산 능력</span>
+          <input type="range" min="0" max="10" value="5" data-target="calcScoreVal" oninput="document.getElementById('calcScoreVal').textContent=this.value">
+          <span class="val" id="calcScoreVal">5</span>
+        </div>
+        <div class="self-check">
+          <span>풀이 정확도</span>
+          <input type="range" min="0" max="10" value="5" data-target="accuracyScoreVal" oninput="document.getElementById('accuracyScoreVal').textContent=this.value">
+          <span class="val" id="accuracyScoreVal">5</span>
+        </div>
+        <div class="self-check">
+          <span>수학 흥미도</span>
+          <input type="range" min="0" max="10" value="5" data-target="interestScoreVal" oninput="document.getElementById('interestScoreVal').textContent=this.value">
+          <span class="val" id="interestScoreVal">5</span>
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">상담 신청서 제출하기</button>
+    </form>
+
+    <div class="result-box hidden" id="resultBox">
+      <div class="emoji">✅</div>
+      <h2>제출이 완료되었습니다</h2>
+      <p>소중한 정보 감사합니다.<br>빠른 시일 내에 안내드리겠습니다.</p>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
+  authDomain: "songmath.firebaseapp.com",
+  projectId: "songmath",
+  storageBucket: "songmath.firebasestorage.app",
+  messagingSenderId: "936295436575",
+  appId: "1:936295436575:web:d1e201508719850cfbe02a"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let currentLevel = '초등';
+const levelTabs = document.getElementById('levelTabs');
+const progressLower = document.getElementById('progressLower');
+const progressHigh = document.getElementById('progressHigh');
+const progressSchoolLabel = document.getElementById('progressSchoolLabel');
+
+levelTabs.addEventListener('click', (e) => {
+  const tab = e.target.closest('.level-tab');
+  if (!tab) return;
+  [...levelTabs.children].forEach(t => t.classList.remove('active'));
+  tab.classList.add('active');
+  currentLevel = tab.dataset.level;
+
+  if (currentLevel === '고등') {
+    progressLower.classList.add('hidden');
+    progressHigh.classList.remove('hidden');
+  } else {
+    progressLower.classList.remove('hidden');
+    progressHigh.classList.add('hidden');
+    progressSchoolLabel.textContent = (currentLevel === '초등' ? '초등학교 학년' : '중학교 학년');
+  }
+});
+
+function getCheckedValues(groupId) {
+  return [...document.querySelectorAll('#' + groupId + ' input:checked')].map(el => el.value);
+}
+
+const form = document.getElementById('consultForm');
+const submitBtn = document.getElementById('submitBtn');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  submitBtn.disabled = true;
+  submitBtn.textContent = '제출 중...';
+
+  const fd = new FormData(form);
+
+  const data = {
+    level: currentLevel,
+    branch: fd.get('branch') || '',
+    studentName: fd.get('studentName') || '',
+    schoolGrade: fd.get('schoolGrade') || '',
+    parentPhone: fd.get('parentPhone') || '',
+    studentPhone: fd.get('studentPhone') || '',
+    visitPath: getCheckedValues('visitPathGroup'),
+    visitPathEtc: fd.get('visitPathEtc') || '',
+    progressGrade: fd.get('progressGrade') || '',
+    progressSemester: fd.get('progressSemester') || '',
+    progressUnit: fd.get('progressUnit') || '',
+    highSubjects: getCheckedValues('highSubjectGroup'),
+    highLevel: fd.get('highLevel') || '',
+    examScores: {
+      round1: fd.get('exam1') || '',
+      round2: fd.get('exam2') || '',
+      round3: fd.get('exam3') || '',
+      round4: fd.get('exam4') || ''
+    },
+    strongAreas: getCheckedValues('highAreaGroup'),
+    weakAreas: getCheckedValues('lowAreaGroup'),
+    selfCheck: {
+      calcScore: Number(document.getElementById('calcScoreVal').textContent),
+      accuracyScore: Number(document.getElementById('accuracyScoreVal').textContent),
+      interestScore: Number(document.getElementById('interestScoreVal').textContent)
+    },
+    createdAt: serverTimestamp(),
+    status: 'new'
+  };
+
+  try {
+    await addDoc(collection(db, 'consultForms'), data);
+    form.classList.add('hidden');
+    document.getElementById('resultBox').classList.remove('hidden');
+  } catch (err) {
+    console.error(err);
+    alert('제출 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+    submitBtn.disabled = false;
+    submitBtn.textContent = '상담 신청서 제출하기';
+  }
+});
+</script>
+
+</body>
+</html>
