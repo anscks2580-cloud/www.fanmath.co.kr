@@ -41,8 +41,11 @@
     padding: 8px 14px; border-radius: 20px;
     border:1px solid var(--border-soft); background: rgba(255,255,255,0.03);
     font-size:12px; color: var(--muted); cursor:pointer; transition: all .15s;
+    position: relative;
   }
-  .chip-opt input { display:none; }
+  .chip-opt input {
+    position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none;
+  }
   .chip-opt:has(input:checked) {
     border-color: var(--gold); color: var(--gold); background: var(--gold-glow);
   }
