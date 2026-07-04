@@ -169,6 +169,54 @@
 .monthly-report-info { flex:1; min-width:160px; }
 .monthly-report-info .month-label { font-size:13px; font-weight:600; margin-bottom:3px; }
 .monthly-report-info .file-label { font-size:12px; color:var(--muted); }
+
+/* 상담 신청 목록 */
+.consult-item {
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  background:rgba(255,255,255,0.03); border:1px solid var(--border-soft);
+  border-radius: 10px; padding: 14px 18px; margin-bottom:8px; flex-wrap:wrap;
+}
+.consult-main { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.consult-level {
+  font-size:11px; font-weight:700; padding:3px 10px; border-radius:100px;
+  background: rgba(240,192,64,0.12); color: var(--gold);
+}
+.consult-name { font-size:14px; font-weight:600; }
+.consult-sub { font-size:12px; color:var(--muted); }
+
+/* 인쇄용 서식 */
+#printSheet { display:none; }
+@media print {
+  body * { visibility: hidden; }
+  #printSheet, #printSheet * { visibility: visible; }
+  #printSheet { display:block; position:absolute; top:0; left:0; width:100%; }
+}
+.ps-page {
+  width: 210mm; min-height: 297mm; margin:0 auto; background:#fff; color:#222;
+  font-family:'Apple SD Gothic Neo',sans-serif; padding: 14mm 14mm; box-sizing:border-box;
+  position: relative;
+}
+.ps-topbar { position:absolute; top:0; left:0; right:0; height:6px; background: var(--ps-accent, #a78bda); }
+.ps-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; }
+.ps-logo { font-size:26px; font-weight:800; color:#5a3fa0; }
+.ps-logo small { display:block; font-size:11px; font-weight:400; color:#a78bda; margin-top:2px; }
+.ps-meta { text-align:right; font-size:12px; line-height:1.9; }
+.ps-meta b { color:#333; }
+.ps-box { display:inline-block; width:12px; height:12px; border:1.3px solid #999; margin:0 4px 0 10px; vertical-align:-1px; position:relative; }
+.ps-box.on::after { content:'✓'; position:absolute; top:-4px; left:0px; font-size:12px; color:#5a3fa0; font-weight:900; }
+.ps-row { display:flex; gap:24px; font-size:13px; margin-bottom:10px; border-bottom:1px solid #ddd; padding-bottom:10px; }
+.ps-row > div { flex:1; }
+.ps-row .lbl { color:#666; margin-right:8px; }
+.ps-section { margin-bottom:14px; }
+.ps-sec-title { font-size:12.5px; font-weight:700; color:#5a3fa0; margin-bottom:6px; }
+.ps-sec-title .note { font-weight:400; color:#999; font-size:10.5px; margin-left:4px; }
+.ps-inline { font-size:12.5px; color:#333; }
+.ps-check-list { display:flex; flex-wrap:wrap; gap: 4px 18px; font-size:12.5px; }
+.ps-check-item { display:flex; align-items:center; }
+.ps-check-item .ps-box { margin:0 6px 0 0; }
+.ps-scorebox { display:flex; justify-content:space-between; font-size:12.5px; }
+.ps-scorebox span { display:inline-block; min-width:70px; }
+.ps-notebox { border:1px solid #ccc; border-radius:4px; padding:12px; min-height: 90px; font-size:12px; color:#999; }
 </style>
 </head>
 <body>
@@ -208,6 +256,7 @@
     <button class="admin-tab" onclick="switchTab('records',this);initRecordsTab()">🗂 기록 조회</button>
     <button class="admin-tab" onclick="switchTab('adminmgmt',this);initAdminMgmtTab()">🔑 관리자 계정</button>
     <button class="admin-tab" onclick="switchTab('apexvideo',this);initApexVideoTab()">🎬 에이펙스 영상</button>
+    <button class="admin-tab" onclick="switchTab('consult',this);initConsultTab()">📥 상담 신청</button>
   </div>
 
   <!-- 학생 관리 -->
@@ -463,6 +512,17 @@
     <div class="card">
       <h3>🎬 등록된 에이펙스 영상 (<span id="apexVideoCount">0</span>개)</h3>
       <div id="apexVideoList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <!-- 상담 신청 관리 -->
+  <div class="tab-panel" id="tab-consult">
+    <div class="card">
+      <h3>📥 홈페이지 상담 신청 접수</h3>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">
+        홈페이지 상담 신청 폼(consult.html)을 통해 접수된 내역입니다. 항목을 클릭하면 원래 종이 양식과 같은 형태로 인쇄/다운로드할 수 있습니다.
+      </div>
+      <div id="consultList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
     </div>
   </div>
 
@@ -5253,8 +5313,158 @@ window.deleteApexVideo = async function(id, title) {
     alert('삭제 오류: ' + e.message);
   }
 };
+
+// ── 상담 신청 관리 ──
+window.initConsultTab = async function() {
+  const el = document.getElementById('consultList');
+  el.innerHTML = '<div style="color:var(--muted);font-size:13px;">불러오는 중...</div>';
+  try {
+    const snap = await getDocs(query(collection(db, 'consultForms'), orderBy('createdAt', 'desc')));
+    if (snap.empty) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:13px;">아직 접수된 상담 신청이 없습니다.</div>';
+      return;
+    }
+    window._consultData = {};
+    let html = '';
+    snap.forEach((d) => {
+      const data = d.data();
+      window._consultData[d.id] = data;
+      const dateStr = data.createdAt?.toDate ? formatConsultDate(data.createdAt.toDate()) : '-';
+      html += `
+        <div class="consult-item">
+          <div class="consult-main">
+            <span class="consult-level">${data.level || '-'}</span>
+            <span class="consult-name">${escapeConsultHtml(data.studentName || '이름없음')}</span>
+            <span class="consult-sub">${escapeConsultHtml(data.schoolGrade || '')} · ${escapeConsultHtml(data.branch || '')} · ${dateStr}</span>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="printConsultSheet('${d.id}')">서식으로 보기 / 다운로드</button>
+        </div>`;
+    });
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = `<div style="color:#ff9090;font-size:13px;">오류: ${e.message}</div>`;
+  }
+};
+
+function formatConsultDate(dt) {
+  const p = (n) => String(n).padStart(2, '0');
+  return `${dt.getFullYear()}.${p(dt.getMonth()+1)}.${p(dt.getDate())} ${p(dt.getHours())}:${p(dt.getMinutes())}`;
+}
+
+function escapeConsultHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function consultCheckbox(isOn) {
+  return `<span class="ps-box${isOn ? ' on' : ''}"></span>`;
+}
+
+const CONSULT_NOTICE_TEXT = {
+  '초등': '송우찬 수학학원 초등부 프로그램은 완전한 복습을 목표로 탄탄한 현행수업과 1년 기초 선행 수업을 병행하고 있습니다. 중학교 3학년 2학기(11월 초)까지 초, 중등부 과정을 모두 수료하면 초, 중등수학에 대한 탄탄한 복습과 고등학교 1년 과정의 선행이 완료됩니다.',
+  '중등': '송우찬 수학학원 중등부 프로그램은 완전한 복습을 목표로 탄탄한 현행수업과 1년 기초 선행 수업을 병행하고 있습니다. 중학교 3학년 2학기(11월 초)까지 중등부 과정을 모두 수료하면 중등수학에 대한 탄탄한 복습과 고등학교 1년 과정의 선행이 완료됩니다.',
+  '고등': '송우찬 수학학원 고등부 프로그램은 개념을 탄탄하게 정립하기 위한 반복, 복습, 심화의 세가지 목표를 가지고 교육과정을 구성하였습니다. 고등부 전체 진도는 2학년 2학기 기말고사가 마무리 되며, 2학년 겨울방학부터 수능대비 수업이 진행됩니다.'
+};
+const CONSULT_ACCENT = { '초등': '#a78bda', '중등': '#f0b13c', '고등': '#7cb8dd' };
+
+window.printConsultSheet = function(docId) {
+  const d = window._consultData[docId];
+  if (!d) return;
+  const dateStr = d.createdAt?.toDate ? formatConsultDate(d.createdAt.toDate()) : '-';
+  const level = d.level || '초등';
+  const visitPaths = ['인터넷 검색', '광고', '지나가다 보고', '주변 권유', '우연히 찾아옴'];
+  const areaOpts = ['수와 연산', '문자와 식', '함수', '기하', '확률과 통계'];
+
+  let progressHtml = '';
+  if (level === '고등') {
+    const subjects = ['공통수학1','공통수학2','대수','미적분1','확률과 통계','미적분2','기하'];
+    progressHtml = `
+      <div class="ps-check-list">
+        ${subjects.map(s => `<span class="ps-check-item">${consultCheckbox((d.highSubjects||[]).includes(s))}${s}</span>`).join('')}
+      </div>
+      <div style="margin-top:8px;font-size:12.5px;">
+        학습 난이도 :
+        ${['기본','응용','심화'].map(l => `<span class="ps-check-item" style="margin-left:14px;">${consultCheckbox(d.highLevel === l)}${l}</span>`).join('')}
+      </div>`;
+  } else {
+    const schoolWord = level === '초등' ? '초등학교' : '중학교';
+    progressHtml = `<div class="ps-inline">${schoolWord} <b>${escapeConsultHtml(d.progressGrade || '＿＿＿')}</b> &nbsp; ${escapeConsultHtml(d.progressSemester || '＿＿＿')} &nbsp; <b>${escapeConsultHtml(d.progressUnit || '＿＿＿＿＿＿')}</b> 까지</div>`;
+  }
+
+  const html = `
+    <div class="ps-page" style="--ps-accent:${CONSULT_ACCENT[level] || '#a78bda'}">
+      <div class="ps-topbar"></div>
+      <div class="ps-header">
+        <div class="ps-logo">송우찬 수학학원<small>선생님의 열정은 학생들을 춤추게 한다</small></div>
+        <div class="ps-meta">
+          <div><b>상담 날짜</b> &nbsp; ${dateStr}</div>
+          <div><b>상담 장소</b> ${consultCheckbox(d.branch === '평촌관')}평촌관 ${consultCheckbox(d.branch === '산본관')}산본관</div>
+          <div><b>과정 구분</b> &nbsp; ${escapeConsultHtml(level)}부</div>
+        </div>
+      </div>
+      <div class="ps-row">
+        <div><span class="lbl">성명</span><b>${escapeConsultHtml(d.studentName || '')}</b></div>
+        <div><span class="lbl">학교 / 학년</span><b>${escapeConsultHtml(d.schoolGrade || '')}</b></div>
+      </div>
+      <div class="ps-row">
+        <div><span class="lbl">연락처(학부모)</span><b>${escapeConsultHtml(d.parentPhone || '')}</b></div>
+        <div><span class="lbl">연락처(학생)</span><b>${escapeConsultHtml(d.studentPhone || '')}</b></div>
+      </div>
+      <div class="ps-section">
+        <div class="ps-sec-title">기초 유의사항</div>
+        <div class="ps-inline" style="line-height:1.6;color:#555;">${CONSULT_NOTICE_TEXT[level]}</div>
+      </div>
+      <div class="ps-section">
+        <div class="ps-sec-title">방문 경로</div>
+        <div class="ps-check-list">
+          ${visitPaths.map(p => `<span class="ps-check-item">${consultCheckbox((d.visitPath||[]).includes(p))}${p}</span>`).join('')}
+          <span class="ps-check-item">${consultCheckbox(!!d.visitPathEtc)}기타: ${escapeConsultHtml(d.visitPathEtc || '')}</span>
+        </div>
+      </div>
+      <div class="ps-section">
+        <div class="ps-sec-title">진도 상황</div>
+        ${progressHtml}
+      </div>
+      <div class="ps-section">
+        <div class="ps-sec-title">최근 시험 결과<span class="note">(대략적 점수대 기입 가능)</span></div>
+        <div class="ps-scorebox">
+          <span>1회 : ${escapeConsultHtml(d.examScores?.round1 || '')}점</span>
+          <span>2회 : ${escapeConsultHtml(d.examScores?.round2 || '')}점</span>
+          <span>3회 : ${escapeConsultHtml(d.examScores?.round3 || '')}점</span>
+          <span>4회 : ${escapeConsultHtml(d.examScores?.round4 || '')}점</span>
+        </div>
+      </div>
+      <div class="ps-section">
+        <div class="ps-sec-title">성취도 높은 학습 영역</div>
+        <div class="ps-check-list">
+          ${areaOpts.map(a => `<span class="ps-check-item">${consultCheckbox((d.strongAreas||[]).includes(a))}${a}</span>`).join('')}
+        </div>
+      </div>
+      <div class="ps-section">
+        <div class="ps-sec-title">성취도 낮은 학습 영역</div>
+        <div class="ps-check-list">
+          ${areaOpts.map(a => `<span class="ps-check-item">${consultCheckbox((d.weakAreas||[]).includes(a))}${a}</span>`).join('')}
+        </div>
+      </div>
+      <div class="ps-section">
+        <div class="ps-sec-title">학습 자가진단</div>
+        <div class="ps-scorebox">
+          <span>연산 능력 : ${d.selfCheck?.calcScore ?? '-'} / 10점</span>
+          <span>풀이 정확도 : ${d.selfCheck?.accuracyScore ?? '-'} / 10점</span>
+          <span>수학 흥미도 : ${d.selfCheck?.interestScore ?? '-'} / 10점</span>
+        </div>
+      </div>
+      <div class="ps-section">
+        <div class="ps-sec-title">상담 내용 <span class="note">※ 원장님 작성 부분입니다.</span></div>
+        <div class="ps-notebox">학원 수강 여부 :<br><br>사용 교재 :<br><br>기타 상담 내용 :</div>
+      </div>
+    </div>
+  `;
+  document.getElementById('printSheet').innerHTML = html;
+  window.print();
+};
 </script>
 <div id="toast"></div>
+<div id="printSheet"></div>
 
 </body>
 </html>
