@@ -81,6 +81,7 @@
   .result-box h2 { font-size:20px; margin-bottom:10px; }
   .result-box p { font-size:13px; color:var(--muted); line-height:1.7; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
 
@@ -282,6 +283,13 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// ── EmailJS 알림 설정 ──
+// 아래 3개 값을 emailjs.com에서 발급받은 값으로 교체하세요.
+const EMAILJS_PUBLIC_KEY = 'NlH7_QmN4ZVUyC0rw_JvP';
+const EMAILJS_SERVICE_ID = 'service_3t1xwfk';
+const EMAILJS_TEMPLATE_ID = 'template_dl76m0d';
+emailjs.init(EMAILJS_PUBLIC_KEY);
+
 let currentLevel = '초등';
 const levelTabs = document.getElementById('levelTabs');
 const progressLower = document.getElementById('progressLower');
@@ -352,6 +360,22 @@ form.addEventListener('submit', async (e) => {
 
   try {
     await addDoc(collection(db, 'consultForms'), data);
+
+    // 이메일 알림 발송 (실패해도 신청 자체는 정상 처리)
+    try {
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        level: data.level,
+        branch: data.branch,
+        student_name: data.studentName,
+        school_grade: data.schoolGrade,
+        parent_phone: data.parentPhone,
+        student_phone: data.studentPhone,
+        submitted_at: new Date().toLocaleString('ko-KR')
+      });
+    } catch (mailErr) {
+      console.error('이메일 알림 발송 실패:', mailErr);
+    }
+
     form.classList.add('hidden');
     document.getElementById('resultBox').classList.remove('hidden');
   } catch (err) {
