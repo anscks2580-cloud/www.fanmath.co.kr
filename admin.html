@@ -192,31 +192,50 @@
   #printSheet { display:block; position:absolute; top:0; left:0; width:100%; }
 }
 .ps-page {
-  width: 210mm; min-height: 297mm; margin:0 auto; background:#fff; color:#222;
-  font-family:'Apple SD Gothic Neo',sans-serif; padding: 14mm 14mm; box-sizing:border-box;
+  width: 210mm; min-height: 297mm; margin:0 auto; background:#fff; color:#2a2a2a;
+  font-family:'Apple SD Gothic Neo',sans-serif; padding: 16mm 16mm 14mm; box-sizing:border-box;
   position: relative;
 }
-.ps-topbar { position:absolute; top:0; left:0; right:0; height:6px; background: var(--ps-accent, #a78bda); }
-.ps-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:18px; }
-.ps-logo { font-size:26px; font-weight:800; color:#5a3fa0; }
-.ps-logo small { display:block; font-size:11px; font-weight:400; color:#a78bda; margin-top:2px; }
-.ps-meta { text-align:right; font-size:12px; line-height:1.9; }
-.ps-meta b { color:#333; }
-.ps-box { display:inline-block; width:12px; height:12px; border:1.3px solid #999; margin:0 4px 0 10px; vertical-align:-1px; position:relative; }
-.ps-box.on::after { content:'✓'; position:absolute; top:-4px; left:0px; font-size:12px; color:#5a3fa0; font-weight:900; }
-.ps-row { display:flex; gap:24px; font-size:13px; margin-bottom:10px; border-bottom:1px solid #ddd; padding-bottom:10px; }
-.ps-row > div { flex:1; }
-.ps-row .lbl { color:#666; margin-right:8px; }
-.ps-section { margin-bottom:14px; }
-.ps-sec-title { font-size:12.5px; font-weight:700; color:#5a3fa0; margin-bottom:6px; }
-.ps-sec-title .note { font-weight:400; color:#999; font-size:10.5px; margin-left:4px; }
+.ps-topbar, .ps-bottombar { position:absolute; left:0; right:0; height:7px; background: var(--ps-accent, #a78bda); }
+.ps-topbar { top:0; }
+.ps-bottombar { bottom:0; }
+.ps-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:22px; padding-bottom:16px; border-bottom: 2px solid var(--ps-accent, #a78bda); }
+.ps-brand { display:flex; align-items:center; gap:10px; }
+.ps-crown { font-size:30px; line-height:1; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.15)); }
+.ps-logo { font-size:25px; font-weight:800; color:#4a2f8f; letter-spacing:-0.5px; }
+.ps-logo small { display:block; font-size:10.5px; font-weight:500; color:#9a8bc4; margin-top:3px; letter-spacing:0.3px; }
+.ps-meta { text-align:right; font-size:11.5px; line-height:2; color:#555; }
+.ps-meta-row { white-space:nowrap; }
+.ps-meta-row b { color:#333; font-weight:700; margin-right:2px; }
+.ps-meta-icon { margin-right:3px; }
+.ps-box { display:inline-block; width:12px; height:12px; border:1.4px solid #aaa; border-radius:2px; margin:0 3px 0 9px; vertical-align:-1px; position:relative; background:#fff; }
+.ps-box.on { border-color: var(--ps-accent, #5a3fa0); background: var(--ps-accent, #5a3fa0); }
+.ps-box.on::after { content:'✓'; position:absolute; top:-3.5px; left:0.5px; font-size:11px; color:#fff; font-weight:900; }
+
+.ps-row { display:flex; gap:28px; font-size:13px; margin-bottom:12px; padding-bottom:11px; border-bottom:1px dashed #ddd; }
+.ps-row > div { flex:1; display:flex; align-items:baseline; gap:8px; }
+.ps-row .lbl { color:#8a8a8a; font-size:11.5px; flex-shrink:0; letter-spacing:0.5px; }
+.ps-row .val { font-weight:700; font-size:14px; color:#222; border-bottom:1.3px solid #ccc; flex:1; padding-bottom:2px; min-height:18px; }
+
+.ps-section { margin-bottom:15px; }
+.ps-sec-title {
+  font-size:12.5px; font-weight:700; color:#3a3a3a; margin-bottom:8px;
+  display:flex; align-items:center; gap:7px;
+}
+.ps-sec-title::before {
+  content:''; display:inline-block; width:4px; height:13px; border-radius:2px;
+  background: var(--ps-accent, #a78bda);
+}
+.ps-sec-title.urgent::before { background:#d9534f; }
+.ps-sec-title .note { font-weight:400; color:#aaa; font-size:10.5px; margin-left:2px; }
 .ps-inline { font-size:12.5px; color:#333; }
-.ps-check-list { display:flex; flex-wrap:wrap; gap: 4px 18px; font-size:12.5px; }
-.ps-check-item { display:flex; align-items:center; }
+.ps-check-list { display:flex; flex-wrap:wrap; gap: 6px 20px; font-size:12.5px; padding-left:2px; }
+.ps-check-item { display:flex; align-items:center; color:#444; }
 .ps-check-item .ps-box { margin:0 6px 0 0; }
-.ps-scorebox { display:flex; justify-content:space-between; font-size:12.5px; }
+.ps-scorebox { display:flex; justify-content:space-between; font-size:12.5px; background:#faf9fc; border-radius:6px; padding:10px 14px; color:#444; }
 .ps-scorebox span { display:inline-block; min-width:70px; }
-.ps-notebox { border:1px solid #ccc; border-radius:4px; padding:12px; min-height: 90px; font-size:12px; color:#999; }
+.ps-notebox { border:1px solid #e2e2e2; border-radius:6px; padding:14px 16px; min-height: 92px; font-size:12px; color:#bbb; line-height:2.2; background:#fcfcfd; }
+.ps-notebox .tag { float:right; font-weight:400; color:#c9a86a; font-size:10px; }
 </style>
 </head>
 <body>
@@ -5394,24 +5413,27 @@ window.printConsultSheet = function(docId) {
     <div class="ps-page" style="--ps-accent:${CONSULT_ACCENT[level] || '#a78bda'}">
       <div class="ps-topbar"></div>
       <div class="ps-header">
-        <div class="ps-logo">송우찬 수학학원<small>선생님의 열정은 학생들을 춤추게 한다</small></div>
+        <div class="ps-brand">
+          <span class="ps-crown">👑</span>
+          <div class="ps-logo">송우찬 수학학원<small>선생님의 열정은 학생들을 춤추게 한다</small></div>
+        </div>
         <div class="ps-meta">
-          <div><b>상담 날짜</b> &nbsp; ${dateStr}</div>
-          <div><b>상담 장소</b> ${consultCheckbox(d.branch === '평촌관')}평촌관 ${consultCheckbox(d.branch === '산본관')}산본관</div>
-          <div><b>과정 구분</b> &nbsp; ${escapeConsultHtml(level)}부</div>
+          <div class="ps-meta-row"><span class="ps-meta-icon">🍀</span><b>상담 날짜</b> ${dateStr}</div>
+          <div class="ps-meta-row"><span class="ps-meta-icon">🌈</span><b>상담 장소</b> ${consultCheckbox(d.branch === '평촌관')}평촌관 ${consultCheckbox(d.branch === '산본관')}산본관</div>
+          <div class="ps-meta-row"><span class="ps-meta-icon">☀️</span><b>과정 구분</b> &nbsp;${escapeConsultHtml(level)}부</div>
         </div>
       </div>
       <div class="ps-row">
-        <div><span class="lbl">성명</span><b>${escapeConsultHtml(d.studentName || '')}</b></div>
-        <div><span class="lbl">학교 / 학년</span><b>${escapeConsultHtml(d.schoolGrade || '')}</b></div>
+        <div><span class="lbl">성&nbsp;&nbsp;명</span><span class="val">${escapeConsultHtml(d.studentName || '')}</span></div>
+        <div><span class="lbl">학교 / 학년</span><span class="val">${escapeConsultHtml(d.schoolGrade || '')}</span></div>
       </div>
       <div class="ps-row">
-        <div><span class="lbl">연락처(학부모)</span><b>${escapeConsultHtml(d.parentPhone || '')}</b></div>
-        <div><span class="lbl">연락처(학생)</span><b>${escapeConsultHtml(d.studentPhone || '')}</b></div>
+        <div><span class="lbl">연락처(학부모)</span><span class="val">${escapeConsultHtml(d.parentPhone || '')}</span></div>
+        <div><span class="lbl">연락처(학생)</span><span class="val">${escapeConsultHtml(d.studentPhone || '')}</span></div>
       </div>
       <div class="ps-section">
-        <div class="ps-sec-title">기초 유의사항</div>
-        <div class="ps-inline" style="line-height:1.6;color:#555;">${CONSULT_NOTICE_TEXT[level]}</div>
+        <div class="ps-sec-title urgent">기초 유의사항</div>
+        <div class="ps-inline" style="line-height:1.75;color:#5c5c5c;padding-left:11px;">${CONSULT_NOTICE_TEXT[level]}</div>
       </div>
       <div class="ps-section">
         <div class="ps-sec-title">방문 경로</div>
@@ -5422,11 +5444,11 @@ window.printConsultSheet = function(docId) {
       </div>
       <div class="ps-section">
         <div class="ps-sec-title">진도 상황</div>
-        ${progressHtml}
+        <div style="padding-left:11px;">${progressHtml}</div>
       </div>
       <div class="ps-section">
         <div class="ps-sec-title">최근 시험 결과<span class="note">(대략적 점수대 기입 가능)</span></div>
-        <div class="ps-scorebox">
+        <div class="ps-scorebox" style="margin-left:11px;">
           <span>1회 : ${escapeConsultHtml(d.examScores?.round1 || '')}점</span>
           <span>2회 : ${escapeConsultHtml(d.examScores?.round2 || '')}점</span>
           <span>3회 : ${escapeConsultHtml(d.examScores?.round3 || '')}점</span>
@@ -5435,28 +5457,29 @@ window.printConsultSheet = function(docId) {
       </div>
       <div class="ps-section">
         <div class="ps-sec-title">성취도 높은 학습 영역</div>
-        <div class="ps-check-list">
+        <div class="ps-check-list" style="padding-left:11px;">
           ${areaOpts.map(a => `<span class="ps-check-item">${consultCheckbox((d.strongAreas||[]).includes(a))}${a}</span>`).join('')}
         </div>
       </div>
       <div class="ps-section">
         <div class="ps-sec-title">성취도 낮은 학습 영역</div>
-        <div class="ps-check-list">
+        <div class="ps-check-list" style="padding-left:11px;">
           ${areaOpts.map(a => `<span class="ps-check-item">${consultCheckbox((d.weakAreas||[]).includes(a))}${a}</span>`).join('')}
         </div>
       </div>
       <div class="ps-section">
         <div class="ps-sec-title">학습 자가진단</div>
-        <div class="ps-scorebox">
+        <div class="ps-scorebox" style="margin-left:11px;">
           <span>연산 능력 : ${d.selfCheck?.calcScore ?? '-'} / 10점</span>
           <span>풀이 정확도 : ${d.selfCheck?.accuracyScore ?? '-'} / 10점</span>
           <span>수학 흥미도 : ${d.selfCheck?.interestScore ?? '-'} / 10점</span>
         </div>
       </div>
       <div class="ps-section">
-        <div class="ps-sec-title">상담 내용 <span class="note">※ 원장님 작성 부분입니다.</span></div>
-        <div class="ps-notebox">학원 수강 여부 :<br><br>사용 교재 :<br><br>기타 상담 내용 :</div>
+        <div class="ps-sec-title">상담 내용</div>
+        <div class="ps-notebox"><span class="tag">※ 원장님 작성 부분입니다.</span>학원 수강 여부 :<br><br>사용 교재 :<br><br>기타 상담 내용 :</div>
       </div>
+      <div class="ps-bottombar"></div>
     </div>
   `;
   document.getElementById('printSheet').innerHTML = html;
