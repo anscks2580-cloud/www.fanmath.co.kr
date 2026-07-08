@@ -474,6 +474,9 @@
       <div class="card-title">📍 반별 진도 입력
         <span style="font-size:12px; color:var(--muted); font-weight:400;" id="progressWeekLabel"></span>
       </div>
+      <div id="progressEditBanner" style="display:none;margin-bottom:12px;padding:8px 12px;border-radius:8px;background:rgba(240,192,64,0.12);border:1px solid rgba(240,192,64,0.4);color:var(--gold);font-size:12px;">
+        ✏️ 이전 기록 수정 중 — 저장하면 해당 기록이 수정됩니다.
+      </div>
       <div class="alert ok" id="progress-ok"></div>
       <div class="alert err" id="progress-err"></div>
 
@@ -514,8 +517,9 @@
       </div>
 
       <div class="btn-row">
-        <button class="btn btn-gold" onclick="submitProgress()">제출하기</button>
+        <button class="btn btn-gold" id="progressSubmitBtn" onclick="submitProgress()">제출하기</button>
         <button class="btn btn-outline" onclick="resetProgress()">초기화</button>
+        <button class="btn btn-outline" id="progressCancelEditBtn" style="display:none;color:#ff9090;border-color:rgba(255,80,80,0.3);" onclick="cancelEditProgress()">수정 취소</button>
       </div>
     </div>
 
@@ -645,7 +649,7 @@ import { getStorage, ref, uploadBytesResumable, getDownloadURL, listAll, deleteO
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, setPersistence, browserLocalPersistence }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc, getDocs, addDoc, collection, query, where, orderBy, deleteDoc, serverTimestamp }
+import { getFirestore, doc, setDoc, updateDoc, getDoc, getDocs, addDoc, collection, query, where, orderBy, deleteDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -1592,6 +1596,8 @@ document.getElementById('videoModal').addEventListener('click', function(e) {
 // ══════════════════════════════════════
 
 let progressRatings = { classAchieve: null };
+let progressReportsCache = {}; // docId -> 저장된 데이터 (수정용)
+let editingProgressDoc = null; // 수정 중인 docId
 
 // 탭 진입 시 주차 레이블 표시
 const origSwitchTab = window.switchTab;
@@ -1620,25 +1626,71 @@ window.submitProgress = async function() {
   }
 
   const ratingLabel = {5:'상', 4:'중상', 3:'중', 2:'중하', 1:'하'};
-  const weekKey = getWeekKey();
 
   try {
-    await addDoc(collection(db, 'progressReports'), {
-      teacherUid:   currentTeacher.uid,
-      teacherName:  currentTeacher.name,
-      weekKey,
-      weekLabel:    getWeekLabel(),
-      classname, textbook, curprogress, newprogress, repeatstep,
-      classAchieve:      progressRatings.classAchieve,
-      classAchieveLabel: ratingLabel[progressRatings.classAchieve],
-      submittedAt: serverTimestamp()
-    });
-    showAlert(ok, `✅ "${classname}" 반 진도가 제출되었습니다.`, 'ok');
-    resetProgress();
+    if (editingProgressDoc) {
+      // 수정 모드: 기존 문서 업데이트 (주차는 원본 유지)
+      await updateDoc(doc(db, 'progressReports', editingProgressDoc), {
+        classname, textbook, curprogress, newprogress, repeatstep,
+        classAchieve:      progressRatings.classAchieve,
+        classAchieveLabel: ratingLabel[progressRatings.classAchieve],
+        updatedAt: serverTimestamp()
+      });
+      showAlert(ok, `✅ "${classname}" 반 진도가 수정되었습니다.`, 'ok');
+      cancelEditProgress();
+    } else {
+      const weekKey = getWeekKey();
+      await addDoc(collection(db, 'progressReports'), {
+        teacherUid:   currentTeacher.uid,
+        teacherName:  currentTeacher.name,
+        weekKey,
+        weekLabel:    getWeekLabel(),
+        classname, textbook, curprogress, newprogress, repeatstep,
+        classAchieve:      progressRatings.classAchieve,
+        classAchieveLabel: ratingLabel[progressRatings.classAchieve],
+        submittedAt: serverTimestamp()
+      });
+      showAlert(ok, `✅ "${classname}" 반 진도가 제출되었습니다.`, 'ok');
+      resetProgress();
+    }
     loadProgressHistory();
   } catch(e) {
     showAlert(err, '제출 오류: ' + e.message, 'err');
   }
+};
+
+// ── 반별 진도 수정 모드 진입 ──
+window.editProgressReport = function(docId) {
+  const data = progressReportsCache[docId];
+  if (!data) { alert('기록을 불러올 수 없습니다.'); return; }
+
+  editingProgressDoc = docId;
+
+  document.getElementById('p-classname').value   = data.classname   || '';
+  document.getElementById('p-textbook').value    = data.textbook    || '';
+  document.getElementById('p-curprogress').value = data.curprogress || '';
+  document.getElementById('p-newprogress').value = data.newprogress || '';
+  document.getElementById('p-repeatstep').value  = data.repeatstep  || '';
+
+  progressRatings.classAchieve = data.classAchieve ?? null;
+  document.querySelectorAll('.rating-row[data-field="classAchieve"] .rating-btn').forEach(b => {
+    b.classList.toggle('selected', parseInt(b.dataset.val) === data.classAchieve);
+  });
+
+  document.getElementById('progressEditBanner').style.display = 'block';
+  document.getElementById('progressSubmitBtn').textContent = '수정 저장';
+  document.getElementById('progressCancelEditBtn').style.display = '';
+
+  document.getElementById('tab-progress').scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+// ── 반별 진도 수정 취소 ──
+window.cancelEditProgress = function() {
+  editingProgressDoc = null;
+  document.getElementById('progressEditBanner').style.display = 'none';
+  document.getElementById('progressSubmitBtn').textContent = '제출하기';
+  document.getElementById('progressCancelEditBtn').style.display = 'none';
+  resetProgress();
 };
 
 window.resetProgress = function() {
@@ -1667,8 +1719,10 @@ async function loadProgressHistory() {
       return;
     }
     el.innerHTML = '';
+    progressReportsCache = {};
     snap.forEach(d => {
       const r = d.data();
+      progressReportsCache[d.id] = r;
       const div = document.createElement('div');
       div.className = 'history-item';
       div.innerHTML = `
@@ -1685,7 +1739,11 @@ async function loadProgressHistory() {
             <span>📊 성취도: <b style="color:var(--gold);">${r.classAchieveLabel||'-'}</b></span>
           </div>
         </div>
-        <div style="text-align:right;margin-top:4px;">
+        <div style="text-align:right;margin-top:4px;display:flex;justify-content:flex-end;gap:8px;">
+          <button onclick="editProgressReport('${d.id}')"
+            style="padding:4px 10px;font-size:11px;border-radius:6px;border:1px solid rgba(240,192,64,0.4);background:rgba(240,192,64,0.1);color:var(--gold);cursor:pointer;font-family:inherit;">
+            수정
+          </button>
           <button onclick="deleteProgressReport('${d.id}')"
             style="padding:4px 10px;font-size:11px;border-radius:6px;border:1px solid rgba(255,80,80,0.3);background:rgba(255,80,80,0.1);color:#ff9090;cursor:pointer;font-family:inherit;">
             삭제
@@ -1703,6 +1761,7 @@ window.deleteProgressReport = async function(docId) {
   if (!confirm('이 진도 기록을 삭제하시겠습니까?')) return;
   try {
     await deleteDoc(doc(db, 'progressReports', docId));
+    if (editingProgressDoc === docId) cancelEditProgress();
     await loadProgressHistory();
   } catch(e) {
     alert('삭제 오류: ' + e.message);
