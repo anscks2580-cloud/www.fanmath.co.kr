@@ -4249,17 +4249,19 @@ window.renderAttendance = function() {
     const bStudents = filtered.filter(s => s.branch === branch);
     if (!bStudents.length) return;
 
-    // 학년별 그룹
-    const byGrade = {};
+    // 반별 그룹 (classGroup 미배정 학생은 학년으로 표시)
+    const byClass = {};
     bStudents.forEach(s => {
-      const g = s.grade || '기타';
-      if (!byGrade[g]) byGrade[g] = [];
-      byGrade[g].push(s);
+      const c = s.classGroup || `${s.grade || '기타'} (반 미배정)`;
+      if (!byClass[c]) byClass[c] = [];
+      byClass[c].push(s);
     });
-    const sortedGrades = Object.keys(byGrade).sort(
-      (a,b) => (gradeOrder.indexOf(a) === -1 ? 99 : gradeOrder.indexOf(a)) -
-                (gradeOrder.indexOf(b) === -1 ? 99 : gradeOrder.indexOf(b))
-    );
+    // 반명 가나다순 정렬, 단 "반 미배정"은 맨 뒤로
+    const sortedClasses = Object.keys(byClass).sort((a, b) => {
+      const aUn = a.includes('반 미배정'), bUn = b.includes('반 미배정');
+      if (aUn !== bUn) return aUn ? 1 : -1;
+      return a.localeCompare(b, 'ko');
+    });
 
     html += `<div style="margin-bottom:20px;">
       <div style="font-size:13px;font-weight:700;color:#A78BFA;letter-spacing:1px;
@@ -4267,14 +4269,14 @@ window.renderAttendance = function() {
         🏫 ${branch} (${bStudents.length}명)
       </div>`;
 
-    sortedGrades.forEach(grade => {
-      const gStudents = byGrade[grade];
+    sortedClasses.forEach(cls => {
+      const cStudents = byClass[cls];
       html += `<div style="margin-bottom:12px;">
         <div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:1px;
-          margin-bottom:6px;padding-left:4px;">${grade}</div>
+          margin-bottom:6px;padding-left:4px;">${cls} (${cStudents.length}명)</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;">`;
 
-      gStudents.forEach(s => {
+      cStudents.forEach(s => {
         const st  = attStatus[s.id] || 'present';
         const c   = attChipColors(st);
         html += `<div id="att-chip-${s.id}" onclick="toggleAttStatus('${s.id}')"
@@ -4284,7 +4286,7 @@ window.renderAttendance = function() {
             background:${c.bg};border:2px solid ${c.bdr};
             transition:background 0.15s,border-color 0.15s;user-select:none;">
           <span style="font-size:13px;font-weight:700;color:${c.text};">${s.name}</span>
-          <span style="font-size:10px;color:${c.sub};margin-top:2px;">${s.classGroup || s.grade}</span>
+          <span style="font-size:10px;color:${c.sub};margin-top:2px;">${s.grade || ''}</span>
         </div>`;
       });
 
@@ -4366,10 +4368,10 @@ window.downloadAttendanceImage = function() {
   branches.forEach(branch => {
     const bStudents = filtered.filter(s => s.branch === branch);
     totalH += 40; // 관 헤더
-    const byGrade = {};
-    bStudents.forEach(s => { const g = s.grade||'기타'; if(!byGrade[g]) byGrade[g]=[]; byGrade[g].push(s); });
-    Object.values(byGrade).forEach(arr => {
-      totalH += 26; // 학년 헤더
+    const byClass = {};
+    bStudents.forEach(s => { const c = s.classGroup || `${s.grade||'기타'} (반 미배정)`; if(!byClass[c]) byClass[c]=[]; byClass[c].push(s); });
+    Object.values(byClass).forEach(arr => {
+      totalH += 26; // 반 헤더
       totalH += Math.ceil(arr.length / cols) * (CHIP_H + GAP) + 12;
     });
   });
@@ -4403,18 +4405,19 @@ window.downloadAttendanceImage = function() {
     ctx.fillText(`🏫 ${branch} (${bStudents.length}명)`, PAD + 10, y + 18);
     y += 34;
 
-    const byGrade = {};
-    bStudents.forEach(s => { const g = s.grade||'기타'; if(!byGrade[g]) byGrade[g]=[]; byGrade[g].push(s); });
-    const sortedGrades = Object.keys(byGrade).sort(
-      (a,b) => (gradeOrder.indexOf(a)===-1?99:gradeOrder.indexOf(a)) -
-               (gradeOrder.indexOf(b)===-1?99:gradeOrder.indexOf(b))
-    );
+    const byClass = {};
+    bStudents.forEach(s => { const c = s.classGroup || `${s.grade||'기타'} (반 미배정)`; if(!byClass[c]) byClass[c]=[]; byClass[c].push(s); });
+    const sortedClasses = Object.keys(byClass).sort((a, b) => {
+      const aUn = a.includes('반 미배정'), bUn = b.includes('반 미배정');
+      if (aUn !== bUn) return aUn ? 1 : -1;
+      return a.localeCompare(b, 'ko');
+    });
 
-    sortedGrades.forEach(grade => {
-      const arr = byGrade[grade];
+    sortedClasses.forEach(cls => {
+      const arr = byClass[cls];
       ctx.fillStyle = '#B45309';
       ctx.font = 'bold 12px "Apple SD Gothic Neo","Malgun Gothic",sans-serif';
-      ctx.fillText(grade, PAD + 4, y + 14);
+      ctx.fillText(`${cls} (${arr.length}명)`, PAD + 4, y + 14);
       y += 22;
 
       arr.forEach((s, i) => {
@@ -4441,10 +4444,10 @@ window.downloadAttendanceImage = function() {
         ctx.font = 'bold 13px "Apple SD Gothic Neo","Malgun Gothic",sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(s.name, cx + CHIP_W/2, cy + 22, CHIP_W - 8);
-        // 반명
+        // 학년
         ctx.font = '10px "Apple SD Gothic Neo","Malgun Gothic",sans-serif';
         ctx.fillStyle = st === 'none' ? '#888888' : 'rgba(255,255,255,0.88)';
-        ctx.fillText(s.classGroup || s.grade, cx + CHIP_W/2, cy + 37, CHIP_W - 8);
+        ctx.fillText(s.grade || '', cx + CHIP_W/2, cy + 37, CHIP_W - 8);
         ctx.textAlign = 'left';
       });
 
