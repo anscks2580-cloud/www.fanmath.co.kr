@@ -218,6 +218,14 @@
   .page-inner { padding: 30px 20px 80px; }
   .video-grid { grid-template-columns: 1fr; }
   #howtoBody { grid-template-columns: repeat(2,1fr) !important; }
+  .video-title {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
 }
 
 /* ── nav 링크 hover 효과 ── */
