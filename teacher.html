@@ -199,6 +199,9 @@
       <div class="card-title">✏️ 이번 주 성취도 입력
         <span style="font-size:12px; color:var(--muted); font-weight:400;" id="weekLabel"></span>
       </div>
+      <div id="editBanner" style="display:none;margin-bottom:12px;padding:8px 12px;border-radius:8px;background:rgba(240,192,64,0.12);border:1px solid rgba(240,192,64,0.4);color:var(--gold);font-size:12px;">
+        ✏️ 이전 기록 수정 중 — 저장하면 해당 주 기록이 덮어써집니다.
+      </div>
       <div class="alert ok" id="weekly-ok"></div>
       <div class="alert err" id="weekly-err"></div>
 
@@ -282,8 +285,9 @@
       </div>
 
       <div class="btn-row">
-        <button class="btn btn-gold" onclick="submitWeekly()">제출하기</button>
+        <button class="btn btn-gold" id="weeklySubmitBtn" onclick="submitWeekly()">제출하기</button>
         <button class="btn btn-outline" onclick="resetWeekly()">초기화</button>
+        <button class="btn btn-outline" id="weeklyCancelEditBtn" style="display:none;color:#ff9090;border-color:rgba(255,80,80,0.3);" onclick="cancelEditWeekly()">수정 취소</button>
       </div>
     </div>
 
@@ -664,6 +668,8 @@ let currentDayFilter = 'all';
 let currentGradeFilter = 'all';
 let studentSearchQuery = '';
 let myStudents = []; // 내 담당 학생만
+let weeklyReportsCache = {}; // docId -> 저장된 데이터 (수정용)
+let editingWeeklyDoc = null; // { docId, weekKey, weekLabel } 수정 중인 기록
 
 // ── 날짜 헬퍼 ──
 // 월요일 기준 주의 월~일 범위를 반환 (월요일에 접속하면 지난주, 나머지는 이번주)
@@ -916,7 +922,8 @@ window.submitWeekly = async function() {
   if (missing.length > 0) { showAlert(err, '과제 충실도, 수업태도, 클리닉 참여도를 모두 선택해주세요.', 'err'); return; }
 
   const student = studentsCache.find(s => s.id === studentId);
-  const weekKey = getWeekKey();
+  const weekKey   = editingWeeklyDoc ? editingWeeklyDoc.weekKey   : getWeekKey();
+  const weekLabel = editingWeeklyDoc ? editingWeeklyDoc.weekLabel : getWeekLabel();
   const ratingLabel = {5:'상',4:'중상',3:'중',2:'중하',1:'하'};
   try {
     await setDoc(doc(db, 'weeklyReports', `${currentTeacher.uid}_${studentId}_${weekKey}`), {
@@ -924,7 +931,7 @@ window.submitWeekly = async function() {
       teacherName: currentTeacher.name,
       studentId, studentName: student?.name || '',
       studentGrade: student?.grade || '',
-      weekKey, weekLabel: getWeekLabel(),
+      weekKey, weekLabel,
       topic, memo,
       ratings: { ...weeklyRatings },
       ratingsLabel: {
@@ -934,12 +941,73 @@ window.submitWeekly = async function() {
       },
       submittedAt: serverTimestamp()
     });
-    showAlert(ok, `✅ ${student?.name} 학생의 주간성취도가 제출되었습니다.`, 'ok');
-    resetWeekly();
+    showAlert(ok, editingWeeklyDoc ? `✅ ${student?.name} 학생의 기록이 수정되었습니다.` : `✅ ${student?.name} 학생의 주간성취도가 제출되었습니다.`, 'ok');
+    cancelEditWeekly(); // 편집 상태 해제 + 폼 초기화
     loadWeeklyHistory();
   } catch(e) {
     showAlert(err, '제출 오류: ' + e.message, 'err');
   }
+};
+
+// ── 주간성취도 수정 모드 진입 ──
+window.editWeeklyReport = function(docId) {
+  const data = weeklyReportsCache[docId];
+  if (!data) { alert('기록을 불러올 수 없습니다.'); return; }
+
+  editingWeeklyDoc = { docId, weekKey: data.weekKey, weekLabel: data.weekLabel };
+
+  // 학년/요일 필터를 전체로 풀어서 학생 카드가 반드시 보이게 함
+  currentDayFilter = 'all';
+  currentGradeFilter = 'all';
+  studentSearchQuery = '';
+  document.getElementById('studentSearch').value = '';
+  document.querySelectorAll('[id^="day-"]').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('[id^="grade-"]').forEach(b => b.classList.remove('selected'));
+  document.getElementById('day-all')?.classList.add('selected');
+  document.getElementById('grade-all')?.classList.add('selected');
+  renderWeeklyStudentSelect();
+
+  // 학생 카드 선택 표시
+  document.getElementById('w-student').value = data.studentId;
+  document.querySelectorAll('#studentCardList button').forEach(b => {
+    const sel = b.dataset.sid === data.studentId;
+    b.dataset.selected = sel ? 'true' : 'false';
+    b.style.background = sel ? 'rgba(240,192,64,0.2)' : 'rgba(255,255,255,0.05)';
+    b.style.borderColor = sel ? 'var(--gold)' : 'rgba(255,255,255,0.15)';
+    b.style.color = sel ? 'var(--gold)' : 'var(--off-white)';
+  });
+
+  // 단원/메모 채우기
+  document.getElementById('w-topic').value = data.topic || '';
+  document.getElementById('w-memo').value = data.memo || '';
+
+  // 평점 채우기
+  const ratings = data.ratings || {};
+  Object.keys(weeklyRatings).forEach(k => weeklyRatings[k] = ratings[k] ?? null);
+  document.querySelectorAll('.rating-row').forEach(row => {
+    const field = row.dataset.field;
+    row.querySelectorAll('.rating-btn').forEach(b => {
+      b.classList.toggle('selected', parseInt(b.dataset.val) === ratings[field]);
+    });
+  });
+
+  // 배너/버튼 상태 표시
+  document.getElementById('editBanner').style.display = 'block';
+  document.getElementById('weekLabel').textContent = `(수정 중) ${data.weekLabel}`;
+  document.getElementById('weeklySubmitBtn').textContent = '수정 저장';
+  document.getElementById('weeklyCancelEditBtn').style.display = '';
+
+  document.getElementById('tab-weekly').scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+// ── 주간성취도 수정 취소 / 폼 초기화 ──
+window.cancelEditWeekly = function() {
+  editingWeeklyDoc = null;
+  document.getElementById('editBanner').style.display = 'none';
+  document.getElementById('weekLabel').textContent = getWeekLabel();
+  document.getElementById('weeklySubmitBtn').textContent = '제출하기';
+  document.getElementById('weeklyCancelEditBtn').style.display = 'none';
+  resetWeekly();
 };
 
 window.resetWeekly = function() {
@@ -964,17 +1032,23 @@ async function loadWeeklyHistory() {
     if (snap.empty) { el.innerHTML = '<div class="empty-state"><div class="icon">📭</div>아직 제출 이력이 없습니다.</div>'; return; }
     const ratingLabel = {5:'매우 우수',4:'우수',3:'보통',2:'미흡',1:'불량'};
     el.innerHTML = '';
+    weeklyReportsCache = {};
     snap.forEach(d => {
       const data = d.data();
+      const docId = d.id;
+      weeklyReportsCache[docId] = data;
       const rl = data.ratingsLabel || {};
       const div = document.createElement('div');
       div.className = 'history-item';
-      const docId = d.id;
       div.innerHTML = `
         <div class="history-item-top">
           <span class="history-week">${data.weekLabel} — ${data.studentName} (${data.studentGrade||''})</span>
           <div style="display:flex;align-items:center;gap:8px;">
             <span class="history-date">${data.topic || ''}</span>
+            <button onclick="editWeeklyReport('${docId}')"
+              style="padding:3px 10px;font-size:11px;border-radius:6px;border:1px solid rgba(240,192,64,0.4);background:rgba(240,192,64,0.1);color:var(--gold);cursor:pointer;font-family:inherit;">
+              수정
+            </button>
             <button onclick="deleteWeeklyReport('${docId}')"
               style="padding:3px 10px;font-size:11px;border-radius:6px;border:1px solid rgba(255,80,80,0.3);background:rgba(255,80,80,0.1);color:#ff9090;cursor:pointer;font-family:inherit;">
               삭제
@@ -1179,6 +1253,7 @@ window.deleteWeeklyReport = async function(docId) {
   if (!confirm('이 성취도 기록을 삭제하시겠습니까?')) return;
   try {
     await deleteDoc(doc(db, 'weeklyReports', docId));
+    if (editingWeeklyDoc && editingWeeklyDoc.docId === docId) cancelEditWeekly();
     await loadWeeklyHistory();
   } catch(e) {
     alert('삭제 오류: ' + e.message);
