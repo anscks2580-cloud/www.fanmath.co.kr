@@ -749,9 +749,9 @@ onAuthStateChanged(auth, async (user) => {
     let allowedTags = null;
     if (!isAdmin && !isTeacher && studentDoc.exists()) {
       const sd = studentDoc.data();
-      const grade = sd.grade || '';
-      const branch = sd.branch || '';
-      const teacherName = sd.teacherName || '';
+      const grade = (sd.grade || '').trim();
+      const branch = (sd.branch || '').trim();
+      const teacherName = (sd.teacherName || '').trim();
 
       // 허용 과목 prefix (공통수학1_ 로 시작하면 전부 허용)
       const subjectPrefixes = (GRADE_VIDEO_TAGS[grade] || []);
@@ -788,7 +788,7 @@ onAuthStateChanged(auth, async (user) => {
         myVideos = allVideos;
       } else if (allowedTags) {
         myVideos = allVideos.filter(v => {
-          const tag = v.tag || '';
+          const tag = (v.tag || '').trim();
           // 중등: 정확히 일치
           if (allowedTags.isJunior) return allowedTags.subjectPrefixes.includes(tag);
           // 고등: 과목 prefix로 시작하면 허용 (공통수학1_ 또는 공통수학1 정확히)

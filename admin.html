@@ -2948,7 +2948,7 @@ window.syncSaveAll = async () => {
 window.addVideo = async () => {
   const title = document.getElementById('v-title').value.trim();
   const vimeoId = document.getElementById('v-ytid').value.trim();
-  const tag = document.getElementById('v-tag').value;
+  const tag = document.getElementById('v-tag').value.trim();
   const date = document.getElementById('v-date').value.trim();
   if (!title || !vimeoId) { showMsg('videoMsg','제목과 Vimeo ID를 입력해주세요.','error'); return; }
   await setDoc(doc(db, 'videos', Date.now().toString()), {
