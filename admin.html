@@ -318,11 +318,17 @@
           <input type="text" id="n-classgroup" placeholder="예: 중2-7A  (요일별 다르면 월:중2-7A/수:중2-7A/금:중2-7A)">
         </div>
       </div>
+      <div class="form-row">
+        <div class="form-group" style="width:100%;">
+          <label style="display:flex;align-items:center;justify-content:space-between;">
+            <span>영상 접근 권한 (해당 카테고리 체크)</span>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="applyRecommendedTags('n')">💡 학년 기준 추천 선택</button>
+          </label>
+          <div id="n-tagChecklist" style="padding:10px;border:1px solid var(--border-soft);border-radius:8px;margin-top:4px;"></div>
+        </div>
+      </div>
       <div style="display:flex;gap:10px;align-items:center;margin-top:4px;">
         <button class="btn btn-primary" onclick="createStudent()">등록</button>
-        <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);cursor:pointer;">
-          <input type="checkbox" id="n-autoAssign" checked style="accent-color:var(--gold);"> 학년별 강의 자동 배정
-        </label>
       </div>
       <div class="msg" id="createMsg"></div>
     </div>
@@ -388,6 +394,13 @@
       <div class="form-group" style="margin-bottom:20px;">
         <label>수업 반</label>
         <input type="text" id="edit-classgroup" placeholder="예: 중2-7A">
+      </div>
+      <div class="form-group" style="margin-bottom:20px;">
+        <label style="display:flex;align-items:center;justify-content:space-between;">
+          <span>영상 접근 권한</span>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="applyRecommendedTags('edit')">💡 학년 기준 추천 선택</button>
+        </label>
+        <div id="edit-tagChecklist" style="padding:10px;border:1px solid var(--border-soft);border-radius:8px;margin-top:4px;"></div>
       </div>
 
       <div style="display:flex;gap:10px;justify-content:flex-end;">
@@ -584,24 +597,29 @@
   <!-- 강의 배정 -->
   <div class="tab-panel" id="tab-assign">
     <div class="card">
-      <h3>🎬 학생별 개별 강의 배정</h3>
+      <h3>🎬 학생별 영상 접근 배정</h3>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
+        영상에 실제로 붙어있는 태그(고1/고2/고3/중1/보충강의실-선생님 등) 기준으로 학생별 접근 권한을 직접 체크합니다.<br>
+        학생이 실제로 보는 화면(videos.html)도 이 값을 그대로 사용하므로, 여기서 체크한 대로 바로 반영됩니다.
+      </div>
       <div class="form-group" style="margin-bottom:16px;">
         <label>학생 선택</label>
         <select id="assignStudent" onchange="loadStudentVideos()">
           <option value="">학생을 선택하세요</option>
         </select>
       </div>
+      <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
+        <button type="button" class="btn btn-secondary btn-sm" id="assignRecommendBtn" style="display:none;" onclick="applyRecommendedTagsForAssignTab()">💡 학년 기준 추천 선택</button>
+      </div>
       <div id="assignVideoList" style="color:var(--muted);font-size:13px;">학생을 먼저 선택해주세요.</div>
       <button class="btn btn-primary" style="margin-top:14px;" onclick="saveAssign()">배정 저장</button>
       <div class="msg" id="assignMsg"></div>
     </div>
     <div class="card">
-      <h3>⚡ 학년별 일괄 자동 배정</h3>
+      <h3>⚡ 학년별 일괄 추천 배정</h3>
       <div class="grade-map-info">
-        강의 목록에서 각 강의의 <b>카테고리(태그)</b>를 기준으로 학년에 맞는 강의를 자동 배정합니다.<br>
-        · 중등: <b>중등</b> 태그 강의<br>
-        · 고1·고2: <b>수학1, 수학2, 내신</b> 태그 강의<br>
-        · 고3·N수: <b>수학1, 수학2, 미적분, 확통, 논술</b> 태그 강의
+        학생의 <b>학년 · 관 · 담당 선생님</b> 기준으로 추천 태그를 계산해 <b>일괄로 덮어씌웁니다.</b><br>
+        기존에 개별로 추가해둔 태그가 있다면 이 작업으로 사라지니, 대상이 많을 때만 사용하세요.
       </div>
       <div class="form-row" style="max-width:400px;">
         <div class="form-group">
@@ -613,7 +631,7 @@
           </select>
         </div>
       </div>
-      <button class="btn btn-primary" onclick="bulkAutoAssign()">자동 배정 실행</button>
+      <button class="btn btn-primary" onclick="bulkAutoAssign()">일괄 추천 배정 실행</button>
       <div class="msg" id="bulkMsg"></div>
     </div>
   </div>
@@ -1352,14 +1370,91 @@ const secondaryApp = initializeSecondaryApp(firebaseConfig, 'secondary');
 const secondaryAuth = getAuth(secondaryApp);
 
 // 학년별 자동 배정 태그 맵
-const GRADE_TAG_MAP = {
-  '중1': ['중등','내신'],
-  '중2': ['중등','내신'],
-  '중3': ['중등','내신'],
-  '고1': ['수학1','수학2','내신'],
-  '고2': ['수학1','수학2','내신'],
-  '고3': ['수학1','수학2','미적분','확통','논술'],
-  'N수': ['수학1','수학2','미적분','확통','논술'],
+// ══════════════════════════════════════════
+// 영상 접근 태그 시스템 (실제 영상 tag 기준, 학생별 직접 배정)
+// ══════════════════════════════════════════
+const TAG_CATEGORIES = [
+  { label: '고1', tags: [
+      {v:'공통수학1', l:'공통수학1'},
+      {v:'공통수학2', l:'공통수학2'},
+      {v:'송팁_공통수학1', l:"Song's Tip 공통수학1"},
+      {v:'송팁_공통수학2', l:"Song's Tip 공통수학2"},
+      {v:'기출_고1_', l:'기출해설 (고1 전체)'},
+  ]},
+  { label: '고2', tags: [
+      {v:'대수', l:'대수'},
+      {v:'미적분', l:'미적분'},
+      {v:'확통', l:'확통'},
+      {v:'기출_고2_', l:'기출해설 (고2 전체)'},
+  ]},
+  { label: '고3 / N수', tags: [
+      {v:'미적분2', l:'미적분2'},
+      {v:'기하', l:'기하'},
+      {v:'수리논술', l:'수리논술'},
+      {v:'기출_고3_', l:'기출해설 (고3 전체)'},
+  ]},
+  { label: '중등', tags: [
+      {v:'중1', l:'중1'}, {v:'중2', l:'중2'}, {v:'중3', l:'중3'},
+  ]},
+  { label: '보충강의실 — 평촌관', tags: [
+      {v:'보충_평촌_송우찬T', l:'송우찬T'},
+      {v:'보충_평촌_송문찬T', l:'송문찬T'},
+      {v:'보충_평촌_김영진T', l:'김영진T'},
+      {v:'보충_평촌_신민훈T', l:'신민훈T'},
+  ]},
+  { label: '보충강의실 — 산본관', tags: [
+      {v:'보충_산본_송우찬T', l:'송우찬T'},
+      {v:'보충_산본_송문찬T', l:'송문찬T'},
+      {v:'보충_산본_공민정T', l:'공민정T'},
+      {v:'보충_산본_장미현T', l:'장미현T'},
+  ]},
+];
+
+// 학년/관/담당쌤 기준 추천 태그 (체크박스 초기값 제안용, 강제 아님)
+function recommendTags(grade, branch, teacherName) {
+  const byGrade = {
+    '고1': ['공통수학1','공통수학2','송팁_공통수학1','송팁_공통수학2','기출_고1_'],
+    '고2': ['대수','미적분','확통','기출_고2_'],
+    '고3': ['미적분2','기하','수리논술','기출_고3_'],
+    'N수': ['미적분2','기하','수리논술','기출_고3_'],
+    '중1': ['중1'], '중2': ['중2'], '중3': ['중3'],
+  };
+  const tags = [...(byGrade[grade] || [])];
+  if (teacherName && branch === '평촌관') tags.push(`보충_평촌_${teacherName}T`);
+  else if (teacherName && branch === '산본관') tags.push(`보충_산본_${teacherName}T`);
+  return tags;
+}
+
+// 체크박스 목록 렌더링
+function renderTagChecklist(containerId, checkedTags) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  const checked = new Set(checkedTags || []);
+  el.innerHTML = TAG_CATEGORIES.map(cat => `
+    <div style="margin-bottom:10px;">
+      <div style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:4px;">${cat.label}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;">
+        ${cat.tags.map(t => `
+          <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--off-white);cursor:pointer;text-transform:none;letter-spacing:0;">
+            <input type="checkbox" class="${containerId}-tag" value="${t.v}" ${checked.has(t.v) ? 'checked' : ''} style="accent-color:var(--gold);width:14px;height:14px;">
+            ${t.l}
+          </label>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function collectCheckedTags(containerId) {
+  return [...document.querySelectorAll(`.${containerId}-tag:checked`)].map(c => c.value);
+}
+
+// 추천 태그 자동 선택 버튼
+window.applyRecommendedTags = function(prefix) {
+  const grade = document.getElementById(prefix + '-grade').value;
+  const branch = document.getElementById(prefix + '-branch').value;
+  const teacherUid = document.getElementById(prefix + '-teacher').value;
+  const teacherName = teacherUid ? (teachersCache.find(t => t.id === teacherUid)?.name || '') : '';
+  const rec = new Set(recommendTags(grade, branch, teacherName));
+  document.querySelectorAll(`.${prefix}-tagChecklist-tag`).forEach(c => { c.checked = rec.has(c.value); });
 };
 
 let studentsCache = [];
@@ -1377,6 +1472,7 @@ onAuthStateChanged(auth, async (user) => {
   await loadGroupNames();
   renderFolderAccordion();
   await loadTeachers();
+  renderTagChecklist('n-tagChecklist', []);
   setupExcelDrop();
   setupTeacherExcelDrop();
 });
@@ -1417,7 +1513,7 @@ window.renderStudents = function renderStudents() {
       <span class="student-meta" style="color:var(--gold);font-size:12px;">${s.teacherName ? s.teacherName + ' T' : '미배정'}</span>
       <span class="student-meta" style="font-size:11px;">${(s.days||[]).join('·') || '-'}</span>
       <span class="student-meta" style="font-size:11px;color:${s.classGroup ? 'var(--gold)' : 'var(--muted)'};">${s.classGroup || '반 미배정'}</span>
-      <span class="student-meta" style="font-size:11px;">강의 ${(s.assignedVideos||[]).length}개</span>
+      <span class="student-meta" style="font-size:11px;">영상접근 ${(s.assignedTags||[]).length}개</span>
       <button class="btn btn-secondary btn-sm" onclick="openEditModal('${s.id}')">✏️ 수정</button>
       <button class="btn btn-danger btn-sm" onclick="deleteStudent('${s.id}','${s.name}')">삭제</button>
     </div>`).join('');
@@ -1427,12 +1523,6 @@ function renderAssignSelect() {
   const sel = document.getElementById('assignStudent');
   sel.innerHTML = '<option value="">학생을 선택하세요</option>' +
     studentsCache.map(s => `<option value="${s.id}">${s.name} (${s.grade} / ${s.branch})</option>`).join('');
-}
-
-// 학년별 자동 배정 비디오 ID 목록 계산
-function getAutoAssignVideos(grade) {
-  const tags = GRADE_TAG_MAP[grade] || [];
-  return videosCache.filter(v => tags.includes(v.tag)).map(v => v.id);
 }
 
 // ── 개별 학생 등록 ──
@@ -1445,22 +1535,22 @@ window.createStudent = async () => {
   const teacherName = teacherUid ? (teachersCache.find(t => t.id === teacherUid)?.name || '') : '';
   const days = [...document.querySelectorAll('.n-day:checked')].map(c => c.value);
   const classGroup = document.getElementById('n-classgroup').value.trim();
-  const autoAssign = document.getElementById('n-autoAssign').checked;
   if (!name || !phone) { showMsg('createMsg','이름과 전화번호를 입력해주세요.','error'); return; }
 
   try {
     const email = name + '@songmath.kr';
     const cred = await createUserWithEmailAndPassword(secondaryAuth, email, phone);
-    const assignedVideos = autoAssign ? getAutoAssignVideos(grade) : [];
+    const assignedTags = collectCheckedTags('n-tagChecklist');
     await setDoc(doc(db, 'students', cred.user.uid), {
-      name, phone, grade, branch, assignedVideos,
+      name, phone, grade, branch, assignedTags,
       teacherUid, teacherName, days, classGroup,
       createdAt: new Date().toISOString()
     });
-    showMsg('createMsg', `${name} 학생 등록 완료! (강의 ${assignedVideos.length}개 자동 배정)`, 'success');
+    showMsg('createMsg', `${name} 학생 등록 완료! (영상 접근 ${assignedTags.length}개 카테고리)`, 'success');
     document.getElementById('n-name').value = '';
     document.getElementById('n-phone').value = '';
     document.getElementById('n-classgroup').value = '';
+    renderTagChecklist('n-tagChecklist', []);
     await loadStudents();
   } catch(e) {
     showMsg('createMsg', e.code === 'auth/email-already-in-use' ? '이미 등록된 학생입니다.' : '오류: '+e.message, 'error');
@@ -1488,6 +1578,9 @@ window.openEditModal = function(uid) {
     cb.checked = (s.days || []).includes(cb.value);
   });
 
+  // 영상 접근 태그 체크박스
+  renderTagChecklist('edit-tagChecklist', s.assignedTags || []);
+
   // 메시지 초기화
   const msg = document.getElementById('editStudentMsg');
   msg.style.display = 'none';
@@ -1509,10 +1602,11 @@ window.saveEditStudent = async function() {
   const teacherName = teacherUid ? (teachersCache.find(t => t.id === teacherUid)?.name || '') : '';
   const days       = [...document.querySelectorAll('.edit-day:checked')].map(cb => cb.value);
   const classGroup = document.getElementById('edit-classgroup').value.trim();
+  const assignedTags = collectCheckedTags('edit-tagChecklist');
 
   try {
     await updateDoc(doc(db, 'students', editingStudentId), {
-      grade, branch, teacherUid, teacherName, days, classGroup
+      grade, branch, teacherUid, teacherName, days, classGroup, assignedTags
     });
     showMsg('editStudentMsg', '✅ 저장 완료!', 'success');
     await loadStudents();
@@ -1628,7 +1722,7 @@ function parseExcel(file) {
         <td>${r.branch}</td>
         <td style="color:${r.teacherUid?'var(--gold)':'#ff9090'};">${r.teacherName||'-'} ${r.teacherUid?'✅':'⚠️미매칭'}</td>
         <td>${r.days.join('·')||'-'}</td>
-        <td style="color:var(--gold);">${getAutoAssignVideos(r.grade).length}개</td>
+        <td style="color:var(--gold);">${recommendTags(r.grade, r.branch, r.teacherName).length}개</td>
       </tr>`).join('')}`;
     document.getElementById('excelPreview').style.display = 'block';
   };
@@ -1659,14 +1753,14 @@ window.uploadExcel = async () => {
     try {
       const email = row.name + '@songmath.kr';
       const cred = await createUserWithEmailAndPassword(secondaryAuth, email, phone);
-      const assignedVideos = autoAssign ? getAutoAssignVideos(row.grade) : [];
+      const assignedTags = autoAssign ? recommendTags(row.grade, row.branch, row.teacherName) : [];
       await setDoc(doc(db, 'students', cred.user.uid), {
         name: row.name, phone: phone,
         grade: row.grade, branch: row.branch,
         teacherUid: row.teacherUid || '',
         teacherName: row.teacherName || '',
         days: row.days || [],
-        assignedVideos, createdAt: new Date().toISOString()
+        assignedTags, createdAt: new Date().toISOString()
       });
       ok++;
     } catch(e) {
@@ -1834,28 +1928,37 @@ window.uploadClassAssign = async () => {
   await loadStudents();
 };
 
-// ── 강의 배정 ──
+// ── 강의 배정 (실제 tag 기준) ──
+let assignTabStudent = null; // 현재 선택된 학생 캐시 (추천 버튼용)
+
 window.loadStudentVideos = async () => {
   const uid = document.getElementById('assignStudent').value;
-  if (!uid) return;
+  const recBtn = document.getElementById('assignRecommendBtn');
+  if (!uid) {
+    document.getElementById('assignVideoList').innerHTML = '학생을 먼저 선택해주세요.';
+    if (recBtn) recBtn.style.display = 'none';
+    assignTabStudent = null;
+    return;
+  }
   const sd = await getDoc(doc(db, 'students', uid));
-  const assigned = sd.data()?.assignedVideos || [];
-  const el = document.getElementById('assignVideoList');
-  if (!videosCache.length) { el.innerHTML = '<div style="color:var(--muted);">강의 목록을 먼저 추가해주세요.</div>'; return; }
-  el.innerHTML = videosCache.map(v => `
-    <div class="assign-item">
-      <input type="checkbox" id="vc_${v.id}" value="${v.id}" ${assigned.includes(v.id)?'checked':''}>
-      <label for="vc_${v.id}" class="assign-title">${v.title}</label>
-      <span class="assign-tag">${v.tag}</span>
-    </div>`).join('');
+  assignTabStudent = { id: uid, ...sd.data() };
+  const assigned = assignTabStudent.assignedTags || [];
+  renderTagChecklist('assignVideoList', assigned);
+  if (recBtn) recBtn.style.display = '';
+};
+
+window.applyRecommendedTagsForAssignTab = function() {
+  if (!assignTabStudent) return;
+  const rec = new Set(recommendTags(assignTabStudent.grade, assignTabStudent.branch, assignTabStudent.teacherName));
+  document.querySelectorAll('.assignVideoList-tag').forEach(c => { c.checked = rec.has(c.value); });
 };
 
 window.saveAssign = async () => {
   const uid = document.getElementById('assignStudent').value;
   if (!uid) { showMsg('assignMsg','학생을 먼저 선택해주세요.','error'); return; }
-  const checked = [...document.querySelectorAll('#assignVideoList input:checked')].map(i => i.value);
-  await updateDoc(doc(db, 'students', uid), {assignedVideos: checked});
-  showMsg('assignMsg','강의 배정 저장 완료!','success');
+  const assignedTags = collectCheckedTags('assignVideoList');
+  await updateDoc(doc(db, 'students', uid), { assignedTags });
+  showMsg('assignMsg', `강의 접근 권한 저장 완료! (${assignedTags.length}개 카테고리)`, 'success');
   await loadStudents();
 };
 
@@ -1863,17 +1966,18 @@ window.bulkAutoAssign = async () => {
   const grade = document.getElementById('bulkGrade').value;
   const targets = grade === 'all' ? studentsCache : studentsCache.filter(s => s.grade === grade);
   if (!targets.length) { showMsg('bulkMsg','해당 학년 학생이 없습니다.','error'); return; }
+  if (!confirm(`${targets.length}명의 영상 접근 권한을 학년/관/담당쌤 기준 추천값으로 덮어씁니다. 계속할까요?`)) return;
 
   const btn = event.target;
   btn.disabled = true; btn.textContent = '배정 중...';
   let count = 0;
   for (const s of targets) {
-    const vids = getAutoAssignVideos(s.grade);
-    await updateDoc(doc(db, 'students', s.id), {assignedVideos: vids});
+    const assignedTags = recommendTags(s.grade, s.branch, s.teacherName);
+    await updateDoc(doc(db, 'students', s.id), { assignedTags });
     count++;
   }
-  showMsg('bulkMsg', `${count}명 자동 배정 완료!`, 'success');
-  btn.disabled = false; btn.textContent = '자동 배정 실행';
+  showMsg('bulkMsg', `${count}명 일괄 추천 배정 완료!`, 'success');
+  btn.disabled = false; btn.textContent = '일괄 추천 배정 실행';
   await loadStudents();
 };
 

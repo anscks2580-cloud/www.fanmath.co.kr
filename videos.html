@@ -733,7 +733,7 @@ onAuthStateChanged(auth, async (user) => {
 
     const { onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
 
-    // 학년별 허용 태그 계산
+    // 학년별 허용 태그 계산 (구버전 학생 데이터용 폴백 - assignedTags 없을 때만 사용)
     const GRADE_VIDEO_TAGS = {
       '중1': ['중1'], '중2': ['중2'], '중3': ['중3'],
       '고1': ['공통수학1','공통수학2','송팁_공통수학1','송팁_공통수학2'],
@@ -746,32 +746,53 @@ onAuthStateChanged(auth, async (user) => {
       '고3':'기출_고3_', 'N수':'기출_고3_',
     };
 
-    let allowedTags = null;
+    // 카테고리 버튼 표시 여부 판단용 prefix 그룹
+    const CATEGORY_MATCH = {
+      '중등':     tags => tags.some(t => ['중1','중2','중3'].includes(t)),
+      '고등':     tags => tags.some(t => ['공통수학1','공통수학2','송팁_공통수학1','송팁_공통수학2','대수','미적분','확통','미적분2','기하'].includes(t)),
+      '기출해설': tags => tags.some(t => t.startsWith('기출_')),
+      '수리논술': tags => tags.includes('수리논술'),
+      '보충강의실': tags => tags.some(t => t.startsWith('보충_')),
+    };
+
+    let allowedTags = null;    // 구버전 폴백용
+    let assignedTags = null;   // 신규: 학생별 직접 배정된 태그/prefix 목록
     if (!isAdmin && !isTeacher && studentDoc.exists()) {
       const sd = studentDoc.data();
       const grade = (sd.grade || '').trim();
       const branch = (sd.branch || '').trim();
       const teacherName = (sd.teacherName || '').trim();
 
-      // 허용 과목 prefix (공통수학1_ 로 시작하면 전부 허용)
-      const subjectPrefixes = (GRADE_VIDEO_TAGS[grade] || []);
-      const examPrefix = GRADE_EXAM_PREFIX[grade] || null;
-      const extraTags = (grade === '고3' || grade === 'N수') ? ['수리논술'] : [];
-      const isJunior = ['중1','중2','중3'].includes(grade);
+      if (Array.isArray(sd.assignedTags)) {
+        // ✅ 신규 시스템: 관리자가 직접 체크한 태그를 그대로 사용
+        assignedTags = sd.assignedTags.map(t => (t || '').trim()).filter(Boolean);
 
-      // 담임 선생님 보충강의실
-      let teacherTags = [];
-      if (teacherName) {
-        if (branch === '평촌관') teacherTags = [`보충_평촌_${teacherName}T`];
-        else if (branch === '산본관') teacherTags = [`보충_산본_${teacherName}T`];
-        else teacherTags = [`보충_평촌_${teacherName}T`, `보충_산본_${teacherName}T`];
-      }
+        // 보충강의실 자동 선택용: assignedTags 안의 보충_관_선생님T 패턴에서 추출
+        const teacherTag = assignedTags.find(t => /^보충_(평촌|산본)_.+T$/.test(t));
+        if (teacherTag) {
+          const m = teacherTag.match(/^보충_(평촌|산본)_(.+)T$/);
+          const branchFull = m[1] === '평촌' ? '평촌관' : '산본관';
+          window.myStudentTeacherInfo = { branch: branchFull, teacherName: m[2] };
+        }
+      } else {
+        // 🕰 구버전 폴백: assignedTags가 아예 없는 (마이그레이션 전) 학생은 기존 규칙으로 계산
+        const subjectPrefixes = (GRADE_VIDEO_TAGS[grade] || []);
+        const examPrefix = GRADE_EXAM_PREFIX[grade] || null;
+        const extraTags = (grade === '고3' || grade === 'N수') ? ['수리논술'] : [];
+        const isJunior = ['중1','중2','중3'].includes(grade);
 
-      allowedTags = { subjectPrefixes, examPrefix, extraTags, teacherTags, grade, isJunior };
+        let teacherTags = [];
+        if (teacherName) {
+          if (branch === '평촌관') teacherTags = [`보충_평촌_${teacherName}T`];
+          else if (branch === '산본관') teacherTags = [`보충_산본_${teacherName}T`];
+          else teacherTags = [`보충_평촌_${teacherName}T`, `보충_산본_${teacherName}T`];
+        }
 
-      // 보충강의실 자동 선택용: 담당 선생님/관 정보 저장
-      if (teacherName && (branch === '평촌관' || branch === '산본관')) {
-        window.myStudentTeacherInfo = { branch, teacherName };
+        allowedTags = { subjectPrefixes, examPrefix, extraTags, teacherTags, grade, isJunior };
+
+        if (teacherName && (branch === '평촌관' || branch === '산본관')) {
+          window.myStudentTeacherInfo = { branch, teacherName };
+        }
       }
     }
 
@@ -786,6 +807,12 @@ onAuthStateChanged(auth, async (user) => {
 
       if (isAdmin || isTeacher) {
         myVideos = allVideos;
+      } else if (assignedTags) {
+        // ✅ 신규 시스템: 정확히 일치하거나, '_'로 끝나는 prefix면 startsWith 매칭
+        myVideos = allVideos.filter(v => {
+          const tag = (v.tag || '').trim();
+          return assignedTags.some(a => tag === a || (a.endsWith('_') && tag.startsWith(a)));
+        });
       } else if (allowedTags) {
         myVideos = allVideos.filter(v => {
           const tag = (v.tag || '').trim();
@@ -807,21 +834,29 @@ onAuthStateChanged(auth, async (user) => {
       renderVideos();
     });
     // 학생이면 필터 바 접근 가능 카테고리만 표시
-    if (!isAdmin && !isTeacher && allowedTags) {
-      const grade = allowedTags.grade;
-      // 중등이면 고등/기출/수리논술/보충 숨기기, 고등이면 중등 숨기기 등
-      const isJunior = ['중1','중2','중3'].includes(grade);
-      const hasSuriNonsul = (grade === '고3' || grade === 'N수');
-      const hasTeacher = !!(allowedTags.teacherTags && allowedTags.teacherTags.length);
-
-      // 각 버튼 표시 여부
-      const btnRules = {
-        '중등':     isJunior,
-        '고등':     !isJunior,
-        '기출해설': !isJunior,
-        '수리논술': hasSuriNonsul,
-        '보충강의실': hasTeacher,
-      };
+    if (!isAdmin && !isTeacher && (assignedTags || allowedTags)) {
+      let btnRules;
+      if (assignedTags) {
+        btnRules = {
+          '중등':     CATEGORY_MATCH['중등'](assignedTags),
+          '고등':     CATEGORY_MATCH['고등'](assignedTags),
+          '기출해설': CATEGORY_MATCH['기출해설'](assignedTags),
+          '수리논술': CATEGORY_MATCH['수리논술'](assignedTags),
+          '보충강의실': CATEGORY_MATCH['보충강의실'](assignedTags),
+        };
+      } else {
+        const grade = allowedTags.grade;
+        const isJunior = ['중1','중2','중3'].includes(grade);
+        const hasSuriNonsul = (grade === '고3' || grade === 'N수');
+        const hasTeacher = !!(allowedTags.teacherTags && allowedTags.teacherTags.length);
+        btnRules = {
+          '중등':     isJunior,
+          '고등':     !isJunior,
+          '기출해설': !isJunior,
+          '수리논술': hasSuriNonsul,
+          '보충강의실': hasTeacher,
+        };
+      }
       document.querySelectorAll('#filterMain .filter-btn').forEach(btn => {
         const text = btn.textContent.trim();
         if (text === 'ALL') return;
