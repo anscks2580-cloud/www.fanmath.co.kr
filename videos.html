@@ -636,15 +636,15 @@
       <!-- 3단계: 보충강의실 선생님 서브 -->
       <div class="filter-sub filter-sub-teacher" id="sub-보충-평촌관">
         <button class="filter-btn active" onclick="selectTeacher('보충-평촌관-all',this,'보충-평촌관')">전체</button>
-        <button class="filter-btn" onclick="selectTeacher('보충-평촌관-송우찬T',this,'보충-평촌관')">송우찬T</button>
-        <button class="filter-btn" onclick="selectTeacher('보충-평촌관-송문찬T',this,'보충-평촌관')">송문찬T</button>
+        <button class="filter-btn" onclick="selectTeacher('보충-평촌관-송우찬 원장T',this,'보충-평촌관')">송우찬T</button>
+        <button class="filter-btn" onclick="selectTeacher('보충-평촌관-송문찬 원장T',this,'보충-평촌관')">송문찬T</button>
         <button class="filter-btn" onclick="selectTeacher('보충-평촌관-김영진T',this,'보충-평촌관')">김영진T</button>
         <button class="filter-btn" onclick="selectTeacher('보충-평촌관-신민훈T',this,'보충-평촌관')">신민훈T</button>
       </div>
       <div class="filter-sub filter-sub-teacher" id="sub-보충-산본관">
         <button class="filter-btn active" onclick="selectTeacher('보충-산본관-all',this,'보충-산본관')">전체</button>
-        <button class="filter-btn" onclick="selectTeacher('보충-산본관-송우찬T',this,'보충-산본관')">송우찬T</button>
-        <button class="filter-btn" onclick="selectTeacher('보충-산본관-송문찬T',this,'보충-산본관')">송문찬T</button>
+        <button class="filter-btn" onclick="selectTeacher('보충-산본관-송우찬 원장T',this,'보충-산본관')">송우찬T</button>
+        <button class="filter-btn" onclick="selectTeacher('보충-산본관-송문찬 원장T',this,'보충-산본관')">송문찬T</button>
         <button class="filter-btn" onclick="selectTeacher('보충-산본관-공민정T',this,'보충-산본관')">공민정T</button>
         <button class="filter-btn" onclick="selectTeacher('보충-산본관-장미현T',this,'보충-산본관')">장미현T</button>
       </div>
@@ -1038,12 +1038,13 @@ window.selectMain = function(main, btn) {
       if (teacherSub) {
         teacherSub.classList.add('open');
         const teacherBtn = [...teacherSub.querySelectorAll('.filter-btn')]
-          .find(b => b.textContent.trim() === `${teacherName}T`);
+          .find(b => (b.getAttribute('onclick') || '').includes(teacherName));
 
         if (teacherBtn) {
           teacherSub.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
           teacherBtn.classList.add('active');
-          currentSub = `보충-${branch}-${teacherName}T`;
+          const m = (teacherBtn.getAttribute('onclick') || '').match(/selectTeacher\('([^']+)'/);
+          if (m) currentSub = m[1];
         }
       }
     }
@@ -1197,8 +1198,14 @@ function renderVideos() {
       list = myVideos.filter(v => examTags.includes(v.tag));
     }
   } else {
-    const tags = MAIN_TAGS[currentMain] || [];
-    list = myVideos.filter(v => tags.some(t => (v.tag||'') === t || (v.tag||'').startsWith(t+'_')));
+    if (currentMain === '고등') {
+      // 고등: 단순 태그(공통수학1 등)와 교재+선생님 조합 태그(공통수학1_세쌍둥이개념_... 등) 둘 다 매칭
+      const prefixes = [...SUBJECT_PREFIXES.filter(p => !['중1','중2','중3','수리논술'].includes(p)), '송팁_공통수학1','송팁_공통수학2'];
+      list = myVideos.filter(v => prefixes.some(p => (v.tag||'') === p || (v.tag||'').startsWith(p + '_')));
+    } else {
+      const tags = MAIN_TAGS[currentMain] || [];
+      list = myVideos.filter(v => tags.some(t => (v.tag||'') === t || (v.tag||'').startsWith(t+'_')));
+    }
   }
 
   // 검색어 필터
