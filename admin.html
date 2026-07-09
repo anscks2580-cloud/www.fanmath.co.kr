@@ -4325,6 +4325,25 @@ window.toggleAttStatus = function(uid) {
   updateAttSummary();
 };
 
+// 반 정렬용: 학년 순서(초→중→고) 기준, 미배정은 맨 뒤
+const ATT_GRADE_ORDER = ['초4','초5','초6','중1','중2','중3','고1','고2','고3','N수'];
+function attClassGradeRank(arr) {
+  const idxs = arr.map(s => {
+    const i = ATT_GRADE_ORDER.indexOf(s.grade);
+    return i === -1 ? ATT_GRADE_ORDER.length : i;
+  });
+  return Math.min(...idxs);
+}
+function attSortClassKeys(byClass) {
+  return Object.keys(byClass).sort((a, b) => {
+    const aUn = a.includes('반 미배정'), bUn = b.includes('반 미배정');
+    if (aUn !== bUn) return aUn ? 1 : -1;
+    const rankDiff = attClassGradeRank(byClass[a]) - attClassGradeRank(byClass[b]);
+    if (rankDiff !== 0) return rankDiff;
+    return a.localeCompare(b, 'ko');
+  });
+}
+
 function attChipColors(status) {
   if (status === 'absent') return { bg:'#EF4444', bdr:'#B91C1C', text:'#fff', sub:'rgba(255,255,255,0.85)', title:'결석 → 클릭:해당없음' };
   if (status === 'none')   return { bg:'#FFFFFF', bdr:'#AAAAAA', text:'#555', sub:'#888',                   title:'해당없음 → 클릭:출석' };
@@ -4386,12 +4405,8 @@ window.renderAttendance = function() {
       if (!byClass[c]) byClass[c] = [];
       byClass[c].push(s);
     });
-    // 반명 가나다순 정렬, 단 "반 미배정"은 맨 뒤로
-    const sortedClasses = Object.keys(byClass).sort((a, b) => {
-      const aUn = a.includes('반 미배정'), bUn = b.includes('반 미배정');
-      if (aUn !== bUn) return aUn ? 1 : -1;
-      return a.localeCompare(b, 'ko');
-    });
+    // 반 정렬: 학년 순서(초→중→고) 기준, 단 "반 미배정"은 맨 뒤로
+    const sortedClasses = attSortClassKeys(byClass);
 
     html += `<div style="margin-bottom:20px;">
       <div style="font-size:13px;font-weight:700;color:#A78BFA;letter-spacing:1px;
@@ -4537,11 +4552,7 @@ window.downloadAttendanceImage = function() {
 
     const byClass = {};
     bStudents.forEach(s => { const c = s.classGroup || `${s.grade||'기타'} (반 미배정)`; if(!byClass[c]) byClass[c]=[]; byClass[c].push(s); });
-    const sortedClasses = Object.keys(byClass).sort((a, b) => {
-      const aUn = a.includes('반 미배정'), bUn = b.includes('반 미배정');
-      if (aUn !== bUn) return aUn ? 1 : -1;
-      return a.localeCompare(b, 'ko');
-    });
+    const sortedClasses = attSortClassKeys(byClass);
 
     sortedClasses.forEach(cls => {
       const arr = byClass[cls];
