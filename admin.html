@@ -411,6 +411,37 @@
     </div>
   </div>
 
+  <!-- 관리자 계정 수정 -->
+  <div id="editAdminModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:#1A1230;border:1px solid rgba(240,192,64,0.3);border-radius:16px;padding:28px;width:92%;max-width:460px;max-height:90vh;overflow-y:auto;">
+      <h3 style="color:var(--gold);margin-bottom:20px;font-size:16px;">✏️ 관리자 정보 수정</h3>
+
+      <div class="form-group" style="margin-bottom:12px;">
+        <label>이름 (표시용)</label>
+        <input type="text" id="edit-adm-name" placeholder="예: 송문찬">
+      </div>
+      <div class="form-group" style="margin-bottom:12px;">
+        <label>관할</label>
+        <select id="edit-adm-branch">
+          <option>평촌관</option>
+          <option>산본관</option>
+          <option>공통</option>
+        </select>
+      </div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:20px;">
+        이메일/비밀번호는 Firebase Auth 계정 정보라 여기서 바로 바꿀 수 없어요.<br>
+        비밀번호를 바꾸려면 아래 "비밀번호 재설정 메일 보내기"를 눌러주세요.
+      </div>
+      <button class="btn btn-secondary btn-sm" style="margin-bottom:20px;" onclick="sendAdminPasswordReset()">📧 비밀번호 재설정 메일 보내기</button>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;">
+        <button class="btn btn-secondary" onclick="closeEditAdminModal()">취소</button>
+        <button class="btn btn-primary" onclick="saveEditAdmin()">저장</button>
+      </div>
+      <div class="msg" id="editAdminMsg"></div>
+    </div>
+  </div>
+
   <!-- 엑셀 일괄 등록 -->
   <div class="tab-panel" id="tab-excel">
     <div class="card">
@@ -1345,7 +1376,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { initializeApp as initializeSecondaryApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, updateDoc, query, where, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
@@ -5334,6 +5365,7 @@ function renderAdmins() {
       <span class="student-meta" style="font-size:11px;color:var(--muted);">
         ${a.createdAt ? new Date(a.createdAt).toLocaleDateString('ko-KR') : ''}
       </span>
+      <button class="btn btn-secondary btn-sm" onclick="openEditAdminModal('${a.id}')">수정</button>
       <button class="btn btn-danger btn-sm" onclick="deleteAdmin('${a.id}','${(a.name||'').replace(/'/g,'\\$&')}')">삭제</button>
     </div>`).join('');
 }
@@ -5372,6 +5404,65 @@ window.createAdmin = async () => {
     showMsg('adminCreateMsg', msg, 'error');
   }
 };
+
+let editingAdminId = null;
+
+window.openEditAdminModal = function(uid) {
+  const a = adminsCache.find(ad => ad.id === uid);
+  if (!a) return;
+  editingAdminId = uid;
+
+  document.getElementById('edit-adm-name').value   = a.name || '';
+  document.getElementById('edit-adm-branch').value = a.branch || '평촌관';
+
+  const msg = document.getElementById('editAdminMsg');
+  msg.style.display = 'none';
+
+  document.getElementById('editAdminModal').style.display = 'flex';
+};
+
+window.closeEditAdminModal = function() {
+  document.getElementById('editAdminModal').style.display = 'none';
+  editingAdminId = null;
+};
+
+window.saveEditAdmin = async function() {
+  if (!editingAdminId) return;
+  const name   = document.getElementById('edit-adm-name').value.trim();
+  const branch = document.getElementById('edit-adm-branch').value;
+
+  if (!name) {
+    showMsg('editAdminMsg', '이름을 입력해주세요.', 'error'); return;
+  }
+
+  try {
+    await updateDoc(doc(db, 'admins', editingAdminId), { name, branch });
+    showMsg('editAdminMsg', '✅ 저장 완료!', 'success');
+    await loadAdmins();
+    setTimeout(() => closeEditAdminModal(), 900);
+  } catch(e) {
+    showMsg('editAdminMsg', '오류: ' + e.message, 'error');
+  }
+};
+
+window.sendAdminPasswordReset = async function() {
+  if (!editingAdminId) return;
+  const a = adminsCache.find(ad => ad.id === editingAdminId);
+  if (!a || !a.email) {
+    showMsg('editAdminMsg', '이메일 정보가 없습니다.', 'error'); return;
+  }
+  try {
+    await sendPasswordResetEmail(auth, a.email);
+    showMsg('editAdminMsg', `📧 ${a.email}(으)로 재설정 메일을 보냈습니다.`, 'success');
+  } catch(e) {
+    showMsg('editAdminMsg', '오류: ' + e.message, 'error');
+  }
+};
+
+// 모달 바깥 클릭 시 닫기
+document.getElementById('editAdminModal').addEventListener('click', function(e) {
+  if (e.target === this) closeEditAdminModal();
+});
 
 window.deleteAdmin = async (uid, name) => {
   if (!confirm(`"${name}" 관리자를 삭제하시겠습니까?\nFirestore 데이터만 삭제됩니다.\nAuth 계정은 Firebase Console에서 별도 삭제해 주세요.`)) return;
