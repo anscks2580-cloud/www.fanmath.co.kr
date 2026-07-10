@@ -584,6 +584,23 @@
       </div>
     </div>
 
+    <!-- 이번 주 클리닉 없음 -->
+    <div class="card">
+      <div class="card-title">🚫 이번 주 토요클리닉 없음</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
+        이번 주 토요일에 진행한 클리닉이 없는 경우, 아래 날짜를 확인하고 버튼을 눌러 제출해주세요.
+      </div>
+      <div class="form-group" style="margin-bottom:16px;max-width:220px;">
+        <label>날짜 <span style="color:#ff9090;">*</span></label>
+        <input type="date" id="c-none-date" style="color-scheme:dark;width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+      </div>
+      <div class="alert ok" id="clinic-none-ok"></div>
+      <div class="alert err" id="clinic-none-err"></div>
+      <div class="btn-row">
+        <button class="btn btn-outline" onclick="submitNoClinic()">🚫 이번 주 클리닉 없음 제출</button>
+      </div>
+    </div>
+
     <!-- 제출 이력 -->
     <div class="card">
       <div class="card-title">🗂 토요클리닉 제출 이력</div>
@@ -1448,6 +1465,8 @@ window.initClinicTab = function() {
   const todayStr = `${yyyy}-${mm}-${dd}`;
   const dateInput = document.getElementById('c-date');
   if (!dateInput.value) dateInput.value = todayStr;
+  const noneDateInput = document.getElementById('c-none-date');
+  if (noneDateInput && !noneDateInput.value) noneDateInput.value = todayStr;
 
   // 내 학생 목록 렌더
   clinicStudentsAll = studentsCache.filter(s => s.teacherUid === currentTeacher.uid);
@@ -1519,6 +1538,35 @@ window.submitClinic = async function() {
   }
 };
 
+window.submitNoClinic = async function() {
+  const dateVal = document.getElementById('c-none-date').value;
+  const ok  = document.getElementById('clinic-none-ok');
+  const err = document.getElementById('clinic-none-err');
+
+  if (!dateVal) { showAlert(err, '날짜를 입력해주세요.', 'err'); return; }
+
+  if (!confirm(`${dateVal} 토요클리닉이 없었던 것으로 제출할까요?`)) return;
+
+  try {
+    await addDoc(collection(db, 'satClinicReports'), {
+      teacherUid:   currentTeacher.uid,
+      teacherName:  currentTeacher.name,
+      studentId:    '',
+      studentName:  '',
+      date:         dateVal,
+      time:         '',
+      book:         '',
+      content:      '',
+      isNone:       true,
+      submittedAt:  serverTimestamp()
+    });
+    showAlert(ok, `✅ ${dateVal} 토요클리닉 없음이 제출되었습니다.`, 'ok');
+    loadClinicHistory();
+  } catch(e) {
+    showAlert(err, '제출 오류: ' + e.message, 'err');
+  }
+};
+
 window.resetClinic = function() {
   clinicSelectedId   = '';
   clinicSelectedName = '';
@@ -1546,6 +1594,17 @@ async function loadClinicHistory() {
     }
     el.innerHTML = [...snap.docs].map(d => {
       const r = d.data();
+      if (r.isNone) {
+        return `<div class="history-item" style="padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.05);">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+            <div>
+              <span style="font-weight:700;color:var(--muted);">🚫 클리닉 없음</span>
+              <span style="font-size:12px;color:var(--muted);margin-left:8px;">${r.date}</span>
+            </div>
+            <button class="btn btn-danger btn-sm" onclick="deleteClinic('${d.id}','(없음)')">삭제</button>
+          </div>
+        </div>`;
+      }
       return `<div class="history-item" style="padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.05);">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
           <div>

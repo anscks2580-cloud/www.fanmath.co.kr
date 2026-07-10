@@ -3948,7 +3948,10 @@ window.loadSatClinicAdmin = async function() {
               <th>날짜</th><th>학생명</th><th>시간</th><th>지참교재</th><th>클리닉 내용</th>
             </tr></thead>
             <tbody>
-              ${rows.map(r => `<tr>
+              ${rows.map(r => r.isNone ? `<tr>
+                <td>${r.date}</td>
+                <td colspan="4" style="color:var(--muted);">🚫 이번 주 클리닉 없음</td>
+              </tr>` : `<tr>
                 <td>${r.date}</td>
                 <td style="font-weight:600;">${r.studentName}</td>
                 <td>${r.time}</td>
@@ -3977,10 +3980,10 @@ window.downloadClinicExcel = function() {
   const rows = satClinicData.map(r => ({
     날짜:       r.date,
     선생님:     r.teacherName,
-    학생명:     r.studentName,
-    시간:       r.time,
-    지참교재:   r.book,
-    클리닉내용: r.content,
+    학생명:     r.isNone ? '없음' : r.studentName,
+    시간:       r.isNone ? '' : r.time,
+    지참교재:   r.isNone ? '' : r.book,
+    클리닉내용: r.isNone ? '이번 주 클리닉 없음' : r.content,
     제출일시:   r.submittedAt?.toDate?.()?.toLocaleDateString('ko-KR') || '',
   }));
 
