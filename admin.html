@@ -635,9 +635,10 @@
       </div>
       <div class="form-group" style="margin-bottom:16px;">
         <label>학생 선택</label>
-        <select id="assignStudent" onchange="loadStudentVideos()">
-          <option value="">학생을 선택하세요</option>
-        </select>
+        <input type="text" id="assignStudentSearch" placeholder="🔍 이름 검색..." oninput="renderAssignStudentList()"
+          style="width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;margin-bottom:8px;">
+        <input type="hidden" id="assignStudent">
+        <div id="assignStudentList" style="max-height:280px;overflow-y:auto;border:1px solid var(--border-soft);border-radius:10px;padding:6px;"></div>
       </div>
       <div style="display:flex;justify-content:flex-end;margin-bottom:6px;">
         <button type="button" class="btn btn-secondary btn-sm" id="assignRecommendBtn" style="display:none;" onclick="applyRecommendedTagsForAssignTab()">💡 학년 기준 추천 선택</button>
@@ -1577,10 +1578,37 @@ window.renderStudents = function renderStudents() {
 }
 
 function renderAssignSelect() {
-  const sel = document.getElementById('assignStudent');
-  sel.innerHTML = '<option value="">학생을 선택하세요</option>' +
-    studentsCache.map(s => `<option value="${s.id}">${s.name} (${s.grade} / ${s.branch})</option>`).join('');
+  renderAssignStudentList();
 }
+
+window.renderAssignStudentList = function() {
+  const el = document.getElementById('assignStudentList');
+  if (!el) return;
+  const q = (document.getElementById('assignStudentSearch')?.value || '').trim().toLowerCase();
+  const selectedUid = document.getElementById('assignStudent').value;
+
+  const list = studentsCache
+    .filter(s => !q || s.name.toLowerCase().includes(q))
+    .sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+
+  if (!list.length) {
+    el.innerHTML = `<div style="color:var(--muted);font-size:13px;padding:10px;">${q ? '검색 결과가 없습니다.' : '등록된 학생이 없습니다.'}</div>`;
+    return;
+  }
+
+  el.innerHTML = list.map(s => `
+    <div class="student-item" style="cursor:pointer;margin-bottom:6px;${s.id === selectedUid ? 'border-color:var(--gold);background:rgba(240,192,64,0.08);' : ''}" onclick="selectAssignStudent('${s.id}')">
+      <div class="student-name">${s.name}</div>
+      <span class="student-meta">${s.grade} · ${s.branch}</span>
+      <span class="student-meta" style="font-size:11px;">영상접근 ${(s.assignedTags||[]).length}개</span>
+    </div>`).join('');
+};
+
+window.selectAssignStudent = function(uid) {
+  document.getElementById('assignStudent').value = uid;
+  renderAssignStudentList();
+  loadStudentVideos();
+};
 
 // ── 개별 학생 등록 ──
 window.createStudent = async () => {
@@ -3948,10 +3976,7 @@ window.loadSatClinicAdmin = async function() {
               <th>날짜</th><th>학생명</th><th>시간</th><th>지참교재</th><th>클리닉 내용</th>
             </tr></thead>
             <tbody>
-              ${rows.map(r => r.isNone ? `<tr>
-                <td>${r.date}</td>
-                <td colspan="4" style="color:var(--muted);">🚫 이번 주 클리닉 없음</td>
-              </tr>` : `<tr>
+              ${rows.map(r => `<tr>
                 <td>${r.date}</td>
                 <td style="font-weight:600;">${r.studentName}</td>
                 <td>${r.time}</td>
@@ -3980,10 +4005,10 @@ window.downloadClinicExcel = function() {
   const rows = satClinicData.map(r => ({
     날짜:       r.date,
     선생님:     r.teacherName,
-    학생명:     r.isNone ? '없음' : r.studentName,
-    시간:       r.isNone ? '' : r.time,
-    지참교재:   r.isNone ? '' : r.book,
-    클리닉내용: r.isNone ? '이번 주 클리닉 없음' : r.content,
+    학생명:     r.studentName,
+    시간:       r.time,
+    지참교재:   r.book,
+    클리닉내용: r.content,
     제출일시:   r.submittedAt?.toDate?.()?.toLocaleDateString('ko-KR') || '',
   }));
 
