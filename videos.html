@@ -811,7 +811,10 @@ onAuthStateChanged(auth, async (user) => {
         // ✅ 신규 시스템: 정확히 일치하거나, '_'로 끝나는 prefix면 startsWith 매칭
         myVideos = allVideos.filter(v => {
           const tag = (v.tag || '').trim();
-          return assignedTags.some(a => tag === a || (a.endsWith('_') && tag.startsWith(a)));
+          return assignedTags.some(a => {
+            if (a.endsWith('_')) return tag.startsWith(a); // 기출_고1_ 같은 prefix 지정
+            return tag === a || tag.startsWith(a + '_');   // 공통수학2 → 공통수학2_개념편_... 도 매칭
+          });
         });
       } else if (allowedTags) {
         myVideos = allVideos.filter(v => {
