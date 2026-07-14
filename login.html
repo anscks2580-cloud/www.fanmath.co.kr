@@ -329,7 +329,8 @@ window.loginAdmin = async function() {
     }
     window.location.href = 'admin.html';
   } catch(e) {
-    showErr('a-err','이메일 또는 비밀번호가 올바르지 않습니다.');
+    console.error('관리자 로그인 에러:', e.code, e.message);
+    showErr('a-err','이메일 또는 비밀번호가 올바르지 않습니다. (' + e.code + ')');
     btn.disabled = false; btn.textContent = '관리자 로그인';
   }
 };
