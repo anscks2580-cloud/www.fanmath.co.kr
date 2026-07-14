@@ -411,7 +411,7 @@
       <div class="filter-sub filter-sub-subject" id="sub-고2">
         <button class="filter-btn active" onclick="selectSub('고2-all',this,'고2')">전체</button>
         <button class="filter-btn" onclick="selectSub('대수',this,'고2')">대수</button>
-        <button class="filter-btn" onclick="selectSub('미적분',this,'고2')">미적분</button>
+        <button class="filter-btn" onclick="selectSub('미적분1',this,'고2')">미적분1</button>
         <button class="filter-btn" onclick="selectSub('확통',this,'고2')">확통</button>
       </div>
       <div class="filter-sub filter-sub-subject" id="sub-고3">
@@ -457,15 +457,15 @@
         <button class="filter-btn" onclick="selectDetail('대수_세쌍둥이라이트_송문찬 원장T',this,'대수')">라이트 - 송문찬 원장T</button>
         <button class="filter-btn" onclick="selectDetail('대수_세쌍둥이파이널',this,'대수')">파이널</button>
       </div>
-      <div class="filter-sub filter-sub-detail" id="sub-미적분">
-        <button class="filter-btn active" onclick="selectDetail('미적분-all',this,'미적분')">전체</button>
-        <button class="filter-btn" onclick="selectDetail('미적분_세쌍둥이개념_송우찬 원장T',this,'미적분')">개념 - 송우찬 원장T</button>
-        <button class="filter-btn" onclick="selectDetail('미적분_세쌍둥이개념_송문찬 원장T',this,'미적분')">개념 - 송문찬 원장T</button>
-        <button class="filter-btn" onclick="selectDetail('미적분_세쌍둥이심화_송우찬 원장T',this,'미적분')">심화 - 송우찬 원장T</button>
-        <button class="filter-btn" onclick="selectDetail('미적분_세쌍둥이심화_송문찬 원장T',this,'미적분')">심화 - 송문찬 원장T</button>
-        <button class="filter-btn" onclick="selectDetail('미적분_세쌍둥이라이트_송우찬 원장T',this,'미적분')">라이트 - 송우찬 원장T</button>
-        <button class="filter-btn" onclick="selectDetail('미적분_세쌍둥이라이트_송문찬 원장T',this,'미적분')">라이트 - 송문찬 원장T</button>
-        <button class="filter-btn" onclick="selectDetail('미적분_세쌍둥이파이널',this,'미적분')">파이널</button>
+      <div class="filter-sub filter-sub-detail" id="sub-미적분1">
+        <button class="filter-btn active" onclick="selectDetail('미적분1-all',this,'미적분1')">전체</button>
+        <button class="filter-btn" onclick="selectDetail('미적분1_세쌍둥이개념_송우찬 원장T',this,'미적분1')">개념 - 송우찬 원장T</button>
+        <button class="filter-btn" onclick="selectDetail('미적분1_세쌍둥이개념_송문찬 원장T',this,'미적분1')">개념 - 송문찬 원장T</button>
+        <button class="filter-btn" onclick="selectDetail('미적분1_세쌍둥이심화_송우찬 원장T',this,'미적분1')">심화 - 송우찬 원장T</button>
+        <button class="filter-btn" onclick="selectDetail('미적분1_세쌍둥이심화_송문찬 원장T',this,'미적분1')">심화 - 송문찬 원장T</button>
+        <button class="filter-btn" onclick="selectDetail('미적분1_세쌍둥이라이트_송우찬 원장T',this,'미적분1')">라이트 - 송우찬 원장T</button>
+        <button class="filter-btn" onclick="selectDetail('미적분1_세쌍둥이라이트_송문찬 원장T',this,'미적분1')">라이트 - 송문찬 원장T</button>
+        <button class="filter-btn" onclick="selectDetail('미적분1_세쌍둥이파이널',this,'미적분1')">파이널</button>
       </div>
       <div class="filter-sub filter-sub-detail" id="sub-확통">
         <button class="filter-btn active" onclick="selectDetail('확통-all',this,'확통')">전체</button>
@@ -737,9 +737,9 @@ onAuthStateChanged(auth, async (user) => {
     const GRADE_VIDEO_TAGS = {
       '중1': ['중1'], '중2': ['중2'], '중3': ['중3'],
       '고1': ['공통수학1','공통수학2','송팁_공통수학1','송팁_공통수학2'],
-      '고2': ['대수','미적분','확통'],
+      '고2': ['대수','미적분1','확통'],
       '고3': ['미적분2','기하'],
-      'N수': ['미적분2','기하','미적분','확통'],
+      'N수': ['미적분2','기하','미적분1','확통'],
     };
     const GRADE_EXAM_PREFIX = {
       '고1':'기출_고1_', '고2':'기출_고2_',
@@ -749,7 +749,7 @@ onAuthStateChanged(auth, async (user) => {
     // 카테고리 버튼 표시 여부 판단용 prefix 그룹
     const CATEGORY_MATCH = {
       '중등':     tags => tags.some(t => ['중1','중2','중3'].includes(t)),
-      '고등':     tags => tags.some(t => ['공통수학1','공통수학2','송팁_공통수학1','송팁_공통수학2','대수','미적분','확통','미적분2','기하'].includes(t)),
+      '고등':     tags => tags.some(t => ['공통수학1','공통수학2','송팁_공통수학1','송팁_공통수학2','대수','미적분1','확통','미적분2','기하'].includes(t)),
       '기출해설': tags => tags.some(t => t.startsWith('기출_')),
       '수리논술': tags => tags.includes('수리논술'),
       '보충강의실': tags => tags.some(t => t.startsWith('보충_')),
@@ -909,13 +909,13 @@ const EXAM_YEARS = ['2025','2024','2023','2022','2021'];
 
 const SUBJECTS = {
   '고1': ['공통수학1','공통수학2','송팁_공통수학1','송팁_공통수학2'],
-  '고2': ['대수','미적분','확통'],
+  '고2': ['대수','미적분1','확통'],
   '고3': ['미적분2','기하'],
 };
 
 // 과목별 폴더 prefix (이 prefix로 시작하는 태그는 해당 과목 영상)
 const SUBJECT_PREFIXES = [
-  '공통수학1','공통수학2','대수','미적분','확통','미적분2','기하',
+  '공통수학1','공통수학2','대수','미적분1','확통','미적분2','기하',
   '중1','중2','중3',
   '수리논술',
   '송팁_공통수학1','송팁_공통수학2',
@@ -933,7 +933,7 @@ const TEACHER_SUBJECTS = {
   '공통수학1': ['송우찬 원장T','송문찬 원장T','공민정T'],
   '공통수학2': ['송우찬 원장T','송문찬 원장T','공민정T'],
   '대수':      ['송우찬 원장T','송문찬 원장T'],
-  '미적분':    ['송우찬 원장T','송문찬 원장T'],
+  '미적분1':    ['송우찬 원장T','송문찬 원장T'],
   '확통':      ['송우찬 원장T','송문찬 원장T'],
   '미적분2':   ['송우찬 원장T','송문찬 원장T'],
   '기하':      ['송우찬 원장T','송문찬 원장T'],
@@ -942,7 +942,7 @@ const SUBJECT_BOOKS = {
   '공통수학1': { withTeacher: BOOKS_WITH_TEACHER, noTeacher: BOOKS_NO_TEACHER },
   '공통수학2': { withTeacher: BOOKS_WITH_TEACHER, noTeacher: BOOKS_NO_TEACHER },
   '대수':      { withTeacher: BOOKS_WITH_TEACHER, noTeacher: BOOKS_NO_TEACHER },
-  '미적분':    { withTeacher: BOOKS_WITH_TEACHER, noTeacher: BOOKS_NO_TEACHER },
+  '미적분1':    { withTeacher: BOOKS_WITH_TEACHER, noTeacher: BOOKS_NO_TEACHER },
   '확통':      { withTeacher: ['세쌍둥이개념'],   noTeacher: BOOKS_NO_TEACHER },
   '미적분2':   { withTeacher: BOOKS_WITH_TEACHER, noTeacher: BOOKS_NO_TEACHER },
   '기하':      { withTeacher: ['세쌍둥이개념'],   noTeacher: BOOKS_NO_TEACHER },
@@ -974,9 +974,9 @@ const MAIN_TAGS = {
 // 학년별 허용 태그 prefix
 const GRADE_PREFIXES = {
   '고1': ['공통수학1','공통수학2','송팁_공통수학1','송팁_공통수학2'],
-  '고2': ['대수','미적분','확통'],
+  '고2': ['대수','미적분1','확통'],
   '고3': ['미적분2','기하'],
-  'N수': ['미적분2','기하','미적분','확통'],
+  'N수': ['미적분2','기하','미적분1','확통'],
 };
 
 let currentMain  = 'all';
