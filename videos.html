@@ -407,12 +407,14 @@
         <button class="filter-btn" onclick="selectSub('공통수학2',this,'고1')">공통수학2</button>
         <button class="filter-btn" onclick="selectSub('송팁_공통수학1',this,'고1')">Song's Tip 공통수학1</button>
         <button class="filter-btn" onclick="selectSub('송팁_공통수학2',this,'고1')">Song's Tip 공통수학2</button>
+        <button class="filter-btn" onclick="selectSub('대수_세쌍둥이라이트',this,'고1')">대수 (라이트)</button>
       </div>
       <div class="filter-sub filter-sub-subject" id="sub-고2">
         <button class="filter-btn active" onclick="selectSub('고2-all',this,'고2')">전체</button>
         <button class="filter-btn" onclick="selectSub('대수',this,'고2')">대수</button>
         <button class="filter-btn" onclick="selectSub('미적분1',this,'고2')">미적분1</button>
         <button class="filter-btn" onclick="selectSub('확통',this,'고2')">확통</button>
+        <button class="filter-btn" onclick="selectSub('미적분2_세쌍둥이라이트',this,'고2')">미적분2 (라이트)</button>
       </div>
       <div class="filter-sub filter-sub-subject" id="sub-고3">
         <button class="filter-btn active" onclick="selectSub('고3-all',this,'고3')">전체</button>
@@ -453,9 +455,12 @@
         <button class="filter-btn" onclick="selectDetail('대수_세쌍둥이개념_송문찬 원장T',this,'대수')">개념 - 송문찬 원장T</button>
         <button class="filter-btn" onclick="selectDetail('대수_세쌍둥이심화_송우찬 원장T',this,'대수')">심화 - 송우찬 원장T</button>
         <button class="filter-btn" onclick="selectDetail('대수_세쌍둥이심화_송문찬 원장T',this,'대수')">심화 - 송문찬 원장T</button>
-        <button class="filter-btn" onclick="selectDetail('대수_세쌍둥이라이트_송우찬 원장T',this,'대수')">라이트 - 송우찬 원장T</button>
-        <button class="filter-btn" onclick="selectDetail('대수_세쌍둥이라이트_송문찬 원장T',this,'대수')">라이트 - 송문찬 원장T</button>
         <button class="filter-btn" onclick="selectDetail('대수_세쌍둥이파이널',this,'대수')">파이널</button>
+      </div>
+      <div class="filter-sub filter-sub-detail" id="sub-대수_세쌍둥이라이트">
+        <button class="filter-btn active" onclick="selectDetail('대수_세쌍둥이라이트-all',this,'대수_세쌍둥이라이트')">전체</button>
+        <button class="filter-btn" onclick="selectDetail('대수_세쌍둥이라이트_송우찬 원장T',this,'대수_세쌍둥이라이트')">라이트 - 송우찬 원장T</button>
+        <button class="filter-btn" onclick="selectDetail('대수_세쌍둥이라이트_송문찬 원장T',this,'대수_세쌍둥이라이트')">라이트 - 송문찬 원장T</button>
       </div>
       <div class="filter-sub filter-sub-detail" id="sub-미적분1">
         <button class="filter-btn active" onclick="selectDetail('미적분1-all',this,'미적분1')">전체</button>
@@ -479,9 +484,12 @@
         <button class="filter-btn" onclick="selectDetail('미적분2_세쌍둥이개념_송문찬 원장T',this,'미적분2')">개념 - 송문찬 원장T</button>
         <button class="filter-btn" onclick="selectDetail('미적분2_세쌍둥이심화_송우찬 원장T',this,'미적분2')">심화 - 송우찬 원장T</button>
         <button class="filter-btn" onclick="selectDetail('미적분2_세쌍둥이심화_송문찬 원장T',this,'미적분2')">심화 - 송문찬 원장T</button>
-        <button class="filter-btn" onclick="selectDetail('미적분2_세쌍둥이라이트_송우찬 원장T',this,'미적분2')">라이트 - 송우찬 원장T</button>
-        <button class="filter-btn" onclick="selectDetail('미적분2_세쌍둥이라이트_송문찬 원장T',this,'미적분2')">라이트 - 송문찬 원장T</button>
         <button class="filter-btn" onclick="selectDetail('미적분2_세쌍둥이파이널',this,'미적분2')">파이널</button>
+      </div>
+      <div class="filter-sub filter-sub-detail" id="sub-미적분2_세쌍둥이라이트">
+        <button class="filter-btn active" onclick="selectDetail('미적분2_세쌍둥이라이트-all',this,'미적분2_세쌍둥이라이트')">전체</button>
+        <button class="filter-btn" onclick="selectDetail('미적분2_세쌍둥이라이트_송우찬 원장T',this,'미적분2_세쌍둥이라이트')">라이트 - 송우찬 원장T</button>
+        <button class="filter-btn" onclick="selectDetail('미적분2_세쌍둥이라이트_송문찬 원장T',this,'미적분2_세쌍둥이라이트')">라이트 - 송문찬 원장T</button>
       </div>
       <div class="filter-sub filter-sub-detail" id="sub-기하">
         <button class="filter-btn active" onclick="selectDetail('기하-all',this,'기하')">전체</button>
@@ -908,8 +916,8 @@ function showLoginPrompt() {
 const EXAM_YEARS = ['2025','2024','2023','2022','2021'];
 
 const SUBJECTS = {
-  '고1': ['공통수학1','공통수학2','송팁_공통수학1','송팁_공통수학2'],
-  '고2': ['대수','미적분1','확통'],
+  '고1': ['공통수학1','공통수학2','송팁_공통수학1','송팁_공통수학2','대수_세쌍둥이라이트'],
+  '고2': ['대수','미적분1','확통','미적분2_세쌍둥이라이트'],
   '고3': ['미적분2','기하'],
 };
 
