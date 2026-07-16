@@ -650,8 +650,8 @@
     <div class="card">
       <h3>⚡ 학년별 일괄 추천 배정</h3>
       <div class="grade-map-info">
-        학생의 <b>학년 · 관 · 담당 선생님</b> 기준으로 추천 태그를 계산해 <b>일괄로 덮어씌웁니다.</b><br>
-        기존에 개별로 추가해둔 태그가 있다면 이 작업으로 사라지니, 대상이 많을 때만 사용하세요.
+        학생의 <b>학년 · 관 · 담당 선생님</b> 기준으로 추천 태그를 계산해 <b>기존 배정에 추가(병합)</b>합니다.<br>
+        이미 개별로 추가해둔 태그는 사라지지 않고 그대로 유지됩니다.
       </div>
       <div class="form-row" style="max-width:400px;">
         <div class="form-group">
@@ -663,7 +663,7 @@
           </select>
         </div>
       </div>
-      <button class="btn btn-primary" onclick="bulkAutoAssign()">일괄 추천 배정 실행</button>
+      <button class="btn btn-primary" onclick="bulkAutoAssign()">일괄 추천 배정 추가</button>
       <div class="msg" id="bulkMsg"></div>
     </div>
   </div>
@@ -2062,18 +2062,20 @@ window.bulkAutoAssign = async () => {
   const grade = document.getElementById('bulkGrade').value;
   const targets = grade === 'all' ? studentsCache : studentsCache.filter(s => s.grade === grade);
   if (!targets.length) { showMsg('bulkMsg','해당 학년 학생이 없습니다.','error'); return; }
-  if (!confirm(`${targets.length}명의 영상 접근 권한을 학년/관/담당쌤 기준 추천값으로 덮어씁니다. 계속할까요?`)) return;
+  if (!confirm(`${targets.length}명에게 학년/관/담당쌤 기준 추천 태그를 기존 배정에 추가합니다. 계속할까요?`)) return;
 
   const btn = event.target;
   btn.disabled = true; btn.textContent = '배정 중...';
   let count = 0;
   for (const s of targets) {
-    const assignedTags = recommendTags(s.grade, s.branch, s.teacherName);
+    const existing = s.assignedTags || [];
+    const recommended = recommendTags(s.grade, s.branch, s.teacherName);
+    const assignedTags = [...new Set([...existing, ...recommended])];
     await updateDoc(doc(db, 'students', s.id), { assignedTags });
     count++;
   }
-  showMsg('bulkMsg', `${count}명 일괄 추천 배정 완료!`, 'success');
-  btn.disabled = false; btn.textContent = '일괄 추천 배정 실행';
+  showMsg('bulkMsg', `${count}명 일괄 추천 배정(추가) 완료!`, 'success');
+  btn.disabled = false; btn.textContent = '일괄 추천 배정 추가';
   await loadStudents();
 };
 
