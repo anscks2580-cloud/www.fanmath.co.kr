@@ -1438,10 +1438,19 @@ const FIXED_TAG_CATEGORIES = [
   ]},
 ];
 
-// 보충강의실 태그는 실제 영상에 붙은 tag 값을 그대로 가져와서 목록을 만든다
-// (예: "송우찬T" 대신 "송우찬 원장T" 처럼 실제와 다르게 하드코딩되는 문제를 원천 차단)
+// 보충강의실 선생님 고정 목록 — 영상이 아직 하나도 없어도 배정 탭에 항상 노출됨
+// (여기 등록된 이름/표기가 실제 정답 태그 형식. 영상 업로드 시에도 이 표기를 그대로 써야 함)
+const SUBBANG_TEACHERS = {
+  '평촌관': ['송우찬 원장T','송문찬 원장T','김영진T','신민훈T'],
+  '산본관': ['송우찬 원장T','송문찬 원장T','공민정T','장미현T'],
+};
+
+// 보충강의실 태그 목록: 고정 선생님 목록을 기본으로 항상 보여주고,
+// 혹시 고정 목록에 없는 태그로 실제 영상이 올라와 있으면 그것도 추가로 병합해서 보여준다
 function getSubbangTagGroups() {
   const seen = { 평촌관: new Set(), 산본관: new Set() };
+  SUBBANG_TEACHERS['평촌관'].forEach(t => seen.평촌관.add(`보충_평촌_${t}`));
+  SUBBANG_TEACHERS['산본관'].forEach(t => seen.산본관.add(`보충_산본_${t}`));
   videosCache.forEach(v => {
     const tag = (v.tag || '').trim();
     if (tag.startsWith('보충_평촌_')) seen.평촌관.add(tag);
@@ -1462,16 +1471,23 @@ function getTagCategories() {
   return [...FIXED_TAG_CATEGORIES, ...getSubbangTagGroups()];
 }
 
-// 영상 tag 목록에서 이름이 포함된 보충강의실 태그를 찾아준다 (원장 등 접미사 차이 흡수)
+// 담당 선생님 이름으로 정확한 보충강의실 태그를 찾아준다.
+// 고정 목록(SUBBANG_TEACHERS)을 우선 기준으로 삼아 "원장" 등 표기를 정확히 맞추고,
+// 혹시 고정 목록에 없는 이름이면 실제 영상 태그에서 찾아보고, 그것도 없으면 기본 추정값 사용.
 function findTeacherTag(branch, teacherName) {
   if (!teacherName) return null;
   const branchPrefix = branch === '평촌관' ? '보충_평촌_' : branch === '산본관' ? '보충_산본_' : null;
   if (!branchPrefix) return null;
+
+  const fixedList = SUBBANG_TEACHERS[branch] || [];
+  const fixedMatch = fixedList.find(t => t.includes(teacherName));
+  if (fixedMatch) return `${branchPrefix}${fixedMatch}`;
+
   const candidates = videosCache
     .map(v => (v.tag || '').trim())
     .filter(t => t.startsWith(branchPrefix) && t.includes(teacherName));
   if (candidates.length) return candidates[0];
-  // 실제 영상이 아직 없으면 기본 추정값으로 폴백
+  // 고정 목록에도 없고 실제 영상도 없으면 기본 추정값으로 폴백
   return `${branchPrefix}${teacherName}T`;
 }
 
