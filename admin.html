@@ -235,7 +235,20 @@
 .ps-scorebox { display:flex; justify-content:space-between; font-size:12.5px; background:#faf9fc; border-radius:6px; padding:10px 14px; color:#444; }
 .ps-scorebox span { display:inline-block; min-width:70px; }
 .ps-notebox { border:1px solid #e2e2e2; border-radius:6px; padding:14px 16px; min-height: 92px; font-size:12px; color:#bbb; line-height:2.2; background:#fcfcfd; }
-.ps-notebox .tag { float:right; font-weight:400; color:#c9a86a; font-size:10px; }
+.ps-notebox .tag { float:right; font-weight:400; color:#c9a86a; font-size:10px; }.notice-target-btn {
+  padding:9px 16px; border-radius:8px; font-size:13px; font-weight:600;
+  background:rgba(255,255,255,0.05); border:1px solid var(--border-soft);
+  color:var(--muted); cursor:pointer; font-family:inherit; transition:all 0.2s;
+}
+.notice-target-btn.active { background:rgba(240,192,64,0.15); border-color:var(--gold); color:var(--gold); }
+.notice-item {
+  padding:14px 16px; border:1px solid var(--border-soft); border-radius:10px;
+  margin-bottom:10px; background:rgba(255,255,255,0.02);
+}
+.notice-item-target {
+  display:inline-block; font-size:11px; padding:3px 8px; border-radius:6px;
+  background:rgba(240,192,64,0.12); color:var(--gold); margin-bottom:6px;
+}
 </style>
 </head>
 <body>
@@ -276,6 +289,7 @@
     <button class="admin-tab" onclick="switchTab('adminmgmt',this);initAdminMgmtTab()">🔑 관리자 계정</button>
     <button class="admin-tab" onclick="switchTab('apexvideo',this);initApexVideoTab()">🎬 에이펙스 영상</button>
     <button class="admin-tab" onclick="switchTab('consult',this);initConsultTab()">📥 상담 신청</button>
+    <button class="admin-tab" onclick="switchTab('notice',this);initNoticeTab()">📢 공지사항</button>
   </div>
 
   <!-- 학생 관리 -->
@@ -586,6 +600,64 @@
         홈페이지 상담 신청 폼(consult.html)을 통해 접수된 내역입니다. 항목을 클릭하면 원래 종이 양식과 같은 형태로 인쇄/다운로드할 수 있습니다.
       </div>
       <div id="consultList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <!-- 공지사항 (학부모 앱 발송) -->
+  <div class="tab-panel" id="tab-notice">
+    <div class="card">
+      <h3>📢 학부모 앱 공지 작성</h3>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">
+        여기서 작성한 공지는 학부모 앱에 바로 노출됩니다. 대상을 전체 / 특정 반 / 특정 학생 중에서 고를 수 있어요.
+      </div>
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">제목</label>
+        <input type="text" id="notice-title" placeholder="예: 8월 여름 특강 안내"
+          style="width:100%;padding:10px 14px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+      </div>
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">내용</label>
+        <textarea id="notice-body" rows="4" placeholder="학부모님께 전달할 내용을 입력하세요."
+          style="width:100%;padding:10px 14px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;resize:vertical;"></textarea>
+      </div>
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">보낼 대상</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button type="button" class="notice-target-btn active" data-target="all" onclick="setNoticeTarget('all')">전체 학부모</button>
+          <button type="button" class="notice-target-btn" data-target="class" onclick="setNoticeTarget('class')">특정 반</button>
+          <button type="button" class="notice-target-btn" data-target="student" onclick="setNoticeTarget('student')">특정 학생</button>
+        </div>
+      </div>
+
+      <!-- 반 선택 -->
+      <div class="form-group" id="notice-class-wrap" style="display:none;margin-bottom:14px;">
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">반 선택</label>
+        <select id="notice-classgroup"
+          style="width:100%;padding:10px 14px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;color-scheme:dark;">
+          <option value="">반을 선택하세요</option>
+        </select>
+      </div>
+
+      <!-- 학생 선택 -->
+      <div class="form-group" id="notice-student-wrap" style="display:none;margin-bottom:14px;">
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">
+          학생 선택 (<span id="notice-selected-count">0</span>명 선택됨)
+        </label>
+        <input type="text" id="notice-student-search" placeholder="학생 이름 검색" oninput="renderNoticeStudentList()"
+          style="width:100%;padding:10px 14px;margin-bottom:8px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+        <div id="notice-student-list" style="max-height:260px;overflow-y:auto;"></div>
+      </div>
+
+      <button class="btn" onclick="submitNotice()" id="notice-submit-btn">📢 공지 등록</button>
+      <div id="notice-msg" class="msg"></div>
+    </div>
+
+    <div class="card">
+      <h3>📋 등록된 공지 목록</h3>
+      <div id="noticeList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
     </div>
   </div>
 
@@ -1385,7 +1457,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { initializeApp as initializeSecondaryApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, deleteDoc, updateDoc, query, where, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, deleteDoc, updateDoc, query, where, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 
@@ -5631,6 +5703,140 @@ window.deleteApexVideo = async function(id, title) {
   } catch(e) {
     alert('삭제 오류: ' + e.message);
   }
+};
+
+// ── 공지사항 (학부모 앱 발송) ──
+let noticeTarget = 'all';
+let noticeSelectedStudentIds = new Set();
+let noticeTabInited = false;
+
+window.initNoticeTab = async function() {
+  if (!noticeTabInited) {
+    noticeTabInited = true;
+    loadNotices();
+  }
+  // 학생 로딩이 아직 안 됐으면 기다렸다가 반 목록 채우기
+  if (!studentsCache.length) await loadStudents();
+  renderNoticeClassOptions();
+  renderNoticeStudentList();
+};
+
+window.setNoticeTarget = function(target) {
+  noticeTarget = target;
+  document.querySelectorAll('.notice-target-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.target === target);
+  });
+  document.getElementById('notice-class-wrap').style.display = target === 'class' ? 'block' : 'none';
+  document.getElementById('notice-student-wrap').style.display = target === 'student' ? 'block' : 'none';
+};
+
+function renderNoticeClassOptions() {
+  const sel = document.getElementById('notice-classgroup');
+  const cur = sel.value;
+  const groups = [...new Set(studentsCache.map(s => s.classGroup).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko'));
+  sel.innerHTML = '<option value="">반을 선택하세요</option>' + groups.map(g => `<option value="${g}">${g}</option>`).join('');
+  if (groups.includes(cur)) sel.value = cur;
+}
+
+window.renderNoticeStudentList = function() {
+  const el = document.getElementById('notice-student-list');
+  const q = (document.getElementById('notice-student-search')?.value || '').trim().toLowerCase();
+  const list = studentsCache
+    .filter(s => !q || s.name.toLowerCase().includes(q))
+    .sort((a,b) => a.name.localeCompare(b.name, 'ko'));
+
+  if (!list.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:10px;">검색 결과가 없습니다.</div>';
+    return;
+  }
+
+  el.innerHTML = list.map(s => `
+    <div class="student-item" style="cursor:pointer;margin-bottom:6px;${noticeSelectedStudentIds.has(s.id) ? 'border-color:var(--gold);background:rgba(240,192,64,0.08);' : ''}" onclick="toggleNoticeStudent('${s.id}')">
+      <div class="student-name">${noticeSelectedStudentIds.has(s.id) ? '✅ ' : ''}${s.name}</div>
+      <span class="student-meta">${s.grade || ''} · ${s.branch || ''}</span>
+      <span class="student-meta" style="font-size:11px;">${s.classGroup || '반 미배정'}</span>
+    </div>`).join('');
+};
+
+window.toggleNoticeStudent = function(uid) {
+  if (noticeSelectedStudentIds.has(uid)) noticeSelectedStudentIds.delete(uid);
+  else noticeSelectedStudentIds.add(uid);
+  document.getElementById('notice-selected-count').textContent = noticeSelectedStudentIds.size;
+  renderNoticeStudentList();
+};
+
+window.submitNotice = async function() {
+  const title = document.getElementById('notice-title').value.trim();
+  const body = document.getElementById('notice-body').value.trim();
+  const btn = document.getElementById('notice-submit-btn');
+
+  if (!title || !body) { showMsg('notice-msg','제목과 내용을 입력해주세요.','error'); return; }
+
+  const payload = { title, body, target: noticeTarget, createdAt: Timestamp.now() };
+
+  if (noticeTarget === 'class') {
+    const cg = document.getElementById('notice-classgroup').value;
+    if (!cg) { showMsg('notice-msg','반을 선택해주세요.','error'); return; }
+    payload.classGroup = cg;
+  } else if (noticeTarget === 'student') {
+    if (!noticeSelectedStudentIds.size) { showMsg('notice-msg','학생을 한 명 이상 선택해주세요.','error'); return; }
+    payload.studentIds = [...noticeSelectedStudentIds];
+  }
+
+  btn.disabled = true; btn.textContent = '등록 중...';
+  try {
+    await addDoc(collection(db, 'notices'), payload);
+    document.getElementById('notice-title').value = '';
+    document.getElementById('notice-body').value = '';
+    noticeSelectedStudentIds.clear();
+    document.getElementById('notice-selected-count').textContent = '0';
+    renderNoticeStudentList();
+    showMsg('notice-msg','공지가 등록되었습니다. 학부모 앱에 바로 노출됩니다.','success');
+    loadNotices();
+  } catch (e) {
+    console.error('공지 등록 오류:', e);
+    showMsg('notice-msg','등록 중 오류가 발생했습니다: ' + e.message,'error');
+  } finally {
+    btn.disabled = false; btn.textContent = '📢 공지 등록';
+  }
+};
+
+async function loadNotices() {
+  const el = document.getElementById('noticeList');
+  try {
+    const q = query(collection(db, 'notices'), orderBy('createdAt', 'desc'));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:13px;">등록된 공지가 없습니다.</div>';
+      return;
+    }
+    el.innerHTML = snap.docs.map(d => {
+      const n = d.data();
+      const dateStr = n.createdAt?.toDate ? n.createdAt.toDate().toLocaleString('ko-KR') : '';
+      const targetLabel = n.target === 'all' ? '전체 학부모'
+        : n.target === 'class' ? `반: ${n.classGroup || '-'}`
+        : `학생 ${n.studentIds?.length || 0}명`;
+      return `
+        <div class="notice-item">
+          <span class="notice-item-target">${targetLabel}</span>
+          <div style="font-weight:700;margin-bottom:4px;">${n.title}</div>
+          <div style="font-size:13px;color:var(--off-white);white-space:pre-wrap;margin-bottom:8px;">${n.body}</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:11px;color:var(--muted);">${dateStr}</span>
+            <button class="btn btn-secondary" style="padding:5px 12px;font-size:12px;" onclick="deleteNotice('${d.id}')">삭제</button>
+          </div>
+        </div>`;
+    }).join('');
+  } catch (e) {
+    console.error('공지 목록 로딩 오류:', e);
+    el.innerHTML = '<div style="color:#ff9090;font-size:13px;">목록을 불러오지 못했습니다.</div>';
+  }
+}
+
+window.deleteNotice = async function(id) {
+  if (!confirm('이 공지를 삭제하시겠습니까? 학부모 앱에서도 사라집니다.')) return;
+  await deleteDoc(doc(db, 'notices', id));
+  loadNotices();
 };
 
 // ── 상담 신청 관리 ──
