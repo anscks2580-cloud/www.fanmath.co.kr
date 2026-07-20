@@ -625,26 +625,26 @@
 
       <div class="form-group" style="margin-bottom:14px;">
         <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">보낼 대상</label>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button type="button" class="notice-target-btn active" data-target="all" onclick="setNoticeTarget('all')">전체 학부모</button>
-          <button type="button" class="notice-target-btn" data-target="class" onclick="setNoticeTarget('class')">특정 반</button>
-          <button type="button" class="notice-target-btn" data-target="student" onclick="setNoticeTarget('student')">특정 학생</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+          <button type="button" class="notice-target-btn active" id="notice-all-btn" onclick="toggleNoticeAll()">👨‍👩‍👧 전체 학부모</button>
+        </div>
+        <div style="font-size:12px;color:var(--muted);">
+          전체가 아니라 특정 반이나 학생만 골라 보내려면, 위 "전체 학부모"를 다시 눌러서 끄고 아래에서 반/학생을 여러 개 골라 선택하면 됩니다.
         </div>
       </div>
 
-      <!-- 반 선택 -->
+      <!-- 반 선택 (다중선택 체크박스) -->
       <div class="form-group" id="notice-class-wrap" style="display:none;margin-bottom:14px;">
-        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">반 선택</label>
-        <select id="notice-classgroup"
-          style="width:100%;padding:10px 14px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;color-scheme:dark;">
-          <option value="">반을 선택하세요</option>
-        </select>
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">
+          반 선택 (<span id="notice-selected-class-count">0</span>개 선택됨, 여러 개 가능)
+        </label>
+        <div id="notice-class-list" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
       </div>
 
-      <!-- 학생 선택 -->
+      <!-- 학생 선택 (다중선택) -->
       <div class="form-group" id="notice-student-wrap" style="display:none;margin-bottom:14px;">
         <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">
-          학생 선택 (<span id="notice-selected-count">0</span>명 선택됨)
+          학생 선택 (<span id="notice-selected-count">0</span>명 선택됨, 여러 명 가능)
         </label>
         <input type="text" id="notice-student-search" placeholder="학생 이름 검색" oninput="renderNoticeStudentList()"
           style="width:100%;padding:10px 14px;margin-bottom:8px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
@@ -658,8 +658,23 @@
         <div id="notice-image-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"></div>
       </div>
 
-      <button class="btn" onclick="submitNotice()" id="notice-submit-btn">📢 공지 등록</button>
+      <button class="btn" onclick="showNoticePreview()" id="notice-submit-btn">👁 미리보기</button>
       <div id="notice-msg" class="msg"></div>
+    </div>
+
+    <!-- 미리보기 카드 (학부모 앱에 보일 실제 모습) -->
+    <div class="card" id="notice-preview-card" style="display:none;border:1px solid rgba(240,192,64,0.5);">
+      <h3>👁 학부모 앱에 이렇게 보여요</h3>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;" id="notice-preview-target"></div>
+      <div style="background:rgba(255,255,255,0.03);border-radius:12px;padding:16px 18px;">
+        <div style="font-weight:700;font-size:15px;margin-bottom:6px;" id="notice-preview-title"></div>
+        <div style="font-size:13px;color:var(--off-white);white-space:pre-wrap;line-height:1.6;margin-bottom:10px;" id="notice-preview-body"></div>
+        <div id="notice-preview-images" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+      </div>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button class="btn btn-secondary" style="flex:1;" onclick="closeNoticePreview()">✏️ 수정하기</button>
+        <button class="btn" style="flex:1;" onclick="submitNotice()" id="notice-confirm-btn">📢 이대로 등록</button>
+      </div>
     </div>
 
     <div class="card">
@@ -5713,7 +5728,8 @@ window.deleteApexVideo = async function(id, title) {
 };
 
 // ── 공지사항 (학부모 앱 발송) ──
-let noticeTarget = 'all';
+let noticeAllSelected = true;
+let noticeSelectedClassGroups = new Set();
 let noticeSelectedStudentIds = new Set();
 let noticeTabInited = false;
 
@@ -5728,13 +5744,12 @@ window.initNoticeTab = async function() {
   renderNoticeStudentList();
 };
 
-window.setNoticeTarget = function(target) {
-  noticeTarget = target;
-  document.querySelectorAll('.notice-target-btn').forEach(b => {
-    b.classList.toggle('active', b.dataset.target === target);
-  });
-  document.getElementById('notice-class-wrap').style.display = target === 'class' ? 'block' : 'none';
-  document.getElementById('notice-student-wrap').style.display = target === 'student' ? 'block' : 'none';
+// 전체 학부모 on/off. 켜면 반/학생 선택 영역 숨김, 끄면 반/학생 선택 가능.
+window.toggleNoticeAll = function() {
+  noticeAllSelected = !noticeAllSelected;
+  document.getElementById('notice-all-btn').classList.toggle('active', noticeAllSelected);
+  document.getElementById('notice-class-wrap').style.display = noticeAllSelected ? 'none' : 'block';
+  document.getElementById('notice-student-wrap').style.display = noticeAllSelected ? 'none' : 'block';
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -5752,12 +5767,23 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function renderNoticeClassOptions() {
-  const sel = document.getElementById('notice-classgroup');
-  const cur = sel.value;
+  const el = document.getElementById('notice-class-list');
   const groups = [...new Set(studentsCache.map(s => s.classGroup).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'ko'));
-  sel.innerHTML = '<option value="">반을 선택하세요</option>' + groups.map(g => `<option value="${g}">${g}</option>`).join('');
-  if (groups.includes(cur)) sel.value = cur;
+  if (!groups.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;">등록된 반이 없습니다.</div>';
+    return;
+  }
+  el.innerHTML = groups.map(g => `
+    <button type="button" class="notice-target-btn${noticeSelectedClassGroups.has(g) ? ' active' : ''}" onclick="toggleNoticeClass('${g.replace(/'/g,"\\'")}')">${g}</button>
+  `).join('');
+  document.getElementById('notice-selected-class-count').textContent = noticeSelectedClassGroups.size;
 }
+
+window.toggleNoticeClass = function(g) {
+  if (noticeSelectedClassGroups.has(g)) noticeSelectedClassGroups.delete(g);
+  else noticeSelectedClassGroups.add(g);
+  renderNoticeClassOptions();
+};
 
 window.renderNoticeStudentList = function() {
   const el = document.getElementById('notice-student-list');
@@ -5786,22 +5812,62 @@ window.toggleNoticeStudent = function(uid) {
   renderNoticeStudentList();
 };
 
+// 미리보기 열기: 유효성 검사 후 학부모 앱에 보일 모습 그대로 보여줌
+window.showNoticePreview = function() {
+  const title = document.getElementById('notice-title').value.trim();
+  const body = document.getElementById('notice-body').value.trim();
+
+  if (!title || !body) { showMsg('notice-msg','제목과 내용을 입력해주세요.','error'); return; }
+  if (!noticeAllSelected && !noticeSelectedClassGroups.size && !noticeSelectedStudentIds.size) {
+    showMsg('notice-msg','전체 학부모를 선택하거나, 반/학생을 한 개 이상 선택해주세요.','error');
+    return;
+  }
+  document.getElementById('notice-msg').style.display = 'none';
+
+  // 대상 요약 문구
+  let targetSummary = '';
+  if (noticeAllSelected) {
+    targetSummary = '👨‍👩‍👧 전체 학부모에게 발송됩니다.';
+  } else {
+    const parts = [];
+    if (noticeSelectedClassGroups.size) parts.push(`반: ${[...noticeSelectedClassGroups].join(', ')}`);
+    if (noticeSelectedStudentIds.size) {
+      const names = [...noticeSelectedStudentIds].map(id => studentsCache.find(s => s.id === id)?.name).filter(Boolean);
+      parts.push(`학생: ${names.join(', ')}`);
+    }
+    targetSummary = parts.join(' · ') + ' 학부모에게 발송됩니다.';
+  }
+  document.getElementById('notice-preview-target').textContent = targetSummary;
+  document.getElementById('notice-preview-title').textContent = title;
+  document.getElementById('notice-preview-body').textContent = body;
+
+  const imgInput = document.getElementById('notice-images');
+  const files = imgInput?.files ? [...imgInput.files] : [];
+  const imgPreviewEl = document.getElementById('notice-preview-images');
+  imgPreviewEl.innerHTML = files.map(f => `<img src="${URL.createObjectURL(f)}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,0.1);">`).join('');
+
+  document.getElementById('notice-preview-card').style.display = 'block';
+  document.getElementById('notice-preview-card').scrollIntoView({ behavior:'smooth', block:'start' });
+};
+
+window.closeNoticePreview = function() {
+  document.getElementById('notice-preview-card').style.display = 'none';
+};
+
+// 실제 등록 (미리보기에서 "이대로 등록" 눌렀을 때)
 window.submitNotice = async function() {
   const title = document.getElementById('notice-title').value.trim();
   const body = document.getElementById('notice-body').value.trim();
-  const btn = document.getElementById('notice-submit-btn');
+  const btn = document.getElementById('notice-confirm-btn');
 
-  if (!title || !body) { showMsg('notice-msg','제목과 내용을 입력해주세요.','error'); return; }
+  const payload = { title, body, createdAt: Timestamp.now() };
 
-  const payload = { title, body, target: noticeTarget, createdAt: Timestamp.now() };
-
-  if (noticeTarget === 'class') {
-    const cg = document.getElementById('notice-classgroup').value;
-    if (!cg) { showMsg('notice-msg','반을 선택해주세요.','error'); return; }
-    payload.classGroup = cg;
-  } else if (noticeTarget === 'student') {
-    if (!noticeSelectedStudentIds.size) { showMsg('notice-msg','학생을 한 명 이상 선택해주세요.','error'); return; }
-    payload.studentIds = [...noticeSelectedStudentIds];
+  if (noticeAllSelected) {
+    payload.target = 'all';
+  } else {
+    payload.target = 'custom';
+    if (noticeSelectedClassGroups.size) payload.classGroups = [...noticeSelectedClassGroups];
+    if (noticeSelectedStudentIds.size) payload.studentIds = [...noticeSelectedStudentIds];
   }
 
   btn.disabled = true; btn.textContent = '등록 중...';
@@ -5828,15 +5894,18 @@ window.submitNotice = async function() {
     if (imgInput) imgInput.value = '';
     document.getElementById('notice-image-preview').innerHTML = '';
     noticeSelectedStudentIds.clear();
+    noticeSelectedClassGroups.clear();
     document.getElementById('notice-selected-count').textContent = '0';
     renderNoticeStudentList();
+    renderNoticeClassOptions();
+    closeNoticePreview();
     showMsg('notice-msg','공지가 등록되었습니다. 학부모 앱에 바로 노출됩니다.','success');
     loadNotices();
   } catch (e) {
     console.error('공지 등록 오류:', e);
     showMsg('notice-msg','등록 중 오류가 발생했습니다: ' + e.message,'error');
   } finally {
-    btn.disabled = false; btn.textContent = '📢 공지 등록';
+    btn.disabled = false; btn.textContent = '📢 이대로 등록';
   }
 };
 
@@ -5852,9 +5921,15 @@ async function loadNotices() {
     el.innerHTML = snap.docs.map(d => {
       const n = d.data();
       const dateStr = n.createdAt?.toDate ? n.createdAt.toDate().toLocaleString('ko-KR') : '';
-      const targetLabel = n.target === 'all' ? '전체 학부모'
-        : n.target === 'class' ? `반: ${n.classGroup || '-'}`
-        : `학생 ${n.studentIds?.length || 0}명`;
+      let targetLabel;
+      if (n.target === 'all') {
+        targetLabel = '전체 학부모';
+      } else {
+        const parts = [];
+        if (n.classGroups?.length) parts.push(`반 ${n.classGroups.length}개`);
+        if (n.studentIds?.length) parts.push(`학생 ${n.studentIds.length}명`);
+        targetLabel = parts.join(' + ') || '대상 없음';
+      }
       return `
         <div class="notice-item">
           <span class="notice-item-target">${targetLabel}</span>
