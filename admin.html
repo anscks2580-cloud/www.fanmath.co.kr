@@ -651,6 +651,13 @@
         <div id="notice-student-list" style="max-height:260px;overflow-y:auto;"></div>
       </div>
 
+      <div class="form-group" style="margin-bottom:14px;">
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">사진 첨부 (선택, 여러 장 가능)</label>
+        <input type="file" id="notice-images" accept="image/*" multiple
+          style="width:100%;padding:10px 14px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
+        <div id="notice-image-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"></div>
+      </div>
+
       <button class="btn" onclick="submitNotice()" id="notice-submit-btn">📢 공지 등록</button>
       <div id="notice-msg" class="msg"></div>
     </div>
@@ -1458,7 +1465,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { initializeApp as initializeSecondaryApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, deleteDoc, updateDoc, query, where, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getStorage, ref, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { getStorage, ref, getDownloadURL, listAll, uploadBytes } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 
 const firebaseConfig = {
@@ -5730,6 +5737,20 @@ window.setNoticeTarget = function(target) {
   document.getElementById('notice-student-wrap').style.display = target === 'student' ? 'block' : 'none';
 };
 
+document.addEventListener('DOMContentLoaded', () => {
+  const imgInput = document.getElementById('notice-images');
+  if (imgInput) {
+    imgInput.addEventListener('change', () => {
+      const preview = document.getElementById('notice-image-preview');
+      preview.innerHTML = '';
+      [...imgInput.files].forEach(file => {
+        const url = URL.createObjectURL(file);
+        preview.innerHTML += `<img src="${url}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--border-soft);">`;
+      });
+    });
+  }
+});
+
 function renderNoticeClassOptions() {
   const sel = document.getElementById('notice-classgroup');
   const cur = sel.value;
@@ -5785,9 +5806,27 @@ window.submitNotice = async function() {
 
   btn.disabled = true; btn.textContent = '등록 중...';
   try {
+    const imgInput = document.getElementById('notice-images');
+    const files = imgInput?.files ? [...imgInput.files] : [];
+    if (files.length) {
+      btn.textContent = '사진 업로드 중...';
+      const imageUrls = [];
+      for (const file of files) {
+        const path = `notices/${Date.now()}_${file.name}`;
+        const fileRef = ref(storage, path);
+        await uploadBytes(fileRef, file);
+        const url = await getDownloadURL(fileRef);
+        imageUrls.push(url);
+      }
+      payload.imageUrls = imageUrls;
+      btn.textContent = '등록 중...';
+    }
+
     await addDoc(collection(db, 'notices'), payload);
     document.getElementById('notice-title').value = '';
     document.getElementById('notice-body').value = '';
+    if (imgInput) imgInput.value = '';
+    document.getElementById('notice-image-preview').innerHTML = '';
     noticeSelectedStudentIds.clear();
     document.getElementById('notice-selected-count').textContent = '0';
     renderNoticeStudentList();
@@ -5821,6 +5860,7 @@ async function loadNotices() {
           <span class="notice-item-target">${targetLabel}</span>
           <div style="font-weight:700;margin-bottom:4px;">${n.title}</div>
           <div style="font-size:13px;color:var(--off-white);white-space:pre-wrap;margin-bottom:8px;">${n.body}</div>
+          ${(n.imageUrls && n.imageUrls.length) ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">${n.imageUrls.map(u => `<img src="${u}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--border-soft);">`).join('')}</div>` : ''}
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <span style="font-size:11px;color:var(--muted);">${dateStr}</span>
             <button class="btn btn-secondary" style="padding:5px 12px;font-size:12px;" onclick="deleteNotice('${d.id}')">삭제</button>
