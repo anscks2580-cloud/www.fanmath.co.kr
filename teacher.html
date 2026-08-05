@@ -196,8 +196,8 @@
 
     <!-- 설문 작성 -->
     <div class="card">
-      <div class="card-title">✏️ 이번 주 성취도 입력
-        <span style="font-size:12px; color:var(--muted); font-weight:400;" id="weekLabel"></span>
+      <div class="card-title">✏️ 저번 주 성취도 작성
+        <span style="font-size:16px; color:var(--muted); font-weight:600;" id="weekLabel"></span>
       </div>
       <div id="editBanner" style="display:none;margin-bottom:12px;padding:8px 12px;border-radius:8px;background:rgba(240,192,64,0.12);border:1px solid rgba(240,192,64,0.4);color:var(--gold);font-size:12px;">
         ✏️ 이전 기록 수정 중 — 저장하면 해당 주 기록이 덮어써집니다.
@@ -506,7 +506,7 @@
 
       <!-- 반별 성취도 -->
       <div class="survey-item">
-        <div class="survey-label">반별 성취도 <span>이번 주 해당 반의 전반적인 성취도</span></div>
+        <div class="survey-label">반별 성취도 <span>저번 주 해당 반의 전반적인 성취도</span></div>
         <div class="rating-row" data-field="classAchieve">
           <button class="rating-btn" data-val="5" onclick="selectRating(this,'classAchieve')">상</button>
           <button class="rating-btn" data-val="4" onclick="selectRating(this,'classAchieve')">중상</button>
@@ -696,17 +696,15 @@ let weeklyReportsCache = {}; // docId -> 저장된 데이터 (수정용)
 let editingWeeklyDoc = null; // { docId, weekKey, weekLabel } 수정 중인 기록
 
 // ── 날짜 헬퍼 ──
-// 월요일 기준 주의 월~일 범위를 반환 (월요일에 접속하면 지난주, 나머지는 이번주)
+// 월요일 기준, 입력 시점 기준 "지난주"의 월~일 범위를 반환 (요일 상관없이 항상 저번 주)
 function getTargetMonday(d = new Date()) {
   const day = d.getDay(); // 0=일 1=월
   // 이번주 월요일
   const thisMonday = new Date(d);
   thisMonday.setHours(0,0,0,0);
   thisMonday.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
-  // 월요일에 접속 시 지난주 월요일
-  if (day === 1) {
-    thisMonday.setDate(thisMonday.getDate() - 7);
-  }
+  // 항상 저번주 월요일로 이동
+  thisMonday.setDate(thisMonday.getDate() - 7);
   return thisMonday;
 }
 function getWeekLabel(d = new Date()) {
