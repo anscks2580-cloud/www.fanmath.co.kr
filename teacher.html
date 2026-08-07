@@ -196,7 +196,8 @@
 
     <!-- 설문 작성 -->
     <div class="card">
-      <div class="card-title">✏️ 저번 주 성취도 작성
+      <div class="card-title" style="flex-wrap:wrap;">✏️ 성취도 작성
+        <select id="weekOffsetSelect" onchange="onWeekOffsetChange()" style="font-size:13px;font-weight:600;padding:4px 8px;border-radius:6px;background:rgba(255,255,255,0.06);color:var(--gold);border:1px solid rgba(240,192,64,0.35);"></select>
         <span style="font-size:16px; color:var(--muted); font-weight:600;" id="weekLabel"></span>
       </div>
       <div id="editBanner" style="display:none;margin-bottom:12px;padding:8px 12px;border-radius:8px;background:rgba(240,192,64,0.12);border:1px solid rgba(240,192,64,0.4);color:var(--gold);font-size:12px;">
@@ -696,30 +697,53 @@ let weeklyReportsCache = {}; // docId -> 저장된 데이터 (수정용)
 let editingWeeklyDoc = null; // { docId, weekKey, weekLabel } 수정 중인 기록
 
 // ── 날짜 헬퍼 ──
-// 월요일 기준, 입력 시점 기준 "지난주"의 월~일 범위를 반환 (요일 상관없이 항상 저번 주)
-function getTargetMonday(d = new Date()) {
+// 월요일 기준, 입력 시점 기준 "N주 전"의 월~일 범위를 반환 (요일 상관없이 항상 지난 주 단위)
+// offsetWeeks: 1=저번주(기본값), 2=2주전, 3=3주전 ...
+function getTargetMonday(d = new Date(), offsetWeeks = 1) {
   const day = d.getDay(); // 0=일 1=월
   // 이번주 월요일
   const thisMonday = new Date(d);
   thisMonday.setHours(0,0,0,0);
   thisMonday.setDate(d.getDate() - (day === 0 ? 6 : day - 1));
-  // 항상 저번주 월요일로 이동
-  thisMonday.setDate(thisMonday.getDate() - 7);
+  // offsetWeeks 만큼 과거로 이동
+  thisMonday.setDate(thisMonday.getDate() - 7 * offsetWeeks);
   return thisMonday;
 }
-function getWeekLabel(d = new Date()) {
-  const monday = getTargetMonday(d);
+function getWeekLabel(d = new Date(), offsetWeeks = 1) {
+  const monday = getTargetMonday(d, offsetWeeks);
   const sunday = new Date(monday);
   sunday.setDate(monday.getDate() + 6);
   const fmt = (dt) => `${dt.getMonth()+1}월 ${dt.getDate()}일`;
   return `${monday.getFullYear()}년 ${fmt(monday)}~${fmt(sunday)}`;
 }
-function getWeekKey(d = new Date()) {
-  const monday = getTargetMonday(d);
+function getWeekKey(d = new Date(), offsetWeeks = 1) {
+  const monday = getTargetMonday(d, offsetWeeks);
   const y = monday.getFullYear();
   const start = new Date(y, 0, 1);
   const w = Math.ceil(((monday - start) / 86400000 + start.getDay() + 1) / 7);
   return `${y}-W${String(w).padStart(2,'0')}`;
+}
+
+// ── 주간성취도: 선택 가능한 "저번 주" 오프셋 ──
+let weeklySelectedOffset = 1; // 1=저번주(기본), 2=2주전 ...
+function buildWeekOffsetOptions() {
+  const sel = document.getElementById('weekOffsetSelect');
+  if (!sel) return;
+  const labels = ['저번 주', '2주 전', '3주 전', '4주 전', '5주 전', '6주 전', '7주 전', '8주 전'];
+  sel.innerHTML = labels.map((lb, i) => {
+    const offset = i + 1;
+    const range = getWeekLabel(new Date(), offset).replace(/^\d+년\s/, '');
+    return `<option value="${offset}">${lb} (${range})</option>`;
+  }).join('');
+  sel.value = String(weeklySelectedOffset);
+}
+function onWeekOffsetChange() {
+  const sel = document.getElementById('weekOffsetSelect');
+  if (!sel) return;
+  weeklySelectedOffset = parseInt(sel.value, 10) || 1;
+  if (!editingWeeklyDoc) {
+    document.getElementById('weekLabel').textContent = getWeekLabel(new Date(), weeklySelectedOffset);
+  }
 }
 function getMonthLabel(d = new Date()) { return `${d.getFullYear()}년 ${d.getMonth()+1}월`; }
 function scoreBadge(score, total) {
@@ -747,7 +771,8 @@ function showPortal() {
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('portalScreen').style.display='block';
   document.getElementById('teacherBadge').textContent = currentTeacher.name + ' 선생님';
-  document.getElementById('weekLabel').textContent = getWeekLabel();
+  buildWeekOffsetOptions();
+  document.getElementById('weekLabel').textContent = getWeekLabel(new Date(), weeklySelectedOffset);
   const todayStr = new Date().toISOString().split('T')[0];
   document.getElementById('t-date').value = todayStr;
   const thisMonth = new Date().toISOString().slice(0,7);
@@ -944,8 +969,8 @@ window.submitWeekly = async function() {
   if (missing.length > 0) { showAlert(err, '과제 충실도, 수업태도, 클리닉 참여도를 모두 선택해주세요.', 'err'); return; }
 
   const student = studentsCache.find(s => s.id === studentId);
-  const weekKey   = editingWeeklyDoc ? editingWeeklyDoc.weekKey   : getWeekKey();
-  const weekLabel = editingWeeklyDoc ? editingWeeklyDoc.weekLabel : getWeekLabel();
+  const weekKey   = editingWeeklyDoc ? editingWeeklyDoc.weekKey   : getWeekKey(new Date(), weeklySelectedOffset);
+  const weekLabel = editingWeeklyDoc ? editingWeeklyDoc.weekLabel : getWeekLabel(new Date(), weeklySelectedOffset);
   const ratingLabel = {5:'상',4:'중상',3:'중',2:'중하',1:'하'};
   try {
     await setDoc(doc(db, 'weeklyReports', `${currentTeacher.uid}_${studentId}_${weekKey}`), {
@@ -1018,6 +1043,8 @@ window.editWeeklyReport = function(docId) {
   document.getElementById('weekLabel').textContent = `(수정 중) ${data.weekLabel}`;
   document.getElementById('weeklySubmitBtn').textContent = '수정 저장';
   document.getElementById('weeklyCancelEditBtn').style.display = '';
+  const offsetSel = document.getElementById('weekOffsetSelect');
+  if (offsetSel) offsetSel.disabled = true; // 수정 중엔 원본 주차 고정
 
   document.getElementById('tab-weekly').scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
@@ -1026,7 +1053,9 @@ window.editWeeklyReport = function(docId) {
 window.cancelEditWeekly = function() {
   editingWeeklyDoc = null;
   document.getElementById('editBanner').style.display = 'none';
-  document.getElementById('weekLabel').textContent = getWeekLabel();
+  document.getElementById('weekLabel').textContent = getWeekLabel(new Date(), weeklySelectedOffset);
+  const offsetSel = document.getElementById('weekOffsetSelect');
+  if (offsetSel) offsetSel.disabled = false;
   document.getElementById('weeklySubmitBtn').textContent = '제출하기';
   document.getElementById('weeklyCancelEditBtn').style.display = 'none';
   resetWeekly();
