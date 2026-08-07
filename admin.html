@@ -3180,7 +3180,12 @@ function renderSyncPreview(folderCount) {
 
   const unfiled = syncCandidates.filter(v => !v.tag).length;
   titleEl.innerHTML = `신규 영상 <b>${syncCandidates.length}개</b> 발견
-    ${unfiled ? `<span style="color:#ffd060;margin-left:8px;">· 폴더 미지정 ${unfiled}개 (카테고리·제목 직접 지정)</span>` : ''}`;
+    ${unfiled ? `<span style="color:#ffd060;margin-left:8px;">· 폴더 미지정 ${unfiled}개 (카테고리·제목 직접 지정)</span>` : ''}
+    <span style="margin-left:10px;">
+      <a href="#" onclick="event.preventDefault();document.querySelectorAll('.sync-check').forEach(c=>c.checked=true);">전체선택</a>
+      <span style="color:var(--muted);">/</span>
+      <a href="#" onclick="event.preventDefault();document.querySelectorAll('.sync-check').forEach(c=>c.checked=false);">전체해제</a>
+    </span>`;
 
   // 카테고리 드롭다운 옵션 HTML
   const catOptHtml = KNOWN_TAGS_SYNC.map(t => `<option value="${t}">${t}</option>`).join('');
@@ -3216,6 +3221,8 @@ function renderSyncPreview(folderCount) {
       ${items.map(v => isUnfiled ? `
         <div style="display:flex;align-items:center;gap:8px;padding:6px 4px;
           border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;flex-wrap:wrap;">
+          <input id="sync-check-${v.idx}" class="sync-check" type="checkbox" checked
+            style="flex-shrink:0;width:16px;height:16px;accent-color:var(--gold);">
           <input id="sync-title-${v.idx}" type="text" value="${(v.title||'').replace(/"/g,'&quot;')}"
             style="flex:1;min-width:160px;padding:5px 8px;background:#1A1230;border:1px solid rgba(255,255,255,0.15);
               border-radius:6px;color:var(--off-white);font-size:12px;font-family:inherit;color-scheme:dark;">
@@ -3227,6 +3234,8 @@ function renderSyncPreview(folderCount) {
         </div>` : `
         <div style="display:flex;align-items:center;gap:10px;padding:6px 4px;
           border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;">
+          <input id="sync-check-${v.idx}" class="sync-check" type="checkbox" checked
+            style="flex-shrink:0;width:16px;height:16px;accent-color:var(--gold);">
           <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${v.title}</span>
           <span style="font-size:11px;color:var(--muted);flex-shrink:0;">${v.date}</span>
         </div>`).join('')}
@@ -3238,9 +3247,12 @@ function renderSyncPreview(folderCount) {
 
 window.syncSaveAll = async () => {
   const today = new Date().toISOString().slice(0,7).replace('-','.');
-  let saved = 0, skipped = 0;
+  let saved = 0, skipped = 0, excluded = 0;
 
   for (let i = 0; i < syncCandidates.length; i++) {
+    const checkEl = document.getElementById('sync-check-' + i);
+    if (checkEl && !checkEl.checked) { excluded++; continue; }
+
     const v = syncCandidates[i];
     let tag = v.tag;
     let title = v.title;
@@ -3269,7 +3281,7 @@ window.syncSaveAll = async () => {
 
   document.getElementById('syncPreview').style.display = 'none';
   document.getElementById('syncStatus').textContent = '';
-  showMsg('syncMsg', `✅ ${saved}개 저장 완료${skipped ? ` · 카테고리 미선택 ${skipped}개 건너뜀` : ''}`, 'success');
+  showMsg('syncMsg', `✅ ${saved}개 저장 완료${skipped ? ` · 카테고리 미선택 ${skipped}개 건너뜀` : ''}${excluded ? ` · 선택 해제 ${excluded}개 제외` : ''}`, 'success');
   await loadVideos();
 };
 
