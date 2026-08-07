@@ -737,10 +737,10 @@ function buildWeekOffsetOptions() {
   }).join('');
   sel.value = String(weeklySelectedOffset);
 }
-function onWeekOffsetChange() {
+window.onWeekOffsetChange = function() {
   const sel = document.getElementById('weekOffsetSelect');
   if (!sel) return;
-  weeklySelectedOffset = parseInt(sel.value, 10) || 1;
+  weeklySelectedOffset = parseInt(sel.value, 10) || 0;
   if (!editingWeeklyDoc) {
     document.getElementById('weekLabel').textContent = getWeekLabel(new Date(), weeklySelectedOffset);
   }
