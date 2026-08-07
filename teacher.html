@@ -729,9 +729,9 @@ let weeklySelectedOffset = 1; // 1=저번주(기본), 2=2주전 ...
 function buildWeekOffsetOptions() {
   const sel = document.getElementById('weekOffsetSelect');
   if (!sel) return;
-  const labels = ['저번 주', '2주 전', '3주 전', '4주 전', '5주 전', '6주 전', '7주 전', '8주 전'];
+  const labels = ['이번 주', '저번 주', '2주 전', '3주 전', '4주 전', '5주 전', '6주 전', '7주 전'];
   sel.innerHTML = labels.map((lb, i) => {
-    const offset = i + 1;
+    const offset = i; // 0=이번주, 1=저번주 ...
     const range = getWeekLabel(new Date(), offset).replace(/^\d+년\s/, '');
     return `<option value="${offset}">${lb} (${range})</option>`;
   }).join('');
