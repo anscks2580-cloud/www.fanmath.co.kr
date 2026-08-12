@@ -288,6 +288,7 @@
     <button class="admin-tab" onclick="switchTab('records',this);initRecordsTab()">🗂 기록 조회</button>
     <button class="admin-tab" onclick="switchTab('adminmgmt',this);initAdminMgmtTab()">🔑 관리자 계정</button>
     <button class="admin-tab" onclick="switchTab('apexvideo',this);initApexVideoTab()">🎬 에이펙스 영상</button>
+    <button class="admin-tab" onclick="switchTab('promo',this);initPromoTab()">📺 홍보영상</button>
     <button class="admin-tab" onclick="switchTab('consult',this);initConsultTab()">📥 상담 신청</button>
     <button class="admin-tab" onclick="switchTab('notice',this);initNoticeTab()">📢 공지사항</button>
   </div>
@@ -589,6 +590,42 @@
     <div class="card">
       <h3>🎬 등록된 에이펙스 영상 (<span id="apexVideoCount">0</span>개)</h3>
       <div id="apexVideoList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <!-- 로비 TV 홍보영상 -->
+  <div class="tab-panel" id="tab-promo">
+
+    <div class="card">
+      <h3>📺 로비 TV 홍보영상 재생</h3>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:16px;">
+        아래 등록된 영상들이 <b style="color:var(--gold);">순서대로 무한 반복 재생</b>되는 재생 전용 페이지입니다.
+        로비 데스크탑 크롬에서 이 페이지를 열고 크롬캐스트로 TV에 화면을 미러링하면 됩니다.
+      </div>
+      <a class="btn btn-primary" href="promo-player.html" target="_blank" rel="noopener">▶ 재생 페이지 열기 (새 탭)</a>
+    </div>
+
+    <!-- 영상 등록 -->
+    <div class="card">
+      <h3>➕ 홍보영상 등록</h3>
+      <div class="form-row" style="max-width:700px;">
+        <div class="form-group">
+          <label>영상 제목</label>
+          <input type="text" id="promov-title" placeholder="예: 2026 여름특강 홍보영상">
+        </div>
+        <div class="form-group">
+          <label>Vimeo ID 또는 URL</label>
+          <input type="text" id="promov-vimeo" placeholder="예: 1234567890 또는 https://vimeo.com/1234567890">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="addPromoVideo()">영상 등록</button>
+      <div id="promoVideoAddMsg" class="msg"></div>
+    </div>
+
+    <!-- 등록된 홍보영상 목록 -->
+    <div class="card">
+      <h3>🎬 등록된 홍보영상 (<span id="promoVideoCount">0</span>개) <span style="font-size:12px;font-weight:400;color:var(--muted);">— 위에서부터 순서대로 재생됩니다</span></h3>
+      <div id="promoVideoList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
     </div>
   </div>
 
@@ -5840,6 +5877,97 @@ window.deleteApexVideo = async function(id, title) {
   try {
     await deleteDoc(doc(db, 'apexVideos', id));
     await loadApexVideos();
+  } catch(e) {
+    alert('삭제 오류: ' + e.message);
+  }
+};
+
+// ── 로비 TV 홍보영상 ──
+let promoTabInited = false;
+window.initPromoTab = function() {
+  if (promoTabInited) { loadPromoVideos(); return; }
+  promoTabInited = true;
+  loadPromoVideos();
+};
+
+window.addPromoVideo = async function() {
+  const title = document.getElementById('promov-title').value.trim();
+  const vimeo = document.getElementById('promov-vimeo').value.trim();
+  if (!title || !vimeo) {
+    showMsg('promoVideoAddMsg', '제목과 Vimeo ID를 입력해주세요.', 'error'); return;
+  }
+  const vimeoId = vimeo.match(/vimeo\.com\/(\d+)/) ? vimeo.match(/vimeo\.com\/(\d+)/)[1] : vimeo.replace(/\D/g, '');
+  if (!vimeoId) { showMsg('promoVideoAddMsg', 'Vimeo ID를 확인해주세요.', 'error'); return; }
+  try {
+    await addDoc(collection(db, 'promoVideos'), {
+      title, vimeoId, active: true,
+      order: Date.now(), createdAt: new Date().toISOString()
+    });
+    showMsg('promoVideoAddMsg', `✅ "${title}" 등록 완료`, 'success');
+    document.getElementById('promov-title').value = '';
+    document.getElementById('promov-vimeo').value = '';
+    await loadPromoVideos();
+  } catch(e) {
+    showMsg('promoVideoAddMsg', '오류: ' + e.message, 'error');
+  }
+};
+
+let promoVideosCache = [];
+async function loadPromoVideos() {
+  try {
+    const snap = await getDocs(query(collection(db, 'promoVideos'), orderBy('order', 'asc')));
+    const list = [];
+    snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+    promoVideosCache = list;
+    const countEl = document.getElementById('promoVideoCount'); if (countEl) countEl.textContent = list.length;
+    const el = document.getElementById('promoVideoList');
+    if (!list.length) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:13px;">등록된 영상이 없습니다.</div>'; return;
+    }
+    el.innerHTML = list.map((v, i) => `
+      <div class="student-item">
+        <div class="student-name">${i+1}. ${v.title}</div>
+        <span class="student-meta" style="font-size:11px;">Vimeo: ${v.vimeoId}</span>
+        <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer;">
+          <input type="checkbox" ${v.active !== false ? 'checked' : ''} onchange="togglePromoActive('${v.id}', this.checked)"> 재생목록에 포함
+        </label>
+        <button class="btn btn-sm" ${i===0 ? 'disabled' : ''} onclick="movePromoVideo(${i}, -1)">▲</button>
+        <button class="btn btn-sm" ${i===list.length-1 ? 'disabled' : ''} onclick="movePromoVideo(${i}, 1)">▼</button>
+        <button class="btn btn-danger btn-sm" onclick="deletePromoVideo('${v.id}','${(v.title||'').replace(/'/g,"\\'")}')">삭제</button>
+      </div>`).join('');
+  } catch(e) {
+    document.getElementById('promoVideoList').innerHTML =
+      `<div style="color:#ff9090;font-size:13px;">오류: ${e.message}</div>`;
+  }
+}
+
+window.togglePromoActive = async function(id, active) {
+  try {
+    await updateDoc(doc(db, 'promoVideos', id), { active });
+  } catch(e) {
+    alert('변경 오류: ' + e.message);
+    loadPromoVideos();
+  }
+};
+
+window.movePromoVideo = async function(index, dir) {
+  const other = index + dir;
+  if (other < 0 || other >= promoVideosCache.length) return;
+  const a = promoVideosCache[index], b = promoVideosCache[other];
+  try {
+    await updateDoc(doc(db, 'promoVideos', a.id), { order: b.order });
+    await updateDoc(doc(db, 'promoVideos', b.id), { order: a.order });
+    await loadPromoVideos();
+  } catch(e) {
+    alert('순서 변경 오류: ' + e.message);
+  }
+};
+
+window.deletePromoVideo = async function(id, title) {
+  if (!confirm(`"${title}" 영상을 삭제하시겠습니까?`)) return;
+  try {
+    await deleteDoc(doc(db, 'promoVideos', id));
+    await loadPromoVideos();
   } catch(e) {
     alert('삭제 오류: ' + e.message);
   }
