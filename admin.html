@@ -605,22 +605,30 @@
       <a class="btn btn-primary" href="promo-player.html" target="_blank" rel="noopener">▶ 재생 페이지 열기 (새 탭)</a>
     </div>
 
-    <!-- 영상 등록 -->
+    <!-- 영상 등록 (Vimeo 폴더 동기화) -->
     <div class="card">
-      <h3>➕ 홍보영상 등록</h3>
-      <div class="form-row" style="max-width:700px;">
+      <h3>🔄 Vimeo 폴더에서 불러오기</h3>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px;">
+        강의 영상과 같은 방식이에요. Vimeo에 <b style="color:var(--gold);">홍보영상 전용 폴더</b>를 하나 만들어두고
+        거기에 영상을 올린 뒤, 아래에서 그 폴더명을 입력하고 불러오면 새로 올라온 영상만 자동으로 찾아줍니다.
+        홍보영상을 바꾸고 싶을 땐 Vimeo 폴더에 새 영상만 올리고 여기서 다시 불러오면 돼요.
+      </div>
+      <div class="form-row" style="max-width:600px;">
         <div class="form-group">
-          <label>영상 제목</label>
-          <input type="text" id="promov-title" placeholder="예: 2026 여름특강 홍보영상">
-        </div>
-        <div class="form-group">
-          <label>Vimeo ID 또는 URL</label>
-          <input type="text" id="promov-vimeo" placeholder="예: 1234567890 또는 https://vimeo.com/1234567890">
+          <label>Vimeo 폴더명</label>
+          <input type="text" id="promo-folder-name" placeholder="예: 학원홍보영상" value="학원홍보영상">
         </div>
       </div>
-      <button class="btn btn-primary" onclick="addPromoVideo()">영상 등록</button>
-      <div id="promoVideoAddMsg" class="msg"></div>
+      <button class="btn btn-primary" onclick="syncPromoFolder()">📥 폴더에서 새 영상 불러오기</button>
+      <div id="promoSyncStatus" style="font-size:13px;color:var(--muted);margin-top:10px;"></div>
+      <div id="promoSyncPreview" style="display:none;margin-top:16px;">
+        <div id="promoSyncPreviewTitle" style="font-size:13px;margin-bottom:8px;"></div>
+        <div id="promoSyncPreviewList"></div>
+        <button class="btn btn-primary" style="margin-top:12px;" onclick="promoSyncSaveAll()">✅ 선택한 영상 재생목록에 추가</button>
+      </div>
     </div>
+
+    <div id="promoVideoAddMsg" class="msg"></div>
 
     <!-- 등록된 홍보영상 목록 -->
     <div class="card">
@@ -5890,26 +5898,83 @@ window.initPromoTab = function() {
   loadPromoVideos();
 };
 
-window.addPromoVideo = async function() {
-  const title = document.getElementById('promov-title').value.trim();
-  const vimeo = document.getElementById('promov-vimeo').value.trim();
-  if (!title || !vimeo) {
-    showMsg('promoVideoAddMsg', '제목과 Vimeo ID를 입력해주세요.', 'error'); return;
-  }
-  const vimeoId = vimeo.match(/vimeo\.com\/(\d+)/) ? vimeo.match(/vimeo\.com\/(\d+)/)[1] : vimeo.replace(/\D/g, '');
-  if (!vimeoId) { showMsg('promoVideoAddMsg', 'Vimeo ID를 확인해주세요.', 'error'); return; }
+let promoSyncCandidates = [];
+
+window.syncPromoFolder = async () => {
+  const folderName = document.getElementById('promo-folder-name').value.trim();
+  const statusEl  = document.getElementById('promoSyncStatus');
+  const previewEl = document.getElementById('promoSyncPreview');
+  previewEl.style.display = 'none';
+  promoSyncCandidates = [];
+
+  if (!folderName) { statusEl.textContent = '⚠️ 폴더명을 입력해주세요.'; return; }
+
+  statusEl.textContent = '⏳ Vimeo 폴더 목록 불러오는 중...';
   try {
-    await addDoc(collection(db, 'promoVideos'), {
-      title, vimeoId, active: true,
-      order: Date.now(), createdAt: new Date().toISOString()
-    });
-    showMsg('promoVideoAddMsg', `✅ "${title}" 등록 완료`, 'success');
-    document.getElementById('promov-title').value = '';
-    document.getElementById('promov-vimeo').value = '';
-    await loadPromoVideos();
+    const allFolders = await fetchVimeoFolders();
+    const matched = allFolders.find(f => f.name === folderName);
+    if (!matched) {
+      statusEl.textContent = `⚠️ "${folderName}" 폴더를 Vimeo에서 찾을 수 없습니다. 폴더명을 다시 확인해주세요.`;
+      return;
+    }
+
+    statusEl.textContent = `⏳ "${folderName}" 폴더 영상 확인 중...`;
+    const videos = await fetchFolderVideos(matched.uri);
+    if (!promoVideosCache.length) await loadPromoVideos();
+    const existingIds = new Set(promoVideosCache.map(v => v.vimeoId));
+
+    for (const v of videos) {
+      const vimeoId = v.uri.replace('/videos/', '');
+      if (existingIds.has(vimeoId)) continue;
+      promoSyncCandidates.push({ vimeoId, title: v.name });
+    }
+
+    if (!promoSyncCandidates.length) {
+      statusEl.textContent = `✅ 새로 추가할 영상이 없습니다. ("${folderName}" 폴더 확인 완료)`;
+      return;
+    }
+
+    statusEl.textContent = '';
+    const titleEl = document.getElementById('promoSyncPreviewTitle');
+    const listEl  = document.getElementById('promoSyncPreviewList');
+    titleEl.innerHTML = `신규 영상 <b style="color:var(--gold);">${promoSyncCandidates.length}개</b> 발견
+      <span style="margin-left:10px;">
+        <a href="#" onclick="event.preventDefault();document.querySelectorAll('.promo-sync-check').forEach(c=>c.checked=true);">전체선택</a>
+        <span style="color:var(--muted);">/</span>
+        <a href="#" onclick="event.preventDefault();document.querySelectorAll('.promo-sync-check').forEach(c=>c.checked=false);">전체해제</a>
+      </span>`;
+    listEl.innerHTML = promoSyncCandidates.map((v, i) => `
+      <div style="display:flex;align-items:center;gap:10px;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;">
+        <input id="promo-sync-check-${i}" class="promo-sync-check" type="checkbox" checked
+          style="flex-shrink:0;width:16px;height:16px;accent-color:var(--gold);">
+        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${v.title}</span>
+      </div>`).join('');
+    previewEl.style.display = 'block';
   } catch(e) {
+    statusEl.textContent = '';
     showMsg('promoVideoAddMsg', '오류: ' + e.message, 'error');
   }
+};
+
+window.promoSyncSaveAll = async () => {
+  let saved = 0;
+  const base = Date.now();
+  for (let i = 0; i < promoSyncCandidates.length; i++) {
+    const checkEl = document.getElementById('promo-sync-check-' + i);
+    if (checkEl && !checkEl.checked) continue;
+    const v = promoSyncCandidates[i];
+    try {
+      await addDoc(collection(db, 'promoVideos'), {
+        title: v.title, vimeoId: v.vimeoId, active: true,
+        order: base + i, createdAt: new Date().toISOString()
+      });
+      saved++;
+    } catch(e) { /* 개별 실패는 건너뛰고 계속 */ }
+  }
+  document.getElementById('promoSyncPreview').style.display = 'none';
+  document.getElementById('promoSyncStatus').textContent = `✅ ${saved}개 영상을 재생목록에 추가했습니다.`;
+  promoSyncCandidates = [];
+  await loadPromoVideos();
 };
 
 let promoVideosCache = [];
