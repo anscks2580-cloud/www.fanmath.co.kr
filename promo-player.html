@@ -50,7 +50,7 @@
 
 <div id="start-overlay">
   <h1>📺 송우찬수학학원 평촌관 홍보영상</h1>
-  <p>TV 화면에 자동 반복 재생을 시작합니다. 한 번만 눌러주세요.</p>
+  <p>TV 화면에 <b style="color:#f0c040;">전체화면으로</b> 자동 반복 재생을 시작합니다. 한 번만 눌러주세요.</p>
   <button id="start-btn">▶ 재생 시작</button>
 </div>
 
@@ -132,9 +132,18 @@ async function init() {
   playCurrent();
 }
 
+function requestFullscreenSafe() {
+  const el = document.documentElement;
+  const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+  if (req) {
+    req.call(el).catch(() => { /* 브라우저가 거부해도 재생은 계속 진행 */ });
+  }
+}
+
 document.getElementById('start-overlay').addEventListener('click', () => {
   if (started) return;
   started = true;
+  requestFullscreenSafe();
   document.getElementById('start-overlay').style.display = 'none';
   init();
 });
@@ -147,6 +156,13 @@ setInterval(async () => {
     if (currentIndex >= videos.length) currentIndex = 0;
   } catch (e) { /* 무시하고 기존 목록 유지 */ }
 }, 20 * 60 * 1000);
+
+// 전체화면이 실수로(Esc 등) 풀렸을 경우 자동 재요청
+document.addEventListener('fullscreenchange', () => {
+  if (started && !document.fullscreenElement) {
+    setTimeout(requestFullscreenSafe, 500);
+  }
+});
 </script>
 </body>
 </html>
