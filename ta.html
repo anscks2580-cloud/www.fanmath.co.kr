@@ -150,8 +150,10 @@ function ttDaysToGroup(days) {
   return null;
 }
 function ttGroupActiveToday(group, weekday) {
+  // weekday: 0=일 ... 6=토
+  // '화목'은 등록된 학생 요일이 화목뿐이라도, 방학특강 등으로 토요일 특강 블록(특정요일:'토')이 붙을 수 있어 토요일도 활성 대상에 포함
   if (group === '월수금') return [1,3,5].includes(weekday);
-  if (group === '화목') return [2,4].includes(weekday);
+  if (group === '화목') return [2,4,6].includes(weekday);
   if (group === '화목토') return [2,4,6].includes(weekday);
   return false;
 }
