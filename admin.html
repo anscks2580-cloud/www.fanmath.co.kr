@@ -909,6 +909,38 @@
     </div>
 
     <div class="card">
+      <h3>📊 엑셀로 한 번에 등록</h3>
+      <div class="grade-map-info">
+        <b>엑셀 파일 형식</b> (컬럼 순서 고정)<br>
+        <b style="color:var(--gold);">선생님 / 요일그룹 / 시간표종류 / 시작일 / 종료일 / 학년 / 시작시간 / 종료시간 / 구분</b><br>
+        · 요일그룹: 월수금 / 화목 / 화목토<br>
+        · 시간표종류: 방학특강 / 정규<br>
+        · 시작일·종료일: 방학특강일 때만 입력 (예: 2026-07-20), 정규는 비워두면 됨<br>
+        · 구분: 수업 / 클리닉<br>
+        · 같은 선생님+요일그룹+시간표종류+기간이면 여러 줄이 하나의 시간표로 합쳐집니다.
+      </div>
+      <div class="excel-drop" id="ttExcelDrop" onclick="document.getElementById('ttExcelInput').click()">
+        <div class="excel-drop-icon">📂</div>
+        <p>클릭하거나 파일을 여기에 드래그하세요</p>
+        <small>.xlsx / .xls 파일 지원</small>
+      </div>
+      <input type="file" id="ttExcelInput" accept=".xlsx,.xls" style="display:none;">
+      <div id="ttExcelPreview" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin:12px 0;">
+          <span style="font-size:13px;color:var(--muted);" id="ttPreviewCount"></span>
+          <button class="btn btn-primary" onclick="uploadTtExcel()">일괄 등록</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="preview-table" id="ttPreviewTable"></table>
+        </div>
+        <div class="msg" id="ttExcelMsg"></div>
+      </div>
+      <div style="margin-top:12px;">
+        <button class="btn btn-secondary" onclick="downloadTtTemplate()">양식 다운로드 (.xlsx)</button>
+      </div>
+    </div>
+
+    <div class="card">
       <h3>📋 등록된 시간표</h3>
       <div id="ttList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
     </div>
@@ -3688,8 +3720,114 @@ function ttRenderTeacherChecks() {
 window.initClinicRoomTab = async () => {
   ttRenderTeacherChecks();
   if (!document.querySelectorAll('.tt-block-row').length) ttAddBlockRow();
+  setupTtExcelDrop();
   await loadTimetables();
   renderClinicPreview();
+};
+
+let ttExcelData = [];
+let ttExcelDropInited = false;
+
+function setupTtExcelDrop() {
+  if (ttExcelDropInited) return;
+  ttExcelDropInited = true;
+  const input = document.getElementById('ttExcelInput');
+  input.addEventListener('change', e => parseTtExcel(e.target.files[0]));
+  const drop = document.getElementById('ttExcelDrop');
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
+  drop.addEventListener('drop', e => { e.preventDefault(); drop.classList.remove('drag'); parseTtExcel(e.dataTransfer.files[0]); });
+}
+
+function ttExcelDate(v) {
+  if (!v) return '';
+  if (v instanceof Date) return v.toISOString().slice(0,10);
+  const s = String(v).trim();
+  const m = s.match(/^(\d{4})[.\-\/](\d{1,2})[.\-\/](\d{1,2})/);
+  if (m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
+  return s;
+}
+function ttExcelTime(v) {
+  if (v == null || v === '') return '';
+  if (typeof v === 'number') {
+    const totalMin = Math.round(v * 24 * 60);
+    return String(Math.floor(totalMin/60)).padStart(2,'0') + ':' + String(totalMin%60).padStart(2,'0');
+  }
+  const s = String(v).trim();
+  const m = s.match(/^(\d{1,2}):(\d{2})/);
+  if (m) return m[1].padStart(2,'0') + ':' + m[2];
+  return s;
+}
+
+function parseTtExcel(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const wb = XLSX.read(e.target.result, {type:'array'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, {header:1});
+    const raw = rows.slice(1).filter(r => r[0]).map(r => ({
+      teacherName: String(r[0]||'').trim(),
+      dayGroup:    String(r[1]||'').trim(),
+      typeLabel:   String(r[2]||'').trim(),
+      validFrom:   ttExcelDate(r[3]),
+      validTo:     ttExcelDate(r[4]),
+      grade:       String(r[5]||'').trim(),
+      start:       ttExcelTime(r[6]),
+      end:         ttExcelTime(r[7]),
+      typeText:    String(r[8]||'').trim(),
+    }));
+    // 선생님+요일그룹+시간표종류+기간 기준으로 묶기
+    const groups = {};
+    raw.forEach(r => {
+      const scheduleType = r.typeLabel === '방학특강' ? 'vacation' : 'regular';
+      const key = [r.teacherName, r.dayGroup, scheduleType, r.validFrom, r.validTo].join('|');
+      if (!groups[key]) groups[key] = { teacherName:r.teacherName, dayGroup:r.dayGroup, scheduleType, validFrom:r.validFrom, validTo:r.validTo, blocks:[] };
+      groups[key].blocks.push({ grade:r.grade, start:r.start, end:r.end, type: r.typeText.includes('클리닉') ? 'clinic' : 'class' });
+    });
+    ttExcelData = Object.values(groups);
+    document.getElementById('ttPreviewCount').textContent = `${ttExcelData.length}개 시간표 (${raw.length}개 블록)`;
+    document.getElementById('ttPreviewTable').innerHTML = `
+      <tr><th>선생님</th><th>요일그룹</th><th>종류</th><th>기간</th><th>블록 수</th></tr>
+      ${ttExcelData.map(g => `<tr>
+        <td>${g.teacherName}</td><td>${g.dayGroup}</td>
+        <td>${g.scheduleType==='vacation'?'방학특강':'정규'}</td>
+        <td>${g.scheduleType==='vacation' ? (g.validFrom+' ~ '+g.validTo) : '-'}</td>
+        <td>${g.blocks.length}</td>
+      </tr>`).join('')}`;
+    document.getElementById('ttExcelPreview').style.display = 'block';
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+window.uploadTtExcel = async () => {
+  if (!ttExcelData.length) return;
+  for (const g of ttExcelData) {
+    const id = `${g.teacherName}_${g.dayGroup}_${g.scheduleType}`.replace(/[^\w가-힣]/g, '_');
+    await setDoc(doc(db, 'timetables', id), {
+      teacherName: g.teacherName, dayGroup: g.dayGroup, scheduleType: g.scheduleType,
+      validFrom: g.scheduleType === 'vacation' ? g.validFrom : null,
+      validTo: g.scheduleType === 'vacation' ? g.validTo : null,
+      blocks: g.blocks, updatedAt: new Date().toISOString()
+    });
+  }
+  showMsg('ttExcelMsg', `${ttExcelData.length}개 시간표 등록 완료!`, 'success');
+  await loadTimetables();
+  renderClinicPreview();
+};
+
+window.downloadTtTemplate = () => {
+  const ws = XLSX.utils.aoa_to_sheet([
+    ['선생님','요일그룹','시간표종류','시작일','종료일','학년','시작시간','종료시간','구분'],
+    ['신민훈T','월수금','방학특강','2026-07-20','2026-08-16','초등','14:00','15:30','수업'],
+    ['신민훈T','월수금','방학특강','2026-07-20','2026-08-16','초등','15:30','16:30','클리닉'],
+    ['신민훈T','월수금','방학특강','2026-07-20','2026-08-16','중1','15:00','15:30','클리닉'],
+    ['신민훈T','월수금','방학특강','2026-07-20','2026-08-16','중1','15:30','17:40','수업'],
+  ]);
+  ws['!cols'] = [{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:8},{wch:9},{wch:9},{wch:8}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '시간표');
+  XLSX.writeFile(wb, '선생님시간표_양식.xlsx');
 };
 
 async function loadTimetables() {
