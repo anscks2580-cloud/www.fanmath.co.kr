@@ -3906,6 +3906,7 @@ window.deleteTimetable = async (id) => {
 };
 
 // 요일그룹 판별
+function ttNormTeacher(name) { return (name || '').toString().trim().replace(/T$/,''); }
 function ttDaysToGroup(days) {
   const s = new Set(days || []);
   const eq = arr => arr.length === s.size && arr.every(d => s.has(d));
@@ -3962,7 +3963,7 @@ function computeCurrentClinicStudents(students, timetables) {
       if (!ttBlockActiveToday(b, weekday)) return;
       if (!(hhmm >= b.start && hhmm < b.end)) return;
       students.forEach(s => {
-        if (s.teacherName !== t.teacherName) return;
+        if (ttNormTeacher(s.teacherName) !== ttNormTeacher(t.teacherName)) return;
         if (ttDaysToGroup(s.days) !== t.dayGroup) return;
         if (!ttGradeMatches(s.grade, b.grade)) return;
         results.push({ name: s.name, grade: s.grade, classGroup: s.classGroup, teacherName: s.teacherName, endTime: b.end });
@@ -4007,7 +4008,7 @@ window.runClinicDiagnosis = () => {
   timetablesCache.forEach(t => {
     const activeToday = ttGroupActiveToday(t.dayGroup, weekday);
     const inRange = t.scheduleType !== 'vacation' || (t.validFrom && t.validTo && todayStr >= t.validFrom && todayStr <= t.validTo);
-    const matchedStudents = studentsCache.filter(s => s.teacherName === t.teacherName);
+    const matchedStudents = studentsCache.filter(s => ttNormTeacher(s.teacherName) === ttNormTeacher(t.teacherName));
     const rightDayGroupStudents = matchedStudents.filter(s => ttDaysToGroup(s.days) === t.dayGroup);
 
     out.push(`<div style="padding:10px 0;border-bottom:1px solid var(--border-soft);">
@@ -4021,7 +4022,7 @@ window.runClinicDiagnosis = () => {
 
   const allTeacherNames = [...new Set(timetablesCache.map(t => t.teacherName))];
   const studentTeacherNames = [...new Set(studentsCache.map(s => s.teacherName).filter(Boolean))];
-  const unmatched = allTeacherNames.filter(n => !studentTeacherNames.includes(n));
+  const unmatched = allTeacherNames.filter(n => !studentTeacherNames.some(sn => ttNormTeacher(sn) === ttNormTeacher(n)));
   if (unmatched.length) {
     out.push(`<div style="margin-top:10px;color:#ffb066;">⚠️ 시간표에는 있지만 학생 '담당선생님'에는 정확히 일치하는 이름이 없는 선생님: ${unmatched.join(', ')}<br>
     (학생 등록정보의 실제 담당선생님 값 목록: ${studentTeacherNames.join(', ') || '없음'})</div>`);

@@ -145,6 +145,7 @@ function esc(s) {
 }
 
 // 요일그룹 판별 및 시간표 계산 (admin.html과 동일한 로직)
+function ttNormTeacher(name) { return (name || '').toString().trim().replace(/T$/,''); }
 function ttDaysToGroup(days) {
   const s = new Set(days || []);
   const eq = arr => arr.length === s.size && arr.every(d => s.has(d));
@@ -198,7 +199,7 @@ function computeCurrentClinicStudents(students, timetables) {
       const isUpcoming = b.start > hhmm;
       if (!isNow && !isUpcoming) return;
       students.forEach(s => {
-        if (s.teacherName !== t.teacherName) return;
+        if (ttNormTeacher(s.teacherName) !== ttNormTeacher(t.teacherName)) return;
         if (ttDaysToGroup(s.days) !== t.dayGroup) return;
         if (!ttGradeMatches(s.grade, b.grade)) return;
         const row = { name: s.name, grade: s.grade, classGroup: s.classGroup, teacherName: s.teacherName, startTime: b.start, endTime: b.end };
