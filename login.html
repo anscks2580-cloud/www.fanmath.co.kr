@@ -121,6 +121,7 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
     <div class="login-tabs">
       <button class="login-tab active" onclick="switchTab('student',this)">학생</button>
       <button class="login-tab" onclick="switchTab('teacher',this)">선생님</button>
+      <button class="login-tab" onclick="switchTab('ta',this)">조교</button>
       <button class="login-tab" onclick="switchTab('admin',this)">관리자</button>
     </div>
 
@@ -186,6 +187,23 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
       </div>
       <button class="btn-login" id="t-btn" onclick="loginTeacher()">선생님 로그인</button>
       <div class="error-msg" id="t-err"></div>
+    </div>
+
+    <!-- 조교 탭 -->
+    <div class="tab-form" id="form-ta">
+      <div class="form-group">
+        <label>아이디</label>
+        <input type="text" id="ta-name" placeholder="" autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label>비밀번호</label>
+        <input type="password" id="ta-pw" placeholder="" autocomplete="current-password">
+      </div>
+      <div class="login-options">
+        <span></span>
+      </div>
+      <button class="btn-login" id="ta-btn" onclick="loginTA()">조교 로그인</button>
+      <div class="error-msg" id="ta-err"></div>
     </div>
 
     <!-- 관리자 탭 -->
@@ -294,7 +312,7 @@ window.loginTeacher = async function() {
     await setPersistence(auth, persistence);
     const cred = await signInWithEmailAndPassword(auth, name + '@songmath.kr', pw);
     const teacherDoc = await getDoc(doc(db, 'teachers', cred.user.uid));
-    if (!teacherDoc.exists()) {
+    if (!teacherDoc.exists() || teacherDoc.data().role === 'ta') {
       showErr('t-err', '선생님 계정이 아닙니다. 원장님께 문의해주세요.');
       btn.disabled = false; btn.textContent = '선생님 로그인';
       return;
@@ -303,6 +321,34 @@ window.loginTeacher = async function() {
   } catch(e) {
     showErr('t-err', '이름 또는 비밀번호가 올바르지 않습니다.');
     btn.disabled = false; btn.textContent = '선생님 로그인';
+  }
+};
+
+// 조교 로그인
+window.loginTA = async function() {
+  const name = document.getElementById('ta-name').value.trim();
+  const pw   = document.getElementById('ta-pw').value;
+  const btn  = document.getElementById('ta-btn');
+
+  if (!name || !pw) { showErr('ta-err', '이름과 비밀번호를 입력해주세요.'); return; }
+
+  btn.disabled = true; btn.textContent = '로그인 중...';
+
+  const persistence = browserSessionPersistence;
+
+  try {
+    await setPersistence(auth, persistence);
+    const cred = await signInWithEmailAndPassword(auth, name + '@songmath.kr', pw);
+    const teacherDoc = await getDoc(doc(db, 'teachers', cred.user.uid));
+    if (!teacherDoc.exists() || teacherDoc.data().role !== 'ta') {
+      showErr('ta-err', '조교 계정이 아닙니다. 원장님께 문의해주세요.');
+      btn.disabled = false; btn.textContent = '조교 로그인';
+      return;
+    }
+    window.location.href = 'ta.html';
+  } catch(e) {
+    showErr('ta-err', '이름 또는 비밀번호가 올바르지 않습니다.');
+    btn.disabled = false; btn.textContent = '조교 로그인';
   }
 };
 
@@ -399,6 +445,8 @@ document.getElementById('s-name').addEventListener('keydown', e => { if(e.key===
 document.getElementById('s-pw').addEventListener('keydown', e => { if(e.key==='Enter') loginStudent(); });
 document.getElementById('t-name').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('t-pw').focus(); });
 document.getElementById('t-pw').addEventListener('keydown', e => { if(e.key==='Enter') loginTeacher(); });
+document.getElementById('ta-name').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('ta-pw').focus(); });
+document.getElementById('ta-pw').addEventListener('keydown', e => { if(e.key==='Enter') loginTA(); });
 document.getElementById('a-pw').addEventListener('keydown', e => { if(e.key==='Enter') loginAdmin(); });
 </script>
 </body>

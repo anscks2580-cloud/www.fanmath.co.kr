@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>조교 | 송우찬수학학원</title>
+<link rel="stylesheet" href="style.css">
+<style>
+.admin-wrap { max-width:960px; margin:0 auto; padding:100px 24px 96px; }
+.admin-header { margin-bottom:40px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px; }
+.admin-header h1 { font-size:26px; font-weight:700; margin-bottom:6px; }
+.admin-header p { font-size:13px; color:var(--muted); }
+.logout-btn { padding:8px 16px; background:rgba(255,255,255,0.06); border:1px solid var(--border-soft); border-radius:8px; color:var(--muted); font-size:12px; cursor:pointer; font-family:inherit; }
+.logout-btn:hover { color:var(--off-white); border-color:rgba(255,255,255,0.3); }
+
+.admin-tabs { display:flex; gap:0; border-bottom:2px solid var(--border-soft); margin-bottom:32px; flex-wrap:wrap; }
+.admin-tab {
+  padding:11px 24px; background:none; border:none;
+  font-size:13px; font-weight:600; font-family:inherit;
+  color:var(--muted); cursor:pointer; position:relative; transition:color 0.2s;
+}
+.admin-tab::after {
+  content:''; position:absolute; bottom:-2px; left:0; right:0;
+  height:2px; background:var(--gold);
+  transform:scaleX(0); transition:transform 0.2s;
+}
+.admin-tab.active { color:var(--gold); }
+.admin-tab.active::after { transform:scaleX(1); }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+
+.card { background:var(--bg-card); border:1px solid var(--border-soft); border-radius:14px; padding:26px; margin-bottom:20px; }
+.card h3 { font-size:15px; font-weight:600; margin-bottom:18px; color:var(--gold); }
+
+.btn { padding:10px 20px; border:none; border-radius:8px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; transition:all 0.2s; }
+.btn-primary { background:var(--gold); color:var(--bg); }
+.btn-primary:hover { background:#f5cc50; }
+.btn-secondary { background:rgba(255,255,255,0.08); color:var(--off-white); border:1px solid var(--border-soft); text-decoration:none; display:inline-block; }
+.btn-secondary:hover { background:rgba(255,255,255,0.14); }
+.btn-sm { padding:6px 13px; font-size:12px; }
+
+.item {
+  display:flex; align-items:center; gap:12px; flex-wrap:wrap;
+  padding:14px 16px; background:rgba(255,255,255,0.03);
+  border:1px solid var(--border-soft); border-radius:10px; margin-bottom:8px;
+}
+.item-name { font-weight:600; font-size:14px; flex:1; min-width:120px; }
+.item-meta { font-size:12px; color:var(--muted); }
+.badge { font-size:11px; background:rgba(240,192,64,0.1); color:var(--gold); padding:3px 9px; border-radius:5px; font-weight:600; }
+.badge-overdue { background:rgba(255,80,80,0.15); color:#ff9090; }
+.empty { color:var(--muted); font-size:13px; }
+
+@media(max-width:640px){ .admin-tabs{ overflow-x:auto; flex-wrap:nowrap; } }
+</style>
+</head>
+<body>
+<div class="admin-wrap">
+  <div class="admin-header">
+    <div>
+      <h1>조교 페이지</h1>
+      <p id="taName">불러오는 중...</p>
+    </div>
+    <button class="logout-btn" onclick="doLogout()">로그아웃</button>
+  </div>
+
+  <div class="admin-tabs">
+    <button class="admin-tab active" onclick="switchTab('clinicroom',this)">🏥 클리닉실 현황</button>
+    <button class="admin-tab" onclick="switchTab('homework',this)">📚 숙제 확인</button>
+    <button class="admin-tab" onclick="switchTab('answerkeys',this)">🗂 답지</button>
+    <button class="admin-tab" onclick="switchTab('tasks',this)">📝 작업물</button>
+  </div>
+
+  <!-- 클리닉실 현황 -->
+  <div class="tab-panel active" id="tab-clinicroom">
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+        <h3 style="margin:0;">🏥 현재 클리닉실 인원 (<span id="crCount">0</span>명)</h3>
+        <button class="btn btn-secondary btn-sm" onclick="loadClinicRoom()">🔄 새로고침</button>
+      </div>
+      <div id="crList"><div class="empty">불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <!-- 숙제 확인 -->
+  <div class="tab-panel" id="tab-homework">
+    <div class="card">
+      <h3>📚 업로드된 숙제 (<span id="hwCount">0</span>건)</h3>
+      <div id="hwList"><div class="empty">불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <!-- 답지 -->
+  <div class="tab-panel" id="tab-answerkeys">
+    <div class="card">
+      <h3>🗂 채점용 답지 (네이버 마이박스 · Vimeo)</h3>
+      <div id="akList"><div class="empty">불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <!-- 작업물 -->
+  <div class="tab-panel" id="tab-tasks">
+    <div class="card">
+      <h3>📝 조교 작업물 (네이버 마이박스)</h3>
+      <div id="ttList"><div class="empty">불러오는 중...</div></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
+  authDomain: "songmath.firebaseapp.com",
+  projectId: "songmath",
+  storageBucket: "songmath.firebasestorage.app",
+  messagingSenderId: "936295436575",
+  appId: "1:936295436575:web:d1e201508719850cfbe02a"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+window.switchTab = function(id, btn) {
+  document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+};
+
+window.doLogout = async function() {
+  await signOut(auth);
+  window.location.href = 'login.html';
+};
+
+function esc(s) {
+  return (s || '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// 클리닉실 현황
+window.loadClinicRoom = async function() {
+  const el = document.getElementById('crList');
+  el.innerHTML = '<div class="empty">불러오는 중...</div>';
+  const snap = await getDocs(query(collection(db, 'clinicRoom'), orderBy('endTime', 'asc')));
+  const rows = [];
+  snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+  document.getElementById('crCount').textContent = rows.length;
+  if (!rows.length) { el.innerHTML = '<div class="empty">현재 클리닉실에 있는 학생이 없습니다.</div>'; return; }
+
+  const nowMin = (() => { const n = new Date(); return n.getHours() * 60 + n.getMinutes(); })();
+  const toMin = (t) => { if (!t) return null; const [h,m] = t.split(':').map(Number); return h*60+m; };
+
+  el.innerHTML = rows.map(r => {
+    const em = toMin(r.endTime);
+    const overdue = em !== null && em < nowMin;
+    return `
+    <div class="item">
+      <div class="item-name">${esc(r.name)}</div>
+      <span class="item-meta">${esc(r.grade)}</span>
+      <span class="item-meta">${esc(r.classGroup)}</span>
+      <span class="badge ${overdue ? 'badge-overdue' : ''}">${overdue ? '⏰ 종료 ' : '~'}${esc(r.endTime) || '-'}</span>
+    </div>`;
+  }).join('');
+};
+
+// 숙제 확인
+window.loadHomework = async function() {
+  const el = document.getElementById('hwList');
+  el.innerHTML = '<div class="empty">불러오는 중...</div>';
+  const snap = await getDocs(query(collection(db, 'homeworks'), orderBy('createdAt', 'desc')));
+  const rows = [];
+  snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+  document.getElementById('hwCount').textContent = rows.length;
+  if (!rows.length) { el.innerHTML = '<div class="empty">업로드된 숙제가 없습니다.</div>'; return; }
+  el.innerHTML = rows.map(r => `
+    <div class="item">
+      <div class="item-name">${esc(r.title)}</div>
+      <span class="item-meta">${esc(r.target)}</span>
+      <a href="${r.fileURL}" target="_blank" class="btn btn-secondary btn-sm">📄 열기</a>
+    </div>`).join('');
+};
+
+// 답지
+window.loadAnswerKeys = async function() {
+  const el = document.getElementById('akList');
+  el.innerHTML = '<div class="empty">불러오는 중...</div>';
+  const snap = await getDocs(query(collection(db, 'answerKeys'), orderBy('createdAt', 'desc')));
+  const rows = [];
+  snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+  if (!rows.length) { el.innerHTML = '<div class="empty">등록된 답지 링크가 없습니다.</div>'; return; }
+  el.innerHTML = rows.map(r => `
+    <div class="item">
+      <div class="item-name">${esc(r.title)}</div>
+      <span class="item-meta">${esc(r.note)}</span>
+      <a href="${r.link}" target="_blank" class="btn btn-secondary btn-sm">🔗 열기</a>
+    </div>`).join('');
+};
+
+// 조교 작업물
+window.loadTasks = async function() {
+  const el = document.getElementById('ttList');
+  el.innerHTML = '<div class="empty">불러오는 중...</div>';
+  const snap = await getDocs(query(collection(db, 'taTasks'), orderBy('createdAt', 'desc')));
+  const rows = [];
+  snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+  if (!rows.length) { el.innerHTML = '<div class="empty">등록된 작업물이 없습니다.</div>'; return; }
+  el.innerHTML = rows.map(r => `
+    <div class="item">
+      <div class="item-name">${esc(r.title)}</div>
+      <span class="item-meta">${esc(r.note)}</span>
+      <a href="${r.link}" target="_blank" class="btn btn-secondary btn-sm">🔗 열기</a>
+    </div>`).join('');
+};
+
+// 조교 권한 확인
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { window.location.href = 'login.html'; return; }
+  const tDoc = await getDoc(doc(db, 'teachers', user.uid));
+  if (!tDoc.exists() || tDoc.data().role !== 'ta') {
+    window.location.href = 'login.html';
+    return;
+  }
+  document.getElementById('taName').textContent = `${tDoc.data().name} 조교님 · ${tDoc.data().branch || ''}`;
+  await Promise.all([loadClinicRoom(), loadHomework(), loadAnswerKeys(), loadTasks()]);
+});
+</script>
+</body>
+</html>
