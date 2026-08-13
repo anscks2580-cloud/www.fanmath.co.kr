@@ -140,30 +140,84 @@ function esc(s) {
   return (s || '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-// 클리닉실 현황
+// 요일그룹 판별 및 시간표 계산 (admin.html과 동일한 로직)
+function ttDaysToGroup(days) {
+  const s = new Set(days || []);
+  const eq = arr => arr.length === s.size && arr.every(d => s.has(d));
+  if (eq(['월','수','금'])) return '월수금';
+  if (eq(['화','목'])) return '화목';
+  if (eq(['화','목','토'])) return '화목토';
+  return null;
+}
+function ttGroupActiveToday(group, weekday) {
+  if (group === '월수금') return [1,3,5].includes(weekday);
+  if (group === '화목') return [2,4].includes(weekday);
+  if (group === '화목토') return [2,4,6].includes(weekday);
+  return false;
+}
+function ttGradeMatches(studentGrade, blockGrade) {
+  if (blockGrade === '초등') return (studentGrade || '').startsWith('초');
+  return studentGrade === blockGrade;
+}
+function computeCurrentClinicStudents(students, timetables) {
+  const now = new Date();
+  const weekday = now.getDay();
+  const todayStr = now.toISOString().slice(0,10);
+  const hhmm = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+
+  const byKey = {};
+  timetables.forEach(t => {
+    if (!ttGroupActiveToday(t.dayGroup, weekday)) return;
+    const key = t.teacherName + '|' + t.dayGroup;
+    if (t.scheduleType === 'vacation') {
+      if (t.validFrom && t.validTo && todayStr >= t.validFrom && todayStr <= t.validTo) byKey[key] = t;
+    } else {
+      if (!byKey[key] || byKey[key].scheduleType !== 'vacation') byKey[key] = t;
+    }
+  });
+
+  const active = Object.values(byKey);
+  const results = [];
+  active.forEach(t => {
+    (t.blocks || []).forEach(b => {
+      if (b.type !== 'clinic') return;
+      if (!(hhmm >= b.start && hhmm < b.end)) return;
+      students.forEach(s => {
+        if (s.teacherName !== t.teacherName) return;
+        if (ttDaysToGroup(s.days) !== t.dayGroup) return;
+        if (!ttGradeMatches(s.grade, b.grade)) return;
+        results.push({ name: s.name, grade: s.grade, classGroup: s.classGroup, teacherName: s.teacherName, endTime: b.end });
+      });
+    });
+  });
+  return results;
+}
+
+// 클리닉실 현황 (시간표 기반 자동 계산)
 window.loadClinicRoom = async function() {
   const el = document.getElementById('crList');
   el.innerHTML = '<div class="empty">불러오는 중...</div>';
-  const snap = await getDocs(query(collection(db, 'clinicRoom'), orderBy('endTime', 'asc')));
-  const rows = [];
-  snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+  const [studentsSnap, timetablesSnap] = await Promise.all([
+    getDocs(collection(db, 'students')),
+    getDocs(collection(db, 'timetables'))
+  ]);
+  const students = [];
+  studentsSnap.forEach(d => students.push({ id: d.id, ...d.data() }));
+  const timetables = [];
+  timetablesSnap.forEach(d => timetables.push({ id: d.id, ...d.data() }));
+
+  const rows = computeCurrentClinicStudents(students, timetables);
   document.getElementById('crCount').textContent = rows.length;
-  if (!rows.length) { el.innerHTML = '<div class="empty">현재 클리닉실에 있는 학생이 없습니다.</div>'; return; }
+  if (!rows.length) { el.innerHTML = '<div class="empty">지금 이 시간에 클리닉인 학생이 없습니다.</div>'; return; }
 
-  const nowMin = (() => { const n = new Date(); return n.getHours() * 60 + n.getMinutes(); })();
-  const toMin = (t) => { if (!t) return null; const [h,m] = t.split(':').map(Number); return h*60+m; };
-
-  el.innerHTML = rows.map(r => {
-    const em = toMin(r.endTime);
-    const overdue = em !== null && em < nowMin;
-    return `
+  el.innerHTML = rows.map(r => `
     <div class="item">
       <div class="item-name">${esc(r.name)}</div>
       <span class="item-meta">${esc(r.grade)}</span>
       <span class="item-meta">${esc(r.classGroup)}</span>
-      <span class="badge ${overdue ? 'badge-overdue' : ''}">${overdue ? '⏰ 종료 ' : '~'}${esc(r.endTime) || '-'}</span>
-    </div>`;
-  }).join('');
+      <span class="item-meta">${esc(r.teacherName)}</span>
+      <span class="badge">~${esc(r.endTime)}</span>
+    </div>`).join('');
 };
 
 // 숙제 확인

@@ -868,29 +868,57 @@
 
   </div>
 
-  <!-- 클리닉실 -->
+  <!-- 클리닉실 (선생님 시간표 기반 자동 계산) -->
   <div class="tab-panel" id="tab-clinicroom">
     <div class="card">
-      <h3>+ 클리닉실 입실 등록</h3>
+      <h3>+ 선생님 시간표 등록</h3>
+      <div class="grade-map-info">
+        시간표를 등록하면, 조교 페이지의 <b style="color:var(--gold);">클리닉실 현황</b>이 학생 등록 정보(담당선생님·등원요일·학년)를 기준으로<br>
+        지금 이 순간 "클리닉" 시간대인 학생들을 <b style="color:var(--gold);">자동으로</b> 보여줍니다. (수동 입실/퇴실 필요 없음)
+      </div>
       <div class="form-row">
-        <div class="form-group"><label>학생 이름</label><input type="text" id="cr-name" placeholder="예: 홍길동"></div>
-        <div class="form-group"><label>학년</label>
-          <select id="cr-grade">
-            <option>중1</option><option>중2</option><option>중3</option>
-            <option>고1</option><option>고2</option><option>고3</option><option>N수</option>
-          </select>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label>적용할 선생님 (여러 명 선택 가능 — 시간표가 같으면 한 번에 등록)</label>
+          <div id="tt-teacher-checks" style="display:flex;gap:12px;flex-wrap:wrap;padding:9px 0;"></div>
         </div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>반 (선택)</label><input type="text" id="cr-class" placeholder="예: 화목반"></div>
-        <div class="form-group"><label>끝나는 시간</label><input type="time" id="cr-endtime"></div>
+        <div class="form-group"><label>요일그룹</label>
+          <select id="tt-daygroup"><option>월수금</option><option>화목</option><option>화목토</option></select>
+        </div>
+        <div class="form-group"><label>시간표 종류</label>
+          <select id="tt-type" onchange="document.getElementById('tt-range-row').style.display=this.value==='vacation'?'grid':'none'">
+            <option value="regular">정규반 시간표</option>
+            <option value="vacation">방학특강 (기간 한정)</option>
+          </select>
+        </div>
       </div>
-      <button class="btn btn-primary" onclick="addClinicRoomEntry()">입실 등록</button>
-      <div class="msg" id="clinicRoomMsg"></div>
+      <div class="form-row" id="tt-range-row" style="display:none;">
+        <div class="form-group"><label>시작일</label><input type="date" id="tt-from"></div>
+        <div class="form-group"><label>종료일</label><input type="date" id="tt-to"></div>
+      </div>
+      <div class="grade-map-info" style="margin-bottom:10px;">
+        방학특강으로 등록하면 <b style="color:var(--gold);">해당 기간에만</b> 이 시간표가 우선 적용되고, 기간이 지나면 자동으로 정규반 시간표로 돌아갑니다.
+      </div>
+      <div id="tt-blocks"></div>
+      <button class="btn btn-secondary btn-sm" onclick="ttAddBlockRow()" style="margin:10px 0;">+ 시간 블록 추가</button>
+      <div>
+        <button class="btn btn-primary" onclick="saveTimetable()">시간표 저장</button>
+      </div>
+      <div class="msg" id="ttMsg"></div>
     </div>
+
     <div class="card">
-      <h3>🏥 현재 클리닉실 인원 (<span id="clinicRoomCount">0</span>명)</h3>
-      <div id="clinicRoomList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
+      <h3>📋 등록된 시간표</h3>
+      <div id="ttList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <h3 style="margin:0;">🏥 지금 이 순간 클리닉실 인원 미리보기 (<span id="clinicPreviewCount">0</span>명)</h3>
+        <button class="btn btn-secondary btn-sm" onclick="renderClinicPreview()">🔄 새로고침</button>
+      </div>
+      <div id="clinicPreviewList"><div style="color:var(--muted);font-size:13px;">시간표를 등록하면 여기 표시됩니다.</div></div>
     </div>
   </div>
 
@@ -3624,51 +3652,180 @@ window.deleteTeacher = async (uid, name) => {
 };
 
 // ══════════════════════════════════════════
-// 🏥 클리닉실 (조교 페이지에서 실시간 조회)
+// 🏥 클리닉실 (선생님 시간표 기반 자동 계산)
 // ══════════════════════════════════════════
-let clinicRoomInited = false;
+const TT_TEACHERS = ['송우찬 원장T','송문찬 원장T','조현주 부원장T','김영진T','신민훈T','장미현T','공민정T'];
+const TT_GRADE_OPTIONS = ['초등','중1','중2','중3','고1','고2','고3','N수'];
+let timetablesCache = [];
+
+function ttAddBlockRow(vals) {
+  const wrap = document.getElementById('tt-blocks');
+  const row = document.createElement('div');
+  row.className = 'form-row tt-block-row';
+  row.style.gridTemplateColumns = '1fr 1fr 1fr 1fr auto';
+  row.style.alignItems = 'end';
+  row.innerHTML = `
+    <div class="form-group"><label>학년</label>
+      <select class="tt-b-grade">${TT_GRADE_OPTIONS.map(g=>`<option ${vals&&vals.grade===g?'selected':''}>${g}</option>`).join('')}</select>
+    </div>
+    <div class="form-group"><label>시작</label><input type="time" class="tt-b-start" value="${vals?.start||''}"></div>
+    <div class="form-group"><label>종료</label><input type="time" class="tt-b-end" value="${vals?.end||''}"></div>
+    <div class="form-group"><label>구분</label>
+      <select class="tt-b-type"><option value="class" ${vals?.type==='class'?'selected':''}>수업 (선)</option><option value="clinic" ${vals?.type==='clinic'?'selected':''}>클리닉 (클)</option></select>
+    </div>
+    <button class="btn btn-danger btn-sm" onclick="this.closest('.tt-block-row').remove()">삭제</button>`;
+  wrap.appendChild(row);
+}
+
+function ttRenderTeacherChecks() {
+  const wrap = document.getElementById('tt-teacher-checks');
+  wrap.innerHTML = TT_TEACHERS.map(t => `
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--off-white);cursor:pointer;">
+      <input type="checkbox" class="tt-teacher-check" value="${t}" style="accent-color:var(--gold);width:15px;height:15px;"> ${t}
+    </label>`).join('');
+}
+
 window.initClinicRoomTab = async () => {
-  if (clinicRoomInited) { await loadClinicRoom(); return; }
-  clinicRoomInited = true;
-  await loadClinicRoom();
+  ttRenderTeacherChecks();
+  if (!document.querySelectorAll('.tt-block-row').length) ttAddBlockRow();
+  await loadTimetables();
+  renderClinicPreview();
 };
 
-async function loadClinicRoom() {
-  const snap = await getDocs(query(collection(db, 'clinicRoom'), orderBy('endTime', 'asc')));
-  const rows = [];
-  snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
-  document.getElementById('clinicRoomCount').textContent = rows.length;
-  const el = document.getElementById('clinicRoomList');
-  if (!rows.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;">현재 클리닉실에 등록된 학생이 없습니다.</div>'; return; }
-  el.innerHTML = rows.map(r => `
-    <div class="student-item">
-      <div class="student-name">${r.name}</div>
-      <span class="student-meta">${r.grade || ''}</span>
-      <span class="student-meta">${r.classGroup || ''}</span>
-      <span class="preview-badge">~${r.endTime || '-'}</span>
-      <button class="btn btn-danger btn-sm" onclick="removeClinicRoomEntry('${r.id}')">퇴실</button>
+async function loadTimetables() {
+  const snap = await getDocs(collection(db, 'timetables'));
+  timetablesCache = [];
+  snap.forEach(d => timetablesCache.push({ id: d.id, ...d.data() }));
+  renderTimetableList();
+}
+
+function renderTimetableList() {
+  const el = document.getElementById('ttList');
+  if (!timetablesCache.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;">등록된 시간표가 없습니다.</div>'; return; }
+  el.innerHTML = timetablesCache.map(t => `
+    <div class="student-item" style="align-items:flex-start;flex-direction:column;gap:6px;">
+      <div style="display:flex;gap:10px;align-items:center;width:100%;flex-wrap:wrap;">
+        <div class="student-name">${t.teacherName}</div>
+        <span class="preview-badge">${t.dayGroup}</span>
+        <span class="preview-badge" style="${t.scheduleType==='vacation'?'background:rgba(255,150,80,0.15);color:#ffb066;':''}">${t.scheduleType==='vacation' ? `방학특강 (${t.validFrom}~${t.validTo})` : '정규반'}</span>
+        <button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="deleteTimetable('${t.id}')">삭제</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.8;">
+        ${(t.blocks||[]).map(b => `${b.grade} ${b.start}~${b.end} <span style="color:${b.type==='clinic'?'var(--gold)':'#8fd0ff'};">${b.type==='clinic'?'클리닉':'수업'}</span>`).join(' &nbsp;·&nbsp; ')}
+      </div>
     </div>`).join('');
 }
 
-window.addClinicRoomEntry = async () => {
-  const name = document.getElementById('cr-name').value.trim();
-  const grade = document.getElementById('cr-grade').value;
-  const classGroup = document.getElementById('cr-class').value.trim();
-  const endTime = document.getElementById('cr-endtime').value;
-  if (!name || !endTime) { showMsg('clinicRoomMsg', '이름과 끝나는 시간을 입력해주세요.', 'error'); return; }
-  await addDoc(collection(db, 'clinicRoom'), {
-    name, grade, classGroup, endTime, createdAt: new Date().toISOString()
-  });
-  showMsg('clinicRoomMsg', `${name} 학생 입실 등록 완료!`, 'success');
-  document.getElementById('cr-name').value = '';
-  document.getElementById('cr-class').value = '';
-  document.getElementById('cr-endtime').value = '';
-  await loadClinicRoom();
+window.saveTimetable = async () => {
+  const teachers = [...document.querySelectorAll('.tt-teacher-check:checked')].map(c => c.value);
+  const dayGroup = document.getElementById('tt-daygroup').value;
+  const scheduleType = document.getElementById('tt-type').value;
+  const validFrom = document.getElementById('tt-from').value;
+  const validTo = document.getElementById('tt-to').value;
+  const blocks = [...document.querySelectorAll('.tt-block-row')].map(row => ({
+    grade: row.querySelector('.tt-b-grade').value,
+    start: row.querySelector('.tt-b-start').value,
+    end: row.querySelector('.tt-b-end').value,
+    type: row.querySelector('.tt-b-type').value
+  }));
+
+  if (!teachers.length) { showMsg('ttMsg', '선생님을 한 명 이상 선택해주세요.', 'error'); return; }
+  if (scheduleType === 'vacation' && (!validFrom || !validTo)) { showMsg('ttMsg', '방학특강은 시작일과 종료일을 입력해주세요.', 'error'); return; }
+  if (!blocks.length || blocks.some(b => !b.start || !b.end)) { showMsg('ttMsg', '시간 블록의 시작/종료 시간을 모두 입력해주세요.', 'error'); return; }
+
+  for (const teacherName of teachers) {
+    const id = `${teacherName}_${dayGroup}_${scheduleType}`.replace(/[^\w가-힣]/g, '_');
+    await setDoc(doc(db, 'timetables', id), {
+      teacherName, dayGroup, scheduleType,
+      validFrom: scheduleType === 'vacation' ? validFrom : null,
+      validTo: scheduleType === 'vacation' ? validTo : null,
+      blocks, updatedAt: new Date().toISOString()
+    });
+  }
+  showMsg('ttMsg', `${teachers.join(', ')} 시간표 저장 완료!`, 'success');
+  await loadTimetables();
+  renderClinicPreview();
 };
 
-window.removeClinicRoomEntry = async (id) => {
-  await deleteDoc(doc(db, 'clinicRoom', id));
-  await loadClinicRoom();
+window.deleteTimetable = async (id) => {
+  if (!confirm('이 시간표를 삭제하시겠습니까?')) return;
+  await deleteDoc(doc(db, 'timetables', id));
+  await loadTimetables();
+  renderClinicPreview();
+};
+
+// 요일그룹 판별
+function ttDaysToGroup(days) {
+  const s = new Set(days || []);
+  const eq = arr => arr.length === s.size && arr.every(d => s.has(d));
+  if (eq(['월','수','금'])) return '월수금';
+  if (eq(['화','목'])) return '화목';
+  if (eq(['화','목','토'])) return '화목토';
+  return null;
+}
+function ttGroupActiveToday(group, weekday) {
+  // weekday: 0=일 ... 6=토
+  if (group === '월수금') return [1,3,5].includes(weekday);
+  if (group === '화목') return [2,4].includes(weekday);
+  if (group === '화목토') return [2,4,6].includes(weekday);
+  return false;
+}
+function ttGradeMatches(studentGrade, blockGrade) {
+  if (blockGrade === '초등') return (studentGrade || '').startsWith('초');
+  return studentGrade === blockGrade;
+}
+
+// 지금 이 순간 클리닉인 학생 목록 계산 (admin 미리보기 + ta.html 공용 로직)
+function computeCurrentClinicStudents(students, timetables) {
+  const now = new Date();
+  const weekday = now.getDay();
+  const todayStr = now.toISOString().slice(0,10);
+  const hhmm = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+
+  // 선생님+요일그룹별로 오늘 적용할 시간표 하나만 선택 (방학특강 우선)
+  const byKey = {};
+  timetables.forEach(t => {
+    if (!ttGroupActiveToday(t.dayGroup, weekday)) return;
+    const key = t.teacherName + '|' + t.dayGroup;
+    if (t.scheduleType === 'vacation') {
+      if (t.validFrom && t.validTo && todayStr >= t.validFrom && todayStr <= t.validTo) {
+        byKey[key] = t; // 방학특강이 활성이면 무조건 우선
+      }
+    } else {
+      if (!byKey[key] || byKey[key].scheduleType !== 'vacation') byKey[key] = t;
+    }
+  });
+
+  const active = Object.values(byKey);
+  const results = [];
+  active.forEach(t => {
+    (t.blocks || []).forEach(b => {
+      if (b.type !== 'clinic') return;
+      if (!(hhmm >= b.start && hhmm < b.end)) return;
+      students.forEach(s => {
+        if (s.teacherName !== t.teacherName) return;
+        if (ttDaysToGroup(s.days) !== t.dayGroup) return;
+        if (!ttGradeMatches(s.grade, b.grade)) return;
+        results.push({ name: s.name, grade: s.grade, classGroup: s.classGroup, teacherName: s.teacherName, endTime: b.end });
+      });
+    });
+  });
+  return results;
+}
+
+window.renderClinicPreview = () => {
+  const list = computeCurrentClinicStudents(studentsCache, timetablesCache);
+  document.getElementById('clinicPreviewCount').textContent = list.length;
+  const el = document.getElementById('clinicPreviewList');
+  if (!list.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;">지금 이 시간에 클리닉인 학생이 없습니다.</div>'; return; }
+  el.innerHTML = list.map(r => `
+    <div class="student-item">
+      <div class="student-name">${r.name}</div>
+      <span class="student-meta">${r.grade}</span>
+      <span class="student-meta">${r.classGroup||''}</span>
+      <span class="student-meta">${r.teacherName}</span>
+      <span class="preview-badge">~${r.endTime}</span>
+    </div>`).join('');
 };
 
 // ══════════════════════════════════════════
