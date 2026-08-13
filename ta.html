@@ -159,6 +159,11 @@ function ttGradeMatches(studentGrade, blockGrade) {
   if (blockGrade === '초등') return (studentGrade || '').startsWith('초');
   return studentGrade === blockGrade;
 }
+const TT_DAY_NUM = {'일':0,'월':1,'화':2,'수':3,'목':4,'금':5,'토':6};
+function ttBlockActiveToday(block, weekday) {
+  if (block.day) return TT_DAY_NUM[block.day] === weekday;
+  return weekday !== 6 && weekday !== 0;
+}
 function computeCurrentClinicStudents(students, timetables) {
   const now = new Date();
   const weekday = now.getDay();
@@ -181,6 +186,7 @@ function computeCurrentClinicStudents(students, timetables) {
   active.forEach(t => {
     (t.blocks || []).forEach(b => {
       if (b.type !== 'clinic') return;
+      if (!ttBlockActiveToday(b, weekday)) return;
       if (!(hhmm >= b.start && hhmm < b.end)) return;
       students.forEach(s => {
         if (s.teacherName !== t.teacherName) return;

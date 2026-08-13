@@ -912,11 +912,12 @@
       <h3>📊 엑셀로 한 번에 등록</h3>
       <div class="grade-map-info">
         <b>엑셀 파일 형식</b> (컬럼 순서 고정)<br>
-        <b style="color:var(--gold);">선생님 / 요일그룹 / 시간표종류 / 시작일 / 종료일 / 학년 / 시작시간 / 종료시간 / 구분</b><br>
+        <b style="color:var(--gold);">선생님 / 요일그룹 / 시간표종류 / 시작일 / 종료일 / 학년 / 시작시간 / 종료시간 / 구분 / 특정요일(선택)</b><br>
         · 요일그룹: 월수금 / 화목 / 화목토<br>
         · 시간표종류: 방학특강 / 정규<br>
         · 시작일·종료일: 방학특강일 때만 입력 (예: 2026-07-20), 정규는 비워두면 됨<br>
         · 구분: 수업 / 클리닉<br>
+        · <b style="color:var(--gold);">특정요일</b>: 비워두면 그 요일그룹의 평일에 매번 적용. 화목토 그룹에서 토요일만 다른 시간이면 이 칸에 "토"라고 적으면 그 줄은 토요일에만 적용됩니다.<br>
         · 같은 선생님+요일그룹+시간표종류+기간이면 여러 줄이 하나의 시간표로 합쳐집니다.
       </div>
       <div class="excel-drop" id="ttExcelDrop" onclick="document.getElementById('ttExcelInput').click()">
@@ -3694,7 +3695,7 @@ function ttAddBlockRow(vals) {
   const wrap = document.getElementById('tt-blocks');
   const row = document.createElement('div');
   row.className = 'form-row tt-block-row';
-  row.style.gridTemplateColumns = '1fr 1fr 1fr 1fr auto';
+  row.style.gridTemplateColumns = '1fr 1fr 1fr 1fr 1fr auto';
   row.style.alignItems = 'end';
   row.innerHTML = `
     <div class="form-group"><label>학년</label>
@@ -3704,6 +3705,9 @@ function ttAddBlockRow(vals) {
     <div class="form-group"><label>종료</label><input type="time" class="tt-b-end" value="${vals?.end||''}"></div>
     <div class="form-group"><label>구분</label>
       <select class="tt-b-type"><option value="class" ${vals?.type==='class'?'selected':''}>수업 (선)</option><option value="clinic" ${vals?.type==='clinic'?'selected':''}>클리닉 (클)</option></select>
+    </div>
+    <div class="form-group"><label>특정요일</label>
+      <select class="tt-b-day"><option value="" ${!vals?.day?'selected':''}>평일 전체</option><option value="토" ${vals?.day==='토'?'selected':''}>토요일만</option></select>
     </div>
     <button class="btn btn-danger btn-sm" onclick="this.closest('.tt-block-row').remove()">삭제</button>`;
   wrap.appendChild(row);
@@ -3776,6 +3780,7 @@ function parseTtExcel(file) {
       start:       ttExcelTime(r[6]),
       end:         ttExcelTime(r[7]),
       typeText:    String(r[8]||'').trim(),
+      day:         String(r[9]||'').trim(),
     }));
     // 선생님+요일그룹+시간표종류+기간 기준으로 묶기
     const groups = {};
@@ -3783,7 +3788,7 @@ function parseTtExcel(file) {
       const scheduleType = r.typeLabel === '방학특강' ? 'vacation' : 'regular';
       const key = [r.teacherName, r.dayGroup, scheduleType, r.validFrom, r.validTo].join('|');
       if (!groups[key]) groups[key] = { teacherName:r.teacherName, dayGroup:r.dayGroup, scheduleType, validFrom:r.validFrom, validTo:r.validTo, blocks:[] };
-      groups[key].blocks.push({ grade:r.grade, start:r.start, end:r.end, type: r.typeText.includes('클리닉') ? 'clinic' : 'class' });
+      groups[key].blocks.push({ grade:r.grade, start:r.start, end:r.end, type: r.typeText.includes('클리닉') ? 'clinic' : 'class', day: r.day || '' });
     });
     ttExcelData = Object.values(groups);
     document.getElementById('ttPreviewCount').textContent = `${ttExcelData.length}개 시간표 (${raw.length}개 블록)`;
@@ -3818,13 +3823,13 @@ window.uploadTtExcel = async () => {
 
 window.downloadTtTemplate = () => {
   const ws = XLSX.utils.aoa_to_sheet([
-    ['선생님','요일그룹','시간표종류','시작일','종료일','학년','시작시간','종료시간','구분'],
-    ['신민훈T','월수금','방학특강','2026-07-20','2026-08-16','초등','14:00','15:30','수업'],
-    ['신민훈T','월수금','방학특강','2026-07-20','2026-08-16','초등','15:30','16:30','클리닉'],
-    ['신민훈T','월수금','방학특강','2026-07-20','2026-08-16','중1','15:00','15:30','클리닉'],
-    ['신민훈T','월수금','방학특강','2026-07-20','2026-08-16','중1','15:30','17:40','수업'],
+    ['선생님','요일그룹','시간표종류','시작일','종료일','학년','시작시간','종료시간','구분','특정요일(선택)'],
+    ['신민훈T','월수금','방학특강','2026-07-20','2026-08-16','초등','14:00','15:30','수업',''],
+    ['신민훈T','월수금','방학특강','2026-07-20','2026-08-16','초등','15:30','16:30','클리닉',''],
+    ['김영진T','화목토','방학특강','2026-07-20','2026-08-16','중1','17:00','19:30','수업',''],
+    ['김영진T','화목토','방학특강','2026-07-20','2026-08-16','중1','15:00','17:00','수업','토'],
   ]);
-  ws['!cols'] = [{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:8},{wch:9},{wch:9},{wch:8}];
+  ws['!cols'] = [{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:8},{wch:9},{wch:9},{wch:8},{wch:12}];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, '시간표');
   XLSX.writeFile(wb, '선생님시간표_양식.xlsx');
@@ -3849,7 +3854,7 @@ function renderTimetableList() {
         <button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="deleteTimetable('${t.id}')">삭제</button>
       </div>
       <div style="font-size:12px;color:var(--muted);line-height:1.8;">
-        ${(t.blocks||[]).map(b => `${b.grade} ${b.start}~${b.end} <span style="color:${b.type==='clinic'?'var(--gold)':'#8fd0ff'};">${b.type==='clinic'?'클리닉':'수업'}</span>`).join(' &nbsp;·&nbsp; ')}
+        ${(t.blocks||[]).map(b => `${b.grade}${b.day?`(${b.day})`:''} ${b.start}~${b.end} <span style="color:${b.type==='clinic'?'var(--gold)':'#8fd0ff'};">${b.type==='clinic'?'클리닉':'수업'}</span>`).join(' &nbsp;·&nbsp; ')}
       </div>
     </div>`).join('');
 }
@@ -3864,7 +3869,8 @@ window.saveTimetable = async () => {
     grade: row.querySelector('.tt-b-grade').value,
     start: row.querySelector('.tt-b-start').value,
     end: row.querySelector('.tt-b-end').value,
-    type: row.querySelector('.tt-b-type').value
+    type: row.querySelector('.tt-b-type').value,
+    day: row.querySelector('.tt-b-day').value
   }));
 
   if (!teachers.length) { showMsg('ttMsg', '선생님을 한 명 이상 선택해주세요.', 'error'); return; }
@@ -3912,6 +3918,12 @@ function ttGradeMatches(studentGrade, blockGrade) {
   if (blockGrade === '초등') return (studentGrade || '').startsWith('초');
   return studentGrade === blockGrade;
 }
+// 블록에 특정 요일(예:'토')이 지정돼 있으면 그 요일에만, 없으면 그룹의 평일(월~금)에만 적용
+const TT_DAY_NUM = {'일':0,'월':1,'화':2,'수':3,'목':4,'금':5,'토':6};
+function ttBlockActiveToday(block, weekday) {
+  if (block.day) return TT_DAY_NUM[block.day] === weekday;
+  return weekday !== 6 && weekday !== 0; // 특정 요일 지정 없으면 평일에만 (토/일 제외)
+}
 
 // 지금 이 순간 클리닉인 학생 목록 계산 (admin 미리보기 + ta.html 공용 로직)
 function computeCurrentClinicStudents(students, timetables) {
@@ -3939,6 +3951,7 @@ function computeCurrentClinicStudents(students, timetables) {
   active.forEach(t => {
     (t.blocks || []).forEach(b => {
       if (b.type !== 'clinic') return;
+      if (!ttBlockActiveToday(b, weekday)) return;
       if (!(hhmm >= b.start && hhmm < b.end)) return;
       students.forEach(s => {
         if (s.teacherName !== t.teacherName) return;
