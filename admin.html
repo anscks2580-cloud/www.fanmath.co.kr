@@ -953,6 +953,13 @@
       </div>
       <div id="clinicPreviewList"><div style="color:var(--muted);font-size:13px;">시간표를 등록하면 여기 표시됩니다.</div></div>
     </div>
+
+    <div class="card">
+      <h3>🔍 왜 안 뜨는지 확인 (진단)</h3>
+      <div class="grade-map-info">학생이 안 뜰 때 눌러보세요. 오늘 인식된 시간표와, 선생님 이름이 학생 등록정보와 정확히 일치하는지 확인해드립니다.</div>
+      <button class="btn btn-secondary btn-sm" onclick="runClinicDiagnosis()">진단 실행</button>
+      <div id="ttDiag" style="margin-top:14px;font-size:12.5px;line-height:1.9;color:var(--off-white);"></div>
+    </div>
   </div>
 
   <!-- 조교 자료 (숙제 · 답지 · 작업물) -->
@@ -3978,6 +3985,49 @@ window.renderClinicPreview = () => {
       <span class="student-meta">${r.teacherName}</span>
       <span class="preview-badge">~${r.endTime}</span>
     </div>`).join('');
+};
+
+window.runClinicDiagnosis = () => {
+  const now = new Date();
+  const weekday = now.getDay();
+  const weekdayNames = ['일','월','화','수','목','금','토'];
+  const todayStr = now.toISOString().slice(0,10);
+  const hhmm = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+  const out = [];
+
+  out.push(`<div>📅 오늘: ${todayStr} (${weekdayNames[weekday]}요일) · 현재시각: ${hhmm}</div>`);
+  out.push(`<div style="margin-top:6px;">📋 등록된 시간표 총 ${timetablesCache.length}개, 학생 총 ${studentsCache.length}명</div><hr style="border-color:var(--border-soft);margin:10px 0;">`);
+
+  if (!timetablesCache.length) {
+    out.push(`<div style="color:#ff9090;">⚠️ 등록된 시간표가 하나도 없습니다. 엑셀 업로드나 저장이 실제로 반영됐는지 확인해주세요 (새로고침 후 '등록된 시간표' 목록에 나타나야 합니다).</div>`);
+    document.getElementById('ttDiag').innerHTML = out.join('');
+    return;
+  }
+
+  timetablesCache.forEach(t => {
+    const activeToday = ttGroupActiveToday(t.dayGroup, weekday);
+    const inRange = t.scheduleType !== 'vacation' || (t.validFrom && t.validTo && todayStr >= t.validFrom && todayStr <= t.validTo);
+    const matchedStudents = studentsCache.filter(s => s.teacherName === t.teacherName);
+    const rightDayGroupStudents = matchedStudents.filter(s => ttDaysToGroup(s.days) === t.dayGroup);
+
+    out.push(`<div style="padding:10px 0;border-bottom:1px solid var(--border-soft);">
+      <b style="color:var(--gold);">${t.teacherName}</b> · ${t.dayGroup} · ${t.scheduleType==='vacation'?`방학특강(${t.validFrom}~${t.validTo})`:'정규'}
+      &nbsp; ${activeToday ? '✅오늘요일해당' : '❌오늘요일아님'} &nbsp; ${inRange ? '✅기간내' : '❌기간아님'}<br>
+      <span style="color:var(--muted);">→ '담당선생님'이 정확히 "${t.teacherName}"으로 등록된 학생: <b style="color:${matchedStudents.length?'#90ff90':'#ff9090'};">${matchedStudents.length}명</b></span><br>
+      <span style="color:var(--muted);">→ 그 중 등원요일이 ${t.dayGroup} 패턴(요일 배열이 정확히 일치)인 학생: <b style="color:${rightDayGroupStudents.length?'#90ff90':'#ff9090'};">${rightDayGroupStudents.length}명</b>
+      ${matchedStudents.length && !rightDayGroupStudents.length ? ` <span style="color:#ffb066;">← 등원요일 값이 안 맞는 것 같아요. (예: ${JSON.stringify(matchedStudents[0].days)})</span>` : ''}</span>
+    </div>`);
+  });
+
+  const allTeacherNames = [...new Set(timetablesCache.map(t => t.teacherName))];
+  const studentTeacherNames = [...new Set(studentsCache.map(s => s.teacherName).filter(Boolean))];
+  const unmatched = allTeacherNames.filter(n => !studentTeacherNames.includes(n));
+  if (unmatched.length) {
+    out.push(`<div style="margin-top:10px;color:#ffb066;">⚠️ 시간표에는 있지만 학생 '담당선생님'에는 정확히 일치하는 이름이 없는 선생님: ${unmatched.join(', ')}<br>
+    (학생 등록정보의 실제 담당선생님 값 목록: ${studentTeacherNames.join(', ') || '없음'})</div>`);
+  }
+
+  document.getElementById('ttDiag').innerHTML = out.join('');
 };
 
 // ══════════════════════════════════════════
