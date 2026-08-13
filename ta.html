@@ -79,6 +79,10 @@
       </div>
       <div id="crList"><div class="empty">불러오는 중...</div></div>
     </div>
+    <div class="card">
+      <h3 style="margin:0 0 14px;">⏭ 오늘 클리닉 예정 (<span id="crUpcomingCount">0</span>명)</h3>
+      <div id="crUpcomingList"><div class="empty">불러오는 중...</div></div>
+    </div>
   </div>
 
   <!-- 숙제 확인 -->
@@ -184,48 +188,76 @@ function computeCurrentClinicStudents(students, timetables) {
   });
 
   const active = Object.values(byKey);
-  const results = [];
+  const nowResults = [];
+  const upcomingResults = [];
   active.forEach(t => {
     (t.blocks || []).forEach(b => {
       if (b.type !== 'clinic') return;
       if (!ttBlockActiveToday(b, weekday)) return;
-      if (!(hhmm >= b.start && hhmm < b.end)) return;
+      const isNow = hhmm >= b.start && hhmm < b.end;
+      const isUpcoming = b.start > hhmm;
+      if (!isNow && !isUpcoming) return;
       students.forEach(s => {
         if (s.teacherName !== t.teacherName) return;
         if (ttDaysToGroup(s.days) !== t.dayGroup) return;
         if (!ttGradeMatches(s.grade, b.grade)) return;
-        results.push({ name: s.name, grade: s.grade, classGroup: s.classGroup, teacherName: s.teacherName, endTime: b.end });
+        const row = { name: s.name, grade: s.grade, classGroup: s.classGroup, teacherName: s.teacherName, startTime: b.start, endTime: b.end };
+        if (isNow) nowResults.push(row); else upcomingResults.push(row);
       });
     });
   });
-  return results;
+  upcomingResults.sort((a,b) => a.startTime.localeCompare(b.startTime));
+  return { now: nowResults, upcoming: upcomingResults };
 }
 
 // 클리닉실 현황 (시간표 기반 자동 계산)
 window.loadClinicRoom = async function() {
   const el = document.getElementById('crList');
+  const upEl = document.getElementById('crUpcomingList');
   el.innerHTML = '<div class="empty">불러오는 중...</div>';
-  const [studentsSnap, timetablesSnap] = await Promise.all([
-    getDocs(collection(db, 'students')),
-    getDocs(collection(db, 'timetables'))
-  ]);
-  const students = [];
-  studentsSnap.forEach(d => students.push({ id: d.id, ...d.data() }));
-  const timetables = [];
-  timetablesSnap.forEach(d => timetables.push({ id: d.id, ...d.data() }));
+  upEl.innerHTML = '<div class="empty">불러오는 중...</div>';
+  let students = [], timetables = [];
+  try {
+    const [studentsSnap, timetablesSnap] = await Promise.all([
+      getDocs(collection(db, 'students')),
+      getDocs(collection(db, 'timetables'))
+    ]);
+    studentsSnap.forEach(d => students.push({ id: d.id, ...d.data() }));
+    timetablesSnap.forEach(d => timetables.push({ id: d.id, ...d.data() }));
+  } catch (e) {
+    const errMsg = `<div class="empty" style="color:#ff9090;">불러오지 못했습니다. (${esc(e.message)})<br>원장님께 권한 설정(Firestore 보안규칙) 확인을 요청해주세요.</div>`;
+    el.innerHTML = errMsg;
+    upEl.innerHTML = errMsg;
+    return;
+  }
 
-  const rows = computeCurrentClinicStudents(students, timetables);
-  document.getElementById('crCount').textContent = rows.length;
-  if (!rows.length) { el.innerHTML = '<div class="empty">지금 이 시간에 클리닉인 학생이 없습니다.</div>'; return; }
+  const { now: nowRows, upcoming: upRows } = computeCurrentClinicStudents(students, timetables);
 
-  el.innerHTML = rows.map(r => `
-    <div class="item">
-      <div class="item-name">${esc(r.name)}</div>
-      <span class="item-meta">${esc(r.grade)}</span>
-      <span class="item-meta">${esc(r.classGroup)}</span>
-      <span class="item-meta">${esc(r.teacherName)}</span>
-      <span class="badge">~${esc(r.endTime)}</span>
-    </div>`).join('');
+  document.getElementById('crCount').textContent = nowRows.length;
+  if (!nowRows.length) { el.innerHTML = '<div class="empty">지금 이 시간에 클리닉인 학생이 없습니다.</div>'; }
+  else {
+    el.innerHTML = nowRows.map(r => `
+      <div class="item">
+        <div class="item-name">${esc(r.name)}</div>
+        <span class="item-meta">${esc(r.grade)}</span>
+        <span class="item-meta">${esc(r.classGroup)}</span>
+        <span class="item-meta">${esc(r.teacherName)}</span>
+        <span class="badge">~${esc(r.endTime)}</span>
+      </div>`).join('');
+  }
+
+  document.getElementById('crUpcomingCount').textContent = upRows.length;
+  if (!upRows.length) { upEl.innerHTML = '<div class="empty">오늘 예정된 클리닉이 더 없습니다.</div>'; }
+  else {
+    upEl.innerHTML = upRows.map(r => `
+      <div class="item">
+        <div class="item-name">${esc(r.name)}</div>
+        <span class="item-meta">${esc(r.grade)}</span>
+        <span class="item-meta">${esc(r.classGroup)}</span>
+        <span class="item-meta">${esc(r.teacherName)}</span>
+        <span class="badge">${esc(r.startTime)}~${esc(r.endTime)}</span>
+      </div>`).join('');
+  }
 };
 
 // 숙제 확인
