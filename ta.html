@@ -262,18 +262,27 @@ window.loadClinicRoom = async function() {
 };
 
 // 숙제 확인
+// 관리자가 올린 날짜(요일)에 따라, 같은 요일그룹의 다음 등원일이 되어야 노출됨
+// (예: 화요일에 올린 화목반 숙제 → 목요일에 노출 / 월요일에 올린 월수금반 숙제 → 수요일에 노출)
+function todayStr() {
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
 window.loadHomework = async function() {
   const el = document.getElementById('hwList');
   el.innerHTML = '<div class="empty">불러오는 중...</div>';
   const snap = await getDocs(query(collection(db, 'homeworks'), orderBy('createdAt', 'desc')));
   const rows = [];
   snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
-  document.getElementById('hwCount').textContent = rows.length;
-  if (!rows.length) { el.innerHTML = '<div class="empty">업로드된 숙제가 없습니다.</div>'; return; }
-  el.innerHTML = rows.map(r => `
+  const today = todayStr();
+  // targetDate가 있으면 그 날짜부터 노출, 없는(기존) 자료는 그냥 노출
+  const visible = rows.filter(r => !r.targetDate || r.targetDate <= today);
+  document.getElementById('hwCount').textContent = visible.length;
+  if (!visible.length) { el.innerHTML = '<div class="empty">오늘 확인할 숙제가 없습니다.</div>'; return; }
+  el.innerHTML = visible.map(r => `
     <div class="item">
-      <div class="item-name">${esc(r.title)}</div>
-      <span class="item-meta">${esc(r.target)}</span>
+      <div class="item-name">${esc(r.date || '')} 숙제</div>
       <a href="${r.fileURL}" target="_blank" class="btn btn-secondary btn-sm">📄 열기</a>
     </div>`).join('');
 };
