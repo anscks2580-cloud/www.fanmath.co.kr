@@ -104,7 +104,11 @@
   <!-- 작업물 -->
   <div class="tab-panel" id="tab-tasks">
     <div class="card">
-      <h3>📝 조교 작업물 (네이버 마이박스)</h3>
+      <h3>📁 조교 작업물 마이박스 폴더</h3>
+      <div id="ttLinkArea"><div class="empty">불러오는 중...</div></div>
+    </div>
+    <div class="card">
+      <h3>📝 오늘의 작업 내용</h3>
       <div id="ttList"><div class="empty">불러오는 중...</div></div>
     </div>
   </div>
@@ -300,21 +304,34 @@ window.loadAnswerKeys = async function() {
       <a href="${r.link}" target="_blank" class="btn btn-secondary btn-sm">🔗 링크를 눌러주세요</a>
     </div>`).join('');
 };
-// 조교 작업물
+// 조교 작업물: 고정 마이박스 링크
+window.loadTaMyboxLink = async function() {
+  const el = document.getElementById('ttLinkArea');
+  el.innerHTML = '<div class="empty">불러오는 중...</div>';
+  try {
+    const snap = await getDoc(doc(db, 'settings', 'taMyboxLink'));
+    const link = snap.exists() ? snap.data().link : '';
+    if (!link) { el.innerHTML = '<div class="empty">등록된 마이박스 링크가 없습니다.</div>'; return; }
+    el.innerHTML = `<a href="${link}" target="_blank" class="btn btn-secondary btn-sm">🔗 링크를 눌러주세요</a>`;
+  } catch(e) {
+    el.innerHTML = '<div class="empty">불러오지 못했습니다.</div>';
+  }
+};
+
+// 조교 작업물: 하루하루 작업 내용
 window.loadTasks = async function() {
   const el = document.getElementById('ttList');
   el.innerHTML = '<div class="empty">불러오는 중...</div>';
   const snap = await getDocs(query(collection(db, 'taTasks'), orderBy('createdAt', 'desc')));
   const rows = [];
   snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
-  if (!rows.length) { el.innerHTML = '<div class="empty">등록된 작업물이 없습니다.</div>'; return; }
+  if (!rows.length) { el.innerHTML = '<div class="empty">등록된 작업 내용이 없습니다.</div>'; return; }
   el.innerHTML = rows.map(r => {
     const dateStr = r.createdAt ? new Date(r.createdAt).toLocaleDateString('ko-KR', {month:'numeric', day:'numeric'}) : '';
     return `
     <div class="item" style="flex-direction:column; align-items:stretch;">
       <div class="item-name">${esc(dateStr)} 조교 ${esc(r.taName)} 작업내용</div>
       <div class="item-meta" style="white-space:pre-wrap;">${esc(r.note)}</div>
-      <a href="${r.link}" target="_blank" class="btn btn-secondary btn-sm" style="align-self:flex-start;">🔗 링크를 눌러주세요</a>
     </div>`;
   }).join('');
 };
@@ -328,7 +345,7 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
   document.getElementById('taName').textContent = `${tDoc.data().name} 조교님 · ${tDoc.data().branch || ''}`;
-  await Promise.all([loadClinicRoom(), loadHomework(), loadAnswerKeys(), loadTasks()]);
+  await Promise.all([loadClinicRoom(), loadHomework(), loadAnswerKeys(), loadTasks(), loadTaMyboxLink()]);
 });
 </script>
 </body>

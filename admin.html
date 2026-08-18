@@ -990,17 +990,22 @@
     </div>
 
     <div class="card">
-      <h3>+ 조교 작업물 등록 (네이버 마이박스 링크)</h3>
-      <div class="form-row">
-        <div class="form-group"><label>조교 이름</label><input type="text" id="tt-name" placeholder="예: 김경열"></div>
-        <div class="form-group"><label>마이박스 링크</label><input type="text" id="tt-link" placeholder="https://..."></div>
-      </div>
+      <h3>📁 조교 작업물 마이박스 링크 (고정)</h3>
+      <div class="form-group" style="margin-bottom:12px;"><label>마이박스 폴더 링크</label><input type="text" id="tt-mybox-link" placeholder="https://..."></div>
+      <button class="btn btn-primary" onclick="saveTaMyboxLink()">저장</button>
+      <div class="msg" id="ttLinkMsg"></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:10px;">한 번 저장해두면 조교 페이지에서 계속 이 링크로 폴더에 들어갑니다. 링크가 바뀔 때만 다시 저장하면 됩니다.</div>
+    </div>
+
+    <div class="card">
+      <h3>+ 오늘의 작업 내용 등록</h3>
+      <div class="form-group"><label>조교 이름</label><input type="text" id="tt-name" placeholder="예: 김경열"></div>
       <div class="form-group" style="margin-bottom:12px;"><label>작업 내용</label><input type="text" id="tt-note" placeholder="예: 2025년 1학기 기말고사 군포고1 해설지 작성"></div>
       <button class="btn btn-primary" onclick="addTaTask()">등록</button>
       <div class="msg" id="ttMsg"></div>
     </div>
     <div class="card">
-      <h3>📝 조교 작업물 목록 (<span id="ttCount">0</span>건)</h3>
+      <h3>📝 작업 내용 목록 (<span id="ttCount">0</span>건)</h3>
       <div id="ttList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
     </div>
   </div>
@@ -4031,9 +4036,9 @@ window.runClinicDiagnosis = () => {
 // ══════════════════════════════════════════
 let taMaterialsInited = false;
 window.initTaMaterialsTab = async () => {
-  if (taMaterialsInited) { await Promise.all([loadHomeworks(), loadAnswerKeys(), loadTaTasks()]); return; }
+  if (taMaterialsInited) { await Promise.all([loadHomeworks(), loadAnswerKeys(), loadTaTasks(), loadTaMyboxLink()]); return; }
   taMaterialsInited = true;
-  await Promise.all([loadHomeworks(), loadAnswerKeys(), loadTaTasks()]);
+  await Promise.all([loadHomeworks(), loadAnswerKeys(), loadTaTasks(), loadTaMyboxLink()]);
 };
 
 // 숙제
@@ -4128,32 +4133,44 @@ window.deleteAnswerKey = async (id) => {
   await loadAnswerKeys();
 };
 
-// 조교 작업물 링크
+// 조교 작업물: 고정 마이박스 링크
+async function loadTaMyboxLink() {
+  try {
+    const snap = await getDoc(doc(db, 'settings', 'taMyboxLink'));
+    document.getElementById('tt-mybox-link').value = snap.exists() ? (snap.data().link || '') : '';
+  } catch(e) { /* noop */ }
+}
+
+window.saveTaMyboxLink = async () => {
+  const link = document.getElementById('tt-mybox-link').value.trim();
+  if (!link) { showMsg('ttLinkMsg', '링크를 입력해주세요.', 'error'); return; }
+  await setDoc(doc(db, 'settings', 'taMyboxLink'), { link, updatedAt: new Date().toISOString() });
+  showMsg('ttLinkMsg', '마이박스 링크 저장 완료!', 'success');
+};
+
+// 조교 작업물: 하루하루 작업 내용
 async function loadTaTasks() {
   const snap = await getDocs(query(collection(db, 'taTasks'), orderBy('createdAt', 'desc')));
   const rows = [];
   snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
   document.getElementById('ttCount').textContent = rows.length;
   const el = document.getElementById('ttList');
-  if (!rows.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;">등록된 작업물이 없습니다.</div>'; return; }
+  if (!rows.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;">등록된 작업 내용이 없습니다.</div>'; return; }
   el.innerHTML = rows.map(r => `
     <div class="student-item">
       <div class="student-name">${r.createdAt ? new Date(r.createdAt).toLocaleDateString('ko-KR', {month:'numeric', day:'numeric'}) : ''} 조교 ${r.taName || ''}</div>
       <span class="student-meta" style="font-size:11px;">${r.note || ''}</span>
-      <a href="${r.link}" target="_blank" class="btn btn-secondary btn-sm">열기</a>
       <button class="btn btn-danger btn-sm" onclick="deleteTaTask('${r.id}')">삭제</button>
     </div>`).join('');
 }
 
 window.addTaTask = async () => {
   const taName = document.getElementById('tt-name').value.trim();
-  const link = document.getElementById('tt-link').value.trim();
   const note = document.getElementById('tt-note').value.trim();
-  if (!taName || !link || !note) { showMsg('ttMsg', '조교 이름, 링크, 작업 내용을 모두 입력해주세요.', 'error'); return; }
-  await addDoc(collection(db, 'taTasks'), { taName, link, note, createdAt: new Date().toISOString() });
-  showMsg('ttMsg', '작업물 등록 완료!', 'success');
+  if (!taName || !note) { showMsg('ttMsg', '조교 이름과 작업 내용을 모두 입력해주세요.', 'error'); return; }
+  await addDoc(collection(db, 'taTasks'), { taName, note, createdAt: new Date().toISOString() });
+  showMsg('ttMsg', '작업 내용 등록 완료!', 'success');
   document.getElementById('tt-name').value = '';
-  document.getElementById('tt-link').value = '';
   document.getElementById('tt-note').value = '';
   await loadTaTasks();
 };
