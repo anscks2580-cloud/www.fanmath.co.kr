@@ -967,8 +967,7 @@
     <div class="card">
       <h3>+ 숙제 업로드 (이미지/PDF)</h3>
       <div class="form-row">
-        <div class="form-group"><label>제목</label><input type="text" id="hw-title" placeholder="예: 8/13 고2 대수 숙제"></div>
-        <div class="form-group"><label>대상 (반/학년, 선택)</label><input type="text" id="hw-target" placeholder="예: 고2 화목반"></div>
+        <div class="form-group"><label>날짜</label><input type="date" id="hw-date" style="color-scheme:dark;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;"></div>
       </div>
       <input type="file" id="hw-file" accept="image/*,.pdf" style="margin-bottom:12px;color:var(--muted);font-size:13px;">
       <button class="btn btn-primary" onclick="uploadHomework()">업로드</button>
@@ -980,12 +979,8 @@
     </div>
 
     <div class="card">
-      <h3>+ 답지 링크 등록 (네이버 마이박스 · Vimeo)</h3>
-      <div class="form-row">
-        <div class="form-group"><label>제목</label><input type="text" id="ak-title" placeholder="예: 8월 대수 심화 답지"></div>
-        <div class="form-group"><label>링크 URL</label><input type="text" id="ak-link" placeholder="https://..."></div>
-      </div>
-      <div class="form-group" style="margin-bottom:12px;"><label>메모 (선택)</label><input type="text" id="ak-note" placeholder="예: 마이박스 > 답지 > 대수 폴더"></div>
+      <h3>+ 답지 링크 등록 (네이버 마이박스)</h3>
+      <div class="form-group" style="margin-bottom:12px;"><label>마이박스 링크</label><input type="text" id="ak-link" placeholder="https://..."></div>
       <button class="btn btn-primary" onclick="addAnswerKey()">등록</button>
       <div class="msg" id="akMsg"></div>
     </div>
@@ -997,10 +992,10 @@
     <div class="card">
       <h3>+ 조교 작업물 등록 (네이버 마이박스 링크)</h3>
       <div class="form-row">
-        <div class="form-group"><label>제목</label><input type="text" id="tt-title" placeholder="예: 9월 모의고사 문제지 정리"></div>
-        <div class="form-group"><label>링크 URL</label><input type="text" id="tt-link" placeholder="https://..."></div>
+        <div class="form-group"><label>날짜</label><input type="date" id="tt-date" style="color-scheme:dark;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;"></div>
+        <div class="form-group"><label>마이박스 링크</label><input type="text" id="tt-link" placeholder="https://..."></div>
       </div>
-      <div class="form-group" style="margin-bottom:12px;"><label>작업 내용 (선택)</label><input type="text" id="tt-note" placeholder="예: 폴더 안 파일 이름 정리 후 인쇄"></div>
+      <div class="form-group" style="margin-bottom:12px;"><label>작업 내용</label><input type="text" id="tt-note" placeholder="예: 9월 모의고사 문제지 정리 후 폴더 업로드"></div>
       <button class="btn btn-primary" onclick="addTaTask()">등록</button>
       <div class="msg" id="ttMsg"></div>
     </div>
@@ -4051,19 +4046,17 @@ async function loadHomeworks() {
   if (!rows.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;">업로드된 숙제가 없습니다.</div>'; return; }
   el.innerHTML = rows.map(r => `
     <div class="student-item">
-      <div class="student-name">${r.title}</div>
-      <span class="student-meta">${r.target || ''}</span>
+      <div class="student-name">${r.date || r.title || ''}</div>
       <a href="${r.fileURL}" target="_blank" class="btn btn-secondary btn-sm">열기</a>
       <button class="btn btn-danger btn-sm" onclick="deleteHomework('${r.id}')">삭제</button>
     </div>`).join('');
 }
 
 window.uploadHomework = async () => {
-  const title = document.getElementById('hw-title').value.trim();
-  const target = document.getElementById('hw-target').value.trim();
+  const date = document.getElementById('hw-date').value;
   const fileInput = document.getElementById('hw-file');
   const file = fileInput.files[0];
-  if (!title || !file) { showMsg('hwUploadMsg', '제목과 파일을 모두 입력해주세요.', 'error'); return; }
+  if (!date || !file) { showMsg('hwUploadMsg', '날짜와 파일을 모두 입력해주세요.', 'error'); return; }
   showMsg('hwUploadMsg', '업로드 중...', 'success');
   try {
     const path = `homeworks/${Date.now()}_${file.name}`;
@@ -4071,11 +4064,10 @@ window.uploadHomework = async () => {
     await uploadBytes(fileRef, file);
     const fileURL = await getDownloadURL(fileRef);
     await addDoc(collection(db, 'homeworks'), {
-      title, target, fileURL, fileName: file.name, createdAt: new Date().toISOString()
+      date, fileURL, fileName: file.name, createdAt: new Date().toISOString()
     });
     showMsg('hwUploadMsg', '숙제 업로드 완료!', 'success');
-    document.getElementById('hw-title').value = '';
-    document.getElementById('hw-target').value = '';
+    document.getElementById('hw-date').value = '';
     fileInput.value = '';
     await loadHomeworks();
   } catch(e) {
@@ -4099,23 +4091,18 @@ async function loadAnswerKeys() {
   if (!rows.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;">등록된 답지 링크가 없습니다.</div>'; return; }
   el.innerHTML = rows.map(r => `
     <div class="student-item">
-      <div class="student-name">${r.title}</div>
-      <span class="student-meta" style="font-size:11px;">${r.note || ''}</span>
+      <div class="student-name">${r.createdAt ? new Date(r.createdAt).toLocaleDateString('ko-KR') : ''}</div>
       <a href="${r.link}" target="_blank" class="btn btn-secondary btn-sm">열기</a>
       <button class="btn btn-danger btn-sm" onclick="deleteAnswerKey('${r.id}')">삭제</button>
     </div>`).join('');
 }
 
 window.addAnswerKey = async () => {
-  const title = document.getElementById('ak-title').value.trim();
   const link = document.getElementById('ak-link').value.trim();
-  const note = document.getElementById('ak-note').value.trim();
-  if (!title || !link) { showMsg('akMsg', '제목과 링크를 입력해주세요.', 'error'); return; }
-  await addDoc(collection(db, 'answerKeys'), { title, link, note, createdAt: new Date().toISOString() });
+  if (!link) { showMsg('akMsg', '링크를 입력해주세요.', 'error'); return; }
+  await addDoc(collection(db, 'answerKeys'), { link, createdAt: new Date().toISOString() });
   showMsg('akMsg', '답지 링크 등록 완료!', 'success');
-  document.getElementById('ak-title').value = '';
   document.getElementById('ak-link').value = '';
-  document.getElementById('ak-note').value = '';
   await loadAnswerKeys();
 };
 
@@ -4134,21 +4121,20 @@ async function loadTaTasks() {
   if (!rows.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;">등록된 작업물이 없습니다.</div>'; return; }
   el.innerHTML = rows.map(r => `
     <div class="student-item">
-      <div class="student-name">${r.title}</div>
-      <span class="student-meta" style="font-size:11px;">${r.note || ''}</span>
+      <div class="student-name">${r.date || ''} — ${r.note || ''}</div>
       <a href="${r.link}" target="_blank" class="btn btn-secondary btn-sm">열기</a>
       <button class="btn btn-danger btn-sm" onclick="deleteTaTask('${r.id}')">삭제</button>
     </div>`).join('');
 }
 
 window.addTaTask = async () => {
-  const title = document.getElementById('tt-title').value.trim();
+  const date = document.getElementById('tt-date').value;
   const link = document.getElementById('tt-link').value.trim();
   const note = document.getElementById('tt-note').value.trim();
-  if (!title || !link) { showMsg('ttMsg', '제목과 링크를 입력해주세요.', 'error'); return; }
-  await addDoc(collection(db, 'taTasks'), { title, link, note, createdAt: new Date().toISOString() });
+  if (!date || !link || !note) { showMsg('ttMsg', '날짜, 링크, 작업 내용을 모두 입력해주세요.', 'error'); return; }
+  await addDoc(collection(db, 'taTasks'), { date, link, note, createdAt: new Date().toISOString() });
   showMsg('ttMsg', '작업물 등록 완료!', 'success');
-  document.getElementById('tt-title').value = '';
+  document.getElementById('tt-date').value = '';
   document.getElementById('tt-link').value = '';
   document.getElementById('tt-note').value = '';
   await loadTaTasks();
