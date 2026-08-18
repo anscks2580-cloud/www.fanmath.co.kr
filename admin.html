@@ -991,11 +991,7 @@
 
     <div class="card">
       <h3>+ 조교 작업물 등록 (네이버 마이박스 링크)</h3>
-      <div class="form-row">
-        <div class="form-group"><label>날짜</label><input type="date" id="tt-date" style="color-scheme:dark;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;"></div>
-        <div class="form-group"><label>마이박스 링크</label><input type="text" id="tt-link" placeholder="https://..."></div>
-      </div>
-      <div class="form-group" style="margin-bottom:12px;"><label>작업 내용</label><input type="text" id="tt-note" placeholder="예: 9월 모의고사 문제지 정리 후 폴더 업로드"></div>
+      <div class="form-group" style="margin-bottom:12px;"><label>마이박스 링크</label><input type="text" id="tt-link" placeholder="https://..."></div>
       <button class="btn btn-primary" onclick="addTaTask()">등록</button>
       <div class="msg" id="ttMsg"></div>
     </div>
@@ -4121,22 +4117,18 @@ async function loadTaTasks() {
   if (!rows.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;">등록된 작업물이 없습니다.</div>'; return; }
   el.innerHTML = rows.map(r => `
     <div class="student-item">
-      <div class="student-name">${r.date || ''} — ${r.note || ''}</div>
+      <div class="student-name">${r.createdAt ? new Date(r.createdAt).toLocaleDateString('ko-KR') : ''}</div>
       <a href="${r.link}" target="_blank" class="btn btn-secondary btn-sm">열기</a>
       <button class="btn btn-danger btn-sm" onclick="deleteTaTask('${r.id}')">삭제</button>
     </div>`).join('');
 }
 
 window.addTaTask = async () => {
-  const date = document.getElementById('tt-date').value;
   const link = document.getElementById('tt-link').value.trim();
-  const note = document.getElementById('tt-note').value.trim();
-  if (!date || !link || !note) { showMsg('ttMsg', '날짜, 링크, 작업 내용을 모두 입력해주세요.', 'error'); return; }
-  await addDoc(collection(db, 'taTasks'), { date, link, note, createdAt: new Date().toISOString() });
+  if (!link) { showMsg('ttMsg', '링크를 입력해주세요.', 'error'); return; }
+  await addDoc(collection(db, 'taTasks'), { link, createdAt: new Date().toISOString() });
   showMsg('ttMsg', '작업물 등록 완료!', 'success');
-  document.getElementById('tt-date').value = '';
   document.getElementById('tt-link').value = '';
-  document.getElementById('tt-note').value = '';
   await loadTaTasks();
 };
 
