@@ -991,7 +991,11 @@
 
     <div class="card">
       <h3>+ 조교 작업물 등록 (네이버 마이박스 링크)</h3>
-      <div class="form-group" style="margin-bottom:12px;"><label>마이박스 링크</label><input type="text" id="tt-link" placeholder="https://..."></div>
+      <div class="form-row">
+        <div class="form-group"><label>조교 이름</label><input type="text" id="tt-name" placeholder="예: 김경열"></div>
+        <div class="form-group"><label>마이박스 링크</label><input type="text" id="tt-link" placeholder="https://..."></div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;"><label>작업 내용</label><input type="text" id="tt-note" placeholder="예: 2025년 1학기 기말고사 군포고1 해설지 작성"></div>
       <button class="btn btn-primary" onclick="addTaTask()">등록</button>
       <div class="msg" id="ttMsg"></div>
     </div>
@@ -4117,18 +4121,23 @@ async function loadTaTasks() {
   if (!rows.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;">등록된 작업물이 없습니다.</div>'; return; }
   el.innerHTML = rows.map(r => `
     <div class="student-item">
-      <div class="student-name">${r.createdAt ? new Date(r.createdAt).toLocaleDateString('ko-KR') : ''}</div>
+      <div class="student-name">${r.createdAt ? new Date(r.createdAt).toLocaleDateString('ko-KR', {month:'numeric', day:'numeric'}) : ''} 조교 ${r.taName || ''}</div>
+      <span class="student-meta" style="font-size:11px;">${r.note || ''}</span>
       <a href="${r.link}" target="_blank" class="btn btn-secondary btn-sm">열기</a>
       <button class="btn btn-danger btn-sm" onclick="deleteTaTask('${r.id}')">삭제</button>
     </div>`).join('');
 }
 
 window.addTaTask = async () => {
+  const taName = document.getElementById('tt-name').value.trim();
   const link = document.getElementById('tt-link').value.trim();
-  if (!link) { showMsg('ttMsg', '링크를 입력해주세요.', 'error'); return; }
-  await addDoc(collection(db, 'taTasks'), { link, createdAt: new Date().toISOString() });
+  const note = document.getElementById('tt-note').value.trim();
+  if (!taName || !link || !note) { showMsg('ttMsg', '조교 이름, 링크, 작업 내용을 모두 입력해주세요.', 'error'); return; }
+  await addDoc(collection(db, 'taTasks'), { taName, link, note, createdAt: new Date().toISOString() });
   showMsg('ttMsg', '작업물 등록 완료!', 'success');
+  document.getElementById('tt-name').value = '';
   document.getElementById('tt-link').value = '';
+  document.getElementById('tt-note').value = '';
   await loadTaTasks();
 };
 

@@ -288,12 +288,9 @@ window.loadAnswerKeys = async function() {
   if (!rows.length) { el.innerHTML = '<div class="empty">등록된 답지 링크가 없습니다.</div>'; return; }
   el.innerHTML = rows.map(r => `
     <div class="item">
-      <div class="item-name">${esc(r.title)}</div>
-      <span class="item-meta">${esc(r.note)}</span>
-      <a href="${r.link}" target="_blank" class="btn btn-secondary btn-sm">🔗 열기</a>
+      <a href="${r.link}" target="_blank" class="btn btn-secondary btn-sm">🔗 링크를 눌러주세요</a>
     </div>`).join('');
 };
-
 // 조교 작업물
 window.loadTasks = async function() {
   const el = document.getElementById('ttList');
@@ -302,12 +299,15 @@ window.loadTasks = async function() {
   const rows = [];
   snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
   if (!rows.length) { el.innerHTML = '<div class="empty">등록된 작업물이 없습니다.</div>'; return; }
-  el.innerHTML = rows.map(r => `
-    <div class="item">
-      <div class="item-name">${esc(r.title)}</div>
-      <span class="item-meta">${esc(r.note)}</span>
-      <a href="${r.link}" target="_blank" class="btn btn-secondary btn-sm">🔗 열기</a>
-    </div>`).join('');
+  el.innerHTML = rows.map(r => {
+    const dateStr = r.createdAt ? new Date(r.createdAt).toLocaleDateString('ko-KR', {month:'numeric', day:'numeric'}) : '';
+    return `
+    <div class="item" style="flex-direction:column; align-items:stretch;">
+      <div class="item-name">${esc(dateStr)} 조교 ${esc(r.taName)} 작업내용</div>
+      <div class="item-meta" style="white-space:pre-wrap;">${esc(r.note)}</div>
+      <a href="${r.link}" target="_blank" class="btn btn-secondary btn-sm" style="align-self:flex-start;">🔗 링크를 눌러주세요</a>
+    </div>`;
+  }).join('');
 };
 
 // 조교 권한 확인
