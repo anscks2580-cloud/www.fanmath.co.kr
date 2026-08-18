@@ -297,9 +297,22 @@
 
     <!-- 제출 이력 -->
     <div class="card">
-      <div class="card-title">🗂 최근 제출 이력</div>
+      <div class="card-title">🗂 제출 이력 조회</div>
+      <div class="form-grid" style="margin-bottom:14px;">
+        <div class="form-group">
+          <label>학생</label>
+          <select id="wh-student"><option value="">전체 학생</option></select>
+        </div>
+        <div class="form-group">
+          <label>주차</label>
+          <select id="wh-week"><option value="">전체 주차</option></select>
+        </div>
+      </div>
+      <div class="btn-row" style="margin-bottom:14px;">
+        <button class="btn btn-gold" onclick="loadWeeklyHistory()">조회</button>
+      </div>
       <div id="weeklyHistory" class="history-list">
-        <div class="empty-state"><div class="icon">📭</div>아직 제출 이력이 없습니다.</div>
+        <div class="empty-state"><div class="icon">🔍</div>학생 또는 주차를 선택하고 조회해주세요.</div>
       </div>
     </div>
   </div>
@@ -837,8 +850,20 @@ async function loadStudents() {
   const viewEl = document.getElementById('view-student');
   if (viewEl) viewEl.innerHTML = '<option value="">전체 학생</option>' + myOpts;
 
+  const whStudentEl = document.getElementById('wh-student');
+  if (whStudentEl) whStudentEl.innerHTML = '<option value="">전체 학생</option>' + myOpts;
+  const whWeekEl = document.getElementById('wh-week');
+  if (whWeekEl) {
+    const weekOpts = [];
+    for (let offset = 1; offset <= 12; offset++) {
+      const label = getWeekLabel(new Date(), offset);
+      const key = getWeekKey(new Date(), offset);
+      weekOpts.push(`<option value="${key}">${label}</option>`);
+    }
+    whWeekEl.innerHTML = '<option value="">전체 주차</option>' + weekOpts.join('');
+  }
+
   loadTestHistory();
-  loadWeeklyHistory();
   loadMonthlyHistory();
   loadProgressHistory();
 }
@@ -1071,8 +1096,11 @@ window.resetWeekly = function() {
 };
 
 // ── 주간 이력 로드 ──
-async function loadWeeklyHistory() {
+window.loadWeeklyHistory = async function loadWeeklyHistory() {
   const el = document.getElementById('weeklyHistory');
+  const studentId = document.getElementById('wh-student')?.value || '';
+  const weekKey = document.getElementById('wh-week')?.value || '';
+  el.innerHTML = '<div class="empty-state"><div class="icon">⏳</div>조회 중...</div>';
   try {
     const q = query(
       collection(db, 'weeklyReports'),
@@ -1080,13 +1108,16 @@ async function loadWeeklyHistory() {
       orderBy('submittedAt', 'desc')
     );
     const snap = await getDocs(q);
-    if (snap.empty) { el.innerHTML = '<div class="empty-state"><div class="icon">📭</div>아직 제출 이력이 없습니다.</div>'; return; }
+    let rows = [];
+    snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+    if (studentId) rows = rows.filter(r => r.studentId === studentId);
+    if (weekKey) rows = rows.filter(r => r.weekKey === weekKey);
+    if (!rows.length) { el.innerHTML = '<div class="empty-state"><div class="icon">📭</div>해당 조건의 제출 이력이 없습니다.</div>'; return; }
     const ratingLabel = {5:'매우 우수',4:'우수',3:'보통',2:'미흡',1:'불량'};
     el.innerHTML = '';
     weeklyReportsCache = {};
-    snap.forEach(d => {
-      const data = d.data();
-      const docId = d.id;
+    rows.forEach(data => {
+      const docId = data.id;
       weeklyReportsCache[docId] = data;
       const rl = data.ratingsLabel || {};
       const div = document.createElement('div');
@@ -1116,7 +1147,7 @@ async function loadWeeklyHistory() {
   } catch(e) {
     el.innerHTML = `<div class="empty-state" style="color:#ff9090;">오류: ${e.message}<br>Firestore 인덱스가 필요할 수 있습니다.</div>`;
   }
-}
+};
 
 // ══ PDF 드롭존 설정 ══
 let selectedPdfFiles = [];
