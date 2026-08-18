@@ -236,11 +236,6 @@
 
       <!-- 학생 카드 목록 -->
       <div id="studentCardList" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;min-height:36px;"></div>
-      <!-- 수업 단원 -->
-      <div class="form-group" style="margin-bottom:16px;">
-        <label>수업 단원</label>
-        <input type="text" id="w-topic" placeholder="예: 수1 · 지수함수">
-      </div>
       <!-- hidden select for compatibility -->
       <select id="w-student" style="display:none;"></select>
 
@@ -984,7 +979,6 @@ function showAlert(el, msg, type) {
 // ══ 주간성취도 제출 ══
 window.submitWeekly = async function() {
   const studentId = document.getElementById('w-student').value;
-  const topic     = document.getElementById('w-topic').value.trim();
   const memo      = document.getElementById('w-memo').value.trim();
   const ok  = document.getElementById('weekly-ok');
   const err = document.getElementById('weekly-err');
@@ -1004,7 +998,7 @@ window.submitWeekly = async function() {
       studentId, studentName: student?.name || '',
       studentGrade: student?.grade || '',
       weekKey, weekLabel,
-      topic, memo,
+      memo,
       ratings: { ...weeklyRatings },
       ratingsLabel: {
         homework: ratingLabel[weeklyRatings.homework],
@@ -1049,8 +1043,7 @@ window.editWeeklyReport = function(docId) {
     b.style.color = sel ? 'var(--gold)' : 'var(--off-white)';
   });
 
-  // 단원/메모 채우기
-  document.getElementById('w-topic').value = data.topic || '';
+  // 메모 채우기
   document.getElementById('w-memo').value = data.memo || '';
 
   // 평점 채우기
@@ -1088,7 +1081,6 @@ window.cancelEditWeekly = function() {
 
 window.resetWeekly = function() {
   document.getElementById('w-student').value = '';
-  document.getElementById('w-topic').value = '';
   document.getElementById('w-memo').value = '';
   Object.keys(weeklyRatings).forEach(k => weeklyRatings[k] = null);
   document.querySelectorAll('.rating-btn').forEach(b => { if (!b.id?.startsWith('day-')) b.classList.remove('selected'); });
@@ -1126,7 +1118,6 @@ window.loadWeeklyHistory = async function loadWeeklyHistory() {
         <div class="history-item-top">
           <span class="history-week">${data.weekLabel} — ${data.studentName} (${data.studentGrade||''})</span>
           <div style="display:flex;align-items:center;gap:8px;">
-            <span class="history-date">${data.topic || ''}</span>
             <button onclick="editWeeklyReport('${docId}')"
               style="padding:3px 10px;font-size:11px;border-radius:6px;border:1px solid rgba(240,192,64,0.4);background:rgba(240,192,64,0.1);color:var(--gold);cursor:pointer;font-family:inherit;">
               수정
