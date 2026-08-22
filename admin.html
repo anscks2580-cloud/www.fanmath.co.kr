@@ -2917,6 +2917,49 @@ function showToast(msg) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
 }
 
+// 같은 태그(카테고리) 그룹 안에서 순서를 1번부터 빈틈없이 재정렬.
+// edits: [[videoId, 원하는순서(Number|null)], ...] — 방금 사용자가 입력한 값(우선순위 높음)
+async function renumberTagGroup(tag, edits) {
+  const editMap = new Map(edits);
+  const groupItems = videosCache.filter(v => v.tag === tag);
+  const writes = [];
+
+  // 1) 이번에 명시적으로 "미지정(빈칸)"으로 바꾼 항목은 번호 부여 대상에서 제외
+  editMap.forEach((num, id) => {
+    if (num == null) {
+      const v = groupItems.find(x => x.id === id);
+      if (v && v.order != null) {
+        writes.push(updateDoc(doc(db, 'videos', id), { order: null }).then(() => { v.order = null; }));
+      }
+    }
+  });
+
+  // 2) 번호를 가져야 할 나머지 항목들을 "원하는 순서" 기준으로 정렬 후 1..N 재부여
+  //    같은 번호를 지정하면 방금 수정한 항목이 그 번호를 차지하고 기존 항목은 뒤로 밀림
+  const withKey = groupItems
+    .filter(v => !(editMap.has(v.id) && editMap.get(v.id) == null))
+    .map((v, idx) => {
+      const edited = editMap.has(v.id);
+      const num = edited ? editMap.get(v.id) : (v.order != null ? Number(v.order) : null);
+      return { v, idx, edited, key: num == null ? Infinity : num };
+    });
+
+  withKey.sort((a, b) => {
+    if (a.key !== b.key) return a.key - b.key;
+    if (a.edited !== b.edited) return a.edited ? -1 : 1;
+    return a.idx - b.idx;
+  });
+
+  withKey.forEach((item, i) => {
+    const newOrder = i + 1;
+    if (item.v.order !== newOrder) {
+      writes.push(updateDoc(doc(db, 'videos', item.v.id), { order: newOrder }).then(() => { item.v.order = newOrder; }));
+    }
+  });
+
+  await Promise.all(writes);
+}
+
 // 행 저장 (순서 + 제목 함께)
 window.saveRow = async (id) => {
   const orderInput = document.getElementById('order-' + id);
@@ -2928,9 +2971,18 @@ window.saveRow = async (id) => {
   if (!title) { showToast('❌ 제목을 입력해주세요.'); return; }
 
   try {
-    await updateDoc(doc(db, 'videos', id), { order: orderNum, title });
     const cached = videosCache.find(v => v.id === id);
-    if (cached) { cached.order = orderNum; cached.title = title; }
+    const tag = cached ? cached.tag : null;
+
+    await updateDoc(doc(db, 'videos', id), { title });
+    if (cached) cached.title = title;
+
+    if (tag) {
+      await renumberTagGroup(tag, [[id, orderNum]]);
+    } else {
+      await updateDoc(doc(db, 'videos', id), { order: orderNum });
+      if (cached) cached.order = orderNum;
+    }
     showToast('✅ 저장 완료');
 
     const checkbox = document.querySelector(`.video-check[data-id="${id}"]`);
@@ -2959,10 +3011,14 @@ window.saveOrder = async (id) => {
   const val = input.value.trim();
   const orderNum = val === '' ? null : Number(val);
   try {
-    await updateDoc(doc(db, 'videos', id), { order: orderNum });
-    // videosCache 업데이트
     const cached = videosCache.find(v => v.id === id);
-    if (cached) cached.order = orderNum;
+    const tag = cached ? cached.tag : null;
+    if (tag) {
+      await renumberTagGroup(tag, [[id, orderNum]]);
+    } else {
+      await updateDoc(doc(db, 'videos', id), { order: orderNum });
+      if (cached) cached.order = orderNum;
+    }
     showToast(`✅ 순서 저장 완료 (${orderNum != null ? orderNum + '번' : '미지정'})`);
 
     // 해당 아이템이 속한 그룹 컨테이너 찾아서 내부 순서만 재정렬
@@ -2995,7 +3051,9 @@ window.bulkSaveOrder = async () => {
   const inputs = document.querySelectorAll('input[id^="order-"]');
   if (!inputs.length) { showToast('저장할 항목이 없습니다.'); return; }
   let saved = 0;
-  const promises = [];
+  const titlePromises = [];
+  const editsByTag = new Map(); // tag(또는 '__no_tag__') -> [[id, orderNum], ...]
+
   inputs.forEach(input => {
     const id = input.id.replace('order-', '');
     const val = input.value.trim();
@@ -3003,20 +3061,39 @@ window.bulkSaveOrder = async () => {
     const titleInput = document.getElementById('title-' + id);
     const title = titleInput ? titleInput.value.trim() : null;
     const cached = videosCache.find(v => v.id === id);
-    // 변경 없으면 스킵
-    if (cached && cached.order === orderNum && (title === null || cached.title === title)) return;
-    const updateData = { order: orderNum };
-    if (title) updateData.title = title;
-    promises.push(
-      updateDoc(doc(db, 'videos', id), updateData)
-        .then(() => {
-          if (cached) { cached.order = orderNum; if (title) cached.title = title; }
-          saved++;
-        })
-    );
+    if (!cached) return;
+
+    const orderChanged = !(cached.order == null && orderNum == null) && cached.order !== orderNum;
+    const titleChanged = !!title && cached.title !== title;
+    if (!orderChanged && !titleChanged) return;
+
+    if (titleChanged) {
+      titlePromises.push(
+        updateDoc(doc(db, 'videos', id), { title }).then(() => { cached.title = title; })
+      );
+    }
+    if (orderChanged) {
+      const tag = cached.tag || '__no_tag__';
+      if (!editsByTag.has(tag)) editsByTag.set(tag, []);
+      editsByTag.get(tag).push([id, orderNum]);
+    }
+    saved++;
   });
+
   try {
-    await Promise.all(promises);
+    await Promise.all(titlePromises);
+    for (const [tag, edits] of editsByTag) {
+      if (tag === '__no_tag__') {
+        await Promise.all(edits.map(([id, num]) =>
+          updateDoc(doc(db, 'videos', id), { order: num }).then(() => {
+            const c = videosCache.find(v => v.id === id);
+            if (c) c.order = num;
+          })
+        ));
+      } else {
+        await renumberTagGroup(tag, edits);
+      }
+    }
     document.querySelectorAll('[id^="vgrp-"]').forEach(groupEl => {
       if (groupEl.style.display === 'none') return;
       const rows = [...groupEl.querySelectorAll('.assign-item')];
@@ -3445,6 +3522,19 @@ window.syncSaveAll = async () => {
   const today = new Date().toISOString().slice(0,7).replace('-','.');
   let saved = 0, skipped = 0, excluded = 0;
 
+  // 태그(카테고리)별 다음 순서 번호. 기존에 등록된 강의가 있으면 그 다음 번호부터,
+  // 없으면 1번부터 — 비메오에서 불러온 순서 그대로 순차 부여.
+  const nextOrderByTag = {};
+  function nextOrder(tag) {
+    if (nextOrderByTag[tag] == null) {
+      const maxExisting = videosCache
+        .filter(v => v.tag === tag && v.order != null)
+        .reduce((max, v) => Math.max(max, Number(v.order)), 0);
+      nextOrderByTag[tag] = maxExisting + 1;
+    }
+    return nextOrderByTag[tag]++;
+  }
+
   for (let i = 0; i < syncCandidates.length; i++) {
     const checkEl = document.getElementById('sync-check-' + i);
     if (checkEl && !checkEl.checked) { excluded++; continue; }
@@ -3461,14 +3551,16 @@ window.syncSaveAll = async () => {
     }
 
     try {
+      const order = nextOrder(tag);
       await setDoc(doc(db, 'videos', v.vimeoId), {
         vimeoId: v.vimeoId,
         title,
         tag,
         date:    v.date || today,
-        order:   null,
+        order,
         createdAt: new Date().toISOString(),
       });
+      videosCache.push({ id: v.vimeoId, vimeoId: v.vimeoId, title, tag, date: v.date || today, order });
       saved++;
     } catch(e) {
       console.error('저장 실패:', v.title, e);
