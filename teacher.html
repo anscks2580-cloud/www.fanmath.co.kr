@@ -189,6 +189,7 @@
     <button class="teacher-tab" onclick="switchTab('progress',this)">📍 반별 진도</button>
     <button class="teacher-tab" onclick="switchTab('clinic',this);initClinicTab()">🏥 토요클리닉</button>
     <button class="teacher-tab" onclick="switchTab('videos',this);loadTeacherVideos()">🎬 강의 목록</button>
+    <button class="teacher-tab" onclick="switchTab('teachervideos',this);loadTeacherOnlyVideos()">🔒 선생님 전용 영상</button>
   </div>
 
   <!-- ══ 탭 1: 주간성취도 설문 ══ -->
@@ -662,6 +663,39 @@
         </div>
         <div id="videoModalTitle" style="margin-top:12px;font-size:15px;font-weight:600;color:#fff;text-align:center;"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- ══ 탭 6: 선생님 전용 영상 (학생 비공개) ══ -->
+  <div class="tab-panel" id="tab-teachervideos">
+    <div class="card">
+      <div class="card-title">🔒 선생님 전용 영상 등록 <span style="font-weight:400;font-size:12px;color:var(--muted);">— 학생에게는 노출되지 않고 선생님 로그인 시에만 보입니다</span></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>제목</label>
+          <input type="text" id="tv-title" placeholder="예: 3월 셋째주 수업 브리핑">
+        </div>
+        <div class="form-group">
+          <label>비메오 URL 또는 영상 ID</label>
+          <input type="text" id="tv-url" placeholder="예: https://vimeo.com/123456789 또는 123456789">
+        </div>
+      </div>
+      <div class="form-grid full">
+        <div class="form-group">
+          <label>메모 (선택)</label>
+          <textarea id="tv-desc" placeholder="영상 관련 참고사항"></textarea>
+        </div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-gold" onclick="submitTeacherOnlyVideo()">등록하기</button>
+      </div>
+      <div class="alert ok" id="tv-ok"></div>
+      <div class="alert err" id="tv-err"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🎞️ 등록된 영상 목록</div>
+      <div id="teacherOnlyVideoList" style="color:var(--muted);font-size:13px;">불러오는 중...</div>
     </div>
   </div>
 
@@ -1691,6 +1725,109 @@ window.closeVideoModal = function() {
 document.getElementById('videoModal').addEventListener('click', function(e) {
   if (e.target === this) closeVideoModal();
 });
+
+// ══════════ 선생님 전용 영상 (학생 비공개, teacherOnlyVideos 컬렉션) ══════════
+let teacherOnlyVideosCache = [];
+let teacherOnlyVideosLoaded = false;
+
+// 비메오 URL 또는 순수 ID 입력 모두 처리해서 ID만 추출
+function extractVimeoId(input) {
+  const s = (input || '').trim();
+  const m = s.match(/vimeo\.com\/(?:video\/)?(\d+)/i);
+  if (m) return m[1];
+  if (/^\d+$/.test(s)) return s;
+  return null;
+}
+
+window.submitTeacherOnlyVideo = async function() {
+  const title = document.getElementById('tv-title').value.trim();
+  const urlInput = document.getElementById('tv-url').value.trim();
+  const desc = document.getElementById('tv-desc').value.trim();
+  const ok = document.getElementById('tv-ok');
+  const err = document.getElementById('tv-err');
+
+  if (!title) { showAlert(err, '제목을 입력해주세요.', 'err'); return; }
+  const vimeoId = extractVimeoId(urlInput);
+  if (!vimeoId) { showAlert(err, '비메오 URL 또는 영상 ID를 올바르게 입력해주세요.', 'err'); return; }
+
+  try {
+    await addDoc(collection(db, 'teacherOnlyVideos'), {
+      title, vimeoId, desc,
+      teacherUid: currentTeacher.uid,
+      teacherName: currentTeacher.name,
+      createdAt: serverTimestamp()
+    });
+    showAlert(ok, `✅ "${title}" 영상이 등록되었습니다.`, 'ok');
+    document.getElementById('tv-title').value = '';
+    document.getElementById('tv-url').value = '';
+    document.getElementById('tv-desc').value = '';
+    teacherOnlyVideosLoaded = false;
+    loadTeacherOnlyVideos();
+  } catch(e) {
+    showAlert(err, '등록 오류: ' + e.message, 'err');
+  }
+};
+
+window.loadTeacherOnlyVideos = async function() {
+  if (teacherOnlyVideosLoaded) return;
+  const el = document.getElementById('teacherOnlyVideoList');
+  try {
+    const snap = await getDocs(collection(db, 'teacherOnlyVideos'));
+    teacherOnlyVideosCache = [];
+    snap.forEach(d => teacherOnlyVideosCache.push({ id: d.id, ...d.data() }));
+    teacherOnlyVideosCache.sort((a, b) => {
+      const ta = a.createdAt?.seconds || 0, tb = b.createdAt?.seconds || 0;
+      return tb - ta;
+    });
+    teacherOnlyVideosLoaded = true;
+    renderTeacherOnlyVideos();
+  } catch(e) {
+    el.innerHTML = `<div class="empty-state" style="color:#ff9090;">오류: ${e.message}</div>`;
+  }
+};
+
+function renderTeacherOnlyVideos() {
+  const el = document.getElementById('teacherOnlyVideoList');
+  if (!teacherOnlyVideosCache.length) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📭</div>등록된 영상이 없습니다.</div>';
+    return;
+  }
+  el.innerHTML = teacherOnlyVideosCache.map(v => `
+    <div style="display:flex;align-items:center;gap:14px;padding:14px 16px;
+      background:rgba(255,255,255,0.03);border:1px solid var(--border-soft);
+      border-radius:10px;margin-bottom:8px;">
+      <div onclick="openVideoModal('${v.vimeoId}','${(v.title||'').replace(/'/g,"\\'")}')"
+        style="width:48px;height:48px;border-radius:8px;overflow:hidden;flex-shrink:0;background:#000;cursor:pointer;">
+        <img src="https://vumbnail.com/${v.vimeoId}.jpg" alt=""
+          style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+      </div>
+      <div onclick="openVideoModal('${v.vimeoId}','${(v.title||'').replace(/'/g,"\\'")}')"
+        style="flex:1;min-width:0;cursor:pointer;">
+        <div style="font-size:14px;font-weight:600;color:var(--off-white);margin-bottom:4px;
+          overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${v.title || '-'}</div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span style="font-size:11px;color:var(--muted);">등록: ${v.teacherName || '-'}</span>
+          ${v.desc ? `<span style="font-size:11px;color:var(--muted);">· ${v.desc}</span>` : ''}
+        </div>
+      </div>
+      ${v.teacherUid === currentTeacher.uid ? `
+      <button onclick="deleteTeacherOnlyVideo('${v.id}')"
+        style="padding:4px 10px;font-size:11px;border-radius:6px;border:1px solid rgba(255,80,80,0.3);background:rgba(255,80,80,0.1);color:#ff9090;cursor:pointer;font-family:inherit;flex-shrink:0;">
+        삭제
+      </button>` : ''}
+    </div>`).join('');
+}
+
+window.deleteTeacherOnlyVideo = async function(docId) {
+  if (!confirm('이 영상을 삭제하시겠습니까?')) return;
+  try {
+    await deleteDoc(doc(db, 'teacherOnlyVideos', docId));
+    teacherOnlyVideosLoaded = false;
+    loadTeacherOnlyVideos();
+  } catch(e) {
+    alert('삭제 오류: ' + e.message);
+  }
+};
 
 // ── 엔터키 로그인 ──
 ['t-name','t-pw'].forEach(id => {
