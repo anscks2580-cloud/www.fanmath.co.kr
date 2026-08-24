@@ -619,35 +619,10 @@
     </div>
   </div>
 
-  <!-- ══ 탭 5: 강의 목록 ══ -->
+  <!-- ══ 탭 5: 강의 목록 (선생님전용 영상만) ══ -->
   <div class="tab-panel" id="tab-videos">
     <div class="card">
-      <div class="card-title">🎬 강의 목록</div>
-
-      <!-- 카테고리 필터 -->
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;">
-        <button class="rating-btn selected" data-cat="" onclick="filterVideosCat('',this)">전체</button>
-        <button class="rating-btn" data-cat="중1" onclick="filterVideosCat('중1',this)">중1</button>
-        <button class="rating-btn" data-cat="중2" onclick="filterVideosCat('중2',this)">중2</button>
-        <button class="rating-btn" data-cat="중3" onclick="filterVideosCat('중3',this)">중3</button>
-        <button class="rating-btn" data-cat="공통수학1" onclick="filterVideosCat('공통수학1',this)">공통수학1</button>
-        <button class="rating-btn" data-cat="공통수학2" onclick="filterVideosCat('공통수학2',this)">공통수학2</button>
-        <button class="rating-btn" data-cat="대수" onclick="filterVideosCat('대수',this)">대수</button>
-        <button class="rating-btn" data-cat="미적분" onclick="filterVideosCat('미적분',this)">미적분</button>
-        <button class="rating-btn" data-cat="확통" onclick="filterVideosCat('확통',this)">확통</button>
-        <button class="rating-btn" data-cat="미적분2" onclick="filterVideosCat('미적분2',this)">미적분2</button>
-        <button class="rating-btn" data-cat="기하" onclick="filterVideosCat('기하',this)">기하</button>
-        <button class="rating-btn" data-cat="기출_공통수학1" onclick="filterVideosCat('기출_공통수학1',this)">기출_공통수학1</button>
-        <button class="rating-btn" data-cat="기출_공통수학2" onclick="filterVideosCat('기출_공통수학2',this)">기출_공통수학2</button>
-        <button class="rating-btn" data-cat="기출_대수" onclick="filterVideosCat('기출_대수',this)">기출_대수</button>
-        <button class="rating-btn" data-cat="기출_미적분" onclick="filterVideosCat('기출_미적분',this)">기출_미적분</button>
-        <button class="rating-btn" data-cat="기출_확통" onclick="filterVideosCat('기출_확통',this)">기출_확통</button>
-        <button class="rating-btn" data-cat="기출_미적분2" onclick="filterVideosCat('기출_미적분2',this)">기출_미적분2</button>
-        <button class="rating-btn" data-cat="기출_기하" onclick="filterVideosCat('기출_기하',this)">기출_기하</button>
-        <button class="rating-btn" data-cat="수리논술" onclick="filterVideosCat('수리논술',this)">수리논술</button>
-        <button class="rating-btn" data-cat="선생님전용" onclick="filterVideosCat('선생님전용',this)" style="border-color:rgba(255,80,80,0.35);">🔒 선생님전용</button>
-      </div>
-
+      <div class="card-title">🔒 선생님전용 강의 목록</div>
       <div id="teacherVideoList" style="color:var(--muted);font-size:13px;">불러오는 중...</div>
     </div>
 
@@ -1437,7 +1412,8 @@ window.loadTeacherVideos = async function() {
   if (videosLoaded) return; // 이미 로드했으면 스킵
   const el = document.getElementById('teacherVideoList');
   try {
-    const snap = await getDocs(collection(db, 'videos'));
+    const q = query(collection(db, 'videos'), where('tag', '==', '선생님전용'));
+    const snap = await getDocs(q);
     allVideosCache = [];
     snap.forEach(d => allVideosCache.push({ id: d.id, ...d.data() }));
     // 날짜 최신순 정렬
@@ -1449,18 +1425,9 @@ window.loadTeacherVideos = async function() {
   }
 };
 
-window.filterVideosCat = function(cat, btn) {
-  currentVideoCat = cat;
-  document.querySelectorAll('#tab-videos .rating-btn').forEach(b => b.classList.remove('selected'));
-  btn.classList.add('selected');
-  renderTeacherVideos();
-};
-
 function renderTeacherVideos() {
   const el = document.getElementById('teacherVideoList');
-  const filtered = currentVideoCat
-    ? allVideosCache.filter(v => v.tag === currentVideoCat)
-    : allVideosCache;
+  const filtered = allVideosCache;
 
   if (!filtered.length) {
     el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px 0;">해당 카테고리의 강의가 없습니다.</div>';
