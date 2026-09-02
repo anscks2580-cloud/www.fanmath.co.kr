@@ -446,9 +446,14 @@
           <option>공통</option>
         </select>
       </div>
-      <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:20px;">
-        이메일/비밀번호는 Firebase Auth 계정 정보라 여기서 바로 바꿀 수 없어요.<br>
-        비밀번호를 바꾸려면 아래 "비밀번호 재설정 메일 보내기"를 눌러주세요.
+      <div class="form-group" style="margin-bottom:12px;">
+        <label>새 비밀번호로 직접 변경 (8자 이상)</label>
+        <input type="password" id="edit-adm-newpw" placeholder="새 비밀번호 입력">
+      </div>
+      <button class="btn btn-primary btn-sm" style="margin-bottom:14px;" onclick="setAdminPasswordDirect()">🔑 비밀번호 즉시 변경</button>
+
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:10px;">
+        본인이 직접 새 비밀번호를 입력해서 바꿔주기 곤란하면, 아래로 재설정 메일을 보내 본인이 바꾸게 할 수도 있어요.
       </div>
       <button class="btn btn-secondary btn-sm" style="margin-bottom:20px;" onclick="sendAdminPasswordReset()">📧 비밀번호 재설정 메일 보내기</button>
 
@@ -1434,6 +1439,23 @@
   <!-- 관리자 계정 관리 -->
   <div class="tab-panel" id="tab-adminmgmt">
     <div class="card">
+      <h3>🔑 내 비밀번호 변경</h3>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">현재 로그인한 계정(본인)의 비밀번호를 바로 바꿉니다.</div>
+      <div class="form-row" style="max-width:600px;">
+        <div class="form-group">
+          <label>현재 비밀번호</label>
+          <input type="password" id="mypw-current" placeholder="현재 비밀번호">
+        </div>
+        <div class="form-group">
+          <label>새 비밀번호 (8자 이상)</label>
+          <input type="password" id="mypw-new" placeholder="새 비밀번호">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="changeMyPassword()">내 비밀번호 변경</button>
+      <div class="msg" id="myPwMsg"></div>
+    </div>
+
+    <div class="card">
       <h3>+ 관리자 계정 추가</h3>
       <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:18px;">
         Firebase Auth에 계정을 생성하고 <code style="color:var(--gold);background:rgba(240,192,64,0.1);padding:2px 6px;border-radius:4px;">admins</code> 컬렉션에 등록합니다.<br>
@@ -1709,7 +1731,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { initializeApp as initializeSecondaryApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, deleteDoc, updateDoc, query, where, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, getDownloadURL, listAll, uploadBytes } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
@@ -6566,6 +6588,33 @@ window.initAdminMgmtTab = async function() {
   await loadAdmins();
 };
 
+// ── 내 비밀번호 변경 (본인, Firebase Auth 클라이언트 SDK로 직접) ──
+window.changeMyPassword = async function() {
+  const currentPw = document.getElementById('mypw-current').value;
+  const newPw     = document.getElementById('mypw-new').value;
+  if (!currentPw || !newPw) {
+    showMsg('myPwMsg', '현재 비밀번호와 새 비밀번호를 모두 입력해주세요.', 'error'); return;
+  }
+  if (newPw.length < 8) {
+    showMsg('myPwMsg', '새 비밀번호는 8자리 이상이어야 합니다.', 'error'); return;
+  }
+  try {
+    const user = auth.currentUser;
+    // 최근 로그인 요구사항 대비: 현재 비밀번호로 재인증 후 변경
+    const cred = EmailAuthProvider.credential(user.email, currentPw);
+    await reauthenticateWithCredential(user, cred);
+    await updatePassword(user, newPw);
+    showMsg('myPwMsg', '✅ 비밀번호가 변경되었습니다.', 'success');
+    document.getElementById('mypw-current').value = '';
+    document.getElementById('mypw-new').value = '';
+  } catch(e) {
+    const msg = e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential'
+      ? '현재 비밀번호가 올바르지 않습니다.'
+      : '오류: ' + e.message;
+    showMsg('myPwMsg', msg, 'error');
+  }
+};
+
 async function loadAdmins() {
   try {
     const snap = await getDocs(collection(db, 'admins'));
@@ -6642,6 +6691,7 @@ window.openEditAdminModal = function(uid) {
 
   document.getElementById('edit-adm-name').value   = a.name || '';
   document.getElementById('edit-adm-branch').value = a.branch || '평촌관';
+  document.getElementById('edit-adm-newpw').value  = '';
 
   const msg = document.getElementById('editAdminMsg');
   msg.style.display = 'none';
@@ -6684,6 +6734,25 @@ window.sendAdminPasswordReset = async function() {
     showMsg('editAdminMsg', `📧 ${a.email}(으)로 재설정 메일을 보냈습니다.`, 'success');
   } catch(e) {
     showMsg('editAdminMsg', '오류: ' + e.message, 'error');
+  }
+};
+
+// ── 다른 관리자 비밀번호 즉시 변경 (Cloud Function, Admin SDK 필요) ──
+window.setAdminPasswordDirect = async function() {
+  if (!editingAdminId) return;
+  const newPw = document.getElementById('edit-adm-newpw').value;
+  if (!newPw || newPw.length < 8) {
+    showMsg('editAdminMsg', '새 비밀번호는 8자리 이상이어야 합니다.', 'error'); return;
+  }
+  const a = adminsCache.find(ad => ad.id === editingAdminId);
+  if (!confirm(`"${a?.name || ''}" 관리자의 비밀번호를 즉시 변경하시겠습니까?`)) return;
+  try {
+    const resetFn = httpsCallable(functionsInstance, 'adminResetPassword');
+    await resetFn({ uid: editingAdminId, newPassword: newPw });
+    showMsg('editAdminMsg', '✅ 비밀번호가 변경되었습니다.', 'success');
+    document.getElementById('edit-adm-newpw').value = '';
+  } catch(e) {
+    showMsg('editAdminMsg', '오류: ' + e.message + ' (adminResetPassword 클라우드 함수가 배포되어 있는지 확인해주세요)', 'error');
   }
 };
 
