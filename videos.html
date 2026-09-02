@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>동영상강의 | 송우찬수학학원</title>
 <link rel="stylesheet" href="style.css">
+<script src="https://player.vimeo.com/api/player.js"></script>
 <style>
 .page-inner { max-width: 1080px; margin: 0 auto; padding: 40px 48px 96px; }
 
@@ -710,6 +711,7 @@
         allow="autoplay; fullscreen; picture-in-picture">
       </iframe>
     </div>
+    <div id="modalProgressNote" style="padding:10px 24px;font-size:12px;color:var(--muted);border-top:1px solid var(--border-soft);"></div>
 
   </div>
 </div>
@@ -717,7 +719,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, getDocs, collection } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, getDocs, collection, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
 const firebaseConfig = {
@@ -737,6 +739,85 @@ let allVideos = [];
 let myVideos = [];
 let currentTag = 'all';
 let isLoggedIn = false;
+
+// ── 시청 진행률 추적 ──
+let myProfile = null;      // { uid, name, branch, grade, teacherName } - 학생일 때만 세팅
+let currentProgress = null; // 현재 재생중인 영상의 진행 상태
+let progressSaveTimer = null;
+let vimeoPlayer = null;
+let myProgressMap = new Map(); // videoDocId -> { percent, completed, maxWatchedSeconds, lastPositionSeconds, duration }
+const SEEK_BUFFER_SEC = 2; // 앞으로 못 넘기게 하되 약간의 버퍼링 오차는 허용
+
+function makeProgressDocId(uid, videoDocId) { return `${uid}_${videoDocId}`; }
+
+async function loadMyProgress() {
+  if (!myProfile) return;
+  try {
+    const { query, where } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const q = query(collection(db, 'videoProgress'), where('studentUid', '==', myProfile.uid));
+    const snap = await getDocs(q);
+    myProgressMap = new Map();
+    snap.forEach(d => {
+      const data = d.data();
+      myProgressMap.set(data.videoId, {
+        percent: data.percent || 0,
+        completed: !!data.completed,
+        maxWatchedSeconds: data.maxWatchedSeconds || 0,
+        lastPositionSeconds: data.lastPositionSeconds || 0,
+        duration: data.duration || 0,
+      });
+    });
+  } catch (e) {
+    console.error('내 시청 기록 불러오기 실패', e);
+  }
+}
+
+async function flushProgress() {
+  if (!currentProgress || !myProfile) return;
+  const p = currentProgress;
+  const percent = p.duration ? Math.min(100, Math.round((p.maxSeconds / p.duration) * 100)) : 0;
+  const completed = p.duration ? (p.maxSeconds / p.duration) >= 0.9 : false;
+  try {
+    await setDoc(doc(db, 'videoProgress', makeProgressDocId(myProfile.uid, p.videoDocId)), {
+      studentUid: myProfile.uid,
+      studentName: myProfile.name || '',
+      branch: myProfile.branch || '',
+      grade: myProfile.grade || '',
+      teacherName: myProfile.teacherName || '',
+      videoId: p.videoDocId,
+      vimeoId: p.vimeoId,
+      videoTitle: p.title,
+      tag: p.tag || '',
+      duration: p.duration || 0,
+      maxWatchedSeconds: p.maxSeconds || 0,
+      lastPositionSeconds: p.lastSeconds || 0,
+      percent,
+      completed,
+      lastWatchedAt: serverTimestamp(),
+      ...(p.isFirstSave ? { firstWatchedAt: serverTimestamp() } : {})
+    }, { merge: true });
+    p.isFirstSave = false;
+    if (completed) p.locked = false; // 90% 이상 시청하면 그 즉시 자유 이동 허용
+    // 로컬 캐시 갱신 (목록에 바로 반영)
+    myProgressMap.set(p.videoDocId, {
+      percent, completed, maxWatchedSeconds: p.maxSeconds, lastPositionSeconds: p.lastSeconds, duration: p.duration
+    });
+    updateModalProgressNote();
+  } catch (e) {
+    console.error('진행률 저장 실패', e);
+  }
+}
+
+function updateModalProgressNote() {
+  const noteEl = document.getElementById('modalProgressNote');
+  if (!noteEl || !currentProgress) return;
+  const info = myProgressMap.get(currentProgress.videoDocId);
+  const percent = info ? info.percent : 0;
+  const completed = info ? info.completed : false;
+  noteEl.innerHTML = completed
+    ? `✅ 시청 완료 (${percent}%) · 자유롭게 이동 가능`
+    : `⏳ 시청률 ${percent}% · 완료 전에는 앞부분으로 되돌아갈 수만 있고, 아직 보지 않은 구간은 넘길 수 없습니다`;
+}
 
 onAuthStateChanged(auth, async (user) => {
   if (user) {
@@ -787,6 +868,10 @@ onAuthStateChanged(auth, async (user) => {
       const grade = (sd.grade || '').trim();
       const branch = (sd.branch || '').trim();
       const teacherName = (sd.teacherName || '').trim();
+
+      // 시청 진행률 기록용 학생 프로필
+      myProfile = { uid: user.uid, name: sd.name || '', branch, grade, teacherName };
+      await loadMyProgress();
 
       if (Array.isArray(sd.assignedTags)) {
         // ✅ 신규 시스템: 관리자가 직접 체크한 태그를 그대로 사용
@@ -1421,8 +1506,17 @@ window.toggleGroup = function(id) {
 };
 
 function renderRow(v, idx, highlight) {
+  const prog = myProfile ? myProgressMap.get(v.id) : null;
+  const percent = prog ? prog.percent : 0;
+  const progressHtml = myProfile ? `
+      <div style="display:flex;align-items:center;gap:6px;min-width:86px;flex-shrink:0;" title="시청률 ${percent}%">
+        <div style="flex:1;width:52px;height:5px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;">
+          <div style="width:${percent}%;height:100%;background:${prog && prog.completed ? '#5FD98A' : 'var(--gold)'};"></div>
+        </div>
+        <span style="font-size:11px;color:${prog && prog.completed ? '#5FD98A' : 'var(--muted)'};font-weight:600;min-width:30px;">${prog && prog.completed ? '✅' : percent + '%'}</span>
+      </div>` : '';
   return `
-    <div class="video-card" onclick="openModal('${v.vimeoId}','${(v.title||'').replace(/'/g,"\\'")}')">
+    <div class="video-card" onclick="openModal('${v.vimeoId}','${(v.title||'').replace(/'/g,"\\'")}','${v.id}','${(v.tag||'').replace(/'/g,"\\'")}')">
       <span class="video-order">${v.order != null ? v.order : idx}</span>
       <div class="video-play-icon">
         <svg width="10" height="12" viewBox="0 0 10 12" fill="none" stroke="var(--gold)" stroke-width="0" xmlns="http://www.w3.org/2000/svg">
@@ -1433,21 +1527,94 @@ function renderRow(v, idx, highlight) {
         <div class="video-title">${highlight(v.title || '')}</div>
         <div class="video-date">${v.date || ''}</div>
       </div>
+      ${progressHtml}
       <span class="video-tag" style="margin-bottom:0;flex-shrink:0;">${v.tag || ''}</span>
     </div>
   `;
 }
 
-window.openModal = function(id, title) {
+window.openModal = function(id, title, videoDocId, tag) {
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('modalIframe').src = `https://player.vimeo.com/video/${id}?autoplay=1&title=0&byline=0&portrait=0`;
   document.getElementById('modal').classList.add('open');
+
+  // 이전 재생 진행률 저장 후 새 재생 상태 초기화
+  flushProgress();
+  if (progressSaveTimer) { clearInterval(progressSaveTimer); progressSaveTimer = null; }
+  if (vimeoPlayer) { try { vimeoPlayer.unload(); } catch(e){} vimeoPlayer = null; }
+  currentProgress = null;
+
+  const noteEl = document.getElementById('modalProgressNote');
+  if (noteEl) noteEl.innerHTML = '';
+
+  if (myProfile && videoDocId && window.Vimeo && window.Vimeo.Player) {
+    const prev = myProgressMap.get(videoDocId) || { maxWatchedSeconds: 0, lastPositionSeconds: 0, duration: 0, completed: false, percent: 0 };
+    const iframeEl = document.getElementById('modalIframe');
+    vimeoPlayer = new Vimeo.Player(iframeEl);
+    currentProgress = {
+      videoDocId, vimeoId: id, title, tag,
+      duration: prev.duration || 0,
+      maxSeconds: prev.maxWatchedSeconds || 0,
+      lastSeconds: prev.lastPositionSeconds || 0,
+      isFirstSave: !myProgressMap.has(videoDocId),
+      locked: !prev.completed,       // 완료 전에는 앞으로 넘기기 잠금
+      resumeApplied: false,
+      seekGuardBusy: false,
+    };
+    updateModalProgressNote();
+
+    vimeoPlayer.getDuration().then(d => { if (currentProgress) currentProgress.duration = d || 0; }).catch(()=>{});
+
+    // ── 이어보기: 이전에 본 지점부터 재생 ──
+    vimeoPlayer.ready().then(() => {
+      if (currentProgress && !currentProgress.resumeApplied && currentProgress.lastSeconds > 3) {
+        currentProgress.resumeApplied = true;
+        vimeoPlayer.setCurrentTime(Math.max(0, currentProgress.lastSeconds - 1)).catch(()=>{});
+      }
+    });
+
+    vimeoPlayer.on('timeupdate', (data) => {
+      if (!currentProgress) return;
+      currentProgress.lastSeconds = data.seconds || 0;
+      if (data.seconds > currentProgress.maxSeconds) currentProgress.maxSeconds = data.seconds;
+      if (data.duration && !currentProgress.duration) currentProgress.duration = data.duration;
+    });
+
+    // ── 완료 전에는 아직 안 본 구간으로 넘기기(스킵) 방지 ──
+    vimeoPlayer.on('seeked', (data) => {
+      if (!currentProgress || !currentProgress.locked || currentProgress.seekGuardBusy) return;
+      const target = data.seconds || 0;
+      if (target > currentProgress.maxSeconds + SEEK_BUFFER_SEC) {
+        currentProgress.seekGuardBusy = true;
+        vimeoPlayer.setCurrentTime(currentProgress.maxSeconds)
+          .catch(()=>{})
+          .finally(() => { currentProgress.seekGuardBusy = false; });
+      }
+    });
+
+    vimeoPlayer.on('ended', () => {
+      if (currentProgress) {
+        currentProgress.maxSeconds = currentProgress.duration || currentProgress.maxSeconds;
+        currentProgress.locked = false; // 완주 후에는 자유 이동 허용
+      }
+      flushProgress();
+    });
+    // 10초마다 진행률 저장 (너무 잦은 쓰기 방지)
+    progressSaveTimer = setInterval(flushProgress, 10000);
+  }
 };
 
 window.closeModal = function() {
+  flushProgress();
+  if (progressSaveTimer) { clearInterval(progressSaveTimer); progressSaveTimer = null; }
+  if (vimeoPlayer) { try { vimeoPlayer.unload(); } catch(e){} vimeoPlayer = null; }
+  currentProgress = null;
   document.getElementById('modal').classList.remove('open');
   document.getElementById('modalIframe').src = '';
+  renderVideos(); // 목록의 시청률 표시 갱신
 };
+
+window.addEventListener('beforeunload', () => { flushProgress(); });
 
 window.closeOnBg = function(e) {
   if (e.target === document.getElementById('modal')) window.closeModal();

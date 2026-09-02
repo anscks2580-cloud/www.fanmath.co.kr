@@ -277,6 +277,7 @@
     <button class="admin-tab" onclick="switchTab('promotion',this);initPromotionTab()">🎓 일괄 진급</button>
     <button class="admin-tab" onclick="switchTab('assign',this)">강의 배정</button>
     <button class="admin-tab" onclick="switchTab('videos',this);renderFolderAccordion()">강의 목록</button>
+    <button class="admin-tab" onclick="switchTab('watchstatus',this);initWatchStatusTab()">📺 시청현황</button>
     <button class="admin-tab" onclick="switchTab('teachers',this)">선생님 관리</button>
     <button class="admin-tab" onclick="switchTab('clinicroom',this);initClinicRoomTab()">🏥 클리닉실</button>
     <button class="admin-tab" onclick="switchTab('tamaterials',this);initTaMaterialsTab()">📎 조교 자료</button>
@@ -1469,6 +1470,39 @@
     <div class="card">
       <h3>👥 등록된 관리자 (<span id="adminCount">0</span>명)</h3>
       <div id="adminList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <!-- 영상 시청현황 -->
+  <div class="tab-panel" id="tab-watchstatus">
+    <div class="card">
+      <h3>📺 영상 시청현황</h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
+        <select id="ws-branch" onchange="renderWatchStatus()"
+          style="padding:8px 12px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:dark;">
+          <option value="">전체 관</option>
+          <option value="평촌관">평촌관</option>
+          <option value="산본관">산본관</option>
+        </select>
+        <select id="ws-teacher" onchange="renderWatchStatus()"
+          style="padding:8px 12px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:dark;">
+          <option value="">전체 담당T</option>
+        </select>
+        <input type="text" id="ws-student" placeholder="학생 이름 검색" oninput="renderWatchStatus()"
+          style="padding:8px 12px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
+        <input type="text" id="ws-video" placeholder="영상 제목/태그 검색" oninput="renderWatchStatus()"
+          style="padding:8px 12px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
+        <select id="ws-status" onchange="renderWatchStatus()"
+          style="padding:8px 12px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:dark;">
+          <option value="">전체 상태</option>
+          <option value="unwatched">미시청</option>
+          <option value="inprogress">시청중</option>
+          <option value="completed">완료(90%↑)</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="loadWatchStatus(true)">🔄 새로고침</button>
+        <span id="ws-summary" style="color:var(--muted);font-size:12px;margin-left:auto;"></span>
+      </div>
+      <div id="ws-list" style="overflow-x:auto;"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
     </div>
   </div>
 
@@ -6185,6 +6219,142 @@ window.runPromotion = async function() {
   document.getElementById('promo-preview-card').style.display = 'none';
   document.getElementById('promo-run-btn').style.display = 'none';
   await loadStudents();
+};
+
+// ══════════════════════════════════════════
+// 영상 시청현황 탭
+// ══════════════════════════════════════════
+let wsProgressCache = [];   // videoProgress 컬렉션 원본
+let wsAllRows = [];         // 학생 x 배정영상 조인 결과
+let wsLoaded = false;
+
+function wsGetStudentAssignedVideos(student, allVideos) {
+  const assignedTags = Array.isArray(student.assignedTags)
+    ? student.assignedTags.map(t => (t || '').trim()).filter(Boolean)
+    : null;
+  if (!assignedTags || !assignedTags.length) return [];
+  return allVideos.filter(v => {
+    const tag = (v.tag || '').trim();
+    return assignedTags.some(a => a.endsWith('_') ? tag.startsWith(a) : (tag === a || tag.startsWith(a + '_')));
+  });
+}
+
+function wsFormatDate(ts) {
+  if (!ts) return '-';
+  try {
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  } catch(e) { return '-'; }
+}
+
+async function loadWatchStatus(force) {
+  if (wsLoaded && !force) { renderWatchStatus(); return; }
+  document.getElementById('ws-list').innerHTML = '<div style="color:var(--muted);font-size:13px;">불러오는 중...</div>';
+  const snap = await getDocs(collection(db, 'videoProgress'));
+  wsProgressCache = [];
+  snap.forEach(d => wsProgressCache.push({ id: d.id, ...d.data() }));
+  const progressMap = new Map();
+  wsProgressCache.forEach(p => progressMap.set(`${p.studentUid}_${p.videoId}`, p));
+
+  wsAllRows = [];
+  studentsCache.forEach(s => {
+    const assigned = wsGetStudentAssignedVideos(s, videosCache);
+    assigned.forEach(v => {
+      const p = progressMap.get(`${s.id}_${v.id}`);
+      wsAllRows.push({
+        studentUid: s.id, studentName: s.name || '', branch: s.branch || '', grade: s.grade || '',
+        teacherName: s.teacherName || '', videoId: v.id, videoTitle: v.title || '', tag: v.tag || '',
+        percent: p ? (p.percent || 0) : 0,
+        completed: p ? !!p.completed : false,
+        lastWatchedAt: p ? p.lastWatchedAt : null,
+      });
+    });
+  });
+
+  // 담당T 필터 옵션 채우기
+  const teacherSel = document.getElementById('ws-teacher');
+  const teachers = [...new Set(studentsCache.map(s => s.teacherName).filter(Boolean))].sort();
+  teacherSel.innerHTML = '<option value="">전체 담당T</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
+
+  wsLoaded = true;
+  renderWatchStatus();
+}
+
+window.initWatchStatusTab = function() { loadWatchStatus(false); };
+
+window.renderWatchStatus = function renderWatchStatus() {
+  const branch = document.getElementById('ws-branch').value;
+  const teacher = document.getElementById('ws-teacher').value;
+  const studentQ = (document.getElementById('ws-student').value || '').trim().toLowerCase();
+  const videoQ = (document.getElementById('ws-video').value || '').trim().toLowerCase();
+  const status = document.getElementById('ws-status').value;
+
+  let rows = wsAllRows;
+  if (branch) rows = rows.filter(r => r.branch === branch);
+  if (teacher) rows = rows.filter(r => r.teacherName === teacher);
+  if (studentQ) rows = rows.filter(r => r.studentName.toLowerCase().includes(studentQ));
+  if (videoQ) rows = rows.filter(r => r.videoTitle.toLowerCase().includes(videoQ) || r.tag.toLowerCase().includes(videoQ));
+  if (status === 'unwatched') rows = rows.filter(r => r.percent === 0);
+  else if (status === 'inprogress') rows = rows.filter(r => r.percent > 0 && !r.completed);
+  else if (status === 'completed') rows = rows.filter(r => r.completed);
+
+  const el = document.getElementById('ws-list');
+  const summaryEl = document.getElementById('ws-summary');
+  const total = rows.length;
+  const completedCount = rows.filter(r => r.completed).length;
+  const unwatchedCount = rows.filter(r => r.percent === 0).length;
+  summaryEl.textContent = total ? `총 ${total}건 · 완료 ${completedCount} · 미시청 ${unwatchedCount}` : '';
+
+  if (!rows.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px 0;">조건에 맞는 데이터가 없습니다.</div>';
+    return;
+  }
+
+  // 미시청 우선, 그 다음 시청률 낮은 순
+  rows = [...rows].sort((a, b) => {
+    if (a.percent !== b.percent) return a.percent - b.percent;
+    return a.studentName.localeCompare(b.studentName, 'ko');
+  });
+
+  el.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="border-bottom:1px solid rgba(240,192,64,0.3);color:var(--gold);text-align:left;">
+          <th style="padding:8px 10px;">학생</th>
+          <th style="padding:8px 10px;">관/담당T</th>
+          <th style="padding:8px 10px;">영상 제목</th>
+          <th style="padding:8px 10px;">태그</th>
+          <th style="padding:8px 10px;">시청률</th>
+          <th style="padding:8px 10px;">상태</th>
+          <th style="padding:8px 10px;">마지막 시청</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r => {
+          const barColor = r.completed ? '#5FD98A' : (r.percent > 0 ? 'var(--gold)' : 'rgba(255,255,255,0.15)');
+          const statusLabel = r.completed ? '✅ 완료' : (r.percent > 0 ? '⏳ 시청중' : '⚠️ 미시청');
+          const statusColor = r.completed ? '#5FD98A' : (r.percent > 0 ? 'var(--gold)' : '#ff9090');
+          return `
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+            <td style="padding:8px 10px;font-weight:600;">${r.studentName}</td>
+            <td style="padding:8px 10px;color:var(--muted);">${r.branch}${r.teacherName ? ' · ' + r.teacherName + 'T' : ''}</td>
+            <td style="padding:8px 10px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.videoTitle}</td>
+            <td style="padding:8px 10px;color:var(--muted);font-size:11px;">${r.tag}</td>
+            <td style="padding:8px 10px;min-width:120px;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div style="flex:1;height:6px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">
+                  <div style="width:${r.percent}%;height:100%;background:${barColor};"></div>
+                </div>
+                <span style="font-size:11px;color:var(--muted);min-width:32px;text-align:right;">${r.percent}%</span>
+              </div>
+            </td>
+            <td style="padding:8px 10px;color:${statusColor};font-weight:600;font-size:12px;">${statusLabel}</td>
+            <td style="padding:8px 10px;color:var(--muted);font-size:12px;">${wsFormatDate(r.lastWatchedAt)}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
 };
 
 // ══════════════════════════════════════════

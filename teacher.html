@@ -189,6 +189,7 @@
     <button class="teacher-tab" onclick="switchTab('progress',this)">📍 반별 진도</button>
     <button class="teacher-tab" onclick="switchTab('clinic',this);initClinicTab()">🏥 토요클리닉</button>
     <button class="teacher-tab" onclick="switchTab('videos',this);loadTeacherVideos()">🎬 강의 목록</button>
+    <button class="teacher-tab" onclick="switchTab('watchstatus',this);initTeacherWatchStatus()">📺 학생 시청현황</button>
   </div>
 
   <!-- ══ 탭 1: 주간성취도 설문 ══ -->
@@ -616,6 +617,29 @@
       <div id="clinicHistory" class="history-list">
         <div class="empty-state"><div class="icon">📭</div>아직 제출 이력이 없습니다.</div>
       </div>
+    </div>
+  </div>
+
+  <!-- ══ 탭 6: 내 학생 영상 시청현황 ══ -->
+  <div class="tab-panel" id="tab-watchstatus">
+    <div class="card">
+      <div class="card-title">📺 내 담당 학생 영상 시청현황</div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
+        <input type="text" id="tws-student" placeholder="학생 이름 검색" oninput="renderTeacherWatchStatus()"
+          style="padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
+        <input type="text" id="tws-video" placeholder="영상 제목/태그 검색" oninput="renderTeacherWatchStatus()"
+          style="padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
+        <select id="tws-status" onchange="renderTeacherWatchStatus()"
+          style="padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:dark;">
+          <option value="">전체 상태</option>
+          <option value="unwatched">미시청</option>
+          <option value="inprogress">시청중</option>
+          <option value="completed">완료(90%↑)</option>
+        </select>
+        <button class="btn btn-outline" onclick="loadTeacherWatchStatus(true)">🔄 새로고침</button>
+        <span id="tws-summary" style="color:var(--muted);font-size:12px;margin-left:auto;"></span>
+      </div>
+      <div id="tws-list" style="overflow-x:auto;"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
     </div>
   </div>
 
@@ -1398,6 +1422,140 @@ window.loadTestHistory = async function() {
   } catch(e) {
     tbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="color:#ff9090; padding:24px;">오류: ${e.message}<br>Firestore 인덱스가 필요할 수 있습니다.</td></tr>`;
   }
+};
+
+// ══════════════════════════════════════
+// ── 내 학생 영상 시청현황 ──
+// ══════════════════════════════════════
+let twsAllVideosCache = [];
+let twsProgressCache = [];
+let twsAllRows = [];
+let twsLoaded = false;
+
+function twsGetStudentAssignedVideos(student, allVideos) {
+  const assignedTags = Array.isArray(student.assignedTags)
+    ? student.assignedTags.map(t => (t || '').trim()).filter(Boolean)
+    : null;
+  if (!assignedTags || !assignedTags.length) return [];
+  return allVideos.filter(v => {
+    const tag = (v.tag || '').trim();
+    return assignedTags.some(a => a.endsWith('_') ? tag.startsWith(a) : (tag === a || tag.startsWith(a + '_')));
+  });
+}
+
+function twsFormatDate(ts) {
+  if (!ts) return '-';
+  try {
+    const d = ts.toDate ? ts.toDate() : new Date(ts);
+    return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  } catch(e) { return '-'; }
+}
+
+window.initTeacherWatchStatus = function() { loadTeacherWatchStatus(false); };
+
+window.loadTeacherWatchStatus = async function(force) {
+  if (twsLoaded && !force) { renderTeacherWatchStatus(); return; }
+  const el = document.getElementById('tws-list');
+  el.innerHTML = '<div style="color:var(--muted);font-size:13px;">불러오는 중...</div>';
+  try {
+    const [videoSnap, progressSnap] = await Promise.all([
+      getDocs(collection(db, 'videos')),
+      getDocs(collection(db, 'videoProgress'))
+    ]);
+    twsAllVideosCache = [];
+    videoSnap.forEach(d => twsAllVideosCache.push({ id: d.id, ...d.data() }));
+    twsProgressCache = [];
+    progressSnap.forEach(d => twsProgressCache.push({ id: d.id, ...d.data() }));
+
+    const progressMap = new Map();
+    twsProgressCache.forEach(p => progressMap.set(`${p.studentUid}_${p.videoId}`, p));
+
+    twsAllRows = [];
+    myStudents.forEach(s => {
+      const assigned = twsGetStudentAssignedVideos(s, twsAllVideosCache);
+      assigned.forEach(v => {
+        const p = progressMap.get(`${s.id}_${v.id}`);
+        twsAllRows.push({
+          studentName: s.name || '', videoTitle: v.title || '', tag: v.tag || '',
+          percent: p ? (p.percent || 0) : 0,
+          completed: p ? !!p.completed : false,
+          lastWatchedAt: p ? p.lastWatchedAt : null,
+        });
+      });
+    });
+    twsLoaded = true;
+    renderTeacherWatchStatus();
+  } catch(e) {
+    el.innerHTML = `<div style="color:#ff9090;">오류: ${e.message}</div>`;
+  }
+};
+
+window.renderTeacherWatchStatus = function() {
+  const studentQ = (document.getElementById('tws-student').value || '').trim().toLowerCase();
+  const videoQ = (document.getElementById('tws-video').value || '').trim().toLowerCase();
+  const status = document.getElementById('tws-status').value;
+
+  let rows = twsAllRows;
+  if (studentQ) rows = rows.filter(r => r.studentName.toLowerCase().includes(studentQ));
+  if (videoQ) rows = rows.filter(r => r.videoTitle.toLowerCase().includes(videoQ) || r.tag.toLowerCase().includes(videoQ));
+  if (status === 'unwatched') rows = rows.filter(r => r.percent === 0);
+  else if (status === 'inprogress') rows = rows.filter(r => r.percent > 0 && !r.completed);
+  else if (status === 'completed') rows = rows.filter(r => r.completed);
+
+  const el = document.getElementById('tws-list');
+  const summaryEl = document.getElementById('tws-summary');
+  const total = rows.length;
+  const completedCount = rows.filter(r => r.completed).length;
+  const unwatchedCount = rows.filter(r => r.percent === 0).length;
+  summaryEl.textContent = total ? `총 ${total}건 · 완료 ${completedCount} · 미시청 ${unwatchedCount}` : '';
+
+  if (!rows.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px 0;">조건에 맞는 데이터가 없습니다.</div>';
+    return;
+  }
+
+  rows = [...rows].sort((a, b) => {
+    if (a.percent !== b.percent) return a.percent - b.percent;
+    return a.studentName.localeCompare(b.studentName, 'ko');
+  });
+
+  el.innerHTML = `
+    <table style="width:100%;border-collapse:collapse;font-size:13px;">
+      <thead>
+        <tr style="border-bottom:1px solid rgba(240,192,64,0.3);color:var(--gold);text-align:left;">
+          <th style="padding:8px 10px;">학생</th>
+          <th style="padding:8px 10px;">영상 제목</th>
+          <th style="padding:8px 10px;">태그</th>
+          <th style="padding:8px 10px;">시청률</th>
+          <th style="padding:8px 10px;">상태</th>
+          <th style="padding:8px 10px;">마지막 시청</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(r => {
+          const barColor = r.completed ? '#5FD98A' : (r.percent > 0 ? 'var(--gold)' : 'rgba(255,255,255,0.15)');
+          const statusLabel = r.completed ? '✅ 완료' : (r.percent > 0 ? '⏳ 시청중' : '⚠️ 미시청');
+          const statusColor = r.completed ? '#5FD98A' : (r.percent > 0 ? 'var(--gold)' : '#ff9090');
+          return `
+          <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
+            <td style="padding:8px 10px;font-weight:600;">${r.studentName}</td>
+            <td style="padding:8px 10px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.videoTitle}</td>
+            <td style="padding:8px 10px;color:var(--muted);font-size:11px;">${r.tag}</td>
+            <td style="padding:8px 10px;min-width:120px;">
+              <div style="display:flex;align-items:center;gap:6px;">
+                <div style="flex:1;height:6px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">
+                  <div style="width:${r.percent}%;height:100%;background:${barColor};"></div>
+                </div>
+                <span style="font-size:11px;color:var(--muted);min-width:32px;text-align:right;">${r.percent}%</span>
+              </div>
+            </td>
+            <td style="padding:8px 10px;color:${statusColor};font-weight:600;font-size:12px;">${statusLabel}</td>
+            <td style="padding:8px 10px;color:var(--muted);font-size:12px;">${twsFormatDate(r.lastWatchedAt)}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+  `;
 };
 
 // ══════════════════════════════════════
