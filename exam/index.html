@@ -3,21 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>2026 2학기 중간고사 대비 | 평촌 학원 연합</title>
+<title>2026 2학기 중간고사 대비 All in one project | 평촌 학원 연합</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --paper:#FFFFFF;
-    --paper-soft:#FBF9F4;
-    --ink:#20242C;
-    --ink-soft:#6B7280;
-    --line:#E7E3D8;
+    --paper:#FAF7F0;
+    --paper-soft:#F3EDDF;
+    --ink:#1E1B16;
+    --ink-soft:#79715F;
+    --line:#E3D9C1;
     --blue:#2E5EFF;
-    --coral:#FF6B52;
+    --coral:#E8583C;
     --sun:#FFC23A;
     --green:#2FA36B;
     --card:#FFFFFF;
+    --gold:#B08D3E;
+    --gold-soft:#E4D3AC;
+    --charcoal:#15130F;
+    --charcoal-deep:#0C0B08;
   }
   *{box-sizing:border-box;}
   html{scroll-behavior:smooth;}
@@ -28,7 +32,7 @@
     font-family:'Pretendard','Noto Sans KR',sans-serif;
     line-height:1.6;
   }
-  h1,h2,h3,.serif{font-family:'Noto Serif KR',serif;}
+  h1,h2,h3,.serif{font-family:'Nanum Myeongjo',serif;}
   a{color:inherit;}
 
   header{
@@ -36,12 +40,14 @@
     display:flex;
     align-items:center;
     justify-content:space-between;
+    background:var(--paper);
     border-bottom:1px solid var(--line);
   }
   .brand{
     font-weight:700;
     font-size:1rem;
     letter-spacing:0.01em;
+    color:var(--ink);
   }
   nav a{
     margin-left:26px;
@@ -52,67 +58,100 @@
   nav a:hover{color:var(--ink);}
 
   .hero{
-    padding:76px 6vw 56px;
-    text-align:center;
+    padding:64px 6vw 56px;
     background:
-      radial-gradient(700px 300px at 15% 0%, rgba(46,94,255,0.07), transparent 60%),
-      radial-gradient(700px 300px at 85% 10%, rgba(255,107,82,0.08), transparent 60%),
+      radial-gradient(900px 380px at 18% -10%, rgba(176,141,62,0.10), transparent 60%),
+      radial-gradient(700px 320px at 88% 0%, rgba(176,141,62,0.08), transparent 60%),
       var(--paper);
+    border-bottom:1px solid var(--line);
   }
+  .hero-inner{
+    max-width:1180px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:1.4fr 1fr;
+    gap:36px;
+    align-items:center;
+  }
+  .hero-content{text-align:left;}
   .hero .tag{
     display:inline-block;
-    font-size:0.92rem;
+    font-size:0.88rem;
     font-weight:600;
-    color:var(--blue);
-    background:#EEF2FF;
+    color:var(--gold);
+    background:rgba(176,141,62,0.08);
+    border:1px solid rgba(176,141,62,0.3);
     border-radius:20px;
-    padding:6px 16px;
-    margin-bottom:22px;
+    padding:6px 18px;
+    margin-bottom:24px;
   }
   .hero h1{
-    font-size:clamp(2.3rem,5.2vw,3.6rem);
-    line-height:1.25;
-    margin:0 0 30px;
-    font-weight:900;
+    font-size:clamp(2.1rem,4.6vw,3.2rem);
+    line-height:1.28;
+    margin:0 0 10px;
+    font-weight:800;
+    color:var(--ink);
   }
-  .hero h1 .accent{color:var(--coral);}
+  .hero h1 .accent{color:var(--gold);}
+  .hero .tagline{
+    font-family:'Nanum Myeongjo',serif;
+    font-style:italic;
+    font-weight:800;
+    font-size:clamp(1.5rem,2.6vw,2rem);
+    color:var(--gold);
+    margin:0 0 32px;
+    letter-spacing:0.03em;
+    display:inline-flex;
+    align-items:center;
+    gap:14px;
+  }
+  .hero .tagline::after{
+    content:"";
+    display:inline-block;
+    width:52px;
+    height:1px;
+    background:var(--gold);
+    opacity:0.6;
+  }
 
   .collab-row{
     display:flex;
-    justify-content:center;
+    justify-content:flex-start;
     align-items:center;
-    gap:18px;
+    gap:16px;
     flex-wrap:wrap;
-    margin-bottom:12px;
+    margin-bottom:10px;
   }
   .collab-item{
     display:flex;
     align-items:center;
-    gap:10px;
+    gap:9px;
   }
   .logo-slot{
-    width:46px;height:46px;
+    width:38px;height:38px;
     border-radius:50%;
     display:flex;align-items:center;justify-content:center;
     font-weight:700;
-    font-size:0.95rem;
+    font-size:0.85rem;
     color:#fff;
     flex-shrink:0;
     overflow:hidden;
+    border:1px solid var(--line);
   }
   .logo-slot img{width:100%;height:100%;object-fit:cover;}
   .collab-name{
     font-weight:700;
-    font-size:1.05rem;
+    font-size:0.96rem;
+    color:var(--ink);
   }
   .collab-x{
-    font-size:1.1rem;
-    color:var(--ink-soft);
+    font-size:1rem;
+    color:#8A8271;
     font-weight:400;
   }
   .hero .note{
     font-size:0.85rem;
-    color:var(--ink-soft);
+    color:#8A8271;
     margin-top:6px;
   }
 
@@ -128,7 +167,7 @@
     font-size:0.95rem;
   }
   .dday-strip strong{
-    font-family:'Noto Serif KR',serif;
+    font-family:'Nanum Myeongjo',serif;
     font-size:1.3rem;
     color:var(--sun);
   }
@@ -163,46 +202,100 @@
   }
   .filters input{flex:1;min-width:180px;}
 
-  .school-dday-grid{
-    max-width:1180px;
-    margin:22px auto 0;
-    padding:0 6vw;
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-    gap:12px;
-  }
-  .school-card{
+  .school-dday-grid{display:none;}
+  .school-card{display:none;}
+
+  /* ---- 히어로 안에 들어가는 컴팩트 D-DAY 위젯 ---- */
+  .dday-widget{
+    background:var(--card);
     border:1px solid var(--line);
-    border-radius:12px;
-    padding:16px 18px;
-    background:var(--paper-soft);
+    border-radius:16px;
+    padding:18px 20px;
   }
-  .school-card .region{
-    font-size:0.74rem;
+  .dday-widget-head{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:12px;
+  }
+  .dday-widget-head .label{
+    font-size:0.8rem;
     color:var(--ink-soft);
-    background:#fff;
-    display:inline-block;
-    padding:2px 9px;
-    border-radius:20px;
-    margin-bottom:8px;
+    font-weight:600;
   }
-  .school-card .name{
+  .level-tabs{
+    display:flex;
+    gap:6px;
+  }
+  .level-tab{
+    font-family:'Pretendard';
+    font-weight:600;
+    font-size:0.78rem;
+    padding:5px 12px;
+    border:1px solid var(--line);
+    border-radius:20px;
+    background:var(--paper);
+    color:var(--ink-soft);
+    cursor:pointer;
+    transition:background .2s, color .2s;
+  }
+  .level-tab.active{
+    background:var(--gold);
+    color:#fff;
+    border-color:transparent;
+  }
+  .dday-carousel{
+    position:relative;
+    overflow:hidden;
+    min-height:64px;
+  }
+  .dday-slide-track{
+    display:flex;
+    transition:transform .5s ease;
+  }
+  .dday-slide{
+    flex:0 0 100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    box-sizing:border-box;
+  }
+  .dday-slide .info .region-badge{
+    font-size:0.7rem;
+    color:var(--ink-soft);
+    background:var(--paper-soft);
+    padding:2px 8px;
+    border-radius:20px;
+    margin-bottom:6px;
+    display:inline-block;
+  }
+  .dday-slide .info .school-name{
     font-weight:700;
     font-size:0.98rem;
-    margin-bottom:6px;
+    margin-bottom:2px;
   }
-  .school-card .dday{
-    font-family:'Noto Serif KR',serif;
-    font-weight:700;
-    font-size:1.3rem;
-    color:var(--coral);
-  }
-  .school-card .exam-date{
-    font-size:0.78rem;
+  .dday-slide .info .exam-date{
+    font-size:0.76rem;
     color:var(--ink-soft);
-    margin-top:2px;
   }
-  .school-card.tbd .dday{color:var(--ink-soft);font-size:1rem;}
+  .dday-slide .dday-num{
+    font-family:'Nanum Myeongjo',serif;
+    font-weight:800;
+    font-size:1.8rem;
+    color:var(--gold);
+    white-space:nowrap;
+  }
+  .dday-slide.tbd .dday-num{
+    font-size:0.95rem;
+    color:var(--ink-soft);
+  }
+  @media (max-width:900px){
+    .hero-inner{grid-template-columns:1fr;}
+    .hero-content{text-align:center;}
+    .collab-row{justify-content:center;}
+    .dday-widget{max-width:420px;margin:0 auto;}
+  }
 
   .subject-nav{
     max-width:1180px;
@@ -252,7 +345,7 @@
     flex-direction:column;
   }
   .subject-group .head .subj{
-    font-family:'Noto Serif KR',serif;
+    font-family:'Nanum Myeongjo',serif;
     font-weight:700;
     font-size:1.25rem;
   }
@@ -373,35 +466,30 @@
 </header>
 
 <section class="hero">
-  <div class="tag">2026학년도 2학기 중간고사 대비 자료 허브</div>
-  <h1>2026년 2학기<br><span class="accent">중간고사</span> 대비</h1>
+  <div class="hero-inner">
+    <div class="hero-content">
+      <div class="tag">2026학년도 2학기 중간고사 대비 자료 허브</div>
+      <h1>2026년 2학기<br><span class="accent">중간고사</span> 대비</h1>
+      <div class="tagline">All in one project</div>
 
-  <div class="collab-row" id="collabRow"></div>
-  <div class="note">참여 학원 로고는 추후 실제 로고 이미지로 교체 예정입니다</div>
+      <div class="collab-row" id="collabRow"></div>
+      <div class="note">참여 학원 로고는 추후 실제 로고 이미지로 교체 예정입니다</div>
+    </div>
 
-</section>
-
-<div class="filter-bar" id="dday">
-  <h2>학교별 중간고사 D-DAY</h2>
-  <div class="sub">안양·과천·군포·의왕 지역 중·고등학교 시험일 기준입니다. 학교를 검색해서 우리 학교 D-DAY를 바로 확인하세요.</div>
-  <div class="filters">
-    <select id="filterRegion">
-      <option value="">전체 지역</option>
-      <option value="안양">안양</option>
-      <option value="과천">과천</option>
-      <option value="군포">군포</option>
-      <option value="의왕">의왕</option>
-    </select>
-    <select id="filterLevel">
-      <option value="">중/고 전체</option>
-      <option value="중학교">중학교</option>
-      <option value="고등학교">고등학교</option>
-    </select>
-    <input id="schoolKeyword" type="text" placeholder="학교명 검색">
+    <div class="dday-widget" id="dday">
+      <div class="dday-widget-head">
+        <span class="label">중간고사 D-DAY</span>
+        <div class="level-tabs" id="levelTabs">
+          <button class="level-tab active" data-level="중학교">중등</button>
+          <button class="level-tab" data-level="고등학교">고등</button>
+        </div>
+      </div>
+      <div class="dday-carousel" id="ddayCarousel">
+        <div class="dday-slide-track" id="ddaySlideTrack"></div>
+      </div>
+    </div>
   </div>
-</div>
-
-<div class="school-dday-grid" id="schoolDdayGrid"></div>
+</section>
 
 <div class="subject-nav" id="subjectNav"></div>
 
@@ -457,6 +545,73 @@ const SCHOOLS = [
 /* 4) 시트 컬럼명 기준: 학원명, 과목, 학년, 자료명, 링크, 업로드일 */
 /* ======================================================= */
 
+let currentLevel = "중학교";
+let carouselIndex = 0;
+let carouselTimer = null;
+
+function getCurrentSchools(){
+  return SCHOOLS.filter(s => s.level === currentLevel);
+}
+
+function renderCarousel(){
+  const track = document.getElementById('ddaySlideTrack');
+  const schools = getCurrentSchools();
+  track.innerHTML = '';
+
+  if(schools.length === 0){
+    track.innerHTML = '<div class="dday-slide tbd"><div class="info"><div class="school-name">등록된 학교가 없습니다</div></div></div>';
+    return;
+  }
+
+  schools.forEach(s=>{
+    const dday = calcSchoolDday(s.examDate);
+    let ddayLabel = '일정 확인 중';
+    if(dday !== null){
+      ddayLabel = dday > 0 ? `D-${dday}` : (dday === 0 ? 'D-DAY' : '종료');
+    }
+    const slide = document.createElement('div');
+    slide.className = 'dday-slide' + (dday === null ? ' tbd' : '');
+    slide.innerHTML = `
+      <div class="info">
+        <span class="region-badge">${s.region} · ${s.level}</span>
+        <div class="school-name">${s.name}</div>
+        <div class="exam-date">${s.examDate ? s.examDate + ' 시험 시작' : '확정되는 대로 업데이트'}</div>
+      </div>
+      <div class="dday-num">${ddayLabel}</div>
+    `;
+    track.appendChild(slide);
+  });
+
+  carouselIndex = 0;
+  updateCarouselPosition();
+  restartCarouselTimer();
+}
+
+function updateCarouselPosition(){
+  const track = document.getElementById('ddaySlideTrack');
+  const total = getCurrentSchools().length || 1;
+  track.style.transform = `translateX(-${carouselIndex * 100}%)`;
+  void total;
+}
+
+function restartCarouselTimer(){
+  if(carouselTimer) clearInterval(carouselTimer);
+  const schools = getCurrentSchools();
+  if(schools.length <= 1) return;
+  carouselTimer = setInterval(()=>{
+    carouselIndex = (carouselIndex + 1) % schools.length;
+    updateCarouselPosition();
+  }, 2800);
+}
+
+document.getElementById('levelTabs').addEventListener('click', (e)=>{
+  if(!e.target.classList.contains('level-tab')) return;
+  document.querySelectorAll('.level-tab').forEach(t=>t.classList.remove('active'));
+  e.target.classList.add('active');
+  currentLevel = e.target.dataset.level;
+  renderCarousel();
+});
+
 function calcSchoolDday(dateStr){
   if(!dateStr) return null;
   const today = new Date();
@@ -465,49 +620,7 @@ function calcSchoolDday(dateStr){
   return Math.ceil((target - today) / (1000*60*60*24));
 }
 
-function renderSchoolGrid(){
-  const region = document.getElementById('filterRegion').value;
-  const level = document.getElementById('filterLevel').value;
-  const keyword = document.getElementById('schoolKeyword').value.trim();
-
-  const grid = document.getElementById('schoolDdayGrid');
-  grid.innerHTML = '';
-
-  const filtered = SCHOOLS.filter(s=>{
-    if(region && s.region !== region) return false;
-    if(level && s.level !== level) return false;
-    if(keyword && !s.name.includes(keyword)) return false;
-    return true;
-  });
-
-  if(filtered.length === 0){
-    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">해당하는 학교가 없습니다.</div>';
-    return;
-  }
-
-  filtered.forEach(s=>{
-    const dday = calcSchoolDday(s.examDate);
-    const card = document.createElement('div');
-    card.className = 'school-card' + (dday === null ? ' tbd' : '');
-    let ddayLabel = '일정 확인 중';
-    if(dday !== null){
-      ddayLabel = dday > 0 ? `D-${dday}` : (dday === 0 ? 'D-DAY' : '종료');
-    }
-    card.innerHTML = `
-      <span class="region">${s.region} · ${s.level}</span>
-      <div class="name">${s.name}</div>
-      <div class="dday">${ddayLabel}</div>
-      <div class="exam-date">${s.examDate ? s.examDate + ' 시험 시작' : '확정되는 대로 업데이트'}</div>
-    `;
-    grid.appendChild(card);
-  });
-}
-
-['filterRegion','filterLevel'].forEach(id=>{
-  document.getElementById(id).addEventListener('change', renderSchoolGrid);
-});
-document.getElementById('schoolKeyword').addEventListener('input', renderSchoolGrid);
-renderSchoolGrid();
+renderCarousel();
 
 function renderCollabRow(){
   const row = document.getElementById('collabRow');
