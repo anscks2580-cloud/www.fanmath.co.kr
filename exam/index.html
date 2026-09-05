@@ -545,7 +545,7 @@
   <div>문의: 송우찬수학학원 평촌관 원장 송문찬</div>
 </footer>
 
-<script>
+<script type="module">
 /* ====================== 설정 영역 ====================== */
 
 // 1) 참여 학원 & 과목 매칭. logo에 실제 이미지 경로를 넣으면 로고가 뜨고,
@@ -557,12 +557,9 @@ const ACADEMIES = [
   { school: "대치레몬학원", subject: "영어", color: "#2F6B3C", initial: "대", fit: "contain", vimeoFolder: "대치레몬학원", logo: "data:image/jpeg;base64,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" },
 ];
 
-// 2) Vimeo 연동 — 평촌관 학원시스템(admin.html)과 같은 토큰을 사용합니다.
-//    Vimeo에서 "2026년 2학기 중간고사"라는 상위 폴더를 만들고, 그 안에 학원별 하위 폴더
-//    (송우찬수학학원 / 에이펙스영어학원 / 인어스 — ACADEMIES의 vimeoFolder 값과 정확히 일치)를
-//    만들어서 영상을 올리면 이 페이지 자료실에 자동으로 나타납니다. (업로드는 평촌관에서 대신 진행)
-const VIMEO_TOKEN = '91f67f8f7f387216004dd35ec5136f8e';
-const VIMEO_PARENT_FOLDER = '2026년 2학기 중간고사';
+// 2) 자료실 데이터는 이제 admin.html "중간고사 자료" 탭에서 Vimeo 폴더 → examMaterials
+//    컬렉션으로 저장해둔 걸 그대로 읽어옵니다. 실제 Vimeo 연동은 admin.html에서 이뤄집니다.
+//    (아래 ACADEMIES의 vimeoFolder 값은 admin.html 쪽 학원명과 맞춰두는 용도의 참고용입니다.)
 
 // 3) 학교별 중간고사 시작일. examDate가 빈 값이면 "일정 확인 중"으로 표시됩니다.
 //    확정되는 대로 examDate만 "YYYY-MM-DD" 형식으로 채워주세요.
@@ -844,118 +841,50 @@ function hexToSoft(hex){
 document.getElementById('filterGrade').addEventListener('change', renderMaterials);
 document.getElementById('filterKeyword').addEventListener('input', renderMaterials);
 
-// ── Vimeo 연동 ──
-// admin.html과 같은 방식: /me/projects, /me/teams/{id}/folders(또는 projects)에서
-// 폴더 목록을 가져온 뒤, 이름이 일치하는 폴더의 영상을 자료로 표시합니다.
-async function fetchVimeoFolders(){
-  let folders = [];
-  let url = 'https://api.vimeo.com/me/projects?per_page=100&page=1';
-  while(url){
-    const res = await fetch(url, { headers: { Authorization: `bearer ${VIMEO_TOKEN}` } });
-    if(!res.ok) break;
-    const data = await res.json();
-    folders = folders.concat(data.data || []);
-    url = data.paging?.next ? `https://api.vimeo.com${data.paging.next}` : null;
-  }
-  try{
-    const teamRes = await fetch('https://api.vimeo.com/me/teams?per_page=10', {
-      headers: { Authorization: `bearer ${VIMEO_TOKEN}` }
-    });
-    if(teamRes.ok){
-      const teamData = await teamRes.json();
-      for(const team of (teamData.data || [])){
-        let teamUrl = `https://api.vimeo.com${team.uri}/folders?per_page=100&page=1`;
-        while(teamUrl){
-          const res = await fetch(teamUrl, { headers: { Authorization: `bearer ${VIMEO_TOKEN}` } });
-          if(!res.ok){
-            const altUrl = `https://api.vimeo.com${team.uri}/projects?per_page=100&page=1`;
-            const res2 = await fetch(altUrl, { headers: { Authorization: `bearer ${VIMEO_TOKEN}` } });
-            if(res2.ok){
-              const data2 = await res2.json();
-              folders = folders.concat(data2.data || []);
-            }
-            break;
-          }
-          const data = await res.json();
-          folders = folders.concat(data.data || []);
-          teamUrl = data.paging?.next ? `https://api.vimeo.com${data.paging.next}` : null;
-        }
-      }
-    }
-  }catch(e){ console.log('팀 폴더 로드 실패:', e.message); }
-  return folders;
-}
+// ── 자료 불러오기 (Firebase Firestore) ──
+// admin.html "중간고사 자료" 탭에서 Vimeo 폴더 → examMaterials 컬렉션으로 저장해둔 자료를
+// 그대로 읽어옵니다. 실제 Vimeo 연동/폴더 관리는 admin.html에서 이뤄집니다.
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-async function fetchFolderVideos(folderUri){
-  let videos = [];
-  let url = `https://api.vimeo.com${folderUri}/videos?fields=uri,name,created_time,pictures&per_page=100&page=1`;
-  while(url){
-    const res = await fetch(url, { headers: { Authorization: `bearer ${VIMEO_TOKEN}` } });
-    if(!res.ok) break;
-    const data = await res.json();
-    videos = videos.concat(data.data || []);
-    url = data.paging?.next ? `https://api.vimeo.com${data.paging.next}` : null;
-  }
-  return videos;
-}
-
-// 폴더 트리에서 해당 이름의 폴더를 찾습니다.
-// "중간고사" 상위 폴더 아래의 자식(하위) 폴더를 우선 찾고, 없으면 최상위 폴더도 허용합니다.
-async function fetchSubfolders(parentUri){
-  let subs = [];
-  let url = `https://api.vimeo.com${parentUri}/items?per_page=100&page=1`;
-  while(url){
-    const res = await fetch(url, { headers: { Authorization: `bearer ${VIMEO_TOKEN}` } });
-    if(!res.ok) break;
-    const data = await res.json();
-    (data.data || []).forEach(item=>{
-      if(item.folder) subs.push(item.folder);
-    });
-    url = data.paging?.next ? `https://api.vimeo.com${data.paging.next}` : null;
-  }
-  return subs;
-}
-
-function findAcademyFolder(academy, topFolders, subFolders){
-  return subFolders.find(f => f.name === academy.vimeoFolder)
-      || topFolders.find(f => f.name === academy.vimeoFolder);
-}
+const firebaseConfig = {
+  apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
+  authDomain: "songmath.firebaseapp.com",
+  projectId: "songmath",
+  storageBucket: "songmath.firebasestorage.app",
+  messagingSenderId: "936295436575",
+  appId: "1:936295436575:web:d1e201508719850cfbe02a"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 async function loadData(){
   const container = document.getElementById('materialsContainer');
-  container.innerHTML = '<div class="empty-state">Vimeo에서 자료를 불러오는 중입니다…</div>';
+  container.innerHTML = '<div class="empty-state">자료를 불러오는 중입니다…</div>';
   try{
-    const topFolders = await fetchVimeoFolders();
-    const parent = topFolders.find(f => f.name === VIMEO_PARENT_FOLDER);
-    const subFolders = parent ? await fetchSubfolders(parent.uri) : [];
-
+    const snap = await getDocs(query(collection(db, 'examMaterials'), orderBy('order', 'asc')));
     const items = [];
-    for(const academy of ACADEMIES){
-      const folder = findAcademyFolder(academy, topFolders, subFolders);
-      if(!folder) continue;
-      const videos = await fetchFolderVideos(folder.uri);
-      videos.forEach(v=>{
-        const vimeoId = (v.uri || '').split('/').pop();
-        const thumb = v.pictures?.sizes?.length ? v.pictures.sizes[v.pictures.sizes.length - 1].link : `https://vumbnail.com/${vimeoId}.jpg`;
-        items.push({
-          '학원명': academy.school,
-          '과목': academy.subject,
-          '학년': extractGrade(v.name || ''),
-          '자료명': v.name || '(제목 없음)',
-          '링크': `https://vimeo.com/${vimeoId}`,
-          '업로드일': (v.created_time || '').slice(0,10),
-          '썸네일': thumb,
-        });
+    snap.forEach(d=>{
+      const v = d.data();
+      if(v.active === false) return;
+      items.push({
+        '학원명': v.academy || '',
+        '과목': v.subject || '',
+        '학년': v.grade || '',
+        '자료명': v.title || '(제목 없음)',
+        '링크': `https://vimeo.com/${v.vimeoId}`,
+        '업로드일': (v.createdAt || '').slice(0,10),
+        '썸네일': `https://vumbnail.com/${v.vimeoId}.jpg`,
       });
-    }
+    });
     ALL_ITEMS = items;
     renderFilterGrade(ALL_ITEMS);
     renderMaterials();
     if(items.length === 0){
-      container.innerHTML = '<div class="empty-state">아직 등록된 자료가 없습니다. Vimeo에 "2026년 2학기 중간고사" 폴더와 그 안에 학원별 하위 폴더를 만들고 영상을 올려주세요.</div>';
+      container.innerHTML = '<div class="empty-state">아직 등록된 자료가 없습니다. admin.html의 "중간고사 자료" 탭에서 Vimeo 폴더를 불러와 추가해주세요.</div>';
     }
   }catch(e){
-    container.innerHTML = '<div class="empty-state">Vimeo 자료를 불러오지 못했습니다. 토큰 권한 또는 폴더 이름을 확인해 주세요.</div>';
+    container.innerHTML = '<div class="empty-state">자료를 불러오지 못했습니다.</div>';
     console.error(e);
   }
 }
