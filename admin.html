@@ -292,6 +292,7 @@
     <button class="admin-tab" onclick="switchTab('adminmgmt',this);initAdminMgmtTab()">🔑 관리자 계정</button>
     <button class="admin-tab" onclick="switchTab('apexvideo',this);initApexVideoTab()">🎬 에이펙스 영상</button>
     <button class="admin-tab" onclick="switchTab('promo',this);initPromoTab()">📺 홍보영상</button>
+    <button class="admin-tab" onclick="switchTab('exammaterials',this);initExamMaterialsTab()">📝 중간고사 자료</button>
     <button class="admin-tab" onclick="switchTab('consult',this);initConsultTab()">📥 상담 신청</button>
     <button class="admin-tab" onclick="switchTab('notice',this);initNoticeTab()">📢 공지사항</button>
   </div>
@@ -642,6 +643,49 @@
     <div class="card">
       <h3>🎬 등록된 홍보영상 (<span id="promoVideoCount">0</span>개) <span style="font-size:12px;font-weight:400;color:var(--muted);">— 위에서부터 순서대로 재생됩니다</span></h3>
       <div id="promoVideoList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <!-- 중간고사 연합 자료 (평촌 학원 연합 exam 페이지용) -->
+  <div class="tab-panel" id="tab-exammaterials">
+
+    <div class="card">
+      <h3>🔄 Vimeo 폴더에서 불러오기</h3>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px;">
+        홍보영상과 같은 방식이에요. Vimeo에 학원별 폴더를 만들어두고(예: <b style="color:var(--gold);">중간고사-송우찬수학학원</b>)
+        거기에 영상을 올린 뒤, 아래에서 학원을 고르고 불러오면 새로 올라온 영상만 자동으로 찾아줍니다.
+        여기서 저장한 자료가 중간고사 연합 페이지(exam) 자료실에 그대로 노출됩니다.
+      </div>
+      <div class="form-row" style="max-width:600px;">
+        <div class="form-group">
+          <label>학원</label>
+          <select id="exam-academy-select">
+            <option value="송우찬수학학원|수학">송우찬수학학원 (수학)</option>
+            <option value="에이펙스영어학원|영어">에이펙스영어학원 (영어)</option>
+            <option value="인어스수학학원|미정">인어스수학학원 (미정)</option>
+            <option value="대치레몬학원|영어">대치레몬학원 (영어)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Vimeo 폴더명</label>
+          <input type="text" id="exam-folder-name" placeholder="예: 중간고사-송우찬수학학원" value="중간고사-송우찬수학학원">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="syncExamFolder()">📥 폴더에서 새 영상 불러오기</button>
+      <div id="examSyncStatus" style="font-size:13px;color:var(--muted);margin-top:10px;"></div>
+      <div id="examSyncPreview" style="display:none;margin-top:16px;">
+        <div id="examSyncPreviewTitle" style="font-size:13px;margin-bottom:8px;"></div>
+        <div id="examSyncPreviewList"></div>
+        <button class="btn btn-primary" style="margin-top:12px;" onclick="examSyncSaveAll()">✅ 선택한 영상 자료실에 추가</button>
+      </div>
+    </div>
+
+    <div id="examMaterialAddMsg" class="msg"></div>
+
+    <!-- 등록된 중간고사 자료 목록 -->
+    <div class="card">
+      <h3>📚 등록된 중간고사 자료 (<span id="examMaterialCount">0</span>개) <span style="font-size:12px;font-weight:400;color:var(--muted);">— 학원별로 묶어서 보여드려요. 화살표로 학원 내 순서 조정</span></h3>
+      <div id="examMaterialList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
     </div>
   </div>
 
@@ -7012,6 +7056,175 @@ window.deletePromoVideo = async function(id, title) {
     alert('삭제 오류: ' + e.message);
   }
 };
+
+// ── 중간고사 연합 자료 (exam 페이지) ──
+let examTabInited = false;
+window.initExamMaterialsTab = function() {
+  if (examTabInited) { loadExamMaterials(); return; }
+  examTabInited = true;
+  loadExamMaterials();
+};
+
+// 영상 제목에서 "고1","중3" 같은 학년 표기를 뽑아냄
+function extractExamGrade(title) {
+  const m = (title || '').match(/(중|고)[1-3]/);
+  return m ? m[0] : '';
+}
+
+let examSyncCandidates = [];
+
+window.syncExamFolder = async () => {
+  const [academy, subject] = document.getElementById('exam-academy-select').value.split('|');
+  const folderName = document.getElementById('exam-folder-name').value.trim();
+  const statusEl  = document.getElementById('examSyncStatus');
+  const previewEl = document.getElementById('examSyncPreview');
+  previewEl.style.display = 'none';
+  examSyncCandidates = [];
+
+  if (!folderName) { statusEl.textContent = '⚠️ 폴더명을 입력해주세요.'; return; }
+
+  statusEl.textContent = '⏳ Vimeo 폴더 목록 불러오는 중...';
+  try {
+    const allFolders = await fetchVimeoFolders();
+    const matched = allFolders.find(f => f.name === folderName);
+    if (!matched) {
+      statusEl.textContent = `⚠️ "${folderName}" 폴더를 Vimeo에서 찾을 수 없습니다. 폴더명을 다시 확인해주세요.`;
+      return;
+    }
+
+    statusEl.textContent = `⏳ "${folderName}" 폴더 영상 확인 중...`;
+    const videos = await fetchFolderVideos(matched.uri);
+    if (!examMaterialsCache.length) await loadExamMaterials();
+    const existingIds = new Set(examMaterialsCache.map(v => v.vimeoId));
+
+    for (const v of videos) {
+      const vimeoId = v.uri.replace('/videos/', '');
+      if (existingIds.has(vimeoId)) continue;
+      examSyncCandidates.push({ vimeoId, title: v.name, academy, subject });
+    }
+
+    if (!examSyncCandidates.length) {
+      statusEl.textContent = `✅ 새로 추가할 영상이 없습니다. ("${folderName}" 폴더 확인 완료)`;
+      return;
+    }
+
+    statusEl.textContent = '';
+    const titleEl = document.getElementById('examSyncPreviewTitle');
+    const listEl  = document.getElementById('examSyncPreviewList');
+    titleEl.innerHTML = `${academy} — 신규 영상 <b style="color:var(--gold);">${examSyncCandidates.length}개</b> 발견
+      <span style="margin-left:10px;">
+        <a href="#" onclick="event.preventDefault();document.querySelectorAll('.exam-sync-check').forEach(c=>c.checked=true);">전체선택</a>
+        <span style="color:var(--muted);">/</span>
+        <a href="#" onclick="event.preventDefault();document.querySelectorAll('.exam-sync-check').forEach(c=>c.checked=false);">전체해제</a>
+      </span>`;
+    listEl.innerHTML = examSyncCandidates.map((v, i) => `
+      <div style="display:flex;align-items:center;gap:10px;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;">
+        <input id="exam-sync-check-${i}" class="exam-sync-check" type="checkbox" checked
+          style="flex-shrink:0;width:16px;height:16px;accent-color:var(--gold);">
+        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${v.title}</span>
+      </div>`).join('');
+    previewEl.style.display = 'block';
+  } catch(e) {
+    statusEl.textContent = '';
+    showMsg('examMaterialAddMsg', '오류: ' + e.message, 'error');
+  }
+};
+
+window.examSyncSaveAll = async () => {
+  let saved = 0;
+  const base = Date.now();
+  for (let i = 0; i < examSyncCandidates.length; i++) {
+    const checkEl = document.getElementById('exam-sync-check-' + i);
+    if (checkEl && !checkEl.checked) continue;
+    const v = examSyncCandidates[i];
+    try {
+      await addDoc(collection(db, 'examMaterials'), {
+        title: v.title, vimeoId: v.vimeoId, academy: v.academy, subject: v.subject,
+        grade: extractExamGrade(v.title), active: true,
+        order: base + i, createdAt: new Date().toISOString()
+      });
+      saved++;
+    } catch(e) { /* 개별 실패는 건너뛰고 계속 */ }
+  }
+  document.getElementById('examSyncPreview').style.display = 'none';
+  document.getElementById('examSyncStatus').textContent = `✅ ${saved}개 영상을 자료실에 추가했습니다.`;
+  examSyncCandidates = [];
+  await loadExamMaterials();
+};
+
+let examMaterialsCache = [];
+async function loadExamMaterials() {
+  try {
+    const snap = await getDocs(query(collection(db, 'examMaterials'), orderBy('order', 'asc')));
+    const list = [];
+    snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+    examMaterialsCache = list;
+    const countEl = document.getElementById('examMaterialCount'); if (countEl) countEl.textContent = list.length;
+    const el = document.getElementById('examMaterialList');
+    if (!list.length) {
+      el.innerHTML = '<div style="color:var(--muted);font-size:13px;">등록된 자료가 없습니다.</div>'; return;
+    }
+    // 학원별로 묶어서 표시
+    const groups = {};
+    const order = [];
+    list.forEach(v => {
+      if (!groups[v.academy]) { groups[v.academy] = []; order.push(v.academy); }
+      groups[v.academy].push(v);
+    });
+    el.innerHTML = order.map(academy => `
+      <div style="margin-bottom:18px;">
+        <div style="font-size:12px;color:var(--gold);font-weight:600;margin-bottom:6px;">${academy}</div>
+        ${groups[academy].map((v, i) => `
+          <div class="student-item">
+            <div class="student-name">${i+1}. ${v.title}</div>
+            <span class="student-meta" style="font-size:11px;">${v.subject || ''} ${v.grade ? '· '+v.grade : ''} · Vimeo: ${v.vimeoId}</span>
+            <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer;">
+              <input type="checkbox" ${v.active !== false ? 'checked' : ''} onchange="toggleExamMaterialActive('${v.id}', this.checked)"> 자료실에 노출
+            </label>
+            <button class="btn btn-sm" ${i===0 ? 'disabled' : ''} onclick="moveExamMaterial('${academy}', ${i}, -1)">▲</button>
+            <button class="btn btn-sm" ${i===groups[academy].length-1 ? 'disabled' : ''} onclick="moveExamMaterial('${academy}', ${i}, 1)">▼</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteExamMaterial('${v.id}','${(v.title||'').replace(/'/g,"\\'")}')">삭제</button>
+          </div>`).join('')}
+      </div>`).join('');
+  } catch(e) {
+    document.getElementById('examMaterialList').innerHTML =
+      `<div style="color:#ff9090;font-size:13px;">오류: ${e.message}</div>`;
+  }
+}
+
+window.toggleExamMaterialActive = async function(id, active) {
+  try {
+    await updateDoc(doc(db, 'examMaterials', id), { active });
+  } catch(e) {
+    alert('변경 오류: ' + e.message);
+    loadExamMaterials();
+  }
+};
+
+window.moveExamMaterial = async function(academy, index, dir) {
+  const groupList = examMaterialsCache.filter(v => v.academy === academy);
+  const other = index + dir;
+  if (other < 0 || other >= groupList.length) return;
+  const a = groupList[index], b = groupList[other];
+  try {
+    await updateDoc(doc(db, 'examMaterials', a.id), { order: b.order });
+    await updateDoc(doc(db, 'examMaterials', b.id), { order: a.order });
+    await loadExamMaterials();
+  } catch(e) {
+    alert('순서 변경 오류: ' + e.message);
+  }
+};
+
+window.deleteExamMaterial = async function(id, title) {
+  if (!confirm(`"${title}" 자료를 삭제하시겠습니까?`)) return;
+  try {
+    await deleteDoc(doc(db, 'examMaterials', id));
+    await loadExamMaterials();
+  } catch(e) {
+    alert('삭제 오류: ' + e.message);
+  }
+};
+
 
 // ── 공지사항 (학부모 앱 발송) ──
 let noticeAllSelected = true;
