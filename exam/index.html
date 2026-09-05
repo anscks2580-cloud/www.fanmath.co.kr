@@ -68,12 +68,13 @@
   .hero-inner{
     max-width:1180px;
     margin:0 auto;
-    display:grid;
-    grid-template-columns:1.4fr 1fr;
-    gap:36px;
-    align-items:center;
+    position:relative;
   }
-  .hero-content{text-align:center;}
+  .hero-content{
+    text-align:center;
+    max-width:460px;
+    margin:0 auto;
+  }
   .hero .tag{
     display:inline-block;
     font-size:0.88rem;
@@ -207,11 +208,17 @@
 
   /* ---- 히어로 안에 들어가는 컴팩트 D-DAY 위젯 ---- */
   .dday-widget{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    width:250px;
     background:var(--card);
     border:1px solid var(--line);
     border-radius:16px;
     padding:18px 20px;
   }
+  .dday-widget.side-left{left:0;}
+  .dday-widget.side-right{right:0;}
   .dday-widget-head{
     display:flex;
     align-items:center;
@@ -223,26 +230,13 @@
     color:var(--ink-soft);
     font-weight:600;
   }
-  .level-tabs{
-    display:flex;
-    gap:6px;
-  }
-  .level-tab{
-    font-family:'Pretendard';
-    font-weight:600;
-    font-size:0.78rem;
-    padding:5px 12px;
-    border:1px solid var(--line);
-    border-radius:20px;
-    background:var(--paper);
-    color:var(--ink-soft);
-    cursor:pointer;
-    transition:background .2s, color .2s;
-  }
-  .level-tab.active{
-    background:var(--gold);
+  .dday-widget-head .level-badge{
+    font-size:0.72rem;
+    font-weight:700;
     color:#fff;
-    border-color:transparent;
+    background:var(--gold);
+    padding:3px 10px;
+    border-radius:20px;
   }
   .dday-carousel{
     position:relative;
@@ -290,11 +284,14 @@
     font-size:0.95rem;
     color:var(--ink-soft);
   }
-  @media (max-width:900px){
-    .hero-inner{grid-template-columns:1fr;}
-    .hero-content{text-align:center;}
-    .collab-row{justify-content:center;}
-    .dday-widget{max-width:420px;margin:0 auto;}
+  @media (max-width:1080px){
+    .dday-widget{
+      position:static;
+      transform:none;
+      width:100%;
+      max-width:420px;
+      margin:16px auto 0;
+    }
   }
 
   .subject-nav{
@@ -461,7 +458,7 @@
   <div class="brand">평촌 학원 연합 · 중간고사 대비</div>
   <nav>
     <a href="#materials">자료실</a>
-    <a href="#dday">학교별 D-DAY</a>
+    <a href="#ddayMiddleWidget">학교별 D-DAY</a>
   </nav>
 </header>
 
@@ -476,16 +473,23 @@
       <div class="note">참여 학원 로고는 추후 실제 로고 이미지로 교체 예정입니다</div>
     </div>
 
-    <div class="dday-widget" id="dday">
+    <div class="dday-widget side-left" id="ddayMiddleWidget">
       <div class="dday-widget-head">
         <span class="label">중간고사 D-DAY</span>
-        <div class="level-tabs" id="levelTabs">
-          <button class="level-tab active" data-level="중학교">중등</button>
-          <button class="level-tab" data-level="고등학교">고등</button>
-        </div>
+        <span class="level-badge">중등</span>
       </div>
-      <div class="dday-carousel" id="ddayCarousel">
-        <div class="dday-slide-track" id="ddaySlideTrack"></div>
+      <div class="dday-carousel" id="ddayCarouselMiddle">
+        <div class="dday-slide-track" id="ddaySlideTrackMiddle"></div>
+      </div>
+    </div>
+
+    <div class="dday-widget side-right" id="ddayHighWidget">
+      <div class="dday-widget-head">
+        <span class="label">중간고사 D-DAY</span>
+        <span class="level-badge">고등</span>
+      </div>
+      <div class="dday-carousel" id="ddayCarouselHigh">
+        <div class="dday-slide-track" id="ddaySlideTrackHigh"></div>
       </div>
     </div>
   </div>
@@ -545,19 +549,13 @@ const SCHOOLS = [
 /* 4) 시트 컬럼명 기준: 학원명, 과목, 학년, 자료명, 링크, 업로드일 */
 /* ======================================================= */
 
-let currentLevel = "중학교";
-let carouselIndex = 0;
-let carouselTimer = null;
+function makeCarousel(trackId, level){
+  const track = document.getElementById(trackId);
+  const schools = SCHOOLS.filter(s => s.level === level);
+  let index = 0;
+  let timer = null;
 
-function getCurrentSchools(){
-  return SCHOOLS.filter(s => s.level === currentLevel);
-}
-
-function renderCarousel(){
-  const track = document.getElementById('ddaySlideTrack');
-  const schools = getCurrentSchools();
   track.innerHTML = '';
-
   if(schools.length === 0){
     track.innerHTML = '<div class="dday-slide tbd"><div class="info"><div class="school-name">등록된 학교가 없습니다</div></div></div>';
     return;
@@ -582,35 +580,16 @@ function renderCarousel(){
     track.appendChild(slide);
   });
 
-  carouselIndex = 0;
-  updateCarouselPosition();
-  restartCarouselTimer();
-}
+  function update(){ track.style.transform = `translateX(-${index * 100}%)`; }
+  update();
 
-function updateCarouselPosition(){
-  const track = document.getElementById('ddaySlideTrack');
-  const total = getCurrentSchools().length || 1;
-  track.style.transform = `translateX(-${carouselIndex * 100}%)`;
-  void total;
+  if(schools.length > 1){
+    timer = setInterval(()=>{
+      index = (index + 1) % schools.length;
+      update();
+    }, 2800);
+  }
 }
-
-function restartCarouselTimer(){
-  if(carouselTimer) clearInterval(carouselTimer);
-  const schools = getCurrentSchools();
-  if(schools.length <= 1) return;
-  carouselTimer = setInterval(()=>{
-    carouselIndex = (carouselIndex + 1) % schools.length;
-    updateCarouselPosition();
-  }, 2800);
-}
-
-document.getElementById('levelTabs').addEventListener('click', (e)=>{
-  if(!e.target.classList.contains('level-tab')) return;
-  document.querySelectorAll('.level-tab').forEach(t=>t.classList.remove('active'));
-  e.target.classList.add('active');
-  currentLevel = e.target.dataset.level;
-  renderCarousel();
-});
 
 function calcSchoolDday(dateStr){
   if(!dateStr) return null;
@@ -620,7 +599,8 @@ function calcSchoolDday(dateStr){
   return Math.ceil((target - today) / (1000*60*60*24));
 }
 
-renderCarousel();
+makeCarousel('ddaySlideTrackMiddle', '중학교');
+makeCarousel('ddaySlideTrackHigh', '고등학교');
 
 function renderCollabRow(){
   const row = document.getElementById('collabRow');
