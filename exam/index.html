@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026 2학기 중간고사 대비 | 평촌 학원 연합</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@500;700;900&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FFFFFF;
+    --paper-soft:#FBF9F4;
+    --ink:#20242C;
+    --ink-soft:#6B7280;
+    --line:#E7E3D8;
+    --blue:#2E5EFF;
+    --coral:#FF6B52;
+    --sun:#FFC23A;
+    --green:#2FA36B;
+    --card:#FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Pretendard','Noto Sans KR',sans-serif;
+    line-height:1.6;
+  }
+  h1,h2,h3,.serif{font-family:'Noto Serif KR',serif;}
+  a{color:inherit;}
+
+  header{
+    padding:20px 6vw;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    border-bottom:1px solid var(--line);
+  }
+  .brand{
+    font-weight:700;
+    font-size:1rem;
+    letter-spacing:0.01em;
+  }
+  nav a{
+    margin-left:26px;
+    font-size:0.92rem;
+    text-decoration:none;
+    color:var(--ink-soft);
+  }
+  nav a:hover{color:var(--ink);}
+
+  .hero{
+    padding:76px 6vw 56px;
+    text-align:center;
+    background:
+      radial-gradient(700px 300px at 15% 0%, rgba(46,94,255,0.07), transparent 60%),
+      radial-gradient(700px 300px at 85% 10%, rgba(255,107,82,0.08), transparent 60%),
+      var(--paper);
+  }
+  .hero .tag{
+    display:inline-block;
+    font-size:0.92rem;
+    font-weight:600;
+    color:var(--blue);
+    background:#EEF2FF;
+    border-radius:20px;
+    padding:6px 16px;
+    margin-bottom:22px;
+  }
+  .hero h1{
+    font-size:clamp(2.3rem,5.2vw,3.6rem);
+    line-height:1.25;
+    margin:0 0 30px;
+    font-weight:900;
+  }
+  .hero h1 .accent{color:var(--coral);}
+
+  .collab-row{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:18px;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+  }
+  .collab-item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .logo-slot{
+    width:46px;height:46px;
+    border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;
+    font-size:0.95rem;
+    color:#fff;
+    flex-shrink:0;
+    overflow:hidden;
+  }
+  .logo-slot img{width:100%;height:100%;object-fit:cover;}
+  .collab-name{
+    font-weight:700;
+    font-size:1.05rem;
+  }
+  .collab-x{
+    font-size:1.1rem;
+    color:var(--ink-soft);
+    font-weight:400;
+  }
+  .hero .note{
+    font-size:0.85rem;
+    color:var(--ink-soft);
+    margin-top:6px;
+  }
+
+  .dday-strip{
+    margin:36px auto 0;
+    display:inline-flex;
+    align-items:baseline;
+    gap:10px;
+    background:var(--ink);
+    color:#fff;
+    padding:12px 26px;
+    border-radius:30px;
+    font-size:0.95rem;
+  }
+  .dday-strip strong{
+    font-family:'Noto Serif KR',serif;
+    font-size:1.3rem;
+    color:var(--sun);
+  }
+
+  .filter-bar{
+    max-width:1180px;
+    margin:0 auto;
+    padding:60px 6vw 0;
+  }
+  .filter-bar h2{
+    font-size:1.5rem;
+    margin:0 0 4px;
+  }
+  .filter-bar .sub{
+    color:var(--ink-soft);
+    font-size:0.94rem;
+    margin-bottom:22px;
+  }
+  .filters{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .filters select, .filters input{
+    font-family:inherit;
+    font-size:0.9rem;
+    padding:10px 14px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:var(--paper-soft);
+    color:var(--ink);
+  }
+  .filters input{flex:1;min-width:180px;}
+
+  .school-dday-grid{
+    max-width:1180px;
+    margin:22px auto 0;
+    padding:0 6vw;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+    gap:12px;
+  }
+  .school-card{
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px 18px;
+    background:var(--paper-soft);
+  }
+  .school-card .region{
+    font-size:0.74rem;
+    color:var(--ink-soft);
+    background:#fff;
+    display:inline-block;
+    padding:2px 9px;
+    border-radius:20px;
+    margin-bottom:8px;
+  }
+  .school-card .name{
+    font-weight:700;
+    font-size:0.98rem;
+    margin-bottom:6px;
+  }
+  .school-card .dday{
+    font-family:'Noto Serif KR',serif;
+    font-weight:700;
+    font-size:1.3rem;
+    color:var(--coral);
+  }
+  .school-card .exam-date{
+    font-size:0.78rem;
+    color:var(--ink-soft);
+    margin-top:2px;
+  }
+  .school-card.tbd .dday{color:var(--ink-soft);font-size:1rem;}
+
+  .subject-nav{
+    max-width:1180px;
+    margin:0 auto;
+    padding:26px 6vw 0;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .subject-pill{
+    border:1px solid var(--line);
+    padding:9px 18px;
+    border-radius:30px;
+    font-size:0.88rem;
+    font-weight:600;
+    cursor:pointer;
+    background:var(--paper);
+    color:var(--ink-soft);
+  }
+  .subject-pill.active{
+    color:#fff;
+    border-color:transparent;
+  }
+
+  .materials{
+    max-width:1180px;
+    margin:0 auto;
+    padding:30px 6vw 100px;
+  }
+  .subject-group{
+    margin-bottom:44px;
+    border-radius:18px;
+    padding:26px 26px 22px;
+  }
+  .subject-group .head{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:18px;
+  }
+  .subject-group .head .logo-slot{
+    width:40px;height:40px;
+    font-size:0.85rem;
+  }
+  .subject-group .head .titles{
+    display:flex;
+    flex-direction:column;
+  }
+  .subject-group .head .subj{
+    font-family:'Noto Serif KR',serif;
+    font-weight:700;
+    font-size:1.25rem;
+  }
+  .subject-group .head .school{
+    font-size:0.86rem;
+    color:var(--ink-soft);
+  }
+  .subject-group .head .count{
+    margin-left:auto;
+    font-size:0.8rem;
+    color:var(--ink-soft);
+    background:rgba(255,255,255,0.6);
+    padding:4px 10px;
+    border-radius:20px;
+  }
+  .card-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+    gap:12px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px 16px 14px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    text-decoration:none;
+    transition:transform .15s, box-shadow .15s;
+  }
+  .card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 8px 20px rgba(0,0,0,0.06);
+  }
+  .card .grade-tag{
+    font-size:0.74rem;
+    color:var(--ink-soft);
+    align-self:flex-start;
+    background:var(--paper-soft);
+    padding:2px 9px;
+    border-radius:20px;
+  }
+  .card .title{
+    font-weight:600;
+    font-size:0.97rem;
+    line-height:1.4;
+  }
+  .card .meta{
+    font-size:0.78rem;
+    color:var(--ink-soft);
+  }
+
+  .empty-state{
+    text-align:center;
+    padding:50px 20px;
+    color:var(--ink-soft);
+    border:1px dashed var(--line);
+    border-radius:14px;
+    font-size:0.95rem;
+  }
+
+  .upload-cta{
+    background:var(--paper-soft);
+    border-top:1px solid var(--line);
+    padding:56px 6vw;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:30px;
+    flex-wrap:wrap;
+  }
+  .upload-cta h3{
+    margin:0 0 8px;
+    font-size:1.3rem;
+  }
+  .upload-cta p{
+    margin:0;
+    color:var(--ink-soft);
+    max-width:52ch;
+    font-size:0.94rem;
+  }
+  .btn-primary{
+    background:var(--coral);
+    color:#fff;
+    padding:14px 28px;
+    border-radius:30px;
+    text-decoration:none;
+    font-weight:700;
+    font-size:0.94rem;
+    white-space:nowrap;
+  }
+
+  footer{
+    padding:26px 6vw;
+    font-size:0.82rem;
+    color:var(--ink-soft);
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+  }
+
+  @media (max-width:760px){
+    .collab-row{flex-direction:column;gap:14px;}
+    .collab-x{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">평촌 학원 연합 · 중간고사 대비</div>
+  <nav>
+    <a href="#materials">자료실</a>
+    <a href="#dday">학교별 D-DAY</a>
+  </nav>
+</header>
+
+<section class="hero">
+  <div class="tag">2026학년도 2학기 중간고사 대비 자료 허브</div>
+  <h1>2026년 2학기<br><span class="accent">중간고사</span> 대비</h1>
+
+  <div class="collab-row" id="collabRow"></div>
+  <div class="note">참여 학원 로고는 추후 실제 로고 이미지로 교체 예정입니다</div>
+
+</section>
+
+<div class="filter-bar" id="dday">
+  <h2>학교별 중간고사 D-DAY</h2>
+  <div class="sub">안양·과천·군포·의왕 지역 중·고등학교 시험일 기준입니다. 학교를 검색해서 우리 학교 D-DAY를 바로 확인하세요.</div>
+  <div class="filters">
+    <select id="filterRegion">
+      <option value="">전체 지역</option>
+      <option value="안양">안양</option>
+      <option value="과천">과천</option>
+      <option value="군포">군포</option>
+      <option value="의왕">의왕</option>
+    </select>
+    <select id="filterLevel">
+      <option value="">중/고 전체</option>
+      <option value="중학교">중학교</option>
+      <option value="고등학교">고등학교</option>
+    </select>
+    <input id="schoolKeyword" type="text" placeholder="학교명 검색">
+  </div>
+</div>
+
+<div class="school-dday-grid" id="schoolDdayGrid"></div>
+
+<div class="subject-nav" id="subjectNav"></div>
+
+<div class="filter-bar" id="materials">
+  <h2>과목별 대비 자료실</h2>
+  <div class="sub">담당 학원별로 올라온 자료를 과목 단위로 모아뒀습니다. 학년으로 좁혀서 확인하세요.</div>
+  <div class="filters">
+    <select id="filterGrade"><option value="">전체 학년</option></select>
+    <input id="filterKeyword" type="text" placeholder="자료명 검색">
+  </div>
+</div>
+
+<div class="materials" id="materialsContainer">
+  <div class="empty-state">자료를 불러오는 중입니다…</div>
+</div>
+
+<footer>
+  <div>평촌 학원 연합 · 중간고사 대비 자료실</div>
+  <div>문의: 송우찬수학학원 평촌관 원장 송문찬</div>
+</footer>
+
+<script>
+/* ====================== 설정 영역 ====================== */
+
+// 1) 참여 학원 & 과목 매칭. logo에 실제 이미지 경로를 넣으면 로고가 뜨고,
+//    비워두면 이니셜 원형 아이콘으로 자동 표시됩니다.
+const ACADEMIES = [
+  { school: "송우찬수학학원", subject: "수학",   color: "#2E5EFF", initial: "송", logo: "" },
+  { school: "에이펙스영어학원", subject: "영어", color: "#FF6B52", initial: "에", logo: "" },
+  { school: "인어스",         subject: "미정",   color: "#2FA36B", initial: "인", logo: "" },
+];
+
+// 2) 구글시트를 '웹에 게시(CSV)' 한 뒤 그 URL을 아래에 넣으세요.
+const SHEET_CSV_URL = "SHEET_CSV_URL_여기에_입력";
+
+// 3) 학교별 중간고사 시작일. examDate가 빈 값이면 "일정 확인 중"으로 표시됩니다.
+//    확정되는 대로 examDate만 "YYYY-MM-DD" 형식으로 채워주세요.
+const SCHOOLS = [
+  { name: "평촌고등학교", region: "안양", level: "고등학교", examDate: "" },
+  { name: "안양고등학교", region: "안양", level: "고등학교", examDate: "" },
+  { name: "부흥고등학교", region: "안양", level: "고등학교", examDate: "" },
+  { name: "귀인중학교", region: "안양", level: "중학교", examDate: "" },
+  { name: "평촌중학교", region: "안양", level: "중학교", examDate: "" },
+  { name: "범계중학교", region: "안양", level: "중학교", examDate: "" },
+  { name: "과천고등학교", region: "과천", level: "고등학교", examDate: "" },
+  { name: "과천중학교", region: "과천", level: "중학교", examDate: "" },
+  { name: "군포고등학교", region: "군포", level: "고등학교", examDate: "" },
+  { name: "군포중학교", region: "군포", level: "중학교", examDate: "" },
+  { name: "의왕고등학교", region: "의왕", level: "고등학교", examDate: "" },
+  { name: "의왕중학교", region: "의왕", level: "중학교", examDate: "" },
+];
+
+/* 4) 시트 컬럼명 기준: 학원명, 과목, 학년, 자료명, 링크, 업로드일 */
+/* ======================================================= */
+
+function calcSchoolDday(dateStr){
+  if(!dateStr) return null;
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const target = new Date(dateStr);
+  return Math.ceil((target - today) / (1000*60*60*24));
+}
+
+function renderSchoolGrid(){
+  const region = document.getElementById('filterRegion').value;
+  const level = document.getElementById('filterLevel').value;
+  const keyword = document.getElementById('schoolKeyword').value.trim();
+
+  const grid = document.getElementById('schoolDdayGrid');
+  grid.innerHTML = '';
+
+  const filtered = SCHOOLS.filter(s=>{
+    if(region && s.region !== region) return false;
+    if(level && s.level !== level) return false;
+    if(keyword && !s.name.includes(keyword)) return false;
+    return true;
+  });
+
+  if(filtered.length === 0){
+    grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1;">해당하는 학교가 없습니다.</div>';
+    return;
+  }
+
+  filtered.forEach(s=>{
+    const dday = calcSchoolDday(s.examDate);
+    const card = document.createElement('div');
+    card.className = 'school-card' + (dday === null ? ' tbd' : '');
+    let ddayLabel = '일정 확인 중';
+    if(dday !== null){
+      ddayLabel = dday > 0 ? `D-${dday}` : (dday === 0 ? 'D-DAY' : '종료');
+    }
+    card.innerHTML = `
+      <span class="region">${s.region} · ${s.level}</span>
+      <div class="name">${s.name}</div>
+      <div class="dday">${ddayLabel}</div>
+      <div class="exam-date">${s.examDate ? s.examDate + ' 시험 시작' : '확정되는 대로 업데이트'}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+['filterRegion','filterLevel'].forEach(id=>{
+  document.getElementById(id).addEventListener('change', renderSchoolGrid);
+});
+document.getElementById('schoolKeyword').addEventListener('input', renderSchoolGrid);
+renderSchoolGrid();
+
+function renderCollabRow(){
+  const row = document.getElementById('collabRow');
+  ACADEMIES.forEach((a, idx)=>{
+    if(idx > 0){
+      const x = document.createElement('span');
+      x.className = 'collab-x';
+      x.textContent = '✕';
+      row.appendChild(x);
+    }
+    const item = document.createElement('div');
+    item.className = 'collab-item';
+    const logo = document.createElement('div');
+    logo.className = 'logo-slot';
+    logo.style.background = a.color;
+    logo.innerHTML = a.logo ? `<img src="${a.logo}" alt="${a.school} 로고">` : a.initial;
+    const name = document.createElement('span');
+    name.className = 'collab-name';
+    name.textContent = a.school;
+    item.appendChild(logo);
+    item.appendChild(name);
+    row.appendChild(item);
+  });
+}
+renderCollabRow();
+
+function renderSubjectNav(){
+  const nav = document.getElementById('subjectNav');
+  const all = document.createElement('div');
+  all.className = 'subject-pill active';
+  all.textContent = '전체 과목';
+  all.dataset.subject = '';
+  all.style.background = 'var(--ink)';
+  nav.appendChild(all);
+
+  ACADEMIES.forEach(a=>{
+    const pill = document.createElement('div');
+    pill.className = 'subject-pill';
+    pill.textContent = a.subject;
+    pill.dataset.subject = a.subject;
+    nav.appendChild(pill);
+  });
+
+  nav.addEventListener('click', (e)=>{
+    if(!e.target.classList.contains('subject-pill')) return;
+    [...nav.children].forEach(p=>{
+      p.classList.remove('active');
+      p.style.background = 'var(--paper)';
+      p.style.color = 'var(--ink-soft)';
+    });
+    e.target.classList.add('active');
+    const subj = e.target.dataset.subject;
+    const academy = ACADEMIES.find(a=>a.subject === subj);
+    e.target.style.background = academy ? academy.color : 'var(--ink)';
+    e.target.style.color = '#fff';
+    currentSubjectFilter = subj;
+    renderMaterials();
+  });
+}
+let currentSubjectFilter = '';
+renderSubjectNav();
+
+function parseCSV(text){
+  const rows = text.trim().split(/\r?\n/).map(r=>{
+    const result = [];
+    let cur = '', inQuotes = false;
+    for(let i=0;i<r.length;i++){
+      const c = r[i];
+      if(c === '"'){ inQuotes = !inQuotes; }
+      else if(c === ',' && !inQuotes){ result.push(cur); cur=''; }
+      else{ cur += c; }
+    }
+    result.push(cur);
+    return result.map(v=>v.trim());
+  });
+  const header = rows.shift();
+  return rows.filter(r=>r.length>1 && r[0]).map(r=>{
+    const obj = {};
+    header.forEach((h,i)=>obj[h.trim()] = r[i] || '');
+    return obj;
+  });
+}
+
+let ALL_ITEMS = [];
+
+function renderFilterGrade(items){
+  const grades = [...new Set(items.map(i=>i['학년']).filter(Boolean))];
+  const sel = document.getElementById('filterGrade');
+  grades.forEach(g=>{
+    const opt = document.createElement('option');
+    opt.value = g; opt.textContent = g;
+    sel.appendChild(opt);
+  });
+}
+
+function renderMaterials(){
+  const grade = document.getElementById('filterGrade').value;
+  const keyword = document.getElementById('filterKeyword').value.trim().toLowerCase();
+
+  let items = ALL_ITEMS.filter(i=>{
+    if(currentSubjectFilter && i['과목'] !== currentSubjectFilter) return false;
+    if(grade && i['학년'] !== grade) return false;
+    if(keyword && !(i['자료명']||'').toLowerCase().includes(keyword)) return false;
+    return true;
+  });
+
+  const container = document.getElementById('materialsContainer');
+  container.innerHTML = '';
+
+  const subjectsToShow = currentSubjectFilter
+    ? ACADEMIES.filter(a=>a.subject === currentSubjectFilter)
+    : ACADEMIES;
+
+  let anyRendered = false;
+
+  subjectsToShow.forEach(academy=>{
+    const subjectItems = items.filter(i=>i['과목'] === academy.subject);
+    if(subjectItems.length === 0) return;
+    anyRendered = true;
+
+    const group = document.createElement('div');
+    group.className = 'subject-group';
+    group.style.background = hexToSoft(academy.color);
+
+    const head = document.createElement('div');
+    head.className = 'head';
+    head.innerHTML = `
+      <div class="logo-slot" style="background:${academy.color}">
+        ${academy.logo ? `<img src="${academy.logo}" alt="${academy.school} 로고">` : academy.initial}
+      </div>
+      <div class="titles">
+        <div class="subj">${academy.subject}</div>
+        <div class="school">${academy.school}</div>
+      </div>
+      <div class="count">${subjectItems.length}개 자료</div>
+    `;
+    group.appendChild(head);
+
+    const grid = document.createElement('div');
+    grid.className = 'card-grid';
+    subjectItems.forEach(item=>{
+      const a = document.createElement('a');
+      a.className = 'card';
+      a.href = item['링크'] || '#';
+      a.target = '_blank';
+      a.rel = 'noopener';
+      a.innerHTML = `
+        <span class="grade-tag">${item['학년']||''}</span>
+        <div class="title">${item['자료명']||'(제목 없음)'}</div>
+        <div class="meta">${item['업로드일']||''}</div>
+      `;
+      grid.appendChild(a);
+    });
+    group.appendChild(grid);
+    container.appendChild(group);
+  });
+
+  if(!anyRendered){
+    container.innerHTML = '<div class="empty-state">조건에 맞는 자료가 아직 없습니다. 조건을 바꿔서 다시 확인해 보세요.</div>';
+  }
+}
+
+function hexToSoft(hex){
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},0.06)`;
+}
+
+document.getElementById('filterGrade').addEventListener('change', renderMaterials);
+document.getElementById('filterKeyword').addEventListener('input', renderMaterials);
+
+async function loadData(){
+  const container = document.getElementById('materialsContainer');
+  if(SHEET_CSV_URL.includes('여기에_입력')){
+    container.innerHTML = '<div class="empty-state">SHEET_CSV_URL이 아직 설정되지 않았습니다. 스크립트 상단에 구글시트 게시 CSV 링크를 입력해 주세요.</div>';
+    return;
+  }
+  try{
+    const res = await fetch(SHEET_CSV_URL);
+    const text = await res.text();
+    ALL_ITEMS = parseCSV(text);
+    renderFilterGrade(ALL_ITEMS);
+    renderMaterials();
+  }catch(e){
+    container.innerHTML = '<div class="empty-state">자료를 불러오지 못했습니다. 시트 공개 설정을 확인해 주세요.</div>';
+  }
+}
+loadData();
+</script>
+
+</body>
+</html>
