@@ -7130,14 +7130,17 @@ async function fetchExamSubfolders(parentUri) {
   return subs;
 }
 
-// 최상위 폴더에서 먼저 찾고, 없으면 각 최상위 폴더의 하위 폴더까지 한 단계 더 뒤져봅니다.
-async function findExamFolderByName(folderName, topFolders) {
+// 최상위 폴더에서 먼저 찾고, 없으면 모든 최상위 폴더의 하위 폴더를 동시에(병렬로) 뒤져봅니다.
+async function findExamFolderByName(folderName, topFolders, onProgress) {
   let matched = topFolders.find(f => f.name === folderName);
   if (matched) return matched;
-  for (const top of topFolders) {
-    const subs = await fetchExamSubfolders(top.uri);
-    matched = subs.find(f => f.name === folderName);
-    if (matched) return matched;
+  if (onProgress) onProgress();
+  const subfolderLists = await Promise.all(
+    topFolders.map(f => fetchExamSubfolders(f.uri).catch(() => []))
+  );
+  for (const subs of subfolderLists) {
+    const m = subs.find(f => f.name === folderName);
+    if (m) return m;
   }
   return null;
 }
@@ -7155,7 +7158,9 @@ window.syncExamFolder = async () => {
   statusEl.textContent = '⏳ Vimeo 폴더 목록 불러오는 중...';
   try {
     const allFolders = await fetchVimeoFolders();
-    const matched = await findExamFolderByName(folderName, allFolders);
+    const matched = await findExamFolderByName(folderName, allFolders, () => {
+      statusEl.textContent = '⏳ 하위 폴더까지 확인 중... (폴더가 많으면 몇 초 걸릴 수 있어요)';
+    });
     if (!matched) {
       statusEl.textContent = `⚠️ "${folderName}" 폴더를 Vimeo에서 찾을 수 없습니다. 폴더명을 다시 확인해주세요.`;
       return;
