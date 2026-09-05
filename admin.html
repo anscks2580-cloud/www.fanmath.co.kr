@@ -650,6 +650,15 @@
   <div class="tab-panel" id="tab-exammaterials">
 
     <div class="card">
+      <h3>🔑 오늘의 인증번호 (중간고사 exam 페이지)</h3>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px;">
+        매일 자동으로 바뀌는 번호예요. 오늘 하루 각 학원 담당 선생님께 이 번호를 전달해주세요
+        (전화·카톡 등으로). 자정(한국시간) 넘어가면 자동으로 새 번호로 바뀝니다.
+      </div>
+      <div id="examCodeList" style="display:flex;flex-direction:column;gap:8px;"></div>
+    </div>
+
+    <div class="card">
       <h3>🔄 Vimeo 폴더에서 불러오기</h3>
       <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px;">
         홍보영상과 같은 방식이에요. Vimeo에 학원별 폴더를 만들어두고(예: <b style="color:var(--gold);">중간고사-송우찬수학학원</b>)
@@ -7058,8 +7067,42 @@ window.deletePromoVideo = async function(id, title) {
 };
 
 // ── 중간고사 연합 자료 (exam 페이지) ──
+
+// exam 페이지(index.html)와 완전히 똑같은 알고리즘/secret이어야 번호가 일치합니다.
+// index.html의 ACADEMY_SECRETS를 바꾸면 여기도 반드시 똑같이 바꿔주세요.
+const EXAM_ACADEMY_SECRETS = {
+  "송우찬수학학원": "swc-song",
+  "에이펙스영어학원": "apex-eng",
+  "인어스수학학원": "inus-math",
+  "대치레몬학원": "lemon-eng",
+};
+function examTodayKST(){
+  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  return kst.toISOString().slice(0,10).replace(/-/g,'');
+}
+function examDailyCode(secret, dateStr){
+  const str = secret + '-' + dateStr;
+  let hash = 0;
+  for(let i=0;i<str.length;i++){ hash = (hash * 31 + str.charCodeAt(i)) >>> 0; }
+  return String(hash % 1000000).padStart(6, '0');
+}
+function renderExamCodes(){
+  const el = document.getElementById('examCodeList');
+  if (!el) return;
+  const date = examTodayKST();
+  el.innerHTML = Object.entries(EXAM_ACADEMY_SECRETS).map(([academy, secret]) => {
+    const code = examDailyCode(secret, date);
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#2D1F5E;border-radius:8px;">
+        <span style="font-size:13px;">${academy}</span>
+        <span style="font-family:monospace;font-size:16px;font-weight:700;letter-spacing:2px;color:var(--gold);">${code}</span>
+      </div>`;
+  }).join('');
+}
+
 let examTabInited = false;
 window.initExamMaterialsTab = function() {
+  renderExamCodes();
   if (examTabInited) { loadExamMaterials(); return; }
   examTabInited = true;
   loadExamMaterials();
@@ -7072,6 +7115,32 @@ function extractExamGrade(title) {
 }
 
 let examSyncCandidates = [];
+
+// 폴더 안에 들어있는 하위 폴더 목록을 가져옵니다 (한 단계 중첩까지 지원)
+async function fetchExamSubfolders(parentUri) {
+  let subs = [];
+  let url = `https://api.vimeo.com${parentUri}/items?per_page=100&page=1`;
+  while (url) {
+    const res = await fetch(url, { headers: { Authorization: `bearer ${VIMEO_TOKEN}` } });
+    if (!res.ok) break;
+    const data = await res.json();
+    (data.data || []).forEach(item => { if (item.folder) subs.push(item.folder); });
+    url = data.paging?.next ? `https://api.vimeo.com${data.paging.next}` : null;
+  }
+  return subs;
+}
+
+// 최상위 폴더에서 먼저 찾고, 없으면 각 최상위 폴더의 하위 폴더까지 한 단계 더 뒤져봅니다.
+async function findExamFolderByName(folderName, topFolders) {
+  let matched = topFolders.find(f => f.name === folderName);
+  if (matched) return matched;
+  for (const top of topFolders) {
+    const subs = await fetchExamSubfolders(top.uri);
+    matched = subs.find(f => f.name === folderName);
+    if (matched) return matched;
+  }
+  return null;
+}
 
 window.syncExamFolder = async () => {
   const [academy, subject] = document.getElementById('exam-academy-select').value.split('|');
@@ -7086,7 +7155,7 @@ window.syncExamFolder = async () => {
   statusEl.textContent = '⏳ Vimeo 폴더 목록 불러오는 중...';
   try {
     const allFolders = await fetchVimeoFolders();
-    const matched = allFolders.find(f => f.name === folderName);
+    const matched = await findExamFolderByName(folderName, allFolders);
     if (!matched) {
       statusEl.textContent = `⚠️ "${folderName}" 폴더를 Vimeo에서 찾을 수 없습니다. 폴더명을 다시 확인해주세요.`;
       return;
