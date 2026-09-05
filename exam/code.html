@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>오늘의 인증번호 | 중간고사 대비</title>
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@700;800&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#FAF7F0;
+    --ink:#1E1B16;
+    --ink-soft:#79715F;
+    --line:#E3D9C1;
+    --gold:#B08D3E;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Pretendard','Noto Sans KR',sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:24px;
+  }
+  .box{
+    max-width:420px;
+    width:100%;
+    text-align:center;
+  }
+  h1{
+    font-family:'Nanum Myeongjo',serif;
+    font-weight:800;
+    font-size:1.4rem;
+    margin:0 0 6px;
+  }
+  .sub{
+    color:var(--ink-soft);
+    font-size:0.85rem;
+    margin-bottom:28px;
+  }
+  .code-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .code-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:16px 20px;
+  }
+  .code-row .name{
+    font-size:0.92rem;
+    font-weight:600;
+  }
+  .code-row .code{
+    font-family:'Nanum Myeongjo',serif;
+    font-weight:800;
+    font-size:1.4rem;
+    letter-spacing:0.1em;
+    color:var(--gold);
+  }
+  .date-note{
+    margin-top:20px;
+    font-size:0.78rem;
+    color:var(--ink-soft);
+  }
+</style>
+</head>
+<body>
+<div class="box">
+  <h1>오늘의 인증번호</h1>
+  <div class="sub">중간고사 대비 페이지 입장용입니다. 매일 자정(한국시간)에 자동으로 바뀝니다.</div>
+  <div class="code-list" id="codeList"></div>
+  <div class="date-note" id="dateNote"></div>
+</div>
+
+<script>
+// exam 페이지(index.html)와 반드시 똑같은 secret이어야 번호가 일치합니다.
+const ACADEMY_SECRETS = {
+  "송우찬수학학원": "swc-song",
+  "에이펙스영어학원": "apex-eng",
+  "인어스수학학원": "inus-math",
+  "대치레몬학원": "lemon-eng",
+};
+
+function todayKST(){
+  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  return kst.toISOString().slice(0,10).replace(/-/g,'');
+}
+function dailyCode(secret, dateStr){
+  const str = secret + '-' + dateStr;
+  let hash = 0;
+  for(let i=0;i<str.length;i++){ hash = (hash * 31 + str.charCodeAt(i)) >>> 0; }
+  return String(hash % 1000000).padStart(6, '0');
+}
+
+const date = todayKST();
+const listEl = document.getElementById('codeList');
+listEl.innerHTML = Object.entries(ACADEMY_SECRETS).map(([academy, secret]) => `
+  <div class="code-row">
+    <span class="name">${academy}</span>
+    <span class="code">${dailyCode(secret, date)}</span>
+  </div>
+`).join('');
+
+document.getElementById('dateNote').textContent = `${date.slice(0,4)}.${date.slice(4,6)}.${date.slice(6,8)} 기준`;
+</script>
+</body>
+</html>

@@ -463,6 +463,84 @@
     white-space:nowrap;
   }
 
+  .pdf-section{
+    max-width:1180px;
+    margin:0 auto;
+    padding:40px 6vw 60px;
+    border-top:1px solid var(--line);
+  }
+  .pdf-section h2{
+    font-size:1.3rem;
+    margin:0 0 8px;
+  }
+  .pdf-section .sub{
+    color:var(--ink-soft);
+    font-size:0.92rem;
+    max-width:70ch;
+    margin-bottom:20px;
+  }
+
+  /* ── 로그인 게이트 ── */
+  .auth-gate{
+    position:fixed;
+    inset:0;
+    background:var(--paper);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:999;
+    padding:20px;
+  }
+  .auth-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:36px 32px;
+    max-width:360px;
+    width:100%;
+    text-align:center;
+  }
+  .auth-title{
+    font-family:'Nanum Myeongjo',serif;
+    font-weight:800;
+    font-size:1.3rem;
+    margin-bottom:8px;
+  }
+  .auth-sub{
+    font-size:0.85rem;
+    color:var(--ink-soft);
+    margin-bottom:22px;
+    line-height:1.5;
+  }
+  .auth-card input{
+    width:100%;
+    box-sizing:border-box;
+    font-size:0.95rem;
+    padding:12px 14px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    margin-bottom:12px;
+    text-align:center;
+    letter-spacing:0.1em;
+  }
+  .auth-btn{
+    width:100%;
+    background:var(--gold);
+    color:#fff;
+    border:none;
+    padding:12px 0;
+    border-radius:10px;
+    font-weight:700;
+    font-size:0.95rem;
+    cursor:pointer;
+  }
+  .auth-error{
+    color:var(--coral);
+    font-size:0.82rem;
+    margin-top:10px;
+    min-height:1em;
+  }
+
   footer{
     padding:26px 6vw;
     font-size:0.82rem;
@@ -481,9 +559,23 @@
 </head>
 <body>
 
+<!-- ── 로그인 게이트 (학원별 인증번호) ── -->
+<div class="auth-gate" id="authGate">
+  <div class="auth-card">
+    <div class="auth-title">2026년 2학기 중간고사 대비</div>
+    <div class="auth-sub">연합 학원 선생님만 입장 가능합니다. 인증번호를 입력해주세요.</div>
+    <input type="password" id="authCodeInput" placeholder="인증번호" autocomplete="off">
+    <button class="auth-btn" onclick="tryAuth()">입장하기</button>
+    <div class="auth-error" id="authError"></div>
+  </div>
+</div>
+
+<div id="siteContent" style="display:none;">
+
 <header>
   <div class="brand">평촌 학원 연합 · 중간고사 대비</div>
   <nav>
+    <span id="authWelcome" style="margin-right:16px;color:var(--ink-soft);font-size:0.85rem;"></span>
     <a href="#materials">자료실</a>
     <a href="#ddayMiddleWidget">학교별 D-DAY</a>
   </nav>
@@ -540,13 +632,84 @@
   <div class="empty-state">자료를 불러오는 중입니다…</div>
 </div>
 
+<div class="pdf-section">
+  <h2>📄 PDF 자료 (마이박스)</h2>
+  <div class="sub">기출문제·프린트물 같은 PDF 자료는 저작권 문제로 홈페이지에 직접 올리지 않고, 마이박스 공유 폴더로 안내해드려요. 선생님들은 아래 폴더에서 필요한 자료를 받아 학생들에게 직접 프린트해서 배부해주세요.</div>
+  <a class="btn-primary" href="MYBOX_URL_여기에_입력" target="_blank" rel="noopener">마이박스 자료 폴더 열기</a>
+</div>
+
 <footer>
   <div>평촌 학원 연합 · 중간고사 대비 자료실</div>
   <div>문의: 송우찬수학학원 평촌관 원장 송문찬</div>
 </footer>
 
+</div><!-- /#siteContent -->
+
 <script type="module">
 /* ====================== 설정 영역 ====================== */
+
+// 0) 학원별 "매일 바뀌는" 인증번호.
+//    학원마다 고유한 비밀문자열(secret)만 정해두면, 날짜가 바뀔 때마다 자동으로 새 6자리 번호가 생성됩니다.
+//    평촌관은 admin.html "중간고사 자료" 탭에서 오늘의 번호를 확인해 매일 각 학원 담당쌤께 전달하면 됩니다.
+const ACADEMY_SECRETS = {
+  "송우찬수학학원": "swc-song",
+  "에이펙스영어학원": "apex-eng",
+  "인어스수학학원": "inus-math",
+  "대치레몬학원": "lemon-eng",
+};
+
+// 날짜(한국시간 기준, YYYYMMDD)와 학원 비밀문자열을 섞어 6자리 숫자 코드를 만듭니다.
+function todayKST(){
+  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
+  return kst.toISOString().slice(0,10).replace(/-/g,'');
+}
+function dailyCode(secret, dateStr){
+  const str = secret + '-' + dateStr;
+  let hash = 0;
+  for(let i=0;i<str.length;i++){ hash = (hash * 31 + str.charCodeAt(i)) >>> 0; }
+  return String(hash % 1000000).padStart(6, '0');
+}
+function getTodayCodes(){
+  const date = todayKST();
+  const map = {};
+  for(const [academy, secret] of Object.entries(ACADEMY_SECRETS)){
+    map[dailyCode(secret, date)] = academy;
+  }
+  return map;
+}
+
+function showSite(academyName){
+  document.getElementById('authGate').style.display = 'none';
+  document.getElementById('siteContent').style.display = 'block';
+  document.getElementById('authWelcome').textContent = academyName ? `${academyName} 선생님, 안녕하세요` : '';
+}
+
+window.tryAuth = function(){
+  const input = document.getElementById('authCodeInput');
+  const code = input.value.trim();
+  const todayCodes = getTodayCodes();
+  const academyName = todayCodes[code];
+  if(academyName){
+    sessionStorage.setItem('examAuthCode', code);
+    sessionStorage.setItem('examAuthDate', todayKST());
+    showSite(academyName);
+  }else{
+    document.getElementById('authError').textContent = '인증번호가 올바르지 않습니다. (매일 바뀌는 번호예요 — 담당 선생님께 오늘 번호를 다시 확인해주세요)';
+  }
+};
+
+document.getElementById('authCodeInput').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') window.tryAuth();
+});
+
+(function checkExistingAuth(){
+  const savedCode = sessionStorage.getItem('examAuthCode');
+  const savedDate = sessionStorage.getItem('examAuthDate');
+  if(savedCode && savedDate === todayKST()){
+    const academyName = getTodayCodes()[savedCode];
+    if(academyName) showSite(academyName);
+  }
+})();
 
 // 1) 참여 학원 & 과목 매칭. logo에 실제 이미지 경로를 넣으면 로고가 뜨고,
 //    비워두면 이니셜 원형 아이콘으로 자동 표시됩니다.
