@@ -58,7 +58,7 @@
   nav a:hover{color:var(--ink);}
 
   .hero{
-    padding:64px 6vw 56px;
+    padding:36px 0vw 28px;
     background:
       radial-gradient(900px 380px at 18% -10%, rgba(176,141,62,0.10), transparent 60%),
       radial-gradient(700px 320px at 88% 0%, rgba(176,141,62,0.08), transparent 60%),
@@ -66,15 +66,25 @@
     border-bottom:1px solid var(--line);
   }
   .hero-inner{
-    max-width:1180px;
+    max-width:1600px;
     margin:0 auto;
-    position:relative;
+    display:grid;
+    grid-template-columns:1fr auto 1fr;
+    align-items:center;
+    justify-items:center;
+    row-gap:8px;
+    column-gap:100px;
   }
-  .hero-content{
-    text-align:center;
-    max-width:460px;
-    margin:0 auto;
+  .hero-row-full{grid-column:1/-1;}
+  .title-block{
+    grid-column:2;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:6px;
   }
+  .dday-widget.side-left{grid-column:1;justify-self:end;align-self:center;}
+  .dday-widget.side-right{grid-column:3;justify-self:start;align-self:center;}
   .hero .tag{
     display:inline-block;
     font-size:0.88rem;
@@ -84,32 +94,33 @@
     border:1px solid rgba(176,141,62,0.3);
     border-radius:20px;
     padding:6px 18px;
-    margin-bottom:24px;
   }
   .hero h1{
-    font-size:clamp(2.1rem,4.6vw,3.2rem);
-    line-height:1.28;
-    margin:0 0 10px;
+    font-size:clamp(2.8rem,5.6vw,4.2rem);
+    line-height:1.24;
+    margin:0;
     font-weight:800;
     color:var(--ink);
+    text-align:center;
   }
   .hero h1 .accent{color:var(--gold);}
   .hero .tagline{
     font-family:'Nanum Myeongjo',serif;
     font-style:italic;
-    font-weight:800;
-    font-size:clamp(1.5rem,2.6vw,2rem);
+    font-weight:700;
+    font-size:clamp(1.4rem,2.1vw,1.9rem);
     color:var(--gold);
-    margin:0 0 32px;
+    margin:2px 0 0;
     letter-spacing:0.03em;
     display:inline-flex;
     align-items:center;
     gap:14px;
+    white-space:nowrap;
   }
   .hero .tagline::after{
     content:"";
     display:inline-block;
-    width:52px;
+    width:56px;
     height:1px;
     background:var(--gold);
     opacity:0.6;
@@ -119,9 +130,9 @@
     display:flex;
     justify-content:center;
     align-items:center;
-    gap:16px;
+    gap:24px;
     flex-wrap:wrap;
-    margin-bottom:10px;
+    margin-bottom:14px;
   }
   .collab-item{
     display:flex;
@@ -129,11 +140,11 @@
     gap:9px;
   }
   .logo-slot{
-    width:38px;height:38px;
+    width:56px;height:56px;
     border-radius:50%;
     display:flex;align-items:center;justify-content:center;
     font-weight:700;
-    font-size:0.85rem;
+    font-size:1.1rem;
     color:#fff;
     flex-shrink:0;
     overflow:hidden;
@@ -141,12 +152,12 @@
   }
   .logo-slot img{width:100%;height:100%;object-fit:cover;}
   .collab-name{
-    font-weight:700;
-    font-size:0.96rem;
+    font-weight:800;
+    font-size:1.35rem;
     color:var(--ink);
   }
   .collab-x{
-    font-size:1rem;
+    font-size:1.2rem;
     color:#8A8271;
     font-weight:400;
   }
@@ -176,7 +187,7 @@
   .filter-bar{
     max-width:1180px;
     margin:0 auto;
-    padding:60px 6vw 0;
+    padding:24px 6vw 0;
   }
   .filter-bar h2{
     font-size:1.5rem;
@@ -206,98 +217,114 @@
   .school-dday-grid{display:none;}
   .school-card{display:none;}
 
-  /* ---- 히어로 안에 들어가는 컴팩트 D-DAY 위젯 ---- */
+  /* ---- 히어로 안에 들어가는 D-DAY 위젯 (지역별 페이지) ---- */
   .dday-widget{
-    position:absolute;
-    top:50%;
-    transform:translateY(-50%);
-    width:250px;
+    width:340px;
+    flex-shrink:0;
     background:var(--card);
     border:1px solid var(--line);
-    border-radius:16px;
-    padding:18px 20px;
+    border-radius:14px;
+    padding:14px 16px 12px;
   }
-  .dday-widget.side-left{left:0;}
-  .dday-widget.side-right{right:0;}
   .dday-widget-head{
     display:flex;
     align-items:center;
     justify-content:space-between;
-    margin-bottom:12px;
+    margin-bottom:10px;
   }
   .dday-widget-head .label{
-    font-size:0.8rem;
+    font-size:0.74rem;
     color:var(--ink-soft);
     font-weight:600;
   }
   .dday-widget-head .level-badge{
-    font-size:0.72rem;
+    font-size:0.66rem;
     font-weight:700;
     color:#fff;
     background:var(--gold);
-    padding:3px 10px;
+    padding:2px 9px;
     border-radius:20px;
   }
   .dday-carousel{
     position:relative;
     overflow:hidden;
-    min-height:64px;
+    height:225px;
   }
   .dday-slide-track{
     display:flex;
+    align-items:flex-start;
     transition:transform .5s ease;
+    height:100%;
   }
-  .dday-slide{
+  .dday-page{
     flex:0 0 100%;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
     box-sizing:border-box;
+    height:100%;
+    overflow:hidden;
   }
-  .dday-slide .info .region-badge{
+  .dday-page .region-title{
     font-size:0.7rem;
-    color:var(--ink-soft);
-    background:var(--paper-soft);
-    padding:2px 8px;
-    border-radius:20px;
-    margin-bottom:6px;
-    display:inline-block;
-  }
-  .dday-slide .info .school-name{
+    color:var(--gold);
     font-weight:700;
-    font-size:0.98rem;
-    margin-bottom:2px;
+    margin-bottom:6px;
   }
-  .dday-slide .info .exam-date{
+  .dday-row{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:6px;
+    padding:5px 0;
+    border-bottom:1px solid var(--paper-soft);
+  }
+  .dday-row:last-child{border-bottom:none;}
+  .dday-row .school-name{
     font-size:0.76rem;
-    color:var(--ink-soft);
+    font-weight:600;
+    color:var(--ink);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
   }
-  .dday-slide .dday-num{
+  .dday-row .dday-num{
     font-family:'Nanum Myeongjo',serif;
     font-weight:800;
-    font-size:1.8rem;
+    font-size:0.82rem;
     color:var(--gold);
     white-space:nowrap;
   }
-  .dday-slide.tbd .dday-num{
-    font-size:0.95rem;
+  .dday-row.tbd .dday-num{
+    font-size:0.68rem;
     color:var(--ink-soft);
+    font-family:'Pretendard';
+    font-weight:500;
   }
+  .dday-dots{
+    display:flex;
+    justify-content:center;
+    gap:6px;
+    margin-top:12px;
+  }
+  .dday-dots span{
+    width:6px;height:6px;
+    border-radius:50%;
+    background:var(--line);
+  }
+  .dday-dots span.active{background:var(--gold);}
   @media (max-width:1080px){
-    .dday-widget{
-      position:static;
-      transform:none;
+    .hero-inner{grid-template-columns:1fr;}
+    .title-block{grid-column:1;}
+    .dday-widget.side-left,.dday-widget.side-right{
+      grid-column:1;
+      justify-self:center;
       width:100%;
       max-width:420px;
-      margin:16px auto 0;
     }
   }
 
   .subject-nav{
     max-width:1180px;
     margin:0 auto;
-    padding:26px 6vw 0;
+    padding:16px 6vw 0;
     display:flex;
     gap:10px;
     flex-wrap:wrap;
@@ -464,33 +491,36 @@
 
 <section class="hero">
   <div class="hero-inner">
-    <div class="hero-content">
-      <div class="tag">2026학년도 2학기 중간고사 대비 자료 허브</div>
-      <h1>2026년 2학기<br><span class="accent">중간고사</span> 대비</h1>
-      <div class="tagline">All in one project</div>
+    <div class="collab-row hero-row-full" id="collabRow"></div>
+    <div class="note hero-row-full">나머지 참여 학원 로고는 추후 실제 로고 이미지로 교체 예정입니다</div>
 
-      <div class="collab-row" id="collabRow"></div>
-      <div class="note">참여 학원 로고는 추후 실제 로고 이미지로 교체 예정입니다</div>
-    </div>
+    <div class="tag hero-row-full">2026학년도 2학기 중간고사 대비 자료 허브</div>
 
     <div class="dday-widget side-left" id="ddayMiddleWidget">
       <div class="dday-widget-head">
-        <span class="label">중간고사 D-DAY</span>
+        <span class="label">중간고사 기간</span>
         <span class="level-badge">중등</span>
       </div>
       <div class="dday-carousel" id="ddayCarouselMiddle">
         <div class="dday-slide-track" id="ddaySlideTrackMiddle"></div>
       </div>
+      <div class="dday-dots" id="ddayDotsMiddle"></div>
+    </div>
+
+    <div class="title-block">
+      <h1>2026년 2학기<br><span class="accent">중간고사</span> 대비</h1>
+      <div class="tagline">All in one project</div>
     </div>
 
     <div class="dday-widget side-right" id="ddayHighWidget">
       <div class="dday-widget-head">
-        <span class="label">중간고사 D-DAY</span>
+        <span class="label">중간고사 기간</span>
         <span class="level-badge">고등</span>
       </div>
       <div class="dday-carousel" id="ddayCarouselHigh">
         <div class="dday-slide-track" id="ddaySlideTrackHigh"></div>
       </div>
+      <div class="dday-dots" id="ddayDotsHigh"></div>
     </div>
   </div>
 </section>
@@ -521,7 +551,7 @@
 // 1) 참여 학원 & 과목 매칭. logo에 실제 이미지 경로를 넣으면 로고가 뜨고,
 //    비워두면 이니셜 원형 아이콘으로 자동 표시됩니다.
 const ACADEMIES = [
-  { school: "송우찬수학학원", subject: "수학",   color: "#2E5EFF", initial: "송", logo: "" },
+  { school: "송우찬수학학원", subject: "수학",   color: "#2E5EFF", initial: "송", logo: "assets/logo-songwoochan.jpg" },
   { school: "에이펙스영어학원", subject: "영어", color: "#FF6B52", initial: "에", logo: "" },
   { school: "인어스",         subject: "미정",   color: "#2FA36B", initial: "인", logo: "" },
 ];
@@ -532,62 +562,107 @@ const SHEET_CSV_URL = "SHEET_CSV_URL_여기에_입력";
 // 3) 학교별 중간고사 시작일. examDate가 빈 값이면 "일정 확인 중"으로 표시됩니다.
 //    확정되는 대로 examDate만 "YYYY-MM-DD" 형식으로 채워주세요.
 const SCHOOLS = [
-  { name: "평촌고등학교", region: "안양", level: "고등학교", examDate: "" },
-  { name: "안양고등학교", region: "안양", level: "고등학교", examDate: "" },
-  { name: "부흥고등학교", region: "안양", level: "고등학교", examDate: "" },
-  { name: "귀인중학교", region: "안양", level: "중학교", examDate: "" },
-  { name: "평촌중학교", region: "안양", level: "중학교", examDate: "" },
-  { name: "범계중학교", region: "안양", level: "중학교", examDate: "" },
-  { name: "과천고등학교", region: "과천", level: "고등학교", examDate: "" },
-  { name: "과천중학교", region: "과천", level: "중학교", examDate: "" },
-  { name: "군포고등학교", region: "군포", level: "고등학교", examDate: "" },
-  { name: "군포중학교", region: "군포", level: "중학교", examDate: "" },
-  { name: "의왕고등학교", region: "의왕", level: "고등학교", examDate: "" },
-  { name: "의왕중학교", region: "의왕", level: "중학교", examDate: "" },
+  // ---- 중학교 ----
+  { name: "고천중학교", region: "의왕", level: "중학교", period: "9/21 - 9/22" },
+  { name: "곡란중학교", region: "군포", level: "중학교", period: "9/22 - 9/23" },
+  { name: "궁내중학교", region: "군포", level: "중학교", period: "9/22" },
+  { name: "근명중학교", region: "안양", level: "중학교", period: "9/29 - 9/30" },
+  { name: "귀인중학교", region: "안양", level: "중학교", period: "9/29" },
+  { name: "당동중학교", region: "군포", level: "중학교", period: "10/6 - 10/8" },
+  { name: "대안여자중학교", region: "안양", level: "중학교", period: "9/30 - 10/1" },
+  { name: "대안중학교", region: "안양", level: "중학교", period: "9/29 - 9/30" },
+  { name: "도장중학교", region: "군포", level: "중학교", period: "10/7" },
+  { name: "모락중학교", region: "의왕", level: "중학교", period: "9/29 - 9/30" },
+  { name: "범계중학교", region: "안양", level: "중학교", period: "9/29 - 9/30" },
+  { name: "부림중학교", region: "안양", level: "중학교", period: "9/22 - 9/23" },
+  { name: "부흥중학교", region: "안양", level: "중학교", period: "9/21 - 9/22" },
+  { name: "비산중학교", region: "안양", level: "중학교", period: "9/29 - 9/30" },
+  { name: "산본중학교", region: "군포", level: "중학교", period: "9/22 - 9/23" },
+  { name: "수리중학교", region: "군포", level: "중학교", period: "9/17 - 9/18" },
+  { name: "신기중학교", region: "안양", level: "중학교", period: "9/30 - 10/1" },
+  { name: "용호중학교", region: "군포", level: "중학교", period: "9/14 - 9/15" },
+  { name: "율목중학교", region: "과천", level: "중학교", period: "9/28 - 9/30" },
+  { name: "평촌중학교", region: "안양", level: "중학교", period: "9/29 - 9/30" },
+  { name: "호계중학교", region: "안양", level: "중학교", period: "10/1 - 10/2" },
+  { name: "호성중학교", region: "안양", level: "중학교", period: "9/30 - 10/1" },
+  { name: "흥진중학교", region: "군포", level: "중학교", period: "10/13 - 10/14" },
+
+  // ---- 고등학교 ----
+  { name: "관양고등학교", region: "안양", level: "고등학교", period: "10/6 - 10/8" },
+  { name: "군포고등학교", region: "군포", level: "고등학교", period: "9/30 - 10/6" },
+  { name: "동안고등학교", region: "안양", level: "고등학교", period: "10/13 - 10/16" },
+  { name: "모락고등학교", region: "의왕", level: "고등학교", period: "10/12 - 10/16" },
+  { name: "백영고등학교", region: "의왕", level: "고등학교", period: "10/1 - 10/3" },
+  { name: "부흥고등학교", region: "군포", level: "고등학교", period: "9/28 - 10/2" },
+  { name: "산본고등학교", region: "군포", level: "고등학교", period: "10/12 - 10/16" },
+  { name: "성포고등학교", region: "군포", level: "고등학교", period: "10/6 - 10/8" },
+  { name: "수리고등학교", region: "군포", level: "고등학교", period: "9/30 - 10/8" },
+  { name: "신성고등학교", region: "안양", level: "고등학교", period: "10/1 - 10/7" },
+  { name: "안양고등학교", region: "안양", level: "고등학교", period: "10/6 - 10/13" },
+  { name: "안양여자고등학교", region: "안양", level: "고등학교", period: "10/1 - 10/7" },
+  { name: "양명고등학교", region: "군포", level: "고등학교", period: "10/12 - 10/16" },
+  { name: "용호고등학교", region: "군포", level: "고등학교", period: "9/28 - 10/2" },
+  { name: "인덕원고등학교", region: "안양", level: "고등학교", period: "10/12 - 10/15" },
+  { name: "평촌고등학교", region: "안양", level: "고등학교", period: "9/29 - 10/2" },
+  { name: "흥진고등학교", region: "군포", level: "고등학교", period: "9/29 - 10/2" },
 ];
 
 /* 4) 시트 컬럼명 기준: 학원명, 과목, 학년, 자료명, 링크, 업로드일 */
 /* ======================================================= */
 
-function makeCarousel(trackId, level){
+function makeRegionPager(trackId, dotsId, level){
   const track = document.getElementById(trackId);
-  const schools = SCHOOLS.filter(s => s.level === level);
-  let index = 0;
-  let timer = null;
+  const dotsEl = document.getElementById(dotsId);
+  const PAGE_SIZE = 7;
+  const schools = SCHOOLS
+    .filter(s => s.level === level)
+    .sort((a,b)=> a.name.localeCompare(b.name, 'ko'));
 
   track.innerHTML = '';
+  dotsEl.innerHTML = '';
+
   if(schools.length === 0){
-    track.innerHTML = '<div class="dday-slide tbd"><div class="info"><div class="school-name">등록된 학교가 없습니다</div></div></div>';
+    track.innerHTML = '<div class="dday-page"><div class="dday-row tbd"><span class="school-name">등록된 학교가 없습니다</span></div></div>';
     return;
   }
 
-  schools.forEach(s=>{
-    const dday = calcSchoolDday(s.examDate);
-    let ddayLabel = '일정 확인 중';
-    if(dday !== null){
-      ddayLabel = dday > 0 ? `D-${dday}` : (dday === 0 ? 'D-DAY' : '종료');
-    }
-    const slide = document.createElement('div');
-    slide.className = 'dday-slide' + (dday === null ? ' tbd' : '');
-    slide.innerHTML = `
-      <div class="info">
-        <span class="region-badge">${s.region} · ${s.level}</span>
-        <div class="school-name">${s.name}</div>
-        <div class="exam-date">${s.examDate ? s.examDate + ' 시험 시작' : '확정되는 대로 업데이트'}</div>
-      </div>
-      <div class="dday-num">${ddayLabel}</div>
-    `;
-    track.appendChild(slide);
+  // 가나다순으로 정렬 후 PAGE_SIZE개씩 페이지로 분할
+  const pages = [];
+  for(let i = 0; i < schools.length; i += PAGE_SIZE){
+    pages.push(schools.slice(i, i + PAGE_SIZE));
+  }
+
+  pages.forEach(pageSchools=>{
+    const page = document.createElement('div');
+    page.className = 'dday-page';
+    const rows = pageSchools.map(s=>{
+      const period = s.period || '일정 확인 중';
+      return `
+        <div class="dday-row${!s.period ? ' tbd' : ''}">
+          <span class="school-name">${s.name}</span>
+          <span class="dday-num">${period}</span>
+        </div>
+      `;
+    }).join('');
+    page.innerHTML = rows;
+    track.appendChild(page);
+
+    const dot = document.createElement('span');
+    dotsEl.appendChild(dot);
   });
 
-  function update(){ track.style.transform = `translateX(-${index * 100}%)`; }
+  let index = 0;
+  function update(){
+    track.style.transform = `translateX(-${index * 100}%)`;
+    [...dotsEl.children].forEach((d,i)=>d.classList.toggle('active', i === index));
+  }
   update();
 
-  if(schools.length > 1){
-    timer = setInterval(()=>{
-      index = (index + 1) % schools.length;
+  if(pages.length > 1){
+    setInterval(()=>{
+      index = (index + 1) % pages.length;
       update();
-    }, 2800);
+    }, 4000);
   }
 }
 
@@ -599,8 +674,8 @@ function calcSchoolDday(dateStr){
   return Math.ceil((target - today) / (1000*60*60*24));
 }
 
-makeCarousel('ddaySlideTrackMiddle', '중학교');
-makeCarousel('ddaySlideTrackHigh', '고등학교');
+makeRegionPager('ddaySlideTrackMiddle', 'ddayDotsMiddle', '중학교');
+makeRegionPager('ddaySlideTrackHigh', 'ddayDotsHigh', '고등학교');
 
 function renderCollabRow(){
   const row = document.getElementById('collabRow');
