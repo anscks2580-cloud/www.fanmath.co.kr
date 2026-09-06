@@ -661,14 +661,15 @@
     <div class="card">
       <h3>🔄 Vimeo 폴더에서 불러오기</h3>
       <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px;">
-        홍보영상과 같은 방식이에요. Vimeo에 학원별 폴더를 만들어두고(예: <b style="color:var(--gold);">중간고사-송우찬수학학원</b>)
-        거기에 영상을 올린 뒤, 아래에서 학원을 고르고 불러오면 새로 올라온 영상만 자동으로 찾아줍니다.
+        홍보영상과 같은 방식이에요. Vimeo에 <b style="color:var(--gold);">2026년 2학기 중간고사</b> 상위 폴더를 만들고
+        그 안에 학원별 하위 폴더(예: <b style="color:var(--gold);">송우찬수학학원</b>)를 만들어 영상을 올린 뒤,
+        아래에서 학원을 고르고 불러오면 새로 올라온 영상만 자동으로 찾아줍니다.
         여기서 저장한 자료가 중간고사 연합 페이지(exam) 자료실에 그대로 노출됩니다.
       </div>
       <div class="form-row" style="max-width:600px;">
         <div class="form-group">
           <label>학원</label>
-          <select id="exam-academy-select">
+          <select id="exam-academy-select" onchange="document.getElementById('exam-folder-name').value = this.value.split('|')[0];">
             <option value="송우찬수학학원|수학">송우찬수학학원 (수학)</option>
             <option value="에이펙스영어학원|영어">에이펙스영어학원 (영어)</option>
             <option value="인어스수학학원|미정">인어스수학학원 (미정)</option>
@@ -676,8 +677,12 @@
           </select>
         </div>
         <div class="form-group">
+          <label>상위 폴더명 (하위 폴더 안에 있을 때만 입력)</label>
+          <input type="text" id="exam-parent-folder" placeholder="예: 2026년 2학기 중간고사" value="2026년 2학기 중간고사">
+        </div>
+        <div class="form-group">
           <label>Vimeo 폴더명</label>
-          <input type="text" id="exam-folder-name" placeholder="예: 중간고사-송우찬수학학원" value="중간고사-송우찬수학학원">
+          <input type="text" id="exam-folder-name" placeholder="예: 송우찬수학학원" value="송우찬수학학원">
         </div>
       </div>
       <button class="btn btn-primary" onclick="syncExamFolder()">📥 폴더에서 새 영상 불러오기</button>
@@ -7131,10 +7136,20 @@ async function fetchExamSubfolders(parentUri) {
 }
 
 // 최상위 폴더에서 먼저 찾고, 없으면 모든 최상위 폴더의 하위 폴더를 동시에(병렬로) 뒤져봅니다.
-async function findExamFolderByName(folderName, topFolders, onProgress) {
+// parentName이 주어지면 그 폴더 하나의 하위 폴더만 빠르게 확인합니다.
+async function findExamFolderByName(folderName, topFolders, parentName, onProgress) {
   let matched = topFolders.find(f => f.name === folderName);
   if (matched) return matched;
-  if (onProgress) onProgress();
+
+  if (parentName) {
+    const parent = topFolders.find(f => f.name === parentName);
+    if (!parent) return null;
+    if (onProgress) onProgress(`⏳ "${parentName}" 폴더 안을 확인 중...`);
+    const subs = await fetchExamSubfolders(parent.uri);
+    return subs.find(f => f.name === folderName) || null;
+  }
+
+  if (onProgress) onProgress('⏳ 하위 폴더까지 확인 중... (폴더가 많으면 오래 걸릴 수 있어요)');
   const subfolderLists = await Promise.all(
     topFolders.map(f => fetchExamSubfolders(f.uri).catch(() => []))
   );
@@ -7157,9 +7172,10 @@ window.syncExamFolder = async () => {
 
   statusEl.textContent = '⏳ Vimeo 폴더 목록 불러오는 중...';
   try {
+    const parentName = document.getElementById('exam-parent-folder').value.trim();
     const allFolders = await fetchVimeoFolders();
-    const matched = await findExamFolderByName(folderName, allFolders, () => {
-      statusEl.textContent = '⏳ 하위 폴더까지 확인 중... (폴더가 많으면 몇 초 걸릴 수 있어요)';
+    const matched = await findExamFolderByName(folderName, allFolders, parentName, (msg) => {
+      statusEl.textContent = msg;
     });
     if (!matched) {
       statusEl.textContent = `⚠️ "${folderName}" 폴더를 Vimeo에서 찾을 수 없습니다. 폴더명을 다시 확인해주세요.`;
