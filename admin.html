@@ -650,15 +650,6 @@
   <div class="tab-panel" id="tab-exammaterials">
 
     <div class="card">
-      <h3>🔑 오늘의 인증번호 (중간고사 exam 페이지)</h3>
-      <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px;">
-        매일 자동으로 바뀌는 번호예요. 오늘 하루 각 학원 담당 선생님께 이 번호를 전달해주세요
-        (전화·카톡 등으로). 자정(한국시간) 넘어가면 자동으로 새 번호로 바뀝니다.
-      </div>
-      <div id="examCodeList" style="display:flex;flex-direction:column;gap:8px;"></div>
-    </div>
-
-    <div class="card">
       <h3>🔄 Vimeo 폴더에서 불러오기</h3>
       <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px;">
         홍보영상과 같은 방식이에요. Vimeo에 <b style="color:var(--gold);">2026년 2학기 중간고사</b> 상위 폴더를 만들고
@@ -670,10 +661,10 @@
         <div class="form-group">
           <label>학원</label>
           <select id="exam-academy-select" onchange="document.getElementById('exam-folder-name').value = this.value.split('|')[0];">
-            <option value="송우찬수학학원|수학">송우찬수학학원 (수학)</option>
-            <option value="에이펙스영어학원|영어">에이펙스영어학원 (영어)</option>
-            <option value="인어스수학학원|미정">인어스수학학원 (미정)</option>
-            <option value="대치레몬학원|영어">대치레몬학원 (영어)</option>
+            <option value="송우찬수학학원|수학">송우찬수학학원</option>
+            <option value="에이펙스영어학원|영어">에이펙스영어학원</option>
+            <option value="인어스수학학원|수학">인어스수학학원</option>
+            <option value="대치레몬학원|영어">대치레몬학원</option>
           </select>
         </div>
         <div class="form-group">
@@ -683,6 +674,13 @@
         <div class="form-group">
           <label>Vimeo 폴더명</label>
           <input type="text" id="exam-folder-name" placeholder="예: 송우찬수학학원" value="송우찬수학학원">
+        </div>
+        <div class="form-group">
+          <label>자료 유형</label>
+          <select id="exam-material-type">
+            <option value="기출문제">기출문제</option>
+            <option value="유형정리">유형정리</option>
+          </select>
         </div>
       </div>
       <button class="btn btn-primary" onclick="syncExamFolder()">📥 폴더에서 새 영상 불러오기</button>
@@ -7073,41 +7071,8 @@ window.deletePromoVideo = async function(id, title) {
 
 // ── 중간고사 연합 자료 (exam 페이지) ──
 
-// exam 페이지(index.html)와 완전히 똑같은 알고리즘/secret이어야 번호가 일치합니다.
-// index.html의 ACADEMY_SECRETS를 바꾸면 여기도 반드시 똑같이 바꿔주세요.
-const EXAM_ACADEMY_SECRETS = {
-  "송우찬수학학원": "swc-song",
-  "에이펙스영어학원": "apex-eng",
-  "인어스수학학원": "inus-math",
-  "대치레몬학원": "lemon-eng",
-};
-function examTodayKST(){
-  const kst = new Date(Date.now() + 9 * 60 * 60 * 1000);
-  return kst.toISOString().slice(0,10).replace(/-/g,'');
-}
-function examDailyCode(secret, dateStr){
-  const str = secret + '-' + dateStr;
-  let hash = 0;
-  for(let i=0;i<str.length;i++){ hash = (hash * 31 + str.charCodeAt(i)) >>> 0; }
-  return String(hash % 1000000).padStart(6, '0');
-}
-function renderExamCodes(){
-  const el = document.getElementById('examCodeList');
-  if (!el) return;
-  const date = examTodayKST();
-  el.innerHTML = Object.entries(EXAM_ACADEMY_SECRETS).map(([academy, secret]) => {
-    const code = examDailyCode(secret, date);
-    return `
-      <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#2D1F5E;border-radius:8px;">
-        <span style="font-size:13px;">${academy}</span>
-        <span style="font-family:monospace;font-size:16px;font-weight:700;letter-spacing:2px;color:var(--gold);">${code}</span>
-      </div>`;
-  }).join('');
-}
-
 let examTabInited = false;
 window.initExamMaterialsTab = function() {
-  renderExamCodes();
   if (examTabInited) { loadExamMaterials(); return; }
   examTabInited = true;
   loadExamMaterials();
@@ -7163,6 +7128,7 @@ async function findExamFolderByName(folderName, topFolders, parentName, onProgre
 window.syncExamFolder = async () => {
   const [academy, subject] = document.getElementById('exam-academy-select').value.split('|');
   const folderName = document.getElementById('exam-folder-name').value.trim();
+  const materialType = document.getElementById('exam-material-type').value;
   const statusEl  = document.getElementById('examSyncStatus');
   const previewEl = document.getElementById('examSyncPreview');
   previewEl.style.display = 'none';
@@ -7190,7 +7156,7 @@ window.syncExamFolder = async () => {
     for (const v of videos) {
       const vimeoId = v.uri.replace('/videos/', '');
       if (existingIds.has(vimeoId)) continue;
-      examSyncCandidates.push({ vimeoId, title: v.name, academy, subject });
+      examSyncCandidates.push({ vimeoId, title: v.name, academy, subject, materialType });
     }
 
     if (!examSyncCandidates.length) {
@@ -7201,7 +7167,7 @@ window.syncExamFolder = async () => {
     statusEl.textContent = '';
     const titleEl = document.getElementById('examSyncPreviewTitle');
     const listEl  = document.getElementById('examSyncPreviewList');
-    titleEl.innerHTML = `${academy} — 신규 영상 <b style="color:var(--gold);">${examSyncCandidates.length}개</b> 발견
+    titleEl.innerHTML = `${academy} (${materialType}) — 신규 영상 <b style="color:var(--gold);">${examSyncCandidates.length}개</b> 발견
       <span style="margin-left:10px;">
         <a href="#" onclick="event.preventDefault();document.querySelectorAll('.exam-sync-check').forEach(c=>c.checked=true);">전체선택</a>
         <span style="color:var(--muted);">/</span>
@@ -7230,6 +7196,7 @@ window.examSyncSaveAll = async () => {
     try {
       await addDoc(collection(db, 'examMaterials'), {
         title: v.title, vimeoId: v.vimeoId, academy: v.academy, subject: v.subject,
+        materialType: v.materialType || '',
         grade: extractExamGrade(v.title), active: true,
         order: base + i, createdAt: new Date().toISOString()
       });
@@ -7267,7 +7234,16 @@ async function loadExamMaterials() {
         ${groups[academy].map((v, i) => `
           <div class="student-item">
             <div class="student-name">${i+1}. ${v.title}</div>
-            <span class="student-meta" style="font-size:11px;">${v.subject || ''} ${v.grade ? '· '+v.grade : ''} · Vimeo: ${v.vimeoId}</span>
+            <span class="student-meta" style="font-size:11px;">${v.grade ? v.grade+' · ' : ''}Vimeo: ${v.vimeoId}</span>
+            <select style="font-size:12px;" onchange="updateExamMaterialField('${v.id}','subject',this.value)">
+              <option value="수학" ${v.subject==='수학' ? 'selected' : ''}>수학</option>
+              <option value="영어" ${v.subject==='영어' ? 'selected' : ''}>영어</option>
+            </select>
+            <select style="font-size:12px;" onchange="updateExamMaterialField('${v.id}','materialType',this.value)">
+              <option value="" ${!v.materialType ? 'selected' : ''}>유형 미지정</option>
+              <option value="기출문제" ${v.materialType==='기출문제' ? 'selected' : ''}>기출문제</option>
+              <option value="유형정리" ${v.materialType==='유형정리' ? 'selected' : ''}>유형정리</option>
+            </select>
             <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer;">
               <input type="checkbox" ${v.active !== false ? 'checked' : ''} onchange="toggleExamMaterialActive('${v.id}', this.checked)"> 자료실에 노출
             </label>
@@ -7285,6 +7261,19 @@ async function loadExamMaterials() {
 window.toggleExamMaterialActive = async function(id, active) {
   try {
     await updateDoc(doc(db, 'examMaterials', id), { active });
+  } catch(e) {
+    alert('변경 오류: ' + e.message);
+    loadExamMaterials();
+  }
+};
+
+// 등록된 자료 목록에서 과목(수학/영어)·자료유형(기출문제/유형정리)을
+// 직접 바꿔서 index.html 자료실의 어느 필터에 노출될지 조정할 수 있게 합니다.
+window.updateExamMaterialField = async function(id, field, value) {
+  try {
+    await updateDoc(doc(db, 'examMaterials', id), { [field]: value });
+    const item = examMaterialsCache.find(v => v.id === id);
+    if (item) item[field] = value;
   } catch(e) {
     alert('변경 오류: ' + e.message);
     loadExamMaterials();
