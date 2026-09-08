@@ -409,6 +409,20 @@
     padding:4px 10px;
     border-radius:20px;
   }
+  .grade-block{
+    margin-bottom:22px;
+  }
+  .grade-block:last-child{
+    margin-bottom:0;
+  }
+  .grade-block-head{
+    font-family:'Nanum Myeongjo',serif;
+    font-weight:700;
+    font-size:1.02rem;
+    margin-bottom:10px;
+    padding-bottom:6px;
+    border-bottom:1px solid rgba(0,0,0,0.08);
+  }
   .card-grid{
     display:grid;
     grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
@@ -949,6 +963,13 @@ function extractGrade(title){
   return m ? m[0] : '';
 }
 
+// 학년 정렬 순서 (고1→고2→고3→중1→중2→중3→기타)
+const GRADE_ORDER = ['고1','고2','고3','중1','중2','중3'];
+function gradeSortIndex(g){
+  const i = GRADE_ORDER.indexOf(g);
+  return i === -1 ? GRADE_ORDER.length : i;
+}
+
 function renderMaterials(){
   const grade = document.getElementById('filterGrade').value;
   const keyword = document.getElementById('filterKeyword').value.trim().toLowerCase();
@@ -964,64 +985,84 @@ function renderMaterials(){
   const container = document.getElementById('materialsContainer');
   container.innerHTML = '';
 
+  // 학원 구분 없이 과목 단위로 합쳐서 보여주고, 그 안을 학년으로 나눕니다.
+  const uniqueSubjects = [...new Set(ACADEMIES.map(a=>a.subject))];
   const subjectsToShow = currentSubjectFilter
-    ? ACADEMIES.filter(a=>a.subject === currentSubjectFilter)
-    : ACADEMIES;
+    ? uniqueSubjects.filter(s=>s === currentSubjectFilter)
+    : uniqueSubjects;
 
   let anyRendered = false;
 
-  subjectsToShow.forEach(academy=>{
-    const subjectItems = items.filter(i=>i['과목'] === academy.subject);
+  subjectsToShow.forEach(subject=>{
+    const subjectItems = items.filter(i=>i['과목'] === subject);
     if(subjectItems.length === 0) return;
     anyRendered = true;
 
+    const academy = ACADEMIES.find(a=>a.subject === subject);
+    const color = academy ? academy.color : 'var(--ink)';
+
     const group = document.createElement('div');
     group.className = 'subject-group';
-    group.style.background = hexToSoft(academy.color);
+    group.style.background = hexToSoft(color);
 
     const head = document.createElement('div');
     head.className = 'head';
     head.innerHTML = `
-      <div class="logo-slot" style="background:${academy.logo ? '#fff' : academy.color}">
-        ${academy.logo ? `<img src="${academy.logo}" alt="${academy.school} 로고" style="width:${academy.fit === 'contain' ? '82%' : '100%'};height:${academy.fit === 'contain' ? '82%' : '100%'};object-fit:${academy.fit || 'cover'};">` : academy.initial}
-      </div>
+      <div class="logo-slot" style="background:${color}">${subject.slice(0,1)}</div>
       <div class="titles">
-        <div class="subj">${academy.subject}</div>
-        <div class="school">${academy.school}</div>
+        <div class="subj">${subject}</div>
       </div>
       <div class="count">${subjectItems.length}개 자료</div>
     `;
     group.appendChild(head);
 
-    const grid = document.createElement('div');
-    grid.className = 'card-grid';
-    subjectItems.forEach(item=>{
-      const a = document.createElement('a');
-      a.className = 'card';
-      a.href = item['링크'] || '#';
-      const vimeoId = extractVimeoId(item['링크']);
-      if(vimeoId){
-        // 비메오 영상은 새 탭으로 보내지 않고 팝업(모달)로 재생합니다.
-        a.addEventListener('click', (e)=>{
-          e.preventDefault();
-          openVimeoModal(vimeoId, item['자료명']||'');
-        });
-      }else{
-        a.target = '_blank';
-        a.rel = 'noopener';
-      }
-      const thumbHtml = item['썸네일']
-        ? `<img src="${item['썸네일']}" alt="" style="width:100%;border-radius:8px;margin-bottom:6px;aspect-ratio:16/9;object-fit:cover;" onerror="this.style.display='none'">`
-        : '';
-      a.innerHTML = `
-        ${thumbHtml}
-        <span class="grade-tag">${item['학년']||''}</span>
-        <div class="title">${item['자료명']||'(제목 없음)'}</div>
-        <div class="meta">${item['업로드일']||''}</div>
-      `;
-      grid.appendChild(a);
+    // 학년별로 묶기
+    const gradesPresent = [...new Set(subjectItems.map(i=>i['학년']||'학년 미지정'))]
+      .sort((a,b)=>gradeSortIndex(a)-gradeSortIndex(b));
+
+    gradesPresent.forEach(g=>{
+      const gradeItems = subjectItems.filter(i=>(i['학년']||'학년 미지정') === g);
+
+      const gradeBlock = document.createElement('div');
+      gradeBlock.className = 'grade-block';
+
+      const gradeHead = document.createElement('div');
+      gradeHead.className = 'grade-block-head';
+      gradeHead.textContent = g;
+      gradeBlock.appendChild(gradeHead);
+
+      const grid = document.createElement('div');
+      grid.className = 'card-grid';
+      gradeItems.forEach(item=>{
+        const a = document.createElement('a');
+        a.className = 'card';
+        a.href = item['링크'] || '#';
+        const vimeoId = extractVimeoId(item['링크']);
+        if(vimeoId){
+          // 비메오 영상은 새 탭으로 보내지 않고 팝업(모달)로 재생합니다.
+          a.addEventListener('click', (e)=>{
+            e.preventDefault();
+            openVimeoModal(vimeoId, item['자료명']||'');
+          });
+        }else{
+          a.target = '_blank';
+          a.rel = 'noopener';
+        }
+        const thumbHtml = item['썸네일']
+          ? `<img src="${item['썸네일']}" alt="" style="width:100%;border-radius:8px;margin-bottom:6px;aspect-ratio:16/9;object-fit:cover;" onerror="this.style.display='none'">`
+          : '';
+        a.innerHTML = `
+          ${thumbHtml}
+          <span class="grade-tag">${item['학원명']||''}</span>
+          <div class="title">${item['자료명']||'(제목 없음)'}</div>
+          <div class="meta">${item['업로드일']||''}</div>
+        `;
+        grid.appendChild(a);
+      });
+      gradeBlock.appendChild(grid);
+      group.appendChild(gradeBlock);
     });
-    group.appendChild(grid);
+
     container.appendChild(group);
   });
 
