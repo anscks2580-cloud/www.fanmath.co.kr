@@ -7234,7 +7234,16 @@ async function loadExamMaterials() {
         ${groups[academy].map((v, i) => `
           <div class="student-item">
             <div class="student-name">${i+1}. ${v.title}</div>
-            <span class="student-meta" style="font-size:11px;">${v.grade ? v.grade+' · ' : ''}Vimeo: ${v.vimeoId}</span>
+            <span class="student-meta" style="font-size:11px;">Vimeo: ${v.vimeoId}</span>
+            <select style="font-size:12px;" onchange="updateExamMaterialField('${v.id}','grade',this.value)">
+              <option value="" ${!v.grade ? 'selected' : ''}>학년 미지정</option>
+              <option value="고1" ${v.grade==='고1' ? 'selected' : ''}>고1</option>
+              <option value="고2" ${v.grade==='고2' ? 'selected' : ''}>고2</option>
+              <option value="고3" ${v.grade==='고3' ? 'selected' : ''}>고3</option>
+              <option value="중1" ${v.grade==='중1' ? 'selected' : ''}>중1</option>
+              <option value="중2" ${v.grade==='중2' ? 'selected' : ''}>중2</option>
+              <option value="중3" ${v.grade==='중3' ? 'selected' : ''}>중3</option>
+            </select>
             <select style="font-size:12px;" onchange="updateExamMaterialField('${v.id}','subject',this.value)">
               <option value="수학" ${v.subject==='수학' ? 'selected' : ''}>수학</option>
               <option value="영어" ${v.subject==='영어' ? 'selected' : ''}>영어</option>
