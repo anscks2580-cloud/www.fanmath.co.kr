@@ -584,7 +584,7 @@
 <div class="auth-gate" id="authGate">
   <div class="auth-card">
     <div class="auth-title">2026년 2학기 중간고사 대비</div>
-    <div class="auth-sub">연합 학원 선생님만 입장 가능합니다. 인증번호를 입력해주세요.</div>
+    <div class="auth-sub">연합 학원 선생님·학생만 입장 가능합니다. 인증번호를 입력해주세요.</div>
     <input type="password" id="authCodeInput" placeholder="인증번호" autocomplete="off">
     <button class="auth-btn" onclick="tryAuth()">입장하기</button>
     <div class="auth-error" id="authError"></div>
@@ -679,32 +679,58 @@
 /* ====================== 설정 영역 ====================== */
 
 // 0) 학원별 인증번호 — 한번 정하면 계속 그대로 씁니다. 값만 바꾸면 코드 수정 없이 변경돼요.
-const ACADEMY_CODES = {
+//    선생님용 코드와 학생용 코드를 서로 다른 값으로 따로 관리합니다.
+const TEACHER_CODES = {
+  "SWC2026teacher": "송우찬수학학원",
+  "APEX2026teacher": "에이펙스영어학원",
+  "INUS2026teacher": "인어스수학학원",
+  "LEMON2026teacher": "대치레몬학원",
+};
+
+const STUDENT_CODES = {
   "SWC2026": "송우찬수학학원",
   "APEX2026": "에이펙스영어학원",
   "INUS2026": "인어스수학학원",
   "LEMON2026": "대치레몬학원",
 };
 
-function showSite(academyName){
+function showSite(academyName, role){
   document.getElementById('authGate').style.display = 'none';
   document.getElementById('siteContent').style.display = 'block';
-  document.getElementById('authWelcome').textContent = academyName ? `${academyName} 선생님, 안녕하세요` : '';
+  const roleLabel = role === 'student' ? '학생' : '선생님';
+  document.getElementById('authWelcome').textContent = academyName ? `${academyName} ${roleLabel}, 안녕하세요` : '';
 }
 
 // 대소문자 구분 없이 매칭하기 위해 코드를 대문자로 정규화한 조회용 맵을 만듭니다.
-const ACADEMY_CODES_NORMALIZED = {};
-Object.keys(ACADEMY_CODES).forEach(code=>{
-  ACADEMY_CODES_NORMALIZED[code.toUpperCase()] = ACADEMY_CODES[code];
-});
+function normalizeCodes(codes){
+  const normalized = {};
+  Object.keys(codes).forEach(code=>{
+    normalized[code.toUpperCase()] = codes[code];
+  });
+  return normalized;
+}
+const TEACHER_CODES_NORMALIZED = normalizeCodes(TEACHER_CODES);
+const STUDENT_CODES_NORMALIZED = normalizeCodes(STUDENT_CODES);
+
+// 입력된 코드가 선생님/학생 중 어느 쪽인지 찾아줍니다.
+function resolveAuth(rawCode){
+  const code = rawCode.trim().toUpperCase();
+  if(TEACHER_CODES_NORMALIZED[code]){
+    return { academyName: TEACHER_CODES_NORMALIZED[code], role: 'teacher', code };
+  }
+  if(STUDENT_CODES_NORMALIZED[code]){
+    return { academyName: STUDENT_CODES_NORMALIZED[code], role: 'student', code };
+  }
+  return null;
+}
 
 window.tryAuth = function(){
   const input = document.getElementById('authCodeInput');
-  const code = input.value.trim().toUpperCase();
-  const academyName = ACADEMY_CODES_NORMALIZED[code];
-  if(academyName){
-    sessionStorage.setItem('examAuthCode', code);
-    showSite(academyName);
+  const auth = resolveAuth(input.value);
+  if(auth){
+    sessionStorage.setItem('examAuthCode', auth.code);
+    sessionStorage.setItem('examAuthRole', auth.role);
+    showSite(auth.academyName, auth.role);
   }else{
     document.getElementById('authError').textContent = '인증번호가 올바르지 않습니다.';
   }
@@ -715,8 +741,12 @@ document.getElementById('authCodeInput').addEventListener('keydown', (e)=>{
 });
 
 (function checkExistingAuth(){
-  const saved = sessionStorage.getItem('examAuthCode');
-  if(saved && ACADEMY_CODES_NORMALIZED[saved.toUpperCase()]) showSite(ACADEMY_CODES_NORMALIZED[saved.toUpperCase()]);
+  const savedCode = sessionStorage.getItem('examAuthCode');
+  if(!savedCode) return;
+  const savedRole = sessionStorage.getItem('examAuthRole');
+  const codes = savedRole === 'student' ? STUDENT_CODES_NORMALIZED : TEACHER_CODES_NORMALIZED;
+  const academyName = codes[savedCode.toUpperCase()];
+  if(academyName) showSite(academyName, savedRole);
 })();
 
 // 1) 참여 학원 & 과목 매칭. logo에 실제 이미지 경로를 넣으면 로고가 뜨고,
