@@ -678,8 +678,11 @@
         <div class="form-group">
           <label>자료 유형</label>
           <select id="exam-material-type">
-            <option value="기출문제">기출문제</option>
+            <option value="고1 기출문제">고1 기출문제</option>
+            <option value="고2 기출문제">고2 기출문제</option>
             <option value="유형정리">유형정리</option>
+            <option value="송우찬수학학원 보충">송우찬수학학원 보충</option>
+            <option value="인어스수학학원 보충">인어스수학학원 보충</option>
           </select>
         </div>
       </div>
@@ -7250,8 +7253,11 @@ async function loadExamMaterials() {
             </select>
             <select style="font-size:12px;" onchange="updateExamMaterialField('${v.id}','materialType',this.value)">
               <option value="" ${!v.materialType ? 'selected' : ''}>유형 미지정</option>
-              <option value="기출문제" ${v.materialType==='기출문제' ? 'selected' : ''}>기출문제</option>
+              <option value="고1 기출문제" ${v.materialType==='고1 기출문제' ? 'selected' : ''}>고1 기출문제</option>
+              <option value="고2 기출문제" ${v.materialType==='고2 기출문제' ? 'selected' : ''}>고2 기출문제</option>
               <option value="유형정리" ${v.materialType==='유형정리' ? 'selected' : ''}>유형정리</option>
+              <option value="송우찬수학학원 보충" ${v.materialType==='송우찬수학학원 보충' ? 'selected' : ''}>송우찬수학학원 보충</option>
+              <option value="인어스수학학원 보충" ${v.materialType==='인어스수학학원 보충' ? 'selected' : ''}>인어스수학학원 보충</option>
             </select>
             <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer;">
               <input type="checkbox" ${v.active !== false ? 'checked' : ''} onchange="toggleExamMaterialActive('${v.id}', this.checked)"> 자료실에 노출
@@ -7276,7 +7282,7 @@ window.toggleExamMaterialActive = async function(id, active) {
   }
 };
 
-// 등록된 자료 목록에서 과목(수학/영어)·자료유형(기출문제/유형정리)을
+// 등록된 자료 목록에서 과목(수학/영어)·자료 하위분류(고1 기출문제/고2 기출문제/유형정리/학원별 보충)를
 // 직접 바꿔서 index.html 자료실의 어느 필터에 노출될지 조정할 수 있게 합니다.
 window.updateExamMaterialField = async function(id, field, value) {
   try {
