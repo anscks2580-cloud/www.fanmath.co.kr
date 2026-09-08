@@ -1142,7 +1142,8 @@ async function loadData(){
       if(v.active === false) return;
       items.push({
         '학원명': v.academy || '',
-        '과목': v.subject || '',
+        // 예전에 "미정"으로 저장된 자료(주로 인어스수학학원)는 수학으로 취급합니다.
+        '과목': (v.subject === '미정' ? '수학' : v.subject) || '',
         '자료유형': v.materialType || '',
         '학년': v.grade || '',
         '자료명': v.title || '(제목 없음)',
