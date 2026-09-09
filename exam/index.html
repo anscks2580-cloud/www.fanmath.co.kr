@@ -36,7 +36,7 @@
   a{color:inherit;}
 
   header{
-    padding:20px 6vw;
+    padding:18px 6vw;
     display:flex;
     align-items:center;
     justify-content:space-between;
@@ -45,59 +45,90 @@
   }
   .brand{
     font-weight:700;
-    font-size:1rem;
-    letter-spacing:0.01em;
+    font-size:0.92rem;
+    letter-spacing:0.02em;
     color:var(--ink);
   }
+  .brand .brand-sub{
+    display:block;
+    font-size:0.62rem;
+    font-weight:600;
+    letter-spacing:0.18em;
+    color:var(--gold);
+    margin-bottom:3px;
+  }
   nav a{
-    margin-left:26px;
-    font-size:0.92rem;
+    margin-left:30px;
+    font-size:0.84rem;
+    letter-spacing:0.01em;
     text-decoration:none;
     color:var(--ink-soft);
   }
   nav a:hover{color:var(--ink);}
 
   .hero{
-    padding:36px 0vw 28px;
-    background:
-      radial-gradient(900px 380px at 18% -10%, rgba(176,141,62,0.10), transparent 60%),
-      radial-gradient(700px 320px at 88% 0%, rgba(176,141,62,0.08), transparent 60%),
-      var(--paper);
+    position:relative;
+    padding:88px 6vw 64px;
+    overflow:hidden;
+    background:var(--paper);
     border-bottom:1px solid var(--line);
   }
-  .hero-inner{
-    max-width:1600px;
-    margin:0 auto;
-    display:grid;
-    grid-template-columns:1fr auto 1fr;
-    align-items:center;
-    justify-items:center;
-    row-gap:8px;
-    column-gap:100px;
+  .hero-bg{
+    position:absolute;
+    inset:0;
+    z-index:0;
   }
-  .hero-row-full{grid-column:1/-1;}
-  .title-block{
-    grid-column:2;
+  .hero-bg img{
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    object-position:center 30%;
+    opacity:0.28;
+    filter:saturate(0.9);
+  }
+  .hero-bg::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      linear-gradient(180deg, var(--paper) 0%, rgba(14,20,32,0.55) 32%, var(--paper) 100%),
+      radial-gradient(900px 500px at 50% 0%, rgba(210,175,110,0.10), transparent 65%);
+  }
+  .hero-inner{
+    position:relative;
+    z-index:1;
+    max-width:820px;
+    margin:0 auto;
     display:flex;
     flex-direction:column;
     align-items:center;
-    gap:6px;
+    text-align:center;
   }
-  .dday-widget.side-left{grid-column:1;justify-self:end;align-self:center;}
-  .dday-widget.side-right{grid-column:3;justify-self:start;align-self:center;}
-  .hero .tag{
-    display:inline-block;
-    font-size:0.88rem;
-    font-weight:600;
+  .hero-eyebrow{
+    font-size:0.72rem;
+    font-weight:700;
+    letter-spacing:0.32em;
     color:var(--gold);
-    background:rgba(176,141,62,0.08);
-    border:1px solid rgba(176,141,62,0.3);
-    border-radius:20px;
-    padding:6px 18px;
+    margin-bottom:22px;
+  }
+  .hero-num{
+    font-family:'Nanum Myeongjo',serif;
+    font-weight:800;
+    font-size:clamp(3rem,7vw,4.6rem);
+    line-height:1;
+    color:var(--ink);
+    margin:0;
+  }
+  .hero-en{
+    font-size:0.8rem;
+    font-weight:600;
+    letter-spacing:0.28em;
+    color:var(--ink-soft);
+    margin:10px 0 26px;
   }
   .hero h1{
-    font-size:clamp(2.8rem,5.6vw,4.2rem);
-    line-height:1.24;
+    font-size:clamp(2rem,4vw,2.8rem);
+    line-height:1.3;
     margin:0;
     font-weight:800;
     color:var(--ink);
@@ -105,46 +136,59 @@
   }
   .hero h1 .accent{color:var(--gold);}
   .hero .tagline{
-    font-family:'Nanum Myeongjo',serif;
-    font-style:italic;
-    font-weight:700;
-    font-size:clamp(1.4rem,2.1vw,1.9rem);
-    color:var(--gold);
-    margin:2px 0 0;
-    letter-spacing:0.03em;
-    display:inline-flex;
-    align-items:center;
-    gap:14px;
-    white-space:nowrap;
+    font-size:0.98rem;
+    color:var(--ink-soft);
+    margin:14px 0 34px;
+    letter-spacing:0.01em;
   }
-  .hero .tagline::after{
-    content:"";
+  .hero-cta{
     display:inline-block;
-    width:56px;
-    height:1px;
-    background:var(--gold);
-    opacity:0.6;
+    border:1px solid var(--gold);
+    color:var(--gold);
+    background:transparent;
+    padding:13px 34px;
+    border-radius:2px;
+    text-decoration:none;
+    font-size:0.86rem;
+    font-weight:700;
+    letter-spacing:0.08em;
+    transition:background .15s, color .15s;
+  }
+  .hero-cta:hover{background:var(--gold);color:var(--charcoal-deep);}
+
+  .presented-by{
+    margin-top:56px;
+    padding-top:32px;
+    border-top:1px solid var(--line);
+    width:100%;
+  }
+  .presented-label{
+    display:block;
+    font-size:0.66rem;
+    font-weight:700;
+    letter-spacing:0.28em;
+    color:var(--ink-soft);
+    margin-bottom:16px;
   }
 
   .collab-row{
     display:flex;
     justify-content:center;
     align-items:center;
-    gap:24px;
+    gap:18px;
     flex-wrap:wrap;
-    margin-bottom:14px;
   }
   .collab-item{
     display:flex;
     align-items:center;
-    gap:9px;
+    gap:8px;
   }
   .logo-slot{
-    width:56px;height:56px;
+    width:30px;height:30px;
     border-radius:50%;
     display:flex;align-items:center;justify-content:center;
     font-weight:700;
-    font-size:1.1rem;
+    font-size:0.7rem;
     color:#fff;
     flex-shrink:0;
     overflow:hidden;
@@ -152,56 +196,40 @@
   }
   .logo-slot img{width:100%;height:100%;object-fit:cover;}
   .collab-name{
-    font-weight:800;
-    font-size:1.35rem;
-    color:var(--ink);
+    font-weight:600;
+    font-size:0.86rem;
+    color:var(--ink-soft);
   }
   .collab-x{
-    font-size:1.2rem;
-    color:#8A8271;
+    font-size:0.8rem;
+    color:var(--line);
     font-weight:400;
   }
-  .hero .note{
-    font-size:0.85rem;
-    color:#8A8271;
-    margin-top:6px;
-  }
-
-  .dday-strip{
-    margin:36px auto 0;
-    display:inline-flex;
-    align-items:baseline;
-    gap:10px;
-    background:var(--ink);
-    color:#fff;
-    padding:12px 26px;
-    border-radius:30px;
-    font-size:0.95rem;
-  }
-  .dday-strip strong{
-    font-family:'Nanum Myeongjo',serif;
-    font-size:1.3rem;
-    color:var(--sun);
-  }
+  .hero .note{display:none;}
 
   .filter-bar{
     max-width:1180px;
     margin:0 auto;
-    padding:24px 6vw 0;
+    padding:64px 6vw 0;
   }
+  .filter-bar .section-eyebrow{margin-bottom:10px;}
   .filter-bar h2{
     font-size:1.5rem;
     margin:0 0 4px;
+    text-align:center;
+    font-family:'Nanum Myeongjo',serif;
   }
   .filter-bar .sub{
     color:var(--ink-soft);
     font-size:0.94rem;
-    margin-bottom:22px;
+    margin-bottom:28px;
+    text-align:center;
   }
   .filters{
     display:flex;
     gap:10px;
     flex-wrap:wrap;
+    justify-content:center;
   }
   .filters select, .filters input{
     font-family:inherit;
@@ -214,17 +242,43 @@
   }
   .filters input{flex:1;min-width:180px;}
 
-  .school-dday-grid{display:none;}
-  .school-card{display:none;}
+  .schedule-section{
+    max-width:1180px;
+    margin:0 auto;
+    padding:56px 6vw 8px;
+  }
+  .section-eyebrow{
+    font-size:0.7rem;
+    font-weight:700;
+    letter-spacing:0.3em;
+    color:var(--gold);
+    text-align:center;
+    margin-bottom:10px;
+  }
+  .section-heading{
+    font-family:'Nanum Myeongjo',serif;
+    font-size:1.5rem;
+    font-weight:700;
+    text-align:center;
+    color:var(--ink);
+    margin:0 0 36px;
+  }
+  .schedule-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:24px;
+  }
+  @media (max-width:760px){
+    .schedule-grid{grid-template-columns:1fr;}
+  }
 
   /* ---- 히어로 안에 들어가는 D-DAY 위젯 (지역별 페이지) ---- */
   .dday-widget{
-    width:340px;
-    flex-shrink:0;
+    width:100%;
     background:var(--card);
     border:1px solid var(--line);
-    border-radius:14px;
-    padding:14px 16px 12px;
+    border-radius:4px;
+    padding:20px 22px 18px;
   }
   .dday-widget-head{
     display:flex;
@@ -310,16 +364,6 @@
     background:var(--line);
   }
   .dday-dots span.active{background:var(--gold);}
-  @media (max-width:1080px){
-    .hero-inner{grid-template-columns:1fr;}
-    .title-block{grid-column:1;}
-    .dday-widget.side-left,.dday-widget.side-right{
-      grid-column:1;
-      justify-self:center;
-      width:100%;
-      max-width:420px;
-    }
-  }
 
   .subject-nav{
     max-width:1180px;
@@ -405,7 +449,7 @@
     margin-left:auto;
     font-size:0.8rem;
     color:var(--ink-soft);
-    background:rgba(255,255,255,0.6);
+    background:rgba(255,255,255,0.06);
     padding:4px 10px;
     border-radius:20px;
   }
@@ -421,7 +465,7 @@
     font-size:1.02rem;
     margin-bottom:10px;
     padding-bottom:6px;
-    border-bottom:1px solid rgba(0,0,0,0.08);
+    border-bottom:1px solid var(--line);
   }
   .card-grid{
     display:grid;
@@ -441,7 +485,7 @@
   }
   .card:hover{
     transform:translateY(-3px);
-    box-shadow:0 8px 20px rgba(0,0,0,0.06);
+    box-shadow:0 8px 20px rgba(0,0,0,0.35);
   }
   .card .grade-tag{
     font-size:0.74rem;
@@ -576,23 +620,6 @@
     .collab-row{flex-direction:column;gap:14px;}
     .collab-x{display:none;}
   }
-
-  .intro-banner{
-    width:100%;
-    background:var(--paper);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    height:min(260px, 34vh);
-    overflow:hidden;
-  }
-  .intro-banner img{
-    display:block;
-    width:auto;
-    height:100%;
-    max-width:100%;
-    object-fit:contain;
-  }
 </style>
 </head>
 <body>
@@ -600,6 +627,7 @@
 <!-- ── 로그인 게이트 (학원별 인증번호) ── -->
 <div class="auth-gate" id="authGate">
   <div class="auth-card">
+    <div class="hero-eyebrow" style="margin-bottom:10px;">PREMIUM EXAM ARCHIVE</div>
     <div class="auth-title">2026년 2학기 중간고사 대비</div>
     <div class="auth-sub">연합 학원 선생님·학생만 입장 가능합니다. 인증번호를 입력해주세요.</div>
     <input type="password" id="authCodeInput" placeholder="인증번호" autocomplete="off">
@@ -625,28 +653,38 @@
 <div id="siteContent" style="display:none;">
 
 <header>
-  <div class="brand">평촌 학원 연합 · 중간고사 대비</div>
+  <div class="brand"><span class="brand-sub">PREMIUM EXAM ARCHIVE</span>평촌 학원 연합 · 중간고사 대비</div>
   <nav>
     <span id="authWelcome" style="margin-right:16px;color:var(--ink-soft);font-size:0.85rem;"></span>
     <a href="#materials">자료실</a>
-    <a href="#ddayMiddleWidget">학교별 D-DAY</a>
+    <a href="#scheduleSection">학교별 D-DAY</a>
   </nav>
 </header>
 
-<div class="intro-banner">
-  <img src="intro.png" alt="TEAM I:DEA - INUS X DAECHI LEMON X APEX X SONG WOO CHAN">
-</div>
-
 <section class="hero">
+  <div class="hero-bg"><img src="intro.png" alt="" aria-hidden="true"></div>
   <div class="hero-inner">
-    <div class="collab-row hero-row-full" id="collabRow"></div>
-    <div class="note hero-row-full">나머지 참여 학원 로고는 추후 실제 로고 이미지로 교체 예정입니다</div>
+    <div class="hero-eyebrow">PREMIUM EXAM ARCHIVE</div>
+    <p class="hero-num">2026</p>
+    <div class="hero-en">2ND SEMESTER EXAM</div>
+    <h1>중간고사 <span class="accent">대비</span></h1>
+    <p class="tagline">평촌 학원가 공동 시험 대비 자료실</p>
+    <a href="#materials" class="hero-cta">자료실 바로가기</a>
 
-    <div class="tag hero-row-full">2026학년도 2학기 중간고사 대비 자료 허브</div>
+    <div class="presented-by">
+      <span class="presented-label">PARTNER ACADEMIES</span>
+      <div class="collab-row" id="collabRow"></div>
+    </div>
+  </div>
+</section>
 
-    <div class="dday-widget side-left" id="ddayMiddleWidget">
+<section class="schedule-section" id="scheduleSection">
+  <div class="section-eyebrow">EXAM SCHEDULE</div>
+  <div class="section-heading">학교별 중간고사 일정</div>
+  <div class="schedule-grid">
+    <div class="dday-widget" id="ddayMiddleWidget">
       <div class="dday-widget-head">
-        <span class="label">중간고사 기간</span>
+        <span class="label">EXAM PERIOD</span>
         <span class="level-badge">중등</span>
       </div>
       <div class="dday-carousel" id="ddayCarouselMiddle">
@@ -655,14 +693,9 @@
       <div class="dday-dots" id="ddayDotsMiddle"></div>
     </div>
 
-    <div class="title-block">
-      <h1>2026년 2학기<br><span class="accent">중간고사</span> 대비</h1>
-      <div class="tagline">All in one project</div>
-    </div>
-
-    <div class="dday-widget side-right" id="ddayHighWidget">
+    <div class="dday-widget" id="ddayHighWidget">
       <div class="dday-widget-head">
-        <span class="label">중간고사 기간</span>
+        <span class="label">EXAM PERIOD</span>
         <span class="level-badge">고등</span>
       </div>
       <div class="dday-carousel" id="ddayCarouselHigh">
@@ -677,6 +710,7 @@
 <div class="type-nav" id="typeNav"></div>
 
 <div class="filter-bar" id="materials">
+  <div class="section-eyebrow">EXAM MATERIALS</div>
   <h2>과목별 대비 자료실</h2>
   <div class="sub">담당 학원별로 올라온 자료를 과목 단위로 모아뒀습니다. 학년으로 좁혀서 확인하세요.</div>
   <div class="filters">
@@ -907,7 +941,7 @@ function renderCollabRow(){
     if(idx > 0){
       const x = document.createElement('span');
       x.className = 'collab-x';
-      x.textContent = '✕';
+      x.textContent = '·';
       row.appendChild(x);
     }
     const item = document.createElement('div');
