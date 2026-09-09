@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>2026 2학기 중간고사 대비 | 평촌 학원 연합</title>
+<title>자료실 | 2026 2학기 중간고사 대비 · 평촌 학원 연합</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -322,122 +322,188 @@
   }
   .dday-dots span.active{background:var(--gold);}
 
-  .hero{
-    position:relative;
-    padding:76px 6vw 80px;
-    background:var(--paper);
-    border-bottom:1px solid var(--line);
-  }
-  .hero-inner-split{
-    max-width:1240px;
-    margin:0 auto;
-    display:grid;
-    grid-template-columns:1.05fr 0.95fr;
-    align-items:center;
-    gap:64px;
-  }
-  .hero-copy{
-    text-align:left;
-  }
-  .hero-eyebrow{
-    font-size:0.72rem;
-    font-weight:700;
-    letter-spacing:0.32em;
-    color:var(--gold);
-    margin-bottom:20px;
-  }
-  .hero-num{
-    font-family:'Nanum Myeongjo',serif;
-    font-weight:800;
-    font-size:clamp(2.6rem,5vw,3.8rem);
-    line-height:1;
-    color:var(--ink);
-    margin:0;
-  }
-  .hero-en{
-    font-size:0.78rem;
-    font-weight:600;
-    letter-spacing:0.26em;
-    color:var(--ink-soft);
-    margin:10px 0 24px;
-  }
-  .hero h1{
-    font-size:clamp(2rem,3.6vw,2.6rem);
-    line-height:1.32;
-    margin:0;
-    font-weight:800;
-    color:var(--ink);
-  }
-  .hero h1 .accent{color:var(--gold);}
-  .hero .tagline{
-    font-size:0.98rem;
-    color:var(--ink-soft);
-    margin:16px 0 32px;
-    letter-spacing:0.01em;
-  }
-  .hero-visual{
-    position:relative;
-    border:1px solid var(--line);
-    border-radius:6px;
-    overflow:hidden;
-    background:var(--charcoal-deep);
-    box-shadow:0 30px 70px rgba(0,0,0,0.45);
-  }
-  .hero-visual::after{
-    content:"";
-    position:absolute;
-    inset:0;
-    box-shadow:inset 0 0 0 1px rgba(210,175,110,0.15);
-    pointer-events:none;
-  }
-  .hero-visual img{
-    display:block;
-    width:100%;
-    height:auto;
-  }
-  .hero-visual-cap{
-    position:absolute;
-    left:0;right:0;bottom:0;
-    padding:10px 16px;
-    background:linear-gradient(0deg, rgba(12,11,8,0.82), transparent);
-    font-size:0.68rem;
-    letter-spacing:0.18em;
-    color:rgba(241,239,232,0.75);
-    font-weight:600;
-  }
-  @media (max-width:980px){
-    .hero-inner-split{grid-template-columns:1fr;gap:44px;}
-    .hero-copy{text-align:center;}
-    .hero-eyebrow, .hero-en{text-align:center;}
-  }
-
-  .partners-section{
+  .filter-bar{
     max-width:1180px;
     margin:0 auto;
-    padding:56px 6vw;
+    padding:56px 6vw 0;
+  }
+  .filter-bar .section-eyebrow{margin-bottom:10px;}
+  .filter-bar h2{
+    font-size:1.5rem;
+    margin:0 0 4px;
     text-align:center;
-    border-bottom:1px solid var(--line);
+    font-family:'Nanum Myeongjo',serif;
+  }
+  .filter-bar .sub{
+    color:var(--ink-soft);
+    font-size:0.94rem;
+    margin-bottom:28px;
+    text-align:center;
+  }
+  .filters{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    justify-content:center;
+  }
+  .filters select, .filters input{
+    font-family:inherit;
+    font-size:0.9rem;
+    padding:10px 14px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:var(--paper-soft);
+    color:var(--ink);
+  }
+  .filters input{flex:1;min-width:180px;}
+
+  .subject-nav{
+    max-width:1180px;
+    margin:0 auto;
+    padding:16px 6vw 0;
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .subject-pill{
+    border:1px solid var(--line);
+    padding:9px 18px;
+    border-radius:30px;
+    font-size:0.88rem;
+    font-weight:600;
+    cursor:pointer;
+    background:var(--paper);
+    color:var(--ink-soft);
+  }
+  .subject-pill.active{
+    color:#fff;
+    border-color:transparent;
   }
 
-  .cta-section{
-    background:var(--paper-soft);
-    border-top:1px solid var(--line);
-    padding:72px 6vw;
-    text-align:center;
-  }
-  .cta-inner{
-    max-width:640px;
+  .type-nav{
+    max-width:1180px;
     margin:0 auto;
+    padding:10px 6vw 0;
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
   }
-  .cta-inner h2{
-    font-family:'Nanum Myeongjo',serif;
-    font-size:1.7rem;
-    margin:0 0 12px;
-  }
-  .cta-inner p{
+  .type-pill{
+    border:1px solid var(--line);
+    padding:7px 16px;
+    border-radius:30px;
+    font-size:0.82rem;
+    font-weight:600;
+    cursor:pointer;
+    background:var(--paper);
     color:var(--ink-soft);
-    font-size:0.96rem;
-    margin:0 0 30px;
+  }
+  .type-pill.active{
+    background:var(--ink);
+    color:#fff;
+    border-color:transparent;
+  }
+
+  .materials{
+    max-width:1180px;
+    margin:0 auto;
+    padding:30px 6vw 100px;
+  }
+  .subject-group{
+    margin-bottom:44px;
+    border-radius:18px;
+    padding:26px 26px 22px;
+  }
+  .subject-group .head{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:18px;
+  }
+  .subject-group .head .logo-slot{
+    width:40px;height:40px;
+    font-size:0.85rem;
+  }
+  .subject-group .head .titles{
+    display:flex;
+    flex-direction:column;
+  }
+  .subject-group .head .subj{
+    font-family:'Nanum Myeongjo',serif;
+    font-weight:700;
+    font-size:1.25rem;
+  }
+  .subject-group .head .school{
+    font-size:0.86rem;
+    color:var(--ink-soft);
+  }
+  .subject-group .head .count{
+    margin-left:auto;
+    font-size:0.8rem;
+    color:var(--ink-soft);
+    background:rgba(255,255,255,0.06);
+    padding:4px 10px;
+    border-radius:20px;
+  }
+  .grade-block{
+    margin-bottom:22px;
+  }
+  .grade-block:last-child{
+    margin-bottom:0;
+  }
+  .grade-block-head{
+    font-family:'Nanum Myeongjo',serif;
+    font-weight:700;
+    font-size:1.02rem;
+    margin-bottom:10px;
+    padding-bottom:6px;
+    border-bottom:1px solid var(--line);
+  }
+  .card-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+    gap:12px;
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px 16px 14px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    text-decoration:none;
+    transition:transform .15s, box-shadow .15s;
+  }
+  .card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 8px 20px rgba(0,0,0,0.35);
+  }
+  .card .grade-tag{
+    font-size:0.74rem;
+    color:var(--ink-soft);
+    align-self:flex-start;
+    background:var(--paper-soft);
+    padding:2px 9px;
+    border-radius:20px;
+  }
+  .card .title{
+    font-weight:600;
+    font-size:0.97rem;
+    line-height:1.4;
+  }
+  .card .meta{
+    font-size:0.78rem;
+    color:var(--ink-soft);
+  }
+
+  .empty-state{
+    text-align:center;
+    padding:50px 20px;
+    color:var(--ink-soft);
+    border:1px dashed var(--line);
+    border-radius:14px;
+    font-size:0.95rem;
   }
 
 </style>
@@ -456,75 +522,48 @@
   </div>
 </div>
 
+<!-- ── 비메오 영상 팝업 모달 ── -->
+<div id="vimeoModal" style="display:none;position:fixed;inset:0;z-index:1000;align-items:center;justify-content:center;">
+  <div id="vimeoModalOverlay" style="position:absolute;inset:0;background:rgba(12,11,8,0.82);"></div>
+  <div style="position:relative;width:min(90vw,1000px);background:#000;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--charcoal-deep,#0C0B08);">
+      <div id="vimeoModalTitle" style="color:#fff;font-size:0.92rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:12px;"></div>
+      <button id="vimeoModalClose" aria-label="닫기" style="flex-shrink:0;border:none;background:transparent;color:#fff;font-size:1.4rem;line-height:1;cursor:pointer;padding:4px 8px;">✕</button>
+    </div>
+    <div style="position:relative;width:100%;padding-top:56.25%;">
+      <iframe id="vimeoModalFrame" src="" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+    </div>
+  </div>
+</div>
+
+
 <div id="siteContent" style="display:none;">
 
 <header>
   <a href="index.html" class="brand"><span class="brand-sub">PREMIUM EXAM ARCHIVE</span>평촌 학원 연합 · 중간고사 대비</a>
   <nav>
     <span id="authWelcome" style="margin-right:16px;color:var(--ink-soft);font-size:0.85rem;"></span>
-    <a href="materials.html">자료실</a>
-    <a href="#scheduleSection">학교별 D-DAY</a>
+    <a href="index.html">홈으로</a>
+    <a href="index.html#scheduleSection">학교별 D-DAY</a>
   </nav>
 </header>
 
-<section class="hero">
-  <div class="hero-inner-split">
-    <div class="hero-copy">
-      <div class="hero-eyebrow">PREMIUM EXAM ARCHIVE</div>
-      <p class="hero-num">2026</p>
-      <div class="hero-en">2ND SEMESTER EXAM</div>
-      <h1>평촌 학원가 공동<br><span class="accent">중간고사</span> 대비</h1>
-      <p class="tagline">평촌 학원가 공동 시험 대비 자료실</p>
-      <a href="materials.html" class="hero-cta">자료실 바로가기</a>
-    </div>
-    <div class="hero-visual">
-      <img src="intro.png" alt="TEAM I:DEA - 송우찬수학학원 x 에이펙스영어학원 x 인어스수학학원 x 대치레몬학원 공동 프로젝트">
-      <div class="hero-visual-cap">TEAM I:DEA — 4개 학원 공동 프로젝트</div>
-    </div>
+<div class="filter-bar" id="materials">
+  <div class="section-eyebrow">EXAM MATERIALS</div>
+  <h2>과목별 대비 자료실</h2>
+  <div class="sub">담당 학원별로 올라온 자료를 과목 단위로 모아뒀습니다. 학년으로 좁혀서 확인하세요.</div>
+  <div class="filters">
+    <select id="filterGrade"><option value="">전체 학년</option></select>
+    <input id="filterKeyword" type="text" placeholder="자료명 검색">
   </div>
-</section>
+</div>
 
-<section class="partners-section">
-  <div class="section-eyebrow">PARTNER ACADEMIES</div>
-  <div class="collab-row" id="collabRow"></div>
-</section>
+<div class="subject-nav" id="subjectNav"></div>
+<div class="type-nav" id="typeNav"></div>
 
-<section class="schedule-section" id="scheduleSection">
-  <div class="section-eyebrow">EXAM SCHEDULE</div>
-  <div class="section-heading">학교별 중간고사 일정</div>
-  <div class="schedule-grid">
-    <div class="dday-widget" id="ddayMiddleWidget">
-      <div class="dday-widget-head">
-        <span class="label">EXAM PERIOD</span>
-        <span class="level-badge">중등</span>
-      </div>
-      <div class="dday-carousel" id="ddayCarouselMiddle">
-        <div class="dday-slide-track" id="ddaySlideTrackMiddle"></div>
-      </div>
-      <div class="dday-dots" id="ddayDotsMiddle"></div>
-    </div>
-
-    <div class="dday-widget" id="ddayHighWidget">
-      <div class="dday-widget-head">
-        <span class="label">EXAM PERIOD</span>
-        <span class="level-badge">고등</span>
-      </div>
-      <div class="dday-carousel" id="ddayCarouselHigh">
-        <div class="dday-slide-track" id="ddaySlideTrackHigh"></div>
-      </div>
-      <div class="dday-dots" id="ddayDotsHigh"></div>
-    </div>
-  </div>
-</section>
-
-<section class="cta-section">
-  <div class="cta-inner">
-    <div class="section-eyebrow">EXAM MATERIALS</div>
-    <h2>실제 시험 대비 자료는 자료실에서</h2>
-    <p>학교별 · 과목별로 정리된 예상문제, 핵심정리, 해설영상을 자료실에서 확인하세요.</p>
-    <a href="materials.html" class="hero-cta">자료실로 이동</a>
-  </div>
-</section>
+<div class="materials" id="materialsContainer">
+  <div class="empty-state">자료를 불러오는 중입니다…</div>
+</div>
 
 <footer>
   <div>평촌 학원 연합 · 중간고사 대비 자료실</div>
@@ -620,147 +659,294 @@ const ACADEMIES = [
 
 // 3) 학교별 중간고사 시작일
 
-// 3) 학교별 중간고사 시작일. examDate가 빈 값이면 "일정 확인 중"으로 표시됩니다.
-//    확정되는 대로 examDate만 "YYYY-MM-DD" 형식으로 채워주세요.
-const SCHOOLS = [
-  // ---- 중학교 ----
-  { name: "고천중학교", region: "의왕", level: "중학교", period: "9/21 - 9/22" },
-  { name: "곡란중학교", region: "군포", level: "중학교", period: "9/22 - 9/23" },
-  { name: "궁내중학교", region: "군포", level: "중학교", period: "9/22" },
-  { name: "근명중학교", region: "안양", level: "중학교", period: "9/29 - 9/30" },
-  { name: "귀인중학교", region: "안양", level: "중학교", period: "9/29" },
-  { name: "당동중학교", region: "군포", level: "중학교", period: "10/6 - 10/8" },
-  { name: "대안여자중학교", region: "안양", level: "중학교", period: "9/30 - 10/1" },
-  { name: "대안중학교", region: "안양", level: "중학교", period: "9/29 - 9/30" },
-  { name: "도장중학교", region: "군포", level: "중학교", period: "10/7" },
-  { name: "모락중학교", region: "의왕", level: "중학교", period: "9/29 - 9/30" },
-  { name: "범계중학교", region: "안양", level: "중학교", period: "9/29 - 9/30" },
-  { name: "부림중학교", region: "안양", level: "중학교", period: "9/22 - 9/23" },
-  { name: "부흥중학교", region: "안양", level: "중학교", period: "9/21 - 9/22" },
-  { name: "비산중학교", region: "안양", level: "중학교", period: "9/29 - 9/30" },
-  { name: "산본중학교", region: "군포", level: "중학교", period: "9/22 - 9/23" },
-  { name: "수리중학교", region: "군포", level: "중학교", period: "9/17 - 9/18" },
-  { name: "신기중학교", region: "안양", level: "중학교", period: "9/30 - 10/1" },
-  { name: "용호중학교", region: "군포", level: "중학교", period: "9/14 - 9/15" },
-  { name: "율목중학교", region: "과천", level: "중학교", period: "9/28 - 9/30" },
-  { name: "평촌중학교", region: "안양", level: "중학교", period: "9/29 - 9/30" },
-  { name: "호계중학교", region: "안양", level: "중학교", period: "10/1 - 10/2" },
-  { name: "호성중학교", region: "안양", level: "중학교", period: "9/30 - 10/1" },
-  { name: "흥진중학교", region: "군포", level: "중학교", period: "10/13 - 10/14" },
+function renderSubjectNav(){
+  const nav = document.getElementById('subjectNav');
+  const all = document.createElement('div');
+  all.className = 'subject-pill active';
+  all.textContent = '전체 과목';
+  all.dataset.subject = '';
+  all.style.background = 'var(--ink)';
+  nav.appendChild(all);
 
-  // ---- 고등학교 ----
-  { name: "관양고등학교", region: "안양", level: "고등학교", period: "10/6 - 10/8" },
-  { name: "군포고등학교", region: "군포", level: "고등학교", period: "9/30 - 10/6" },
-  { name: "동안고등학교", region: "안양", level: "고등학교", period: "10/13 - 10/16" },
-  { name: "모락고등학교", region: "의왕", level: "고등학교", period: "10/12 - 10/16" },
-  { name: "백영고등학교", region: "의왕", level: "고등학교", period: "10/1 - 10/3" },
-  { name: "부흥고등학교", region: "군포", level: "고등학교", period: "9/28 - 10/2" },
-  { name: "산본고등학교", region: "군포", level: "고등학교", period: "10/12 - 10/16" },
-  { name: "성포고등학교", region: "군포", level: "고등학교", period: "10/6 - 10/8" },
-  { name: "수리고등학교", region: "군포", level: "고등학교", period: "9/30 - 10/8" },
-  { name: "신성고등학교", region: "안양", level: "고등학교", period: "10/1 - 10/7" },
-  { name: "안양고등학교", region: "안양", level: "고등학교", period: "10/6 - 10/13" },
-  { name: "안양여자고등학교", region: "안양", level: "고등학교", period: "10/1 - 10/7" },
-  { name: "양명고등학교", region: "군포", level: "고등학교", period: "10/12 - 10/16" },
-  { name: "용호고등학교", region: "군포", level: "고등학교", period: "9/28 - 10/2" },
-  { name: "인덕원고등학교", region: "안양", level: "고등학교", period: "10/12 - 10/15" },
-  { name: "평촌고등학교", region: "안양", level: "고등학교", period: "9/29 - 10/2" },
-  { name: "흥진고등학교", region: "군포", level: "고등학교", period: "9/29 - 10/2" },
-];
-
-
-function makeRegionPager(trackId, dotsId, level){
-  const track = document.getElementById(trackId);
-  const dotsEl = document.getElementById(dotsId);
-  const PAGE_SIZE = 7;
-  const schools = SCHOOLS
-    .filter(s => s.level === level)
-    .sort((a,b)=> a.name.localeCompare(b.name, 'ko'));
-
-  track.innerHTML = '';
-  dotsEl.innerHTML = '';
-
-  if(schools.length === 0){
-    track.innerHTML = '<div class="dday-page"><div class="dday-row tbd"><span class="school-name">등록된 학교가 없습니다</span></div></div>';
-    return;
-  }
-
-  // 가나다순으로 정렬 후 PAGE_SIZE개씩 페이지로 분할
-  const pages = [];
-  for(let i = 0; i < schools.length; i += PAGE_SIZE){
-    pages.push(schools.slice(i, i + PAGE_SIZE));
-  }
-
-  pages.forEach(pageSchools=>{
-    const page = document.createElement('div');
-    page.className = 'dday-page';
-    const rows = pageSchools.map(s=>{
-      const period = s.period || '일정 확인 중';
-      return `
-        <div class="dday-row${!s.period ? ' tbd' : ''}">
-          <span class="school-name">${s.name}</span>
-          <span class="dday-num">${period}</span>
-        </div>
-      `;
-    }).join('');
-    page.innerHTML = rows;
-    track.appendChild(page);
-
-    const dot = document.createElement('span');
-    dotsEl.appendChild(dot);
+  // 학원별이 아닌 과목별로 중복 없이 표시 (예: 수학, 영어)
+  const uniqueSubjects = [...new Set(ACADEMIES.map(a=>a.subject))];
+  uniqueSubjects.forEach(subj=>{
+    const pill = document.createElement('div');
+    pill.className = 'subject-pill';
+    pill.textContent = subj;
+    pill.dataset.subject = subj;
+    nav.appendChild(pill);
   });
 
-  let index = 0;
-  function update(){
-    track.style.transform = `translateX(-${index * 100}%)`;
-    [...dotsEl.children].forEach((d,i)=>d.classList.toggle('active', i === index));
-  }
-  update();
+  nav.addEventListener('click', (e)=>{
+    if(!e.target.classList.contains('subject-pill')) return;
+    [...nav.children].forEach(p=>{
+      p.classList.remove('active');
+      p.style.background = 'var(--paper)';
+      p.style.color = 'var(--ink-soft)';
+    });
+    e.target.classList.add('active');
+    const subj = e.target.dataset.subject;
+    const academy = ACADEMIES.find(a=>a.subject === subj);
+    e.target.style.background = academy ? academy.color : 'var(--ink)';
+    e.target.style.color = '#fff';
+    currentSubjectFilter = subj;
+    renderMaterials();
+  });
+}
+let currentSubjectFilter = '';
+renderSubjectNav();
 
-  if(pages.length > 1){
-    setInterval(()=>{
-      index = (index + 1) % pages.length;
-      update();
-    }, 4000);
+// 과목 하위 분류
+const MATERIAL_TYPES = ['고1 기출문제', '고2 기출문제', '유형정리', '송우찬수학학원 보충', '인어스수학학원 보충'];
+function renderTypeNav(){
+  const nav = document.getElementById('typeNav');
+  nav.innerHTML = '';
+  const all = document.createElement('div');
+  all.className = 'type-pill active';
+  all.textContent = '전체';
+  all.dataset.type = '';
+  nav.appendChild(all);
+
+  MATERIAL_TYPES.forEach(t=>{
+    const pill = document.createElement('div');
+    pill.className = 'type-pill';
+    pill.textContent = t;
+    pill.dataset.type = t;
+    nav.appendChild(pill);
+  });
+
+  nav.addEventListener('click', (e)=>{
+    if(!e.target.classList.contains('type-pill')) return;
+    [...nav.children].forEach(p=>p.classList.remove('active'));
+    e.target.classList.add('active');
+    currentTypeFilter = e.target.dataset.type;
+    renderMaterials();
+  });
+}
+let currentTypeFilter = '';
+renderTypeNav();
+
+let ALL_ITEMS = [];
+
+function renderFilterGrade(items){
+  const grades = [...new Set(items.map(i=>i['학년']).filter(Boolean))];
+  const sel = document.getElementById('filterGrade');
+  sel.innerHTML = '<option value="">전체 학년</option>';
+  grades.forEach(g=>{
+    const opt = document.createElement('option');
+    opt.value = g; opt.textContent = g;
+    sel.appendChild(opt);
+  });
+}
+
+// 영상 제목에서 "고1","중2","고3" 같은 학년 표기를 뽑아내 태그로 사용
+function extractGrade(title){
+  const m = title.match(/(중|고)[1-3]/);
+  return m ? m[0] : '';
+}
+
+// 학년 정렬 순서 (고1→고2→고3→중1→중2→중3→기타)
+const GRADE_ORDER = ['고1','고2','고3','중1','중2','중3'];
+function gradeSortIndex(g){
+  const i = GRADE_ORDER.indexOf(g);
+  return i === -1 ? GRADE_ORDER.length : i;
+}
+
+function renderMaterials(){
+  const grade = document.getElementById('filterGrade').value;
+  const keyword = document.getElementById('filterKeyword').value.trim().toLowerCase();
+
+  let items = ALL_ITEMS.filter(i=>{
+    if(currentSubjectFilter && i['과목'] !== currentSubjectFilter) return false;
+    if(currentTypeFilter && i['자료유형'] !== currentTypeFilter) return false;
+    if(grade && i['학년'] !== grade) return false;
+    if(keyword && !(i['자료명']||'').toLowerCase().includes(keyword)) return false;
+    return true;
+  });
+
+  const container = document.getElementById('materialsContainer');
+  container.innerHTML = '';
+
+  // 학원 구분 없이 과목 단위로 합쳐서 보여주고, 그 안을 학년으로 나눕니다.
+  const uniqueSubjects = [...new Set(ACADEMIES.map(a=>a.subject))];
+  const subjectsToShow = currentSubjectFilter
+    ? uniqueSubjects.filter(s=>s === currentSubjectFilter)
+    : uniqueSubjects;
+
+  let anyRendered = false;
+
+  subjectsToShow.forEach(subject=>{
+    const subjectItems = items.filter(i=>i['과목'] === subject);
+    if(subjectItems.length === 0) return;
+    anyRendered = true;
+
+    const academy = ACADEMIES.find(a=>a.subject === subject);
+    const color = academy ? academy.color : 'var(--ink)';
+
+    const group = document.createElement('div');
+    group.className = 'subject-group';
+    group.style.background = hexToSoft(color);
+
+    const head = document.createElement('div');
+    head.className = 'head';
+    head.innerHTML = `
+      <div class="logo-slot" style="background:${color}">${subject.slice(0,1)}</div>
+      <div class="titles">
+        <div class="subj">${subject}</div>
+      </div>
+      <div class="count">${subjectItems.length}개 자료</div>
+    `;
+    group.appendChild(head);
+
+    // 학년별로 묶기
+    const gradesPresent = [...new Set(subjectItems.map(i=>i['학년']||'학년 미지정'))]
+      .sort((a,b)=>gradeSortIndex(a)-gradeSortIndex(b));
+
+    gradesPresent.forEach(g=>{
+      const gradeItems = subjectItems.filter(i=>(i['학년']||'학년 미지정') === g);
+
+      const gradeBlock = document.createElement('div');
+      gradeBlock.className = 'grade-block';
+
+      const gradeHead = document.createElement('div');
+      gradeHead.className = 'grade-block-head';
+      gradeHead.textContent = g;
+      gradeBlock.appendChild(gradeHead);
+
+      const grid = document.createElement('div');
+      grid.className = 'card-grid';
+      gradeItems.forEach(item=>{
+        const a = document.createElement('a');
+        a.className = 'card';
+        a.href = item['링크'] || '#';
+        const vimeoId = extractVimeoId(item['링크']);
+        if(vimeoId){
+          // 비메오 영상은 새 탭으로 보내지 않고 팝업(모달)로 재생합니다.
+          a.addEventListener('click', (e)=>{
+            e.preventDefault();
+            openVimeoModal(vimeoId, item['자료명']||'');
+          });
+        }else{
+          a.target = '_blank';
+          a.rel = 'noopener';
+        }
+        const thumbHtml = item['썸네일']
+          ? `<img src="${item['썸네일']}" alt="" style="width:100%;border-radius:8px;margin-bottom:6px;aspect-ratio:16/9;object-fit:cover;" onerror="this.style.display='none'">`
+          : '';
+        a.innerHTML = `
+          ${thumbHtml}
+          <span class="grade-tag">${item['학원명']||''}</span>
+          <div class="title">${item['자료명']||'(제목 없음)'}</div>
+          <div class="meta">${item['업로드일']||''}</div>
+        `;
+        grid.appendChild(a);
+      });
+      gradeBlock.appendChild(grid);
+      group.appendChild(gradeBlock);
+    });
+
+    container.appendChild(group);
+  });
+
+  if(!anyRendered){
+    container.innerHTML = '<div class="empty-state">조건에 맞는 자료가 아직 없습니다. 조건을 바꿔서 다시 확인해 보세요.</div>';
   }
 }
 
-function calcSchoolDday(dateStr){
-  if(!dateStr) return null;
-  const today = new Date();
-  today.setHours(0,0,0,0);
-  const target = new Date(dateStr);
-  return Math.ceil((target - today) / (1000*60*60*24));
+// 자료 링크에서 Vimeo 영상 ID를 추출합니다. (예: https://vimeo.com/123456789 → 123456789)
+function extractVimeoId(url){
+  if(!url) return null;
+  const m = url.match(/vimeo\.com\/(?:.*\/)?(\d+)/);
+  return m ? m[1] : null;
 }
 
-makeRegionPager('ddaySlideTrackMiddle', 'ddayDotsMiddle', '중학교');
-makeRegionPager('ddaySlideTrackHigh', 'ddayDotsHigh', '고등학교');
+// 비메오 영상을 새 탭으로 보내지 않고 팝업(모달)에서 재생합니다.
+function openVimeoModal(vimeoId, title){
+  const modal = document.getElementById('vimeoModal');
+  const frame = document.getElementById('vimeoModalFrame');
+  const titleEl = document.getElementById('vimeoModalTitle');
+  frame.src = `https://player.vimeo.com/video/${vimeoId}?autoplay=1`;
+  titleEl.textContent = title || '';
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
 
-function renderCollabRow(){
-  const row = document.getElementById('collabRow');
-  ACADEMIES.forEach((a, idx)=>{
-    if(idx > 0){
-      const x = document.createElement('span');
-      x.className = 'collab-x';
-      x.textContent = '·';
-      row.appendChild(x);
+function closeVimeoModal(){
+  const modal = document.getElementById('vimeoModal');
+  const frame = document.getElementById('vimeoModalFrame');
+  modal.style.display = 'none';
+  frame.src = ''; // 닫을 때 재생 중지
+  document.body.style.overflow = '';
+}
+window.closeVimeoModal = closeVimeoModal;
+
+document.getElementById('vimeoModalOverlay').addEventListener('click', closeVimeoModal);
+document.getElementById('vimeoModalClose').addEventListener('click', closeVimeoModal);
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape') closeVimeoModal();
+});
+
+function hexToSoft(hex){
+  const r = parseInt(hex.slice(1,3),16);
+  const g = parseInt(hex.slice(3,5),16);
+  const b = parseInt(hex.slice(5,7),16);
+  return `rgba(${r},${g},${b},0.06)`;
+}
+
+document.getElementById('filterGrade').addEventListener('change', renderMaterials);
+document.getElementById('filterKeyword').addEventListener('input', renderMaterials);
+
+// ── 자료 불러오기 (Firebase Firestore) ──
+// admin.html "중간고사 자료" 탭에서 Vimeo 폴더 → examMaterials 컬렉션으로 저장해둔 자료를
+// 그대로 읽어옵니다. 실제 Vimeo 연동/폴더 관리는 admin.html에서 이뤄집니다.
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
+  authDomain: "songmath.firebaseapp.com",
+  projectId: "songmath",
+  storageBucket: "songmath.firebasestorage.app",
+  messagingSenderId: "936295436575",
+  appId: "1:936295436575:web:d1e201508719850cfbe02a"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+async function loadData(){
+  const container = document.getElementById('materialsContainer');
+  container.innerHTML = '<div class="empty-state">자료를 불러오는 중입니다…</div>';
+  try{
+    const snap = await getDocs(query(collection(db, 'examMaterials'), orderBy('order', 'asc')));
+    const items = [];
+    snap.forEach(d=>{
+      const v = d.data();
+      if(v.active === false) return;
+      items.push({
+        '학원명': v.academy || '',
+        // 예전에 "미정"으로 저장된 자료(주로 인어스수학학원)는 수학으로 취급합니다.
+        '과목': (v.subject === '미정' ? '수학' : v.subject) || '',
+        '자료유형': v.materialType || '',
+        '학년': v.grade || '',
+        '자료명': v.title || '(제목 없음)',
+        '링크': `https://vimeo.com/${v.vimeoId}`,
+        '업로드일': (v.createdAt || '').slice(0,10),
+        '썸네일': `https://vumbnail.com/${v.vimeoId}.jpg`,
+      });
+    });
+    ALL_ITEMS = items;
+    renderFilterGrade(ALL_ITEMS);
+    renderMaterials();
+    if(items.length === 0){
+      container.innerHTML = '<div class="empty-state">아직 등록된 자료가 없습니다. admin.html의 "중간고사 자료" 탭에서 Vimeo 폴더를 불러와 추가해주세요.</div>';
     }
-    const item = document.createElement('div');
-    item.className = 'collab-item';
-    const logo = document.createElement('div');
-    logo.className = 'logo-slot';
-    logo.style.background = a.logo ? '#fff' : a.color;
-    const size = (a.fit === 'contain') ? '82%' : '100%';
-    logo.innerHTML = a.logo ? `<img src="${a.logo}" alt="${a.school} 로고" style="width:${size};height:${size};object-fit:${a.fit || 'cover'};">` : a.initial;
-    const name = document.createElement('span');
-    name.className = 'collab-name';
-    name.textContent = a.school;
-    item.appendChild(logo);
-    item.appendChild(name);
-    row.appendChild(item);
-  });
+  }catch(e){
+    container.innerHTML = '<div class="empty-state">자료를 불러오지 못했습니다.</div>';
+    console.error(e);
+  }
 }
-renderCollabRow();
+loadData();
 </script>
 
 </body>
