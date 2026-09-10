@@ -99,6 +99,27 @@
     transition:background .15s, color .15s;
   }
   .hero-cta:hover{background:var(--gold);color:var(--charcoal-deep);}
+  .hero-cta.solid{
+    background:var(--gold);
+    color:var(--charcoal-deep);
+    border-color:var(--gold);
+    font-size:0.92rem;
+    padding:15px 40px;
+  }
+  .hero-cta.solid:hover{background:var(--gold-soft);border-color:var(--gold-soft);}
+  .back-home-link{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    padding:7px 16px;
+    border-radius:30px;
+    font-size:0.82rem;
+    text-decoration:none;
+    transition:border-color .15s, color .15s;
+  }
+  .back-home-link:hover{border-color:var(--gold);color:var(--gold);}
 
   footer{
     padding:26px 6vw;
@@ -446,7 +467,11 @@
     border-radius:20px;
   }
   .grade-block{
-    margin-bottom:22px;
+    margin-bottom:12px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    background:var(--card);
+    overflow:hidden;
   }
   .grade-block:last-child{
     margin-bottom:0;
@@ -454,47 +479,73 @@
   .grade-block-head{
     font-family:'Nanum Myeongjo',serif;
     font-weight:700;
-    font-size:1.02rem;
-    margin-bottom:10px;
-    padding-bottom:6px;
-    border-bottom:1px solid var(--line);
-  }
-  .card-grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
-    gap:12px;
-  }
-  .card{
-    background:var(--card);
-    border:1px solid var(--line);
-    border-radius:12px;
-    padding:16px 16px 14px;
+    font-size:1rem;
+    padding:14px 18px;
+    cursor:pointer;
+    list-style:none;
     display:flex;
-    flex-direction:column;
-    gap:8px;
-    text-decoration:none;
-    transition:transform .15s, box-shadow .15s;
+    align-items:center;
+    justify-content:space-between;
+    user-select:none;
   }
-  .card:hover{
-    transform:translateY(-3px);
-    box-shadow:0 8px 20px rgba(0,0,0,0.35);
+  .grade-block-head::-webkit-details-marker{display:none;}
+  .grade-block-head::after{
+    content:"+";
+    font-size:1.1rem;
+    color:var(--gold);
+    font-weight:400;
+    margin-left:12px;
   }
-  .card .grade-tag{
-    font-size:0.74rem;
-    color:var(--ink-soft);
-    align-self:flex-start;
-    background:var(--paper-soft);
-    padding:2px 9px;
-    border-radius:20px;
-  }
-  .card .title{
+  .grade-block[open] > .grade-block-head::after{content:"–";}
+  .grade-block-head .grade-count{
+    font-family:'Pretendard';
     font-weight:600;
-    font-size:0.97rem;
-    line-height:1.4;
+    font-size:0.76rem;
+    color:var(--ink-soft);
+    margin-left:auto;
+    margin-right:14px;
   }
-  .card .meta{
+  .material-list{
+    border-top:1px solid var(--line);
+  }
+  .material-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    padding:12px 18px;
+    text-decoration:none;
+    border-bottom:1px solid var(--line);
+    transition:background .12s;
+  }
+  .material-row:last-child{border-bottom:none;}
+  .material-row:hover{background:var(--paper-soft);}
+  .material-row .grade-tag{
+    flex-shrink:0;
+    font-size:0.72rem;
+    color:var(--ink-soft);
+    background:var(--paper-soft);
+    padding:3px 10px;
+    border-radius:20px;
+    white-space:nowrap;
+  }
+  .material-row-title{
+    flex:1;
+    font-weight:600;
+    font-size:0.94rem;
+    color:var(--ink);
+    line-height:1.4;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .material-row .meta{
+    flex-shrink:0;
     font-size:0.78rem;
     color:var(--ink-soft);
+  }
+  @media (max-width:600px){
+    .material-row{flex-wrap:wrap;}
+    .material-row-title{white-space:normal;order:1;flex-basis:100%;}
   }
 
   .empty-state{
@@ -543,7 +594,7 @@
   <a href="index.html" class="brand"><span class="brand-sub">PREMIUM EXAM ARCHIVE</span>평촌 학원 연합 · 중간고사 대비</a>
   <nav>
     <span id="authWelcome" style="margin-right:16px;color:var(--ink-soft);font-size:0.85rem;"></span>
-    <a href="index.html">홈으로</a>
+    <a href="index.html" class="back-home-link">← 홈으로</a>
     <a href="index.html#scheduleSection">학교별 D-DAY</a>
   </nav>
 </header>
@@ -806,19 +857,19 @@ function renderMaterials(){
     gradesPresent.forEach(g=>{
       const gradeItems = subjectItems.filter(i=>(i['학년']||'학년 미지정') === g);
 
-      const gradeBlock = document.createElement('div');
+      const gradeBlock = document.createElement('details');
       gradeBlock.className = 'grade-block';
 
-      const gradeHead = document.createElement('div');
+      const gradeHead = document.createElement('summary');
       gradeHead.className = 'grade-block-head';
-      gradeHead.textContent = g;
+      gradeHead.innerHTML = `<span>${g}</span><span class="grade-count">${gradeItems.length}개</span>`;
       gradeBlock.appendChild(gradeHead);
 
-      const grid = document.createElement('div');
-      grid.className = 'card-grid';
+      const list = document.createElement('div');
+      list.className = 'material-list';
       gradeItems.forEach(item=>{
         const a = document.createElement('a');
-        a.className = 'card';
+        a.className = 'material-row';
         a.href = item['링크'] || '#';
         const vimeoId = extractVimeoId(item['링크']);
         if(vimeoId){
@@ -831,18 +882,14 @@ function renderMaterials(){
           a.target = '_blank';
           a.rel = 'noopener';
         }
-        const thumbHtml = item['썸네일']
-          ? `<img src="${item['썸네일']}" alt="" style="width:100%;border-radius:8px;margin-bottom:6px;aspect-ratio:16/9;object-fit:cover;" onerror="this.style.display='none'">`
-          : '';
         a.innerHTML = `
-          ${thumbHtml}
           <span class="grade-tag">${item['학원명']||''}</span>
-          <div class="title">${item['자료명']||'(제목 없음)'}</div>
-          <div class="meta">${item['업로드일']||''}</div>
+          <span class="material-row-title">${item['자료명']||'(제목 없음)'}</span>
+          <span class="meta">${item['업로드일']||''}</span>
         `;
-        grid.appendChild(a);
+        list.appendChild(a);
       });
-      gradeBlock.appendChild(grid);
+      gradeBlock.appendChild(list);
       group.appendChild(gradeBlock);
     });
 
