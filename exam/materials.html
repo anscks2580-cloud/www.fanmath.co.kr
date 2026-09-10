@@ -882,8 +882,14 @@ function renderMaterials(){
           a.target = '_blank';
           a.rel = 'noopener';
         }
+        const rowAcademy = ACADEMIES.find(ac=>ac.school === item['학원명']);
+        const rowLogoHtml = rowAcademy && rowAcademy.logo
+          ? `<img src="${rowAcademy.logo}" alt="" style="width:16px;height:16px;border-radius:50%;object-fit:${rowAcademy.fit||'cover'};margin-right:5px;vertical-align:-3px;">`
+          : rowAcademy
+            ? `<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${rowAcademy.color};margin-right:5px;vertical-align:-2px;"></span>`
+            : '';
         a.innerHTML = `
-          <span class="grade-tag">${item['학원명']||''}</span>
+          <span class="grade-tag">${rowLogoHtml}${item['학원명']||''}</span>
           <span class="material-row-title">${item['자료명']||'(제목 없음)'}</span>
           <span class="meta">${item['업로드일']||''}</span>
         `;
