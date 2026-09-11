@@ -667,15 +667,6 @@ document.getElementById('authCodeInput').addEventListener('keydown', (e)=>{
   if(e.key === 'Enter') window.tryAuth();
 });
 
-(function checkExistingAuth(){
-  const savedCode = sessionStorage.getItem('examAuthCode');
-  if(!savedCode) return;
-  const savedRole = sessionStorage.getItem('examAuthRole');
-  const codes = savedRole === 'student' ? STUDENT_CODES_NORMALIZED : TEACHER_CODES_NORMALIZED;
-  const academyName = codes[savedCode.toUpperCase()];
-  if(academyName) showSite(academyName, savedRole);
-})();
-
 // ── 탭 전환 ──
 window.switchTab = function(tab){
   document.getElementById('tabBoard').classList.toggle('active', tab==='board');
@@ -962,6 +953,17 @@ window.saveAnswer = async function(id){
     setMsg(msgId, '저장 중 오류가 발생했습니다.', false);
   }
 };
+
+// 세션에 저장된 인증 정보가 있으면 자동 로그인 — 여기서 사용하는 loadBoard 등 함수가
+// 전부 정의된 뒤(스크립트 맨 마지막)에 실행되도록 위치를 옮겼습니다.
+(function checkExistingAuth(){
+  const savedCode = sessionStorage.getItem('examAuthCode');
+  if(!savedCode) return;
+  const savedRole = sessionStorage.getItem('examAuthRole');
+  const codes = savedRole === 'student' ? STUDENT_CODES_NORMALIZED : TEACHER_CODES_NORMALIZED;
+  const academyName = codes[savedCode.toUpperCase()];
+  if(academyName) showSite(academyName, savedRole);
+})();
 </script>
 
 </body>
