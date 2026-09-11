@@ -737,11 +737,14 @@
           <label>자료명(제목) <span style="color:var(--muted);font-weight:400;">— 파일 여러 개 선택 시에는 비워두면 파일명이 자동으로 제목이 됩니다</span></label>
           <input type="text" id="exampdf-title" placeholder="예: 성포고 1학기 중간 기출">
         </div>
-        <div class="form-group">
-          <label>PDF 파일 <span style="color:var(--muted);font-weight:400;">(여러 개 한 번에 선택 가능)</span></label>
-          <input type="file" id="exampdf-file" accept="application/pdf" multiple>
-        </div>
       </div>
+      <div class="excel-drop" id="examPdfDrop" onclick="document.getElementById('exampdf-file').click()">
+        <div class="excel-drop-icon">📄</div>
+        <p>클릭하거나 PDF 파일을 여기로 드래그하세요</p>
+        <small>.pdf 파일 지원 · 여러 개 한 번에 선택 가능</small>
+      </div>
+      <input type="file" id="exampdf-file" accept="application/pdf" multiple style="display:none;">
+      <div id="examPdfFileList" style="font-size:12px;color:var(--muted);margin-bottom:12px;"></div>
       <button class="btn btn-primary" onclick="uploadExamPdf()">📤 PDF 업로드 및 등록</button>
       <div id="examPdfMsg" class="msg"></div>
       <div id="examPdfProgress" style="font-size:12px;color:var(--muted);margin-top:8px;"></div>
@@ -7319,8 +7322,36 @@ window.uploadExamPdf = async () => {
   progressEl.textContent = '';
   document.getElementById('exampdf-title').value = '';
   fileInput.value = '';
+  renderExamPdfFileList();
   await loadExamMaterials();
 };
+
+// PDF 드래그&드롭 업로드 영역 (엑셀 업로드 드롭존과 같은 방식)
+function renderExamPdfFileList(){
+  const files = Array.from(document.getElementById('exampdf-file').files || []);
+  const el = document.getElementById('examPdfFileList');
+  if (!el) return;
+  if (!files.length) { el.textContent = ''; return; }
+  el.textContent = `선택된 파일 ${files.length}개: ` + files.map(f => f.name).join(', ');
+}
+(function setupExamPdfDrop(){
+  const drop = document.getElementById('examPdfDrop');
+  const input = document.getElementById('exampdf-file');
+  if (!drop || !input) return;
+  input.addEventListener('change', renderExamPdfFileList);
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag'); });
+  drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
+  drop.addEventListener('drop', e => {
+    e.preventDefault();
+    drop.classList.remove('drag');
+    const dropped = Array.from(e.dataTransfer.files || []).filter(f => f.type === 'application/pdf');
+    if (!dropped.length) return;
+    const dt = new DataTransfer();
+    dropped.forEach(f => dt.items.add(f));
+    input.files = dt.files;
+    renderExamPdfFileList();
+  });
+})();
 
 let examMaterialsCache = [];
 async function loadExamMaterials() {
