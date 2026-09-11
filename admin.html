@@ -7318,49 +7318,72 @@ async function loadExamMaterials() {
     if (!list.length) {
       el.innerHTML = '<div style="color:var(--muted);font-size:13px;">등록된 자료가 없습니다.</div>'; return;
     }
-    // 학원별로 묶어서 표시
-    const groups = {};
-    const order = [];
+    // 과목(수학/영어)별로 먼저 나누고, 그 안에서 학원별로 묶어 아코디언으로 표시
+    const bySubject = { '수학': [], '영어': [] };
     list.forEach(v => {
-      if (!groups[v.academy]) { groups[v.academy] = []; order.push(v.academy); }
-      groups[v.academy].push(v);
+      const subj = v.subject === '영어' ? '영어' : '수학';
+      bySubject[subj].push(v);
     });
-    el.innerHTML = order.map(academy => `
-      <div style="margin-bottom:18px;">
-        <div style="font-size:12px;color:var(--gold);font-weight:600;margin-bottom:6px;">${academy}</div>
-        ${groups[academy].map((v, i) => `
-          <div class="student-item">
-            <div class="student-name">${i+1}. ${v.title}</div>
-            <span class="student-meta" style="font-size:11px;">${v.pdfUrl ? `📄 PDF <a href="${v.pdfUrl}" target="_blank" style="color:var(--gold);">열기</a>` : `Vimeo: ${v.vimeoId}`}</span>
-            <select style="font-size:12px;" onchange="updateExamMaterialField('${v.id}','grade',this.value)">
-              <option value="" ${!v.grade ? 'selected' : ''}>학년 미지정</option>
-              <option value="고1" ${v.grade==='고1' ? 'selected' : ''}>고1</option>
-              <option value="고2" ${v.grade==='고2' ? 'selected' : ''}>고2</option>
-              <option value="고3" ${v.grade==='고3' ? 'selected' : ''}>고3</option>
-              <option value="중1" ${v.grade==='중1' ? 'selected' : ''}>중1</option>
-              <option value="중2" ${v.grade==='중2' ? 'selected' : ''}>중2</option>
-              <option value="중3" ${v.grade==='중3' ? 'selected' : ''}>중3</option>
-            </select>
-            <select style="font-size:12px;" onchange="updateExamMaterialField('${v.id}','subject',this.value)">
-              <option value="수학" ${v.subject==='수학' ? 'selected' : ''}>수학</option>
-              <option value="영어" ${v.subject==='영어' ? 'selected' : ''}>영어</option>
-            </select>
-            <select style="font-size:12px;" onchange="updateExamMaterialField('${v.id}','materialType',this.value)">
-              <option value="" ${!v.materialType ? 'selected' : ''}>유형 미지정</option>
-              <option value="고1 기출문제" ${v.materialType==='고1 기출문제' ? 'selected' : ''}>고1 기출문제</option>
-              <option value="고2 기출문제" ${v.materialType==='고2 기출문제' ? 'selected' : ''}>고2 기출문제</option>
-              <option value="유형정리" ${v.materialType==='유형정리' ? 'selected' : ''}>유형정리</option>
-              <option value="송우찬수학학원 보충" ${v.materialType==='송우찬수학학원 보충' ? 'selected' : ''}>송우찬수학학원 보충</option>
-              <option value="인어스수학학원 보충" ${v.materialType==='인어스수학학원 보충' ? 'selected' : ''}>인어스수학학원 보충</option>
-            </select>
-            <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer;">
-              <input type="checkbox" ${v.active !== false ? 'checked' : ''} onchange="toggleExamMaterialActive('${v.id}', this.checked)"> 자료실에 노출
-            </label>
-            <button class="btn btn-sm" ${i===0 ? 'disabled' : ''} onclick="moveExamMaterial('${academy}', ${i}, -1)">▲</button>
-            <button class="btn btn-sm" ${i===groups[academy].length-1 ? 'disabled' : ''} onclick="moveExamMaterial('${academy}', ${i}, 1)">▼</button>
-            <button class="btn btn-danger btn-sm" onclick="deleteExamMaterial('${v.id}','${(v.title||'').replace(/'/g,"\\'")}')">삭제</button>
-          </div>`).join('')}
-      </div>`).join('');
+
+    el.innerHTML = ['수학', '영어'].map(subject => {
+      const subjectItems = bySubject[subject];
+      if (!subjectItems.length) return '';
+
+      const groups = {};
+      const order = [];
+      subjectItems.forEach(v => {
+        if (!groups[v.academy]) { groups[v.academy] = []; order.push(v.academy); }
+        groups[v.academy].push(v);
+      });
+
+      return `
+        <div style="margin-bottom:22px;">
+          <div style="font-size:14px;font-weight:700;color:var(--gold);margin-bottom:10px;">
+            ${subject === '수학' ? '📐' : '🔤'} ${subject} (${subjectItems.length}개)
+          </div>
+          ${order.map(academy => `
+            <details style="margin-bottom:10px;background:rgba(255,255,255,0.03);border-radius:8px;padding:2px 14px;">
+              <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--off-white);padding:10px 0;">
+                ${academy} <span style="color:var(--muted);font-weight:400;">(${groups[academy].length}개)</span>
+              </summary>
+              <div style="padding-bottom:10px;">
+                ${groups[academy].map((v, i) => `
+                  <div class="student-item">
+                    <div class="student-name">${i+1}. ${v.title}</div>
+                    <span class="student-meta" style="font-size:11px;">${v.pdfUrl ? `📄 PDF <a href="${v.pdfUrl}" target="_blank" style="color:var(--gold);">열기</a>` : `Vimeo: ${v.vimeoId}`}</span>
+                    <select style="font-size:12px;" onchange="updateExamMaterialField('${v.id}','grade',this.value)">
+                      <option value="" ${!v.grade ? 'selected' : ''}>학년 미지정</option>
+                      <option value="고1" ${v.grade==='고1' ? 'selected' : ''}>고1</option>
+                      <option value="고2" ${v.grade==='고2' ? 'selected' : ''}>고2</option>
+                      <option value="고3" ${v.grade==='고3' ? 'selected' : ''}>고3</option>
+                      <option value="중1" ${v.grade==='중1' ? 'selected' : ''}>중1</option>
+                      <option value="중2" ${v.grade==='중2' ? 'selected' : ''}>중2</option>
+                      <option value="중3" ${v.grade==='중3' ? 'selected' : ''}>중3</option>
+                    </select>
+                    <select style="font-size:12px;" onchange="updateExamMaterialField('${v.id}','subject',this.value)">
+                      <option value="수학" ${v.subject==='수학' ? 'selected' : ''}>수학</option>
+                      <option value="영어" ${v.subject==='영어' ? 'selected' : ''}>영어</option>
+                    </select>
+                    <select style="font-size:12px;" onchange="updateExamMaterialField('${v.id}','materialType',this.value)">
+                      <option value="" ${!v.materialType ? 'selected' : ''}>유형 미지정</option>
+                      <option value="고1 기출문제" ${v.materialType==='고1 기출문제' ? 'selected' : ''}>고1 기출문제</option>
+                      <option value="고2 기출문제" ${v.materialType==='고2 기출문제' ? 'selected' : ''}>고2 기출문제</option>
+                      <option value="유형정리" ${v.materialType==='유형정리' ? 'selected' : ''}>유형정리</option>
+                      <option value="송우찬수학학원 보충" ${v.materialType==='송우찬수학학원 보충' ? 'selected' : ''}>송우찬수학학원 보충</option>
+                      <option value="인어스수학학원 보충" ${v.materialType==='인어스수학학원 보충' ? 'selected' : ''}>인어스수학학원 보충</option>
+                    </select>
+                    <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer;">
+                      <input type="checkbox" ${v.active !== false ? 'checked' : ''} onchange="toggleExamMaterialActive('${v.id}', this.checked)"> 자료실에 노출
+                    </label>
+                    <button class="btn btn-sm" ${i===0 ? 'disabled' : ''} onclick="moveExamMaterial('${academy}', ${i}, -1)">▲</button>
+                    <button class="btn btn-sm" ${i===groups[academy].length-1 ? 'disabled' : ''} onclick="moveExamMaterial('${academy}', ${i}, 1)">▼</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteExamMaterial('${v.id}','${(v.title||'').replace(/'/g,"\\'")}')">삭제</button>
+                  </div>`).join('')}
+              </div>
+            </details>
+          `).join('')}
+        </div>`;
+    }).join('');
   } catch(e) {
     document.getElementById('examMaterialList').innerHTML =
       `<div style="color:#ff9090;font-size:13px;">오류: ${e.message}</div>`;
