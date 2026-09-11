@@ -414,13 +414,24 @@
   <p class="section-sub">질문은 비공개로 등록되며, 등록하신 이름과 비밀번호로만 본인 질문과 답변을 확인할 수 있습니다.</p>
 
   <div class="qna-tabs">
-    <button class="qna-tab active" id="tabAsk" onclick="switchTab('ask')">질문하기</button>
+    <button class="qna-tab active" id="tabBoard" onclick="switchTab('board')">게시판</button>
     <button class="qna-tab" id="tabMy" onclick="switchTab('my')">내 질문 확인</button>
     <button class="qna-tab" id="tabAnswer" onclick="switchTab('answer')" style="display:none;">답변하기 (선생님)</button>
   </div>
 
+  <!-- 게시판 (전체 공개, 이름은 비공개) -->
+  <div class="qna-panel active" id="panelBoard">
+    <div class="qlist" id="boardQuestionList"></div>
+    <div style="text-align:center;margin-top:24px;">
+      <button class="hero-cta solid" onclick="switchTab('ask')">+ 질문하기</button>
+    </div>
+  </div>
+
   <!-- 질문 등록 -->
-  <div class="qna-panel active" id="panelAsk">
+  <div class="qna-panel" id="panelAsk">
+    <div style="margin-bottom:16px;">
+      <button class="back-home-link" onclick="switchTab('board')">← 게시판으로</button>
+    </div>
     <div class="form-card">
       <div class="form-row">
         <div class="field">
@@ -531,6 +542,7 @@ function showSite(academyName, role){
   if(role === 'teacher'){
     document.getElementById('tabAnswer').style.display = 'inline-block';
   }
+  loadBoard();
 }
 
 function normalizeCodes(codes){
@@ -581,12 +593,14 @@ document.getElementById('authCodeInput').addEventListener('keydown', (e)=>{
 
 // ── 탭 전환 ──
 window.switchTab = function(tab){
-  document.getElementById('tabAsk').classList.toggle('active', tab==='ask');
+  document.getElementById('tabBoard').classList.toggle('active', tab==='board');
   document.getElementById('tabMy').classList.toggle('active', tab==='my');
   document.getElementById('tabAnswer').classList.toggle('active', tab==='answer');
+  document.getElementById('panelBoard').classList.toggle('active', tab==='board');
   document.getElementById('panelAsk').classList.toggle('active', tab==='ask');
   document.getElementById('panelMy').classList.toggle('active', tab==='my');
   document.getElementById('panelAnswer').classList.toggle('active', tab==='answer');
+  if(tab === 'board') loadBoard();
   if(tab === 'answer') loadAllQuestions();
 };
 
@@ -653,6 +667,7 @@ window.submitQuestion = async function(){
     document.getElementById('qName').value = '';
     document.getElementById('qPassword').value = '';
     document.getElementById('qContent').value = '';
+    setTimeout(()=>{ switchTab('board'); }, 900);
   }catch(e){
     console.error(e);
     setMsg('askMsg', '등록 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.', false);
@@ -722,6 +737,44 @@ function escapeHtml(str){
   div.textContent = str;
   return div.innerHTML;
 }
+
+// ── 게시판: 전체 공개 목록 (이름은 비공개, 학원/학년만 표시) ──
+window.loadBoard = async function(){
+  const listEl = document.getElementById('boardQuestionList');
+  listEl.innerHTML = '<div class="empty-state">불러오는 중입니다…</div>';
+  try{
+    const snap = await getDocs(query(collection(db, 'questions'), orderBy('createdAt', 'desc')));
+    const items = [];
+    snap.forEach(d=> items.push(d.data()));
+
+    if(items.length === 0){
+      listEl.innerHTML = '<div class="empty-state">아직 등록된 질문이 없습니다. 첫 질문을 남겨보세요!</div>';
+      return;
+    }
+
+    listEl.innerHTML = items.map(q=>{
+      const date = q.createdAt && q.createdAt.toDate ? q.createdAt.toDate().toLocaleDateString('ko-KR') : '';
+      const statusClass = q.answered ? 'answered' : 'waiting';
+      const statusText = q.answered ? '답변완료' : '답변대기';
+      const answerHtml = q.answered
+        ? `<div class="qcard-answer"><div class="qcard-answer-label">답변</div><div class="qcard-answer-body">${escapeHtml(q.answer||'')}</div></div>`
+        : '';
+      return `
+        <div class="qcard">
+          <div class="qcard-head">
+            <span class="qcard-meta">${escapeHtml(q.academy||'')} · ${escapeHtml(q.grade||'')} · ${date}</span>
+            <span class="qcard-status ${statusClass}">${statusText}</span>
+          </div>
+          <div class="qcard-content">${escapeHtml(q.content||'')}</div>
+          ${answerHtml}
+        </div>
+      `;
+    }).join('');
+  }catch(e){
+    console.error(e);
+    listEl.innerHTML = '<div class="empty-state">불러오는 중 오류가 발생했습니다.</div>';
+  }
+};
 
 // ── 선생님용: 전체 질문 조회 및 답변 등록 ──
 window.loadAllQuestions = async function(){
