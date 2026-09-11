@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>질문 게시판 | 2026 2학기 중간고사 대비 · 평촌 학원 연합</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+  :root{
+    --paper:#0E1420;
+    --paper-soft:#171F2F;
+    --ink:#F1EFE8;
+    --ink-soft:#9CA3B5;
+    --line:#2B3348;
+    --blue:#5B7FFF;
+    --coral:#E8583C;
+    --sun:#FFC23A;
+    --green:#2FA36B;
+    --card:#161E2E;
+    --gold:#D2AF6E;
+    --gold-soft:#E4D3AC;
+    --charcoal:#15130F;
+    --charcoal-deep:#0C0B08;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Pretendard','Noto Sans KR',sans-serif;
+    line-height:1.6;
+  }
+  h1,h2,h3,.serif{font-family:'Nanum Myeongjo',serif;}
+  a{color:inherit;}
+
+  header{
+    padding:18px 6vw;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:var(--paper);
+    border-bottom:1px solid var(--line);
+  }
+  .brand{
+    font-weight:700;
+    font-size:0.92rem;
+    letter-spacing:0.02em;
+    color:var(--ink);
+    text-decoration:none;
+  }
+  .brand .brand-sub{
+    display:block;
+    font-size:0.62rem;
+    font-weight:600;
+    letter-spacing:0.18em;
+    color:var(--gold);
+    margin-bottom:3px;
+  }
+  nav a{
+    margin-left:30px;
+    font-size:0.84rem;
+    letter-spacing:0.01em;
+    text-decoration:none;
+    color:var(--ink-soft);
+  }
+  nav a:hover{color:var(--ink);}
+  nav .nav-btn{
+    margin-left:12px;
+    display:inline-block;
+    border:1px solid var(--gold);
+    color:var(--gold);
+    background:transparent;
+    padding:8px 18px;
+    border-radius:2px;
+    font-size:0.8rem;
+    font-weight:700;
+    letter-spacing:0.03em;
+    transition:background .15s, color .15s;
+  }
+  nav .nav-btn:hover{background:var(--gold);color:var(--charcoal-deep);}
+  nav .nav-btn.solid{
+    background:var(--gold);
+    color:var(--charcoal-deep);
+    border-color:var(--gold);
+  }
+  nav .nav-btn.solid:hover{background:var(--gold-soft);border-color:var(--gold-soft);}
+  .back-home-link{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    padding:7px 16px;
+    border-radius:30px;
+    font-size:0.82rem;
+    text-decoration:none;
+    transition:border-color .15s, color .15s;
+  }
+  .back-home-link:hover{border-color:var(--gold);color:var(--gold);}
+
+  .section-eyebrow{
+    font-size:0.7rem;
+    font-weight:700;
+    letter-spacing:0.3em;
+    color:var(--gold);
+    text-align:center;
+    margin-bottom:10px;
+  }
+  .section-heading{
+    font-family:'Nanum Myeongjo',serif;
+    font-size:1.5rem;
+    font-weight:700;
+    text-align:center;
+    color:var(--ink);
+    margin:0 0 12px;
+  }
+  .section-sub{
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:0.9rem;
+    max-width:560px;
+    margin:0 auto 36px;
+  }
+
+  .hero-cta{
+    display:inline-block;
+    border:1px solid var(--gold);
+    color:var(--gold);
+    background:transparent;
+    padding:13px 34px;
+    border-radius:2px;
+    text-decoration:none;
+    font-size:0.86rem;
+    font-weight:700;
+    letter-spacing:0.08em;
+    cursor:pointer;
+    transition:background .15s, color .15s;
+  }
+  .hero-cta:hover{background:var(--gold);color:var(--charcoal-deep);}
+  .hero-cta.solid{
+    background:var(--gold);
+    color:var(--charcoal-deep);
+    border-color:var(--gold);
+  }
+  .hero-cta.solid:hover{background:var(--gold-soft);border-color:var(--gold-soft);}
+  .hero-cta:disabled{opacity:0.5;cursor:not-allowed;}
+
+  footer{
+    padding:26px 6vw;
+    font-size:0.82rem;
+    color:var(--ink-soft);
+    display:flex;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:10px;
+    border-top:1px solid var(--line);
+  }
+
+  /* ── 로그인 게이트 ── */
+  .auth-gate{
+    position:fixed;
+    inset:0;
+    background:var(--paper);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    z-index:999;
+    padding:20px;
+  }
+  .auth-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:36px 32px;
+    max-width:360px;
+    width:100%;
+    text-align:center;
+  }
+  .auth-title{
+    font-family:'Nanum Myeongjo',serif;
+    font-weight:800;
+    font-size:1.3rem;
+    margin-bottom:8px;
+  }
+  .auth-sub{
+    font-size:0.85rem;
+    color:var(--ink-soft);
+    margin-bottom:22px;
+    line-height:1.5;
+  }
+  .auth-card input{
+    width:100%;
+    box-sizing:border-box;
+    font-size:0.95rem;
+    padding:12px 14px;
+    border:1px solid var(--line);
+    border-radius:10px;
+    margin-bottom:12px;
+    text-align:center;
+    letter-spacing:0.1em;
+    background:var(--paper-soft);
+    color:var(--ink);
+  }
+  .auth-btn{
+    width:100%;
+    background:var(--gold);
+    color:var(--charcoal-deep);
+    border:none;
+    padding:12px 0;
+    border-radius:10px;
+    font-weight:700;
+    font-size:0.95rem;
+    cursor:pointer;
+  }
+  .auth-error{
+    color:var(--coral);
+    font-size:0.82rem;
+    margin-top:10px;
+    min-height:1em;
+  }
+
+  /* ── 질문 게시판 ── */
+  .qna-section{
+    max-width:720px;
+    margin:0 auto;
+    padding:64px 6vw 80px;
+  }
+  .qna-tabs{
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    margin-bottom:36px;
+  }
+  .qna-tab{
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--ink-soft);
+    padding:10px 22px;
+    border-radius:30px;
+    font-size:0.86rem;
+    font-weight:600;
+    cursor:pointer;
+    transition:border-color .15s, color .15s;
+  }
+  .qna-tab.active{
+    border-color:var(--gold);
+    color:var(--gold);
+  }
+  .qna-panel{display:none;}
+  .qna-panel.active{display:block;}
+
+  .form-card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:28px 26px;
+  }
+  .form-row{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-bottom:12px;
+  }
+  @media (max-width:520px){
+    .form-row{grid-template-columns:1fr;}
+  }
+  .form-card label{
+    display:block;
+    font-size:0.76rem;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+    letter-spacing:0.03em;
+  }
+  .form-card select,
+  .form-card input,
+  .form-card textarea{
+    width:100%;
+    box-sizing:border-box;
+    background:var(--paper-soft);
+    border:1px solid var(--line);
+    color:var(--ink);
+    padding:11px 12px;
+    border-radius:6px;
+    font-size:0.9rem;
+    font-family:inherit;
+  }
+  .form-card textarea{
+    resize:vertical;
+    min-height:120px;
+    margin-bottom:12px;
+  }
+  .field{margin-bottom:12px;}
+  .form-help{
+    font-size:0.76rem;
+    color:var(--ink-soft);
+    margin-top:-6px;
+    margin-bottom:14px;
+  }
+  .form-submit{
+    width:100%;
+    margin-top:6px;
+  }
+  .form-msg{
+    margin-top:14px;
+    font-size:0.85rem;
+    text-align:center;
+    min-height:1.2em;
+  }
+  .form-msg.ok{color:var(--green);}
+  .form-msg.err{color:var(--coral);}
+
+  .qlist{margin-top:20px;}
+  .qcard{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:18px 20px;
+    margin-bottom:14px;
+  }
+  .qcard-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:10px;
+    margin-bottom:8px;
+    flex-wrap:wrap;
+  }
+  .qcard-meta{
+    font-size:0.74rem;
+    color:var(--ink-soft);
+    letter-spacing:0.02em;
+  }
+  .qcard-status{
+    font-size:0.68rem;
+    font-weight:700;
+    padding:2px 10px;
+    border-radius:20px;
+    letter-spacing:0.04em;
+  }
+  .qcard-status.waiting{
+    color:var(--ink-soft);
+    background:var(--paper-soft);
+  }
+  .qcard-status.answered{
+    color:var(--charcoal-deep);
+    background:var(--gold);
+  }
+  .qcard-content{
+    font-size:0.92rem;
+    color:var(--ink);
+    white-space:pre-wrap;
+    margin-bottom:0;
+  }
+  .qcard-answer{
+    margin-top:14px;
+    padding-top:14px;
+    border-top:1px solid var(--line);
+  }
+  .qcard-answer-label{
+    font-size:0.72rem;
+    font-weight:700;
+    color:var(--gold);
+    letter-spacing:0.06em;
+    margin-bottom:6px;
+  }
+  .qcard-answer-body{
+    font-size:0.92rem;
+    color:var(--ink);
+    white-space:pre-wrap;
+  }
+  .empty-state{
+    text-align:center;
+    color:var(--ink-soft);
+    padding:40px 20px;
+    border:1px dashed var(--line);
+    border-radius:14px;
+    font-size:0.9rem;
+  }
+
+</style>
+</head>
+<body>
+
+<!-- ── 로그인 게이트 (학원별 인증번호) ── -->
+<div class="auth-gate" id="authGate">
+  <div class="auth-card">
+    <div style="font-size:0.62rem;font-weight:600;letter-spacing:0.18em;color:var(--gold);margin-bottom:10px;">TEAM I:DEA</div>
+    <div class="auth-title">2026년 2학기 중간고사 대비</div>
+    <div class="auth-sub">연합 학원 선생님·학생만 입장 가능합니다. 인증번호를 입력해주세요.</div>
+    <input type="password" id="authCodeInput" placeholder="인증번호" autocomplete="off">
+    <button class="auth-btn" onclick="tryAuth()">입장하기</button>
+    <div class="auth-error" id="authError"></div>
+  </div>
+</div>
+
+<div id="siteContent" style="display:none;">
+
+<header>
+  <a href="index.html" class="brand"><span class="brand-sub">TEAM I:DEA</span>평촌 학원 연합 · 중간고사 대비</a>
+  <nav>
+    <span id="authWelcome" style="margin-right:16px;color:var(--ink-soft);font-size:0.85rem;"></span>
+    <a href="index.html" class="back-home-link">← 홈으로</a>
+    <a href="materials.html" class="nav-btn solid">자료실</a>
+    <a href="index.html#scheduleSection" class="nav-btn">학교별 D-DAY</a>
+  </nav>
+</header>
+
+<section class="qna-section">
+  <div class="section-eyebrow">Q&amp;A</div>
+  <h2 class="section-heading">질문 게시판</h2>
+  <p class="section-sub">질문은 비공개로 등록되며, 등록하신 이름과 비밀번호로만 본인 질문과 답변을 확인할 수 있습니다.</p>
+
+  <div class="qna-tabs">
+    <button class="qna-tab active" id="tabAsk" onclick="switchTab('ask')">질문하기</button>
+    <button class="qna-tab" id="tabMy" onclick="switchTab('my')">내 질문 확인</button>
+  </div>
+
+  <!-- 질문 등록 -->
+  <div class="qna-panel active" id="panelAsk">
+    <div class="form-card">
+      <div class="form-row">
+        <div class="field">
+          <label for="qAcademy">학원명</label>
+          <select id="qAcademy">
+            <option value="">선택해주세요</option>
+            <option value="송우찬수학학원">송우찬수학학원</option>
+            <option value="에이펙스영어학원">에이펙스영어학원</option>
+            <option value="인어스수학학원">인어스수학학원</option>
+            <option value="대치레몬학원">대치레몬학원</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="qGrade">학년</label>
+          <select id="qGrade">
+            <option value="">선택해주세요</option>
+            <option value="중1">중1</option>
+            <option value="중2">중2</option>
+            <option value="중3">중3</option>
+            <option value="고1">고1</option>
+            <option value="고2">고2</option>
+            <option value="고3">고3</option>
+            <option value="재수생">재수생</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label for="qName">이름</label>
+          <input type="text" id="qName" placeholder="이름을 입력해주세요">
+        </div>
+        <div class="field">
+          <label for="qPassword">비밀번호 (숫자 4자리)</label>
+          <input type="password" id="qPassword" maxlength="4" inputmode="numeric" placeholder="0000">
+        </div>
+      </div>
+      <div class="form-help">비밀번호는 나중에 내 질문을 확인할 때 필요합니다. 잊지 않도록 메모해주세요.</div>
+      <div class="field">
+        <label for="qContent">질문 내용</label>
+        <textarea id="qContent" placeholder="궁금한 내용을 자유롭게 적어주세요."></textarea>
+      </div>
+      <button class="hero-cta solid form-submit" onclick="submitQuestion()">질문 등록하기</button>
+      <div class="form-msg" id="askMsg"></div>
+    </div>
+  </div>
+
+  <!-- 내 질문 확인 -->
+  <div class="qna-panel" id="panelMy">
+    <div class="form-card">
+      <div class="form-row">
+        <div class="field">
+          <label for="myName">이름</label>
+          <input type="text" id="myName" placeholder="등록할 때 입력한 이름">
+        </div>
+        <div class="field">
+          <label for="myPassword">비밀번호 (숫자 4자리)</label>
+          <input type="password" id="myPassword" maxlength="4" inputmode="numeric" placeholder="0000">
+        </div>
+      </div>
+      <button class="hero-cta solid form-submit" onclick="lookupQuestions()">내 질문 확인하기</button>
+      <div class="form-msg" id="myMsg"></div>
+    </div>
+    <div class="qlist" id="myQuestionList"></div>
+  </div>
+</section>
+
+<footer>
+  <div>평촌 학원 연합 · 중간고사 대비 질문 게시판</div>
+  <div>문의: 송우찬수학학원 평촌관 원장 송문찬</div>
+</footer>
+
+</div><!-- /#siteContent -->
+
+<script type="module">
+// 0) 학원별 인증번호 — 한번 정하면 계속 그대로 씁니다. 값만 바꾸면 코드 수정 없이 변경돼요.
+//    선생님용 코드와 학생용 코드를 서로 다른 값으로 따로 관리합니다.
+const TEACHER_CODES = {
+  "SWC2026teacher": "송우찬수학학원",
+  "APEX2026teacher": "에이펙스영어학원",
+  "INUS2026teacher": "인어스수학학원",
+  "LEMON2026teacher": "대치레몬학원",
+};
+
+const STUDENT_CODES = {
+  "SWC2026": "송우찬수학학원",
+  "APEX2026": "에이펙스영어학원",
+  "INUS2026": "인어스수학학원",
+  "LEMON2026": "대치레몬학원",
+};
+
+function showSite(academyName, role){
+  document.getElementById('authGate').style.display = 'none';
+  document.getElementById('siteContent').style.display = 'block';
+  const roleLabel = role === 'student' ? '학생' : '선생님';
+  document.getElementById('authWelcome').textContent = academyName ? `${academyName} ${roleLabel}, 안녕하세요` : '';
+}
+
+function normalizeCodes(codes){
+  const normalized = {};
+  Object.keys(codes).forEach(code=>{
+    normalized[code.toUpperCase()] = codes[code];
+  });
+  return normalized;
+}
+const TEACHER_CODES_NORMALIZED = normalizeCodes(TEACHER_CODES);
+const STUDENT_CODES_NORMALIZED = normalizeCodes(STUDENT_CODES);
+
+function resolveAuth(rawCode){
+  const code = rawCode.trim().toUpperCase();
+  if(TEACHER_CODES_NORMALIZED[code]){
+    return { academyName: TEACHER_CODES_NORMALIZED[code], role: 'teacher', code };
+  }
+  if(STUDENT_CODES_NORMALIZED[code]){
+    return { academyName: STUDENT_CODES_NORMALIZED[code], role: 'student', code };
+  }
+  return null;
+}
+
+window.tryAuth = function(){
+  const input = document.getElementById('authCodeInput');
+  const auth = resolveAuth(input.value);
+  if(auth){
+    sessionStorage.setItem('examAuthCode', auth.code);
+    sessionStorage.setItem('examAuthRole', auth.role);
+    showSite(auth.academyName, auth.role);
+  }else{
+    document.getElementById('authError').textContent = '인증번호가 올바르지 않습니다.';
+  }
+};
+
+document.getElementById('authCodeInput').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter') window.tryAuth();
+});
+
+(function checkExistingAuth(){
+  const savedCode = sessionStorage.getItem('examAuthCode');
+  if(!savedCode) return;
+  const savedRole = sessionStorage.getItem('examAuthRole');
+  const codes = savedRole === 'student' ? STUDENT_CODES_NORMALIZED : TEACHER_CODES_NORMALIZED;
+  const academyName = codes[savedCode.toUpperCase()];
+  if(academyName) showSite(academyName, savedRole);
+})();
+
+// ── 탭 전환 ──
+window.switchTab = function(tab){
+  document.getElementById('tabAsk').classList.toggle('active', tab==='ask');
+  document.getElementById('tabMy').classList.toggle('active', tab==='my');
+  document.getElementById('panelAsk').classList.toggle('active', tab==='ask');
+  document.getElementById('panelMy').classList.toggle('active', tab==='my');
+};
+
+// ── Firebase (songmath 프로젝트 공용) ──
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
+  authDomain: "songmath.firebaseapp.com",
+  projectId: "songmath",
+  storageBucket: "songmath.firebasestorage.app",
+  messagingSenderId: "936295436575",
+  appId: "1:936295436575:web:d1e201508719850cfbe02a"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// 비밀번호는 평문 저장하지 않고 SHA-256 해시로 저장합니다.
+async function hashPassword(pw){
+  const enc = new TextEncoder().encode(pw);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function setMsg(elId, text, ok){
+  const el = document.getElementById(elId);
+  el.textContent = text;
+  el.className = 'form-msg ' + (ok ? 'ok' : 'err');
+}
+
+window.submitQuestion = async function(){
+  const academy = document.getElementById('qAcademy').value;
+  const grade = document.getElementById('qGrade').value;
+  const name = document.getElementById('qName').value.trim();
+  const password = document.getElementById('qPassword').value.trim();
+  const content = document.getElementById('qContent').value.trim();
+
+  if(!academy || !grade || !name || !password || !content){
+    setMsg('askMsg', '학원명, 학년, 이름, 비밀번호, 질문 내용을 모두 입력해주세요.', false);
+    return;
+  }
+  if(!/^\d{4}$/.test(password)){
+    setMsg('askMsg', '비밀번호는 숫자 4자리로 입력해주세요.', false);
+    return;
+  }
+
+  setMsg('askMsg', '등록 중입니다…', true);
+  try{
+    const passwordHash = await hashPassword(password);
+    await addDoc(collection(db, 'questions'), {
+      academy,
+      grade,
+      name,
+      passwordHash,
+      content,
+      answer: '',
+      answered: false,
+      createdAt: serverTimestamp(),
+    });
+    setMsg('askMsg', '질문이 등록되었습니다. "내 질문 확인" 탭에서 답변을 확인하실 수 있습니다.', true);
+    document.getElementById('qAcademy').value = '';
+    document.getElementById('qGrade').value = '';
+    document.getElementById('qName').value = '';
+    document.getElementById('qPassword').value = '';
+    document.getElementById('qContent').value = '';
+  }catch(e){
+    console.error(e);
+    setMsg('askMsg', '등록 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.', false);
+  }
+};
+
+window.lookupQuestions = async function(){
+  const name = document.getElementById('myName').value.trim();
+  const password = document.getElementById('myPassword').value.trim();
+  const listEl = document.getElementById('myQuestionList');
+
+  if(!name || !password){
+    setMsg('myMsg', '이름과 비밀번호를 입력해주세요.', false);
+    listEl.innerHTML = '';
+    return;
+  }
+
+  setMsg('myMsg', '조회 중입니다…', true);
+  try{
+    const passwordHash = await hashPassword(password);
+    const snap = await getDocs(query(collection(db, 'questions'), where('name', '==', name)));
+    const mine = [];
+    snap.forEach(d=>{
+      const v = d.data();
+      if(v.passwordHash === passwordHash) mine.push(v);
+    });
+
+    if(mine.length === 0){
+      setMsg('myMsg', '', true);
+      listEl.innerHTML = '<div class="empty-state">이름 또는 비밀번호가 일치하는 질문이 없습니다.</div>';
+      return;
+    }
+
+    mine.sort((a,b)=>{
+      const at = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+      const bt = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+      return bt - at;
+    });
+
+    setMsg('myMsg', `총 ${mine.length}건의 질문이 있습니다.`, true);
+    listEl.innerHTML = mine.map(q=>{
+      const date = q.createdAt && q.createdAt.toDate ? q.createdAt.toDate().toLocaleDateString('ko-KR') : '';
+      const statusClass = q.answered ? 'answered' : 'waiting';
+      const statusText = q.answered ? '답변완료' : '답변대기';
+      const answerHtml = q.answered
+        ? `<div class="qcard-answer"><div class="qcard-answer-label">답변</div><div class="qcard-answer-body">${escapeHtml(q.answer||'')}</div></div>`
+        : '';
+      return `
+        <div class="qcard">
+          <div class="qcard-head">
+            <span class="qcard-meta">${escapeHtml(q.academy||'')} · ${escapeHtml(q.grade||'')} · ${date}</span>
+            <span class="qcard-status ${statusClass}">${statusText}</span>
+          </div>
+          <div class="qcard-content">${escapeHtml(q.content||'')}</div>
+          ${answerHtml}
+        </div>
+      `;
+    }).join('');
+  }catch(e){
+    console.error(e);
+    setMsg('myMsg', '조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.', false);
+  }
+};
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+</script>
+
+</body>
+</html>
