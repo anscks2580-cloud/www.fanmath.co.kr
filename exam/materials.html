@@ -890,9 +890,12 @@ function renderMaterials(){
           : rowAcademy
             ? `<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${rowAcademy.color};margin-right:5px;vertical-align:-2px;"></span>`
             : '';
+        const formatBadge = item['형식'] === 'PDF'
+          ? `<span style="font-size:0.66rem;font-weight:700;color:var(--gold);border:1px solid var(--gold);border-radius:20px;padding:1px 8px;margin-right:6px;vertical-align:1px;">PDF</span>`
+          : '';
         a.innerHTML = `
           <span class="grade-tag">${rowLogoHtml}${item['학원명']||''}</span>
-          <span class="material-row-title">${item['자료명']||'(제목 없음)'}</span>
+          ${formatBadge}<span class="material-row-title">${item['자료명']||'(제목 없음)'}</span>
           <span class="meta">${item['업로드일']||''}</span>
         `;
         list.appendChild(a);
@@ -978,6 +981,9 @@ async function loadData(){
     snap.forEach(d=>{
       const v = d.data();
       if(v.active === false) return;
+      // 자료마다 형태가 다릅니다: Vimeo 영상(vimeoId)이 있으면 영상 자료,
+      // 없고 pdfUrl이 있으면 PDF 자료(예: 영어 자료실은 PDF만 업로드).
+      const isVideo = !!v.vimeoId;
       items.push({
         '학원명': v.academy || '',
         // 예전에 "미정"으로 저장된 자료(주로 인어스수학학원)는 수학으로 취급합니다.
@@ -985,16 +991,17 @@ async function loadData(){
         '자료유형': v.materialType || '',
         '학년': v.grade || '',
         '자료명': v.title || '(제목 없음)',
-        '링크': `https://vimeo.com/${v.vimeoId}`,
+        '링크': isVideo ? `https://vimeo.com/${v.vimeoId}` : (v.pdfUrl || v.fileUrl || ''),
         '업로드일': (v.createdAt || '').slice(0,10),
-        '썸네일': `https://vumbnail.com/${v.vimeoId}.jpg`,
+        '썸네일': isVideo ? `https://vumbnail.com/${v.vimeoId}.jpg` : '',
+        '형식': isVideo ? '영상' : 'PDF',
       });
     });
     ALL_ITEMS = items;
     renderFilterGrade(ALL_ITEMS);
     renderMaterials();
     if(items.length === 0){
-      container.innerHTML = '<div class="empty-state">아직 등록된 자료가 없습니다. admin.html의 "중간고사 자료" 탭에서 Vimeo 폴더를 불러와 추가해주세요.</div>';
+      container.innerHTML = '<div class="empty-state">아직 등록된 자료가 없습니다. admin.html의 "중간고사 자료" 탭에서 Vimeo 폴더 또는 PDF를 불러와 추가해주세요.</div>';
     }
   }catch(e){
     container.innerHTML = '<div class="empty-state">자료를 불러오지 못했습니다.</div>';
