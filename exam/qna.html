@@ -709,7 +709,7 @@ window.switchTab = function(tab){
 
 // ── Firebase (songmath 프로젝트 공용) ──
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
@@ -998,7 +998,10 @@ window.loadAllQuestions = async function(){
             <span class="qcard-meta">${escapeHtml(q.name||'')} · ${escapeHtml(q.academy||'')} · ${escapeHtml(q.grade||'')} · ${date}</span>
             <span class="qcard-status ${statusClass}">${statusText}</span>
           </div>
-          <div style="font-weight:700;margin-bottom:6px;">${escapeHtml(q.title||'(제목 없음)')}</div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:6px;">
+            <div style="font-weight:700;">${escapeHtml(q.title||'(제목 없음)')}</div>
+            <button class="back-home-link" style="flex-shrink:0;color:var(--coral);border-color:var(--coral);" onclick="deleteQuestion('${q.id}')">삭제</button>
+          </div>
           <div class="qcard-content">${escapeHtml(q.content||'')}</div>
           <div class="qcard-answer">
             <div class="qcard-answer-label">답변 작성</div>
@@ -1012,6 +1015,19 @@ window.loadAllQuestions = async function(){
   }catch(e){
     console.error(e);
     listEl.innerHTML = '<div class="empty-state">불러오는 중 오류가 발생했습니다.</div>';
+  }
+};
+
+window.deleteQuestion = async function(id){
+  if(currentRole !== 'teacher') return;
+  const ok = confirm('이 질문을 삭제하시겠습니까? 삭제하면 되돌릴 수 없습니다.');
+  if(!ok) return;
+  try{
+    await deleteDoc(doc(db, 'questions', id));
+    loadAllQuestions();
+  }catch(e){
+    console.error(e);
+    alert('삭제 중 오류가 발생했습니다.');
   }
 };
 
