@@ -333,8 +333,10 @@
     border-bottom:1px solid var(--line);
   }
   .board-table th.col-num,.board-table td.col-num{width:56px;text-align:center;}
+  .board-table th.col-subject,.board-table td.col-subject{width:80px;text-align:center;}
   .board-table th.col-author,.board-table td.col-author{width:90px;text-align:center;}
   .board-table th.col-date,.board-table td.col-date{width:110px;text-align:center;}
+  .board-table th.col-academy,.board-table td.col-academy{width:150px;text-align:center;}
   .board-table th.col-status,.board-table td.col-status{width:100px;text-align:center;}
   .board-row{
     cursor:pointer;
@@ -370,6 +372,16 @@
   .board-detail-row td{
     padding:16px 20px;
     border-bottom:1px solid var(--line);
+  }
+  .board-unlock input{
+    background:var(--paper-soft);
+    border:1px solid var(--line);
+    color:var(--ink);
+    padding:9px 12px;
+    border-radius:6px;
+    font-size:0.9rem;
+    text-align:center;
+    letter-spacing:0.1em;
   }
   .board-detail-content{
     font-size:0.9rem;
@@ -440,6 +452,7 @@
     padding-top:14px;
     border-top:1px solid var(--line);
   }
+  .qcard-answer-textarea{min-height:160px;}
   .qcard-answer-label{
     font-size:0.72rem;
     font-weight:700;
@@ -617,9 +630,11 @@ const STUDENT_CODES = {
 };
 
 let currentRole = null;
+let currentAcademyName = null;
 
 function showSite(academyName, role){
   currentRole = role;
+  currentAcademyName = academyName;
   document.getElementById('authGate').style.display = 'none';
   document.getElementById('siteContent').style.display = 'block';
   const roleLabel = role === 'student' ? '학생' : '선생님';
@@ -792,7 +807,7 @@ window.lookupQuestions = async function(){
       const statusClass = q.answered ? 'answered' : 'waiting';
       const statusText = q.answered ? '답변완료' : '답변대기';
       const answerHtml = q.answered
-        ? `<div class="qcard-answer"><div class="qcard-answer-label">답변</div><div class="qcard-answer-body">${escapeHtml(q.answer||'')}</div></div>`
+        ? `<div class="qcard-answer"><div class="qcard-answer-label">답변 ${q.answeredBy ? '· ' + escapeHtml(q.answeredBy) : ''}</div><div class="qcard-answer-body">${escapeHtml(q.answer||'')}</div></div>`
         : '';
       return `
         <div class="qcard">
@@ -820,10 +835,22 @@ function escapeHtml(str){
 
 function maskName(name){
   if(!name) return '익명';
-  return name.charAt(0) + 'OO';
+  const len = name.length;
+  if(len === 1) return name;
+  if(len === 2) return name.charAt(0) + 'O';
+  return name.charAt(0) + 'O'.repeat(len - 2) + name.charAt(len - 1);
 }
 
-// ── 게시판: 전체 공개 목록 (이름은 마스킹, 표 형식) ──
+const ACADEMY_SUBJECT = {
+  "송우찬수학학원": "수학",
+  "에이펙스영어학원": "영어",
+  "인어스수학학원": "수학",
+  "대치레몬학원": "영어",
+};
+
+// ── 게시판: 전체 공개 목록 (제목·게시일·학원명·과목명·이름) ──
+let boardItems = [];
+
 window.loadBoard = async function(){
   const listEl = document.getElementById('boardQuestionList');
   listEl.innerHTML = '<div class="empty-state">불러오는 중입니다…</div>';
@@ -831,35 +858,43 @@ window.loadBoard = async function(){
     const snap = await getDocs(query(collection(db, 'questions'), orderBy('createdAt', 'desc')));
     const items = [];
     snap.forEach(d=> items.push(d.data()));
+    boardItems = items;
 
     if(items.length === 0){
       listEl.innerHTML = '<div class="empty-state">아직 등록된 질문이 없습니다. 첫 질문을 남겨보세요!</div>';
       return;
     }
 
-    const total = items.length;
     const rows = items.map((q, idx)=>{
-      const num = total - idx;
       const date = q.createdAt && q.createdAt.toDate ? q.createdAt.toDate().toLocaleDateString('ko-KR') : '';
       const statusClass = q.answered ? 'answered' : 'waiting';
       const statusText = q.answered ? '답변완료' : '접수';
       const title = q.title || '(제목 없음)';
-      const answerHtml = q.answered
-        ? `<div class="board-detail-answer"><div class="board-detail-answer-label">답변</div><div class="board-detail-answer-body">${escapeHtml(q.answer||'')}</div></div>`
-        : '';
+      const subject = ACADEMY_SUBJECT[q.academy] || '';
       return `
         <tr class="board-row" onclick="toggleBoardRow(${idx})">
-          <td class="col-num">${num}</td>
-          <td><div class="board-title"><span class="lock">🔒</span>${escapeHtml(title)}</div></td>
-          <td class="col-author">${maskName(q.name)}</td>
+          <td>
+            <div class="board-title">
+              <span class="lock">🔒</span>${escapeHtml(title)}
+              <span class="board-status-badge ${statusClass}" style="margin-left:6px;">${statusText}</span>
+            </div>
+          </td>
           <td class="col-date">${date}</td>
-          <td class="col-status"><span class="board-status-badge ${statusClass}">${statusText}</span></td>
+          <td class="col-academy">${escapeHtml(q.academy||'')}</td>
+          <td class="col-subject">${escapeHtml(subject)}</td>
+          <td class="col-author">${maskName(q.name)}</td>
         </tr>
         <tr class="board-detail-row" id="boardDetail-${idx}">
           <td colspan="5">
-            <div style="font-size:0.76rem;color:var(--ink-soft);margin-bottom:8px;">${escapeHtml(q.academy||'')} · ${escapeHtml(q.grade||'')}</div>
-            <div class="board-detail-content">${escapeHtml(q.content||'')}</div>
-            ${answerHtml}
+            <div class="board-unlock" id="boardUnlock-${idx}" onclick="event.stopPropagation()">
+              <div style="font-size:0.82rem;color:var(--ink-soft);margin-bottom:8px;">🔒 비공개 글입니다. 등록 시 입력한 비밀번호(4자리)를 입력해주세요.</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <input type="password" maxlength="4" inputmode="numeric" id="boardPw-${idx}" placeholder="0000" style="max-width:120px;">
+                <button class="hero-cta solid" style="padding:9px 20px;" onclick="unlockBoardRow(${idx})">확인</button>
+              </div>
+              <div class="form-msg" id="boardPwMsg-${idx}"></div>
+            </div>
+            <div class="board-content-wrap" id="boardContent-${idx}" style="display:none;"></div>
           </td>
         </tr>
       `;
@@ -869,11 +904,11 @@ window.loadBoard = async function(){
       <table class="board-table">
         <thead>
           <tr>
-            <th class="col-num">번호</th>
             <th>제목</th>
-            <th class="col-author">작성자</th>
-            <th class="col-date">등록일</th>
-            <th class="col-status">처리상태</th>
+            <th class="col-date">게시일</th>
+            <th class="col-academy">학원명</th>
+            <th class="col-subject">과목명</th>
+            <th class="col-author">이름</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -889,6 +924,39 @@ window.toggleBoardRow = function(idx){
   const row = document.getElementById('boardDetail-' + idx);
   if(row) row.classList.toggle('open');
 };
+
+window.unlockBoardRow = async function(idx){
+  const q = boardItems[idx];
+  const input = document.getElementById('boardPw-' + idx);
+  const msgId = 'boardPwMsg-' + idx;
+  const pw = (input.value || '').trim();
+  if(!/^\d{4}$/.test(pw)){
+    setMsg(msgId, '비밀번호 4자리를 입력해주세요.', false);
+    return;
+  }
+  const hash = await hashPassword(pw);
+  if(hash !== q.passwordHash){
+    setMsg(msgId, '비밀번호가 일치하지 않습니다.', false);
+    return;
+  }
+  const answerHtml = q.answered
+    ? `<div class="board-detail-answer"><div class="board-detail-answer-label">답변 ${q.answeredBy ? '· ' + escapeHtml(q.answeredBy) : ''}</div><div class="board-detail-answer-body">${escapeHtml(q.answer||'')}</div></div>`
+    : '';
+  document.getElementById('boardContent-' + idx).innerHTML = `
+    <div style="font-size:0.76rem;color:var(--ink-soft);margin-bottom:8px;">${escapeHtml(q.grade||'')}</div>
+    <div class="board-detail-content">${escapeHtml(q.content||'')}</div>
+    ${answerHtml}
+  `;
+  document.getElementById('boardContent-' + idx).style.display = 'block';
+  document.getElementById('boardUnlock-' + idx).style.display = 'none';
+};
+
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter' && e.target && e.target.id && e.target.id.startsWith('boardPw-')){
+    const idx = e.target.id.replace('boardPw-', '');
+    window.unlockBoardRow(idx);
+  }
+});
 
 // ── 선생님용: 전체 질문 조회 및 답변 등록 ──
 window.loadAllQuestions = async function(){
@@ -920,7 +988,7 @@ window.loadAllQuestions = async function(){
           <div class="qcard-content">${escapeHtml(q.content||'')}</div>
           <div class="qcard-answer">
             <div class="qcard-answer-label">답변 작성</div>
-            <textarea id="ans-${q.id}" placeholder="답변을 입력해주세요.">${q.answer||''}</textarea>
+            <textarea id="ans-${q.id}" class="qcard-answer-textarea" placeholder="답변을 입력해주세요.">${q.answer||''}</textarea>
             <button class="hero-cta solid form-submit" onclick="saveAnswer('${q.id}')">답변 저장</button>
             <div class="form-msg" id="ansMsg-${q.id}"></div>
           </div>
@@ -946,6 +1014,7 @@ window.saveAnswer = async function(id){
     await updateDoc(doc(db, 'questions', id), {
       answer,
       answered: true,
+      answeredBy: currentAcademyName || '',
     });
     setMsg(msgId, '답변이 저장되었습니다.', true);
   }catch(e){
