@@ -416,6 +416,7 @@
   <div class="qna-tabs">
     <button class="qna-tab active" id="tabAsk" onclick="switchTab('ask')">질문하기</button>
     <button class="qna-tab" id="tabMy" onclick="switchTab('my')">내 질문 확인</button>
+    <button class="qna-tab" id="tabAnswer" onclick="switchTab('answer')" style="display:none;">답변하기 (선생님)</button>
   </div>
 
   <!-- 질문 등록 -->
@@ -484,6 +485,15 @@
     </div>
     <div class="qlist" id="myQuestionList"></div>
   </div>
+
+  <!-- 답변하기 (선생님 전용) -->
+  <div class="qna-panel" id="panelAnswer">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+      <div class="form-help" style="margin:0;">등록된 질문에 답변을 달거나 수정할 수 있습니다.</div>
+      <button class="hero-cta" onclick="loadAllQuestions()">새로고침</button>
+    </div>
+    <div class="qlist" id="answerQuestionList"></div>
+  </div>
 </section>
 
 <footer>
@@ -510,11 +520,17 @@ const STUDENT_CODES = {
   "LEMON2026": "대치레몬학원",
 };
 
+let currentRole = null;
+
 function showSite(academyName, role){
+  currentRole = role;
   document.getElementById('authGate').style.display = 'none';
   document.getElementById('siteContent').style.display = 'block';
   const roleLabel = role === 'student' ? '학생' : '선생님';
   document.getElementById('authWelcome').textContent = academyName ? `${academyName} ${roleLabel}, 안녕하세요` : '';
+  if(role === 'teacher'){
+    document.getElementById('tabAnswer').style.display = 'inline-block';
+  }
 }
 
 function normalizeCodes(codes){
@@ -567,13 +583,16 @@ document.getElementById('authCodeInput').addEventListener('keydown', (e)=>{
 window.switchTab = function(tab){
   document.getElementById('tabAsk').classList.toggle('active', tab==='ask');
   document.getElementById('tabMy').classList.toggle('active', tab==='my');
+  document.getElementById('tabAnswer').classList.toggle('active', tab==='answer');
   document.getElementById('panelAsk').classList.toggle('active', tab==='ask');
   document.getElementById('panelMy').classList.toggle('active', tab==='my');
+  document.getElementById('panelAnswer').classList.toggle('active', tab==='answer');
+  if(tab === 'answer') loadAllQuestions();
 };
 
 // ── Firebase (songmath 프로젝트 공용) ──
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
@@ -703,6 +722,69 @@ function escapeHtml(str){
   div.textContent = str;
   return div.innerHTML;
 }
+
+// ── 선생님용: 전체 질문 조회 및 답변 등록 ──
+window.loadAllQuestions = async function(){
+  if(currentRole !== 'teacher') return;
+  const listEl = document.getElementById('answerQuestionList');
+  listEl.innerHTML = '<div class="empty-state">불러오는 중입니다…</div>';
+  try{
+    const snap = await getDocs(query(collection(db, 'questions'), orderBy('createdAt', 'desc')));
+    const items = [];
+    snap.forEach(d=> items.push({ id: d.id, ...d.data() }));
+
+    if(items.length === 0){
+      listEl.innerHTML = '<div class="empty-state">등록된 질문이 없습니다.</div>';
+      return;
+    }
+
+    listEl.innerHTML = items.map(q=>{
+      const date = q.createdAt && q.createdAt.toDate ? q.createdAt.toDate().toLocaleDateString('ko-KR') : '';
+      const statusClass = q.answered ? 'answered' : 'waiting';
+      const statusText = q.answered ? '답변완료' : '답변대기';
+      const safeAnswer = escapeHtml(q.answer || '').replace(/"/g, '&quot;');
+      return `
+        <div class="qcard">
+          <div class="qcard-head">
+            <span class="qcard-meta">${escapeHtml(q.name||'')} · ${escapeHtml(q.academy||'')} · ${escapeHtml(q.grade||'')} · ${date}</span>
+            <span class="qcard-status ${statusClass}">${statusText}</span>
+          </div>
+          <div class="qcard-content">${escapeHtml(q.content||'')}</div>
+          <div class="qcard-answer">
+            <div class="qcard-answer-label">답변 작성</div>
+            <textarea id="ans-${q.id}" placeholder="답변을 입력해주세요.">${q.answer||''}</textarea>
+            <button class="hero-cta solid form-submit" onclick="saveAnswer('${q.id}')">답변 저장</button>
+            <div class="form-msg" id="ansMsg-${q.id}"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }catch(e){
+    console.error(e);
+    listEl.innerHTML = '<div class="empty-state">불러오는 중 오류가 발생했습니다.</div>';
+  }
+};
+
+window.saveAnswer = async function(id){
+  const textarea = document.getElementById('ans-' + id);
+  const answer = textarea.value.trim();
+  const msgId = 'ansMsg-' + id;
+  if(!answer){
+    setMsg(msgId, '답변 내용을 입력해주세요.', false);
+    return;
+  }
+  setMsg(msgId, '저장 중입니다…', true);
+  try{
+    await updateDoc(doc(db, 'questions', id), {
+      answer,
+      answered: true,
+    });
+    setMsg(msgId, '답변이 저장되었습니다.', true);
+  }catch(e){
+    console.error(e);
+    setMsg(msgId, '저장 중 오류가 발생했습니다.', false);
+  }
+};
 </script>
 
 </body>
