@@ -259,6 +259,7 @@
   }
   .dday-widget{
     width:100%;
+    min-width:0;
     background:var(--card);
     border:1px solid var(--line);
     border-radius:4px;
@@ -288,15 +289,20 @@
     position:relative;
     overflow:hidden;
     height:225px;
+    width:100%;
+    min-width:0;
   }
   .dday-slide-track{
     display:flex;
     align-items:flex-start;
     transition:transform .5s ease;
     height:100%;
+    width:100%;
+    min-width:0;
   }
   .dday-page{
     flex:0 0 100%;
+    min-width:0;
     box-sizing:border-box;
     height:100%;
     overflow:hidden;
@@ -323,6 +329,8 @@
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
+    min-width:0;
+    flex:1 1 auto;
   }
   .dday-row .dday-num{
     font-family:'Nanum Myeongjo',serif;
