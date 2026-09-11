@@ -67,6 +67,26 @@
     color:var(--ink-soft);
   }
   nav a:hover{color:var(--ink);}
+  nav .nav-btn{
+    margin-left:12px;
+    display:inline-block;
+    border:1px solid var(--gold);
+    color:var(--gold);
+    background:transparent;
+    padding:8px 18px;
+    border-radius:2px;
+    font-size:0.8rem;
+    font-weight:700;
+    letter-spacing:0.03em;
+    transition:background .15s, color .15s;
+  }
+  nav .nav-btn:hover{background:var(--gold);color:var(--charcoal-deep);}
+  nav .nav-btn.solid{
+    background:var(--gold);
+    color:var(--charcoal-deep);
+    border-color:var(--gold);
+  }
+  nav .nav-btn.solid:hover{background:var(--gold-soft);border-color:var(--gold-soft);}
 
   .section-eyebrow{
     font-size:0.7rem;
@@ -467,11 +487,11 @@
 <div id="siteContent" style="display:none;">
 
 <header>
-  <a href="index.html" class="brand"><span class="brand-sub">PREMIUM EXAM ARCHIVE</span>평촌 학원 연합 · 중간고사 대비</a>
+  <a href="index.html" class="brand"><span class="brand-sub">TEAM I:DEA</span>평촌 학원 연합 · 중간고사 대비</a>
   <nav>
     <span id="authWelcome" style="margin-right:16px;color:var(--ink-soft);font-size:0.85rem;"></span>
-    <a href="materials.html">자료실</a>
-    <a href="#scheduleSection">학교별 D-DAY</a>
+    <a href="materials.html" class="nav-btn solid">자료실</a>
+    <a href="#scheduleSection" class="nav-btn">학교별 D-DAY</a>
   </nav>
 </header>
 
@@ -521,14 +541,6 @@
   </div>
 </section>
 
-<section class="cta-section">
-  <div class="cta-inner">
-    <div class="section-eyebrow">EXAM MATERIALS</div>
-    <h2>실제 시험 대비 자료는 자료실에서</h2>
-    <p>학교별 · 과목별로 정리된 예상문제, 핵심정리, 해설영상을 자료실에서 확인하세요.</p>
-    <a href="materials.html" class="hero-cta solid">자료실로 이동</a>
-  </div>
-</section>
 
 <footer>
   <div>평촌 학원 연합 · 중간고사 대비 자료실</div>
