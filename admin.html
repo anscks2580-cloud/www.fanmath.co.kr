@@ -695,6 +695,57 @@
       </div>
     </div>
 
+    <div class="card">
+      <h3>📄 PDF 자료 등록</h3>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px;">
+        영어 자료처럼 영상이 아니라 PDF로 올리는 자료는 여기서 등록합니다. 파일을 올리면 Firebase Storage에 저장되고,
+        그 링크가 자동으로 자료실(exam) 목록에 "PDF" 표시와 함께 추가됩니다. 누르면 새 탭에서 PDF가 열립니다.
+      </div>
+      <div class="form-row" style="max-width:600px;">
+        <div class="form-group">
+          <label>학원</label>
+          <select id="exampdf-academy-select">
+            <option value="송우찬수학학원|수학">송우찬수학학원</option>
+            <option value="에이펙스영어학원|영어">에이펙스영어학원</option>
+            <option value="인어스수학학원|수학">인어스수학학원</option>
+            <option value="대치레몬학원|영어">대치레몬학원</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>학년</label>
+          <select id="exampdf-grade">
+            <option value="">학년 미지정</option>
+            <option value="고1">고1</option>
+            <option value="고2">고2</option>
+            <option value="고3">고3</option>
+            <option value="중1">중1</option>
+            <option value="중2">중2</option>
+            <option value="중3">중3</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>자료 유형</label>
+          <select id="exampdf-material-type">
+            <option value="고1 기출문제">고1 기출문제</option>
+            <option value="고2 기출문제">고2 기출문제</option>
+            <option value="유형정리">유형정리</option>
+            <option value="송우찬수학학원 보충">송우찬수학학원 보충</option>
+            <option value="인어스수학학원 보충">인어스수학학원 보충</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>자료명(제목)</label>
+          <input type="text" id="exampdf-title" placeholder="예: 성포고 1학기 중간 기출">
+        </div>
+        <div class="form-group">
+          <label>PDF 파일</label>
+          <input type="file" id="exampdf-file" accept="application/pdf">
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="uploadExamPdf()">📤 PDF 업로드 및 등록</button>
+      <div id="examPdfMsg" class="msg"></div>
+    </div>
+
     <div id="examMaterialAddMsg" class="msg"></div>
 
     <!-- 등록된 중간고사 자료 목록 -->
@@ -7212,6 +7263,49 @@ window.examSyncSaveAll = async () => {
   await loadExamMaterials();
 };
 
+// PDF 자료 업로드 (영어 자료실처럼 영상이 아니라 PDF로 올리는 경우).
+// Firebase Storage에 파일을 올리고, 그 다운로드 URL을 pdfUrl 필드로 examMaterials에 저장합니다.
+// vimeoId가 없는 자료는 자료실(materials.html)에서 자동으로 "PDF"로 인식해 새 탭으로 열어줍니다.
+window.uploadExamPdf = async () => {
+  const [academy, subject] = document.getElementById('exampdf-academy-select').value.split('|');
+  const grade = document.getElementById('exampdf-grade').value;
+  const materialType = document.getElementById('exampdf-material-type').value;
+  const title = document.getElementById('exampdf-title').value.trim();
+  const fileInput = document.getElementById('exampdf-file');
+  const file = fileInput.files[0];
+
+  if (!title || !file) {
+    showMsg('examPdfMsg', '자료명과 PDF 파일을 모두 입력해주세요.', 'error');
+    return;
+  }
+  if (file.type !== 'application/pdf') {
+    showMsg('examPdfMsg', 'PDF 파일만 업로드할 수 있습니다.', 'error');
+    return;
+  }
+
+  showMsg('examPdfMsg', '업로드 중...', 'success');
+  try {
+    const path = `examMaterials/pdf/${academy}/${Date.now()}_${file.name}`;
+    const fileRef = ref(storage, path);
+    await uploadBytes(fileRef, file);
+    const pdfUrl = await getDownloadURL(fileRef);
+
+    await addDoc(collection(db, 'examMaterials'), {
+      title, pdfUrl, academy, subject,
+      materialType: materialType || '',
+      grade, active: true,
+      order: Date.now(), createdAt: new Date().toISOString()
+    });
+
+    showMsg('examPdfMsg', '✅ PDF 자료가 등록되었습니다.', 'success');
+    document.getElementById('exampdf-title').value = '';
+    fileInput.value = '';
+    await loadExamMaterials();
+  } catch(e) {
+    showMsg('examPdfMsg', '업로드 실패: ' + e.message, 'error');
+  }
+};
+
 let examMaterialsCache = [];
 async function loadExamMaterials() {
   try {
@@ -7237,7 +7331,7 @@ async function loadExamMaterials() {
         ${groups[academy].map((v, i) => `
           <div class="student-item">
             <div class="student-name">${i+1}. ${v.title}</div>
-            <span class="student-meta" style="font-size:11px;">Vimeo: ${v.vimeoId}</span>
+            <span class="student-meta" style="font-size:11px;">${v.pdfUrl ? `📄 PDF <a href="${v.pdfUrl}" target="_blank" style="color:var(--gold);">열기</a>` : `Vimeo: ${v.vimeoId}`}</span>
             <select style="font-size:12px;" onchange="updateExamMaterialField('${v.id}','grade',this.value)">
               <option value="" ${!v.grade ? 'selected' : ''}>학년 미지정</option>
               <option value="고1" ${v.grade==='고1' ? 'selected' : ''}>고1</option>
