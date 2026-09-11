@@ -543,6 +543,25 @@
     font-size:0.78rem;
     color:var(--ink-soft);
   }
+  .material-row-actions{
+    display:flex;
+    gap:6px;
+    flex-shrink:0;
+  }
+  .material-action-btn{
+    font-size:0.72rem;
+    font-weight:700;
+    padding:5px 12px;
+    border-radius:20px;
+    border:1px solid var(--line);
+    color:var(--ink-soft);
+    text-decoration:none;
+    white-space:nowrap;
+    transition:border-color .12s, color .12s;
+  }
+  .material-action-btn:hover{border-color:var(--gold);color:var(--gold);}
+  .material-action-btn.download{border-color:var(--gold);color:var(--gold);}
+  .material-action-btn.download:hover{background:var(--gold);color:var(--charcoal-deep);}
   @media (max-width:600px){
     .material-row{flex-wrap:wrap;}
     .material-row-title{white-space:normal;order:1;flex-basis:100%;}
@@ -744,14 +763,20 @@ function renderSubjectNav(){
     e.target.style.background = academy ? academy.color : 'var(--gold)';
     e.target.style.color = academy ? '#fff' : 'var(--charcoal-deep)';
     currentSubjectFilter = subj;
+    currentTypeFilter = '';
+    renderTypeNav();
     renderMaterials();
   });
 }
 let currentSubjectFilter = '';
 renderSubjectNav();
 
-// 과목 하위 분류
-const MATERIAL_TYPES = ['고1 기출문제', '고2 기출문제', '유형정리', '송우찬수학학원 보충', '인어스수학학원 보충'];
+// 과목 하위 분류 — 수학은 자료 유형(기출문제/유형정리/보충) 기준, 영어는 학년 기준으로 나눕니다.
+const MATERIAL_TYPES_MATH = ['고1 기출문제', '고2 기출문제', '유형정리', '송우찬수학학원 보충', '인어스수학학원 보충'];
+const MATERIAL_TYPES_ENGLISH = ['중1', '중2', '중3', '고1', '고2', '고3'];
+function currentTypeField(){
+  return currentSubjectFilter === '영어' ? '학년' : '자료유형';
+}
 function renderTypeNav(){
   const nav = document.getElementById('typeNav');
   nav.innerHTML = '';
@@ -761,7 +786,8 @@ function renderTypeNav(){
   all.dataset.type = '';
   nav.appendChild(all);
 
-  MATERIAL_TYPES.forEach(t=>{
+  const types = currentSubjectFilter === '영어' ? MATERIAL_TYPES_ENGLISH : MATERIAL_TYPES_MATH;
+  types.forEach(t=>{
     const pill = document.createElement('div');
     pill.className = 'type-pill';
     pill.textContent = t;
@@ -812,7 +838,7 @@ function renderMaterials(){
 
   let items = ALL_ITEMS.filter(i=>{
     if(currentSubjectFilter && i['과목'] !== currentSubjectFilter) return false;
-    if(currentTypeFilter && i['자료유형'] !== currentTypeFilter) return false;
+    if(currentTypeFilter && i[currentTypeField()] !== currentTypeFilter) return false;
     if(grade && i['학년'] !== grade) return false;
     if(keyword && !(i['자료명']||'').toLowerCase().includes(keyword)) return false;
     return true;
@@ -870,10 +896,57 @@ function renderMaterials(){
       const list = document.createElement('div');
       list.className = 'material-list';
       gradeItems.forEach(item=>{
+        const vimeoId = extractVimeoId(item['링크']);
+        const isPdf = item['형식'] === 'PDF';
+        const rowAcademy = ACADEMIES.find(ac=>ac.school === item['학원명']);
+        const rowLogoHtml = rowAcademy && rowAcademy.logo
+          ? `<img src="${rowAcademy.logo}" alt="" style="width:16px;height:16px;border-radius:50%;object-fit:${rowAcademy.fit||'cover'};margin-right:5px;vertical-align:-3px;">`
+          : rowAcademy
+            ? `<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${rowAcademy.color};margin-right:5px;vertical-align:-2px;"></span>`
+            : '';
+        const formatBadge = isPdf
+          ? `<span style="font-size:0.66rem;font-weight:700;color:var(--gold);border:1px solid var(--gold);border-radius:20px;padding:1px 8px;margin-right:6px;vertical-align:1px;">PDF</span>`
+          : '';
+
+        if(isPdf){
+          // PDF는 클릭하면 바로 열리는 대신, 미리보기(새 탭에서 보기)/다운로드(파일로 저장)를 구분해서 제공합니다.
+          const row = document.createElement('div');
+          row.className = 'material-row';
+          row.innerHTML = `
+            <span class="grade-tag">${rowLogoHtml}${item['학원명']||''}</span>
+            ${formatBadge}<span class="material-row-title">${item['자료명']||'(제목 없음)'}</span>
+            <span class="meta">${item['업로드일']||''}</span>
+            <span class="material-row-actions">
+              <a class="material-action-btn" href="${item['링크']}" target="_blank" rel="noopener">미리보기</a>
+              <a class="material-action-btn download" href="#">다운로드</a>
+            </span>
+          `;
+          const downloadBtn = row.querySelector('.download');
+          downloadBtn.addEventListener('click', async (e)=>{
+            e.preventDefault();
+            try{
+              const res = await fetch(item['링크']);
+              const blob = await res.blob();
+              const blobUrl = URL.createObjectURL(blob);
+              const tempA = document.createElement('a');
+              tempA.href = blobUrl;
+              tempA.download = (item['자료명']||'자료') + '.pdf';
+              document.body.appendChild(tempA);
+              tempA.click();
+              document.body.removeChild(tempA);
+              URL.revokeObjectURL(blobUrl);
+            }catch(err){
+              // 브라우저/네트워크 사정으로 강제 다운로드가 안 되면 새 탭으로라도 열어줍니다.
+              window.open(item['링크'], '_blank');
+            }
+          });
+          list.appendChild(row);
+          return;
+        }
+
         const a = document.createElement('a');
         a.className = 'material-row';
         a.href = item['링크'] || '#';
-        const vimeoId = extractVimeoId(item['링크']);
         if(vimeoId){
           // 비메오 영상은 새 탭으로 보내지 않고 팝업(모달)로 재생합니다.
           a.addEventListener('click', (e)=>{
@@ -884,15 +957,6 @@ function renderMaterials(){
           a.target = '_blank';
           a.rel = 'noopener';
         }
-        const rowAcademy = ACADEMIES.find(ac=>ac.school === item['학원명']);
-        const rowLogoHtml = rowAcademy && rowAcademy.logo
-          ? `<img src="${rowAcademy.logo}" alt="" style="width:16px;height:16px;border-radius:50%;object-fit:${rowAcademy.fit||'cover'};margin-right:5px;vertical-align:-3px;">`
-          : rowAcademy
-            ? `<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${rowAcademy.color};margin-right:5px;vertical-align:-2px;"></span>`
-            : '';
-        const formatBadge = item['형식'] === 'PDF'
-          ? `<span style="font-size:0.66rem;font-weight:700;color:var(--gold);border:1px solid var(--gold);border-radius:20px;padding:1px 8px;margin-right:6px;vertical-align:1px;">PDF</span>`
-          : '';
         a.innerHTML = `
           <span class="grade-tag">${rowLogoHtml}${item['학원명']||''}</span>
           ${formatBadge}<span class="material-row-title">${item['자료명']||'(제목 없음)'}</span>
