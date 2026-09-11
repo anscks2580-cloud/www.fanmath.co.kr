@@ -662,10 +662,9 @@
           <label>학원</label>
           <select id="exam-academy-select" onchange="document.getElementById('exam-folder-name').value = this.value.split('|')[0];">
             <option value="송우찬수학학원|수학">송우찬수학학원</option>
-            <option value="에이펙스영어학원|영어">에이펙스영어학원</option>
             <option value="인어스수학학원|수학">인어스수학학원</option>
-            <option value="대치레몬학원|영어">대치레몬학원</option>
           </select>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">영어(에이펙스영어학원·대치레몬학원)는 영상 대신 PDF로만 등록합니다 — 아래 "PDF 자료 등록"을 이용하세요.</div>
         </div>
         <div class="form-group">
           <label>상위 폴더명 (하위 폴더 안에 있을 때만 입력)</label>
@@ -704,7 +703,7 @@
       <div class="form-row" style="max-width:600px;">
         <div class="form-group">
           <label>학원</label>
-          <select id="exampdf-academy-select">
+          <select id="exampdf-academy-select" onchange="updateExamPdfTypeOptions()">
             <option value="송우찬수학학원|수학">송우찬수학학원</option>
             <option value="에이펙스영어학원|영어">에이펙스영어학원</option>
             <option value="인어스수학학원|수학">인어스수학학원</option>
@@ -723,8 +722,8 @@
             <option value="중3">중3</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>자료 유형</label>
+        <div class="form-group" id="exampdf-materialtype-group">
+          <label>자료 유형 <span style="color:var(--muted);font-weight:400;">(영어는 학년으로만 구분되어 이 칸은 무시됩니다)</span></label>
           <select id="exampdf-material-type">
             <option value="고1 기출문제">고1 기출문제</option>
             <option value="고2 기출문제">고2 기출문제</option>
@@ -7272,10 +7271,19 @@ window.examSyncSaveAll = async () => {
 // vimeoId가 없는 자료는 자료실(materials.html)에서 자동으로 "PDF"로 인식해 새 탭으로 열어줍니다.
 // 파일을 여러 개 선택하면 순서대로 하나씩 업로드합니다. 자료명을 입력했고 파일이 1개일 때만
 // 그 제목을 쓰고, 그 외(제목 비움 또는 파일 여러 개)에는 각 파일명(확장자 제외)을 제목으로 사용합니다.
+// 학원(과목)에 따라 "자료 유형" 칸을 보여줄지 정합니다.
+// 영어는 materials.html에서 학년으로만 구분하므로 이 칸이 필요 없어 숨깁니다.
+window.updateExamPdfTypeOptions = function(){
+  const [, subject] = document.getElementById('exampdf-academy-select').value.split('|');
+  const group = document.getElementById('exampdf-materialtype-group');
+  if (!group) return;
+  group.style.display = subject === '영어' ? 'none' : '';
+};
+
 window.uploadExamPdf = async () => {
   const [academy, subject] = document.getElementById('exampdf-academy-select').value.split('|');
   const grade = document.getElementById('exampdf-grade').value;
-  const materialType = document.getElementById('exampdf-material-type').value;
+  const materialType = subject === '영어' ? '' : document.getElementById('exampdf-material-type').value;
   const titleInput = document.getElementById('exampdf-title').value.trim();
   const fileInput = document.getElementById('exampdf-file');
   const files = Array.from(fileInput.files || []);
@@ -7283,6 +7291,10 @@ window.uploadExamPdf = async () => {
 
   if (!files.length) {
     showMsg('examPdfMsg', 'PDF 파일을 1개 이상 선택해주세요.', 'error');
+    return;
+  }
+  if (subject === '영어' && !grade) {
+    showMsg('examPdfMsg', '영어 자료는 학년을 반드시 선택해주세요.', 'error');
     return;
   }
   const invalid = files.find(f => f.type !== 'application/pdf');
@@ -7338,6 +7350,7 @@ function renderExamPdfFileList(){
   const drop = document.getElementById('examPdfDrop');
   const input = document.getElementById('exampdf-file');
   if (!drop || !input) return;
+  window.updateExamPdfTypeOptions();
   input.addEventListener('change', renderExamPdfFileList);
   drop.addEventListener('dragover', e => { e.preventDefault(); drop.classList.add('drag'); });
   drop.addEventListener('dragleave', () => drop.classList.remove('drag'));
