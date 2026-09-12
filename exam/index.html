@@ -101,17 +101,20 @@
       margin-right:0 !important;
       width:100%;
       order:-1;
+      grid-column:1 / -1;
     }
     header nav{
-      display:flex;
-      flex-wrap:wrap;
+      display:grid;
+      grid-template-columns:1fr 1fr;
       gap:8px;
       width:100%;
     }
     header nav .nav-btn{
       margin-left:0;
-      padding:7px 12px;
+      padding:10px 8px;
       font-size:0.72rem;
+      text-align:center;
+      box-sizing:border-box;
     }
   }
 
@@ -150,12 +153,6 @@
     transition:background .15s, color .15s;
   }
   .hero-cta:hover{background:var(--gold);color:var(--charcoal-deep);}
-  .hero-cta.solid{
-    background:var(--navy);
-    color:var(--gold-soft);
-    border-color:var(--navy);
-  }
-  .hero-cta.solid:hover{background:var(--navy-soft);border-color:var(--navy-soft);color:var(--gold);}
 
   footer{
     padding:26px 6vw;
