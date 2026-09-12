@@ -131,14 +131,18 @@
   }
 
   .hero-cta{
-    display:inline-block;
+    display:block;
+    width:100%;
+    max-width:320px;
+    box-sizing:border-box;
+    text-align:center;
     border:1px solid var(--gold);
     color:var(--gold);
     background:transparent;
-    padding:13px 34px;
+    padding:16px 34px;
     border-radius:2px;
     text-decoration:none;
-    font-size:0.86rem;
+    font-size:0.92rem;
     font-weight:700;
     letter-spacing:0.08em;
     transition:background .15s, color .15s;
@@ -536,8 +540,8 @@
 <section class="hero">
   <div class="hero-inner-split">
     <div class="hero-copy">
-      <h1>2026년 2학기 <span class="accent">중간고사</span> 대비<br><span style="display:inline-block;margin-top:14px;font-size:0.62em;font-weight:600;letter-spacing:0.03em;color:var(--ink-soft);">All in one project by Team IDEA</span></h1>
-      <div style="margin-top:28px;display:flex;gap:12px;flex-wrap:wrap;">
+      <h1>2026년 2학기<br><span class="accent">중간고사</span>대비<br><span style="display:inline-block;margin-top:14px;font-size:0.62em;font-weight:600;letter-spacing:0.03em;color:var(--ink-soft);">All in one project by Team IDEA</span></h1>
+      <div class="hero-cta-row" style="margin-top:28px;display:flex;flex-direction:column;gap:12px;align-items:flex-start;">
         <a href="materials.html" class="hero-cta solid">자료실 바로가기</a>
         <a href="qna.html" class="hero-cta">질문 게시판</a>
         <a href="motivation.html" class="hero-cta">공부하기 싫을때</a>
