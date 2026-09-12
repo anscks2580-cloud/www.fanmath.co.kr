@@ -87,6 +87,31 @@
     border-color:var(--gold);
   }
   nav .nav-btn.solid:hover{background:var(--gold-soft);border-color:var(--gold-soft);}
+
+  @media (max-width:640px){
+    header{
+      flex-direction:column;
+      align-items:flex-start;
+      gap:10px;
+      padding:14px 5vw;
+    }
+    #authWelcome{
+      margin-right:0 !important;
+      width:100%;
+      order:-1;
+    }
+    header nav{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      width:100%;
+    }
+    header nav .nav-btn, header nav .back-home-link{
+      margin-left:0;
+      padding:7px 12px;
+      font-size:0.72rem;
+    }
+  }
   .back-home-link{
     display:inline-flex;
     align-items:center;
