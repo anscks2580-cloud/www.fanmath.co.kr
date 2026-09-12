@@ -460,6 +460,86 @@
     border-bottom:1px solid var(--line);
   }
 
+  /* ── MOTIVATION ── */
+  .motivation-section{
+    max-width:1180px;
+    margin:0 auto;
+    padding:56px 6vw 72px;
+    border-top:1px solid var(--line);
+  }
+  .motiv-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(240px, 1fr));
+    gap:20px;
+  }
+  .motiv-card{
+    display:block;
+    text-align:left;
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:8px;
+    overflow:hidden;
+    cursor:pointer;
+    text-decoration:none;
+    color:inherit;
+    transition:transform 0.15s ease, border-color 0.15s ease;
+  }
+  .motiv-card:hover{
+    transform:translateY(-2px);
+    border-color:var(--gold);
+  }
+  .motiv-thumb{
+    position:relative;
+    width:100%;
+    padding-top:56.25%;
+    background:#000;
+    overflow:hidden;
+  }
+  .motiv-thumb img{
+    position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;
+  }
+  .motiv-thumb .play-badge{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    font-size:2.2rem;color:#fff;text-shadow:0 2px 8px rgba(0,0,0,0.6);
+    background:linear-gradient(rgba(0,0,0,0.05),rgba(0,0,0,0.25));
+  }
+  .motiv-body{
+    padding:12px 14px 14px;
+  }
+  .motiv-title{
+    font-size:0.9rem;
+    font-weight:700;
+    color:var(--ink);
+    margin-bottom:6px;
+    display:-webkit-box;
+    -webkit-line-clamp:2;
+    -webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .motiv-meta{
+    font-size:0.72rem;
+    color:var(--ink-soft);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .motiv-delete{
+    background:transparent;
+    border:none;
+    color:var(--ink-soft);
+    font-size:0.7rem;
+    cursor:pointer;
+    text-decoration:underline;
+  }
+  .motiv-delete:hover{color:var(--coral);}
+  .motiv-empty{
+    grid-column:1/-1;
+    text-align:center;
+    color:var(--ink-soft);
+    font-size:0.88rem;
+    padding:24px 0;
+  }
+
   .cta-section{
     background:var(--paper-soft);
     border-top:1px solid var(--line);
@@ -494,6 +574,20 @@
     <input type="password" id="authCodeInput" placeholder="인증번호" autocomplete="off">
     <button class="auth-btn" onclick="tryAuth()">입장하기</button>
     <div class="auth-error" id="authError"></div>
+  </div>
+</div>
+
+<!-- ── 유튜브 영상 팝업 모달 (동기부여 섹션용) ── -->
+<div id="youtubeModal" style="display:none;position:fixed;inset:0;z-index:1000;align-items:center;justify-content:center;">
+  <div id="youtubeModalOverlay" style="position:absolute;inset:0;background:rgba(12,11,8,0.82);"></div>
+  <div style="position:relative;width:min(90vw,1000px);background:#000;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--charcoal-deep);">
+      <div id="youtubeModalTitle" style="color:#fff;font-size:0.92rem;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:12px;"></div>
+      <button id="youtubeModalClose" aria-label="닫기" style="flex-shrink:0;border:none;background:transparent;color:#fff;font-size:1.4rem;line-height:1;cursor:pointer;padding:4px 8px;">✕</button>
+    </div>
+    <div style="position:relative;width:100%;padding-top:56.25%;">
+      <iframe id="youtubeModalFrame" src="" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+    </div>
   </div>
 </div>
 
@@ -558,6 +652,21 @@
   </div>
 </section>
 
+<section class="motivation-section" id="motivationSection">
+  <div class="section-eyebrow">MOTIVATION</div>
+  <div class="section-heading">동기부여 영상 &amp; 아티클</div>
+  <div id="motivationTeacherBar" style="display:none;max-width:640px;margin:0 auto 28px;padding:16px;border:1px solid var(--line);border-radius:8px;background:var(--paper-soft);">
+    <div style="font-size:0.8rem;color:var(--ink-soft);margin-bottom:10px;">선생님만 볼 수 있는 업로드 창입니다 — 유튜브 영상 링크를 등록하면 모두에게 바로 노출됩니다.</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <input type="text" id="motivTitle" placeholder="영상 제목" style="flex:1;min-width:160px;padding:9px 10px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);">
+      <input type="text" id="motivUrl" placeholder="유튜브 링크 (https://youtube.com/watch?v=...)" style="flex:2;min-width:220px;padding:9px 10px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);">
+      <button class="hero-cta solid" style="padding:9px 20px;font-size:0.82rem;" onclick="addMotivationVideo()">등록</button>
+    </div>
+    <div id="motivMsg" style="font-size:0.78rem;margin-top:8px;color:var(--gold);"></div>
+  </div>
+  <div class="motiv-grid" id="motivationList"></div>
+</section>
+
 
 <footer>
   <div>평촌 학원 연합 · 중간고사 대비 자료실</div>
@@ -583,11 +692,20 @@ const STUDENT_CODES = {
   "LEMON2026": "대치레몬학원",
 };
 
+let currentRole = null;
+let currentAcademyName = null;
+
 function showSite(academyName, role){
+  currentRole = role;
+  currentAcademyName = academyName;
   document.getElementById('authGate').style.display = 'none';
   document.getElementById('siteContent').style.display = 'block';
   const roleLabel = role === 'student' ? '학생' : '선생님';
   document.getElementById('authWelcome').textContent = academyName ? `${academyName} ${roleLabel}, 안녕하세요` : '';
+  if(role === 'teacher'){
+    document.getElementById('motivationTeacherBar').style.display = 'block';
+  }
+  loadMotivationVideos();
 }
 
 // 대소문자 구분 없이 매칭하기 위해 코드를 대문자로 정규화한 조회용 맵을 만듭니다.
@@ -802,6 +920,134 @@ function renderCollabRow(){
   });
 }
 renderCollabRow();
+
+// ── 동기부여 섹션 (Firebase songmath 프로젝트 공용) ──
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
+  authDomain: "songmath.firebaseapp.com",
+  projectId: "songmath",
+  storageBucket: "songmath.firebasestorage.app",
+  messagingSenderId: "936295436575",
+  appId: "1:936295436575:web:d1e201508719850cfbe02a"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// 유튜브 URL/ID 문자열에서 11자리 영상 ID만 뽑아냅니다.
+function extractYoutubeId(input){
+  if(!input) return null;
+  const trimmed = input.trim();
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=)([\w-]{11})/,
+    /(?:youtu\.be\/)([\w-]{11})/,
+    /(?:youtube\.com\/shorts\/)([\w-]{11})/,
+    /(?:youtube\.com\/embed\/)([\w-]{11})/,
+  ];
+  for(const p of patterns){
+    const m = trimmed.match(p);
+    if(m) return m[1];
+  }
+  // 이미 순수 ID(11자)만 입력한 경우
+  if(/^[\w-]{11}$/.test(trimmed)) return trimmed;
+  return null;
+}
+
+let motivationCache = [];
+
+async function loadMotivationVideos(){
+  const el = document.getElementById('motivationList');
+  if(!el) return;
+  el.innerHTML = '<div class="motiv-empty">불러오는 중...</div>';
+  try{
+    const snap = await getDocs(query(collection(db, 'motivationVideos'), orderBy('createdAt', 'desc')));
+    const list = [];
+    snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+    motivationCache = list;
+    renderMotivationList();
+  }catch(e){
+    el.innerHTML = `<div class="motiv-empty">불러오기 오류: ${e.message}</div>`;
+  }
+}
+
+function renderMotivationList(){
+  const el = document.getElementById('motivationList');
+  if(!el) return;
+  if(!motivationCache.length){
+    el.innerHTML = '<div class="motiv-empty">아직 등록된 영상이 없습니다. 선생님이 로그인하면 위에서 영상을 등록할 수 있어요.</div>';
+    return;
+  }
+  el.innerHTML = motivationCache.map(v => `
+    <div class="motiv-card" onclick="openYoutubeModal('${v.youtubeId}', '${(v.title||'').replace(/'/g,"\\'")}')">
+      <div class="motiv-thumb">
+        <img src="https://img.youtube.com/vi/${v.youtubeId}/hqdefault.jpg" alt="${(v.title||'').replace(/"/g,'&quot;')}" loading="lazy">
+        <div class="play-badge">▶</div>
+      </div>
+      <div class="motiv-body">
+        <div class="motiv-title">${v.title || '(제목 없음)'}</div>
+        <div class="motiv-meta">
+          <span>${v.academy || ''}</span>
+          ${currentRole === 'teacher' ? `<button class="motiv-delete" onclick="event.stopPropagation();deleteMotivationVideo('${v.id}')">삭제</button>` : ''}
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+window.addMotivationVideo = async function(){
+  const msgEl = document.getElementById('motivMsg');
+  const titleInput = document.getElementById('motivTitle');
+  const urlInput = document.getElementById('motivUrl');
+  const title = titleInput.value.trim();
+  const youtubeId = extractYoutubeId(urlInput.value);
+
+  if(!title){ msgEl.textContent = '⚠️ 제목을 입력해주세요.'; return; }
+  if(!youtubeId){ msgEl.textContent = '⚠️ 올바른 유튜브 링크를 입력해주세요.'; return; }
+
+  msgEl.textContent = '등록 중...';
+  try{
+    await addDoc(collection(db, 'motivationVideos'), {
+      title, youtubeId,
+      academy: currentAcademyName || '',
+      createdAt: new Date().toISOString()
+    });
+    titleInput.value = '';
+    urlInput.value = '';
+    msgEl.textContent = '✅ 등록 완료';
+    await loadMotivationVideos();
+  }catch(e){
+    msgEl.textContent = '❌ 등록 실패: ' + e.message;
+  }
+};
+
+window.deleteMotivationVideo = async function(id){
+  if(!confirm('이 영상을 삭제하시겠습니까?')) return;
+  try{
+    await deleteDoc(doc(db, 'motivationVideos', id));
+    await loadMotivationVideos();
+  }catch(e){
+    alert('삭제 오류: ' + e.message);
+  }
+};
+
+window.openYoutubeModal = function(youtubeId, title){
+  const modal = document.getElementById('youtubeModal');
+  const frame = document.getElementById('youtubeModalFrame');
+  const titleEl = document.getElementById('youtubeModalTitle');
+  frame.src = `https://www.youtube.com/embed/${youtubeId}?autoplay=1`;
+  titleEl.textContent = title || '';
+  modal.style.display = 'flex';
+};
+
+function closeYoutubeModal(){
+  const modal = document.getElementById('youtubeModal');
+  const frame = document.getElementById('youtubeModalFrame');
+  modal.style.display = 'none';
+  frame.src = '';
+}
+document.getElementById('youtubeModalOverlay').addEventListener('click', closeYoutubeModal);
+document.getElementById('youtubeModalClose').addEventListener('click', closeYoutubeModal);
 </script>
 
 </body>

@@ -900,7 +900,7 @@ function renderMaterials(){
         const isPdf = item['형식'] === 'PDF';
         const rowAcademy = ACADEMIES.find(ac=>ac.school === item['학원명']);
         const rowLogoHtml = rowAcademy && rowAcademy.logo
-          ? `<img src="${rowAcademy.logo}" alt="" style="width:16px;height:16px;border-radius:50%;object-fit:${rowAcademy.fit||'cover'};margin-right:5px;vertical-align:-3px;">`
+          ? `<img src="${rowAcademy.logo}" alt="" style="width:16px;height:16px;border-radius:50%;object-fit:${rowAcademy.fit||'cover'};margin-right:5px;vertical-align:-3px;background:#fff;">`
           : rowAcademy
             ? `<span style="display:inline-block;width:14px;height:14px;border-radius:50%;background:${rowAcademy.color};margin-right:5px;vertical-align:-2px;"></span>`
             : '';
