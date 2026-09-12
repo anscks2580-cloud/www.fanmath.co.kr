@@ -664,12 +664,19 @@
         </div>
         <div class="form-group">
           <label>자료 유형</label>
-          <select id="exam-material-type">
+          <select id="exam-material-type" onchange="updateExamYearVisibility('exam-material-type','exam-year-group')">
             <option value="고1 기출문제">고1 기출문제</option>
             <option value="고2 기출문제">고2 기출문제</option>
             <option value="유형정리">유형정리</option>
             <option value="송우찬수학학원 보충">송우찬수학학원 보충</option>
             <option value="인어스수학학원 보충">인어스수학학원 보충</option>
+          </select>
+        </div>
+        <div class="form-group" id="exam-year-group">
+          <label>연도</label>
+          <select id="exam-year">
+            <option value="2025">2025년</option>
+            <option value="2024">2024년</option>
           </select>
         </div>
       </div>
@@ -738,12 +745,19 @@
         </div>
         <div class="form-group" id="exampdf-materialtype-group">
           <label>자료 유형 <span style="color:var(--muted);font-weight:400;">(영어는 학년으로만 구분되어 이 칸은 무시됩니다)</span></label>
-          <select id="exampdf-material-type">
+          <select id="exampdf-material-type" onchange="updateExamYearVisibility('exampdf-material-type','exampdf-year-group')">
             <option value="고1 기출문제">고1 기출문제</option>
             <option value="고2 기출문제">고2 기출문제</option>
             <option value="유형정리">유형정리</option>
             <option value="송우찬수학학원 보충">송우찬수학학원 보충</option>
             <option value="인어스수학학원 보충">인어스수학학원 보충</option>
+          </select>
+        </div>
+        <div class="form-group" id="exampdf-year-group">
+          <label>연도</label>
+          <select id="exampdf-year">
+            <option value="2025">2025년</option>
+            <option value="2024">2024년</option>
           </select>
         </div>
         <div class="form-group">
@@ -7296,6 +7310,7 @@ async function findExamFolderByName(folderName, topFolders, parentName, onProgre
 
 window.syncExamFolder = async () => {
   const materialType = document.getElementById('exam-material-type').value;
+  const year = YEAR_FILTERABLE_TYPES.includes(materialType) ? document.getElementById('exam-year').value : '';
   const statusEl  = document.getElementById('examSyncStatus');
   const previewEl = document.getElementById('examSyncPreview');
   previewEl.style.display = 'none';
@@ -7327,7 +7342,7 @@ window.syncExamFolder = async () => {
       for (const v of videos) {
         const vimeoId = v.uri.replace('/videos/', '');
         if (existingIds.has(vimeoId)) continue;
-        examSyncCandidates.push({ vimeoId, title: v.name, academy, subject, materialType });
+        examSyncCandidates.push({ vimeoId, title: v.name, academy, subject, materialType, year });
       }
     }
 
@@ -7375,7 +7390,7 @@ function renderExamSyncPreview() {
     <div style="margin-bottom:14px;">
       <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:1px;
         padding:5px 0;border-bottom:1px solid rgba(240,192,64,0.2);margin-bottom:4px;">
-        ${academy} <span style="font-weight:400;color:var(--muted);">${items.length}개 · ${items[0].materialType}</span>
+        ${academy} <span style="font-weight:400;color:var(--muted);">${items.length}개 · ${items[0].materialType}${items[0].year ? ' · ' + items[0].year + '년' : ''}</span>
       </div>
       ${items.map(v => `
         <div style="display:flex;align-items:center;gap:8px;padding:6px 4px;
@@ -7417,7 +7432,7 @@ window.examSyncSaveAll = async () => {
       const order = nextOrder(v.academy);
       await addDoc(collection(db, 'examMaterials'), {
         title, vimeoId: v.vimeoId, academy: v.academy, subject: v.subject,
-        materialType: v.materialType || '',
+        materialType: v.materialType || '', year: v.year || '',
         grade: extractExamGrade(title), active: true,
         order, createdAt: new Date().toISOString()
       });
@@ -7442,12 +7457,25 @@ window.updateExamPdfTypeOptions = function(){
   const group = document.getElementById('exampdf-materialtype-group');
   if (!group) return;
   group.style.display = subject === '영어' ? 'none' : '';
+  const yearGroup = document.getElementById('exampdf-year-group');
+  if (yearGroup) {
+    yearGroup.style.display = (subject !== '영어' && YEAR_FILTERABLE_TYPES.includes(document.getElementById('exampdf-material-type').value)) ? '' : 'none';
+  }
+};
+
+// 고1/고2 기출문제일 때만 "연도" 선택 칸을 보여줍니다. (자료 유형 select의 onchange에서 호출)
+const YEAR_FILTERABLE_TYPES = ['고1 기출문제', '고2 기출문제'];
+window.updateExamYearVisibility = function(typeSelectId, yearGroupId){
+  const typeVal = document.getElementById(typeSelectId).value;
+  const yearGroup = document.getElementById(yearGroupId);
+  if (yearGroup) yearGroup.style.display = YEAR_FILTERABLE_TYPES.includes(typeVal) ? '' : 'none';
 };
 
 window.uploadExamPdf = async () => {
   const [academy, subject] = document.getElementById('exampdf-academy-select').value.split('|');
   const grade = document.getElementById('exampdf-grade').value;
   const materialType = subject === '영어' ? '' : document.getElementById('exampdf-material-type').value;
+  const year = (subject !== '영어' && YEAR_FILTERABLE_TYPES.includes(materialType)) ? document.getElementById('exampdf-year').value : '';
   const titleInput = document.getElementById('exampdf-title').value.trim();
   const fileInput = document.getElementById('exampdf-file');
   const files = Array.from(fileInput.files || []);
@@ -7480,7 +7508,7 @@ window.uploadExamPdf = async () => {
     try {
       await addDoc(collection(db, 'examMaterials'), {
         title, academy, subject,
-        materialType: materialType || '',
+        materialType: materialType || '', year: year || '',
         grade, active: true,
         order: base + i, createdAt: new Date().toISOString()
       });
@@ -7600,6 +7628,12 @@ async function loadExamMaterials() {
                       <option value="송우찬수학학원 보충" ${v.materialType==='송우찬수학학원 보충' ? 'selected' : ''}>송우찬수학학원 보충</option>
                       <option value="인어스수학학원 보충" ${v.materialType==='인어스수학학원 보충' ? 'selected' : ''}>인어스수학학원 보충</option>
                     </select>
+                    ${YEAR_FILTERABLE_TYPES.includes(v.materialType) ? `
+                    <select style="font-size:12px;" onchange="updateExamMaterialField('${v.id}','year',this.value)">
+                      <option value="" ${!v.year ? 'selected' : ''}>연도 미지정</option>
+                      <option value="2025" ${v.year==='2025' ? 'selected' : ''}>2025년</option>
+                      <option value="2024" ${v.year==='2024' ? 'selected' : ''}>2024년</option>
+                    </select>` : ''}
                     <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer;">
                       <input type="checkbox" ${v.active !== false ? 'checked' : ''} onchange="toggleExamMaterialActive('${v.id}', this.checked)"> 자료실에 노출
                     </label>
@@ -7633,6 +7667,8 @@ window.updateExamMaterialField = async function(id, field, value) {
     await updateDoc(doc(db, 'examMaterials', id), { [field]: value });
     const item = examMaterialsCache.find(v => v.id === id);
     if (item) item[field] = value;
+    // 자료유형을 바꾸면(고1/고2 기출문제 ↔ 그 외) 연도 선택 칸이 보이거나 사라져야 하므로 다시 그립니다.
+    if (field === 'materialType') await loadExamMaterials();
   } catch(e) {
     alert('변경 오류: ' + e.message);
     loadExamMaterials();
