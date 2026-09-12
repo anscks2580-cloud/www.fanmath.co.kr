@@ -709,10 +709,10 @@
     </div>
 
     <div class="card">
-      <h3>📄 PDF 자료 등록</h3>
+      <h3>📄 PDF 자료명 등록</h3>
       <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px;">
-        영어 자료처럼 영상이 아니라 PDF로 올리는 자료는 여기서 등록합니다. 파일을 올리면 Firebase Storage에 저장되고,
-        그 링크가 자동으로 자료실(exam) 목록에 "PDF" 표시와 함께 추가됩니다. 누르면 새 탭에서 PDF가 열립니다.
+        저작권 문제로 PDF 파일 자체는 서버에 올리지 않습니다. 아래에서 PDF를 선택하면 <b style="color:var(--gold);">파일명만 자동으로 따서</b> 자료실(exam) 목록에 이름만 등록되고,
+        학생은 해당 자료를 담당 학원 선생님께 직접 요청해야 합니다.
       </div>
       <div class="form-row" style="max-width:600px;">
         <div class="form-group">
@@ -747,18 +747,18 @@
           </select>
         </div>
         <div class="form-group">
-          <label>자료명(제목) <span style="color:var(--muted);font-weight:400;">— 파일 여러 개 선택 시에는 비워두면 파일명이 자동으로 제목이 됩니다</span></label>
-          <input type="text" id="exampdf-title" placeholder="예: 성포고 1학기 중간 기출">
+          <label>자료명(제목) <span style="color:var(--muted);font-weight:400;">— 비워두면 선택한 PDF 파일명이 자동으로 제목이 됩니다</span></label>
+          <input type="text" id="exampdf-title" placeholder="예: 성포고 1학기 중간 기출 (비워두면 파일명 사용)">
         </div>
       </div>
       <div class="excel-drop" id="examPdfDrop" onclick="document.getElementById('exampdf-file').click()">
         <div class="excel-drop-icon">📄</div>
         <p>클릭하거나 PDF 파일을 여기로 드래그하세요</p>
-        <small>.pdf 파일 지원 · 여러 개 한 번에 선택 가능</small>
+        <small>파일은 저장되지 않고 제목만 가져옵니다 · 여러 개 한 번에 선택 가능</small>
       </div>
       <input type="file" id="exampdf-file" accept="application/pdf" multiple style="display:none;">
       <div id="examPdfFileList" style="font-size:12px;color:var(--muted);margin-bottom:12px;"></div>
-      <button class="btn btn-primary" onclick="uploadExamPdf()">📤 PDF 업로드 및 등록</button>
+      <button class="btn btn-primary" onclick="uploadExamPdf()">📋 제목만 자료실에 등록</button>
       <div id="examPdfMsg" class="msg"></div>
       <div id="examPdfProgress" style="font-size:12px;color:var(--muted);margin-top:8px;"></div>
     </div>
@@ -7454,7 +7454,7 @@ window.uploadExamPdf = async () => {
   const progressEl = document.getElementById('examPdfProgress');
 
   if (!files.length) {
-    showMsg('examPdfMsg', 'PDF 파일을 1개 이상 선택해주세요.', 'error');
+    showMsg('examPdfMsg', 'PDF 파일을 1개 이상 선택해주세요. (파일은 저장되지 않고 제목만 가져옵니다)', 'error');
     return;
   }
   if (subject === '영어' && !grade) {
@@ -7463,38 +7463,34 @@ window.uploadExamPdf = async () => {
   }
   const invalid = files.find(f => f.type !== 'application/pdf');
   if (invalid) {
-    showMsg('examPdfMsg', `PDF 파일만 업로드할 수 있습니다. (문제 파일: ${invalid.name})`, 'error');
+    showMsg('examPdfMsg', `PDF 파일만 선택할 수 있습니다. (문제 파일: ${invalid.name})`, 'error');
     return;
   }
 
+  // 저작권 문제로 파일 자체는 Storage에 올리지 않고, 파일명에서 제목만 뽑아 목록에 등록합니다.
+  // 실제 자료는 exam 페이지에 노출되지 않으며, 학생은 담당 선생님께 직접 요청해야 합니다.
   const useSingleTitle = files.length === 1 && titleInput;
-  showMsg('examPdfMsg', '업로드 중...', 'success');
   let saved = 0;
   const base = Date.now();
 
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     const title = useSingleTitle ? titleInput : file.name.replace(/\.pdf$/i, '');
-    progressEl.textContent = `(${i+1}/${files.length}) ${file.name} 업로드 중...`;
+    progressEl.textContent = `(${i+1}/${files.length}) "${title}" 등록 중...`;
     try {
-      const path = `examMaterials/pdf/${academy}/${base}_${i}_${file.name}`;
-      const fileRef = ref(storage, path);
-      await uploadBytes(fileRef, file);
-      const pdfUrl = await getDownloadURL(fileRef);
-
       await addDoc(collection(db, 'examMaterials'), {
-        title, pdfUrl, academy, subject,
+        title, academy, subject,
         materialType: materialType || '',
         grade, active: true,
         order: base + i, createdAt: new Date().toISOString()
       });
       saved++;
     } catch(e) {
-      progressEl.textContent = `⚠️ "${file.name}" 업로드 실패: ${e.message}`;
+      progressEl.textContent = `⚠️ "${file.name}" 등록 실패: ${e.message}`;
     }
   }
 
-  showMsg('examPdfMsg', `✅ ${saved}/${files.length}개 PDF 자료가 등록되었습니다.`, 'success');
+  showMsg('examPdfMsg', `✅ ${saved}/${files.length}개 자료명이 등록되었습니다. (파일은 저장되지 않았습니다 — 학생은 담당 선생님께 직접 요청)`, 'success');
   progressEl.textContent = '';
   document.getElementById('exampdf-title').value = '';
   fileInput.value = '';
