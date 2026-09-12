@@ -21,6 +21,8 @@
     --card:#161E2E;
     --gold:#D2AF6E;
     --gold-soft:#E4D3AC;
+    --navy:#22355C;
+    --navy-soft:#2C4270;
     --charcoal:#15130F;
     --charcoal-deep:#0C0B08;
   }
@@ -70,23 +72,23 @@
   nav .nav-btn{
     margin-left:12px;
     display:inline-block;
-    border:1px solid var(--gold);
-    color:var(--gold);
-    background:transparent;
+    border:1px solid var(--navy);
+    color:var(--gold-soft);
+    background:var(--navy);
     padding:8px 18px;
     border-radius:2px;
     font-size:0.8rem;
     font-weight:700;
     letter-spacing:0.03em;
-    transition:background .15s, color .15s;
+    transition:background .15s, color .15s, border-color .15s;
   }
-  nav .nav-btn:hover{background:var(--gold);color:var(--charcoal-deep);}
+  nav .nav-btn:hover{background:var(--navy-soft);border-color:var(--navy-soft);color:var(--gold);}
   nav .nav-btn.solid{
-    background:var(--gold);
-    color:var(--charcoal-deep);
-    border-color:var(--gold);
+    background:var(--navy);
+    color:var(--gold-soft);
+    border-color:var(--navy);
   }
-  nav .nav-btn.solid:hover{background:var(--gold-soft);border-color:var(--gold-soft);}
+  nav .nav-btn.solid:hover{background:var(--navy-soft);border-color:var(--navy-soft);color:var(--gold);}
 
   @media (max-width:640px){
     header{
@@ -149,11 +151,11 @@
   }
   .hero-cta:hover{background:var(--gold);color:var(--charcoal-deep);}
   .hero-cta.solid{
-    background:var(--gold);
-    color:var(--charcoal-deep);
-    border-color:var(--gold);
+    background:var(--navy);
+    color:var(--gold-soft);
+    border-color:var(--navy);
   }
-  .hero-cta.solid:hover{background:var(--gold-soft);border-color:var(--gold-soft);}
+  .hero-cta.solid:hover{background:var(--navy-soft);border-color:var(--navy-soft);color:var(--gold);}
 
   footer{
     padding:26px 6vw;
@@ -541,7 +543,7 @@
   <div class="hero-inner-split">
     <div class="hero-copy">
       <h1>2026년 2학기<br><span class="accent">중간고사</span>대비<br><span style="display:inline-block;margin-top:14px;font-size:0.62em;font-weight:600;letter-spacing:0.03em;color:var(--ink-soft);">All in one project by Team IDEA</span></h1>
-      <div class="hero-cta-row" style="margin-top:28px;display:flex;flex-direction:column;gap:12px;align-items:flex-start;">
+      <div class="hero-cta-row" style="margin-top:28px;display:flex;flex-direction:column;gap:12px;align-items:center;">
         <a href="materials.html" class="hero-cta solid">자료실 바로가기</a>
         <a href="qna.html" class="hero-cta">질문 게시판</a>
         <a href="motivation.html" class="hero-cta">공부하기 싫을때</a>
