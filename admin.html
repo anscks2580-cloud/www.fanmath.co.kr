@@ -753,7 +753,12 @@
 
     <!-- 등록된 중간고사 자료 목록 -->
     <div class="card">
-      <h3>📚 등록된 중간고사 자료 (<span id="examMaterialCount">0</span>개) <span style="font-size:12px;font-weight:400;color:var(--muted);">— 학원별로 묶어서 보여드려요. 화살표로 학원 내 순서 조정</span></h3>
+      <h3>📚 등록된 중간고사 자료 (<span id="examMaterialCount">0</span>개) <span style="font-size:12px;font-weight:400;color:var(--muted);">— 강의 목록과 동일하게 학원별로 묶어서 보여드려요. 순서 칸에 숫자를 입력하고 저장하면 그 번호로 정렬됩니다.</span></h3>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+        padding:10px 14px;background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);
+        border-radius:8px;margin-bottom:12px;">
+        <button class="btn btn-secondary btn-sm" onclick="bulkSaveExamMaterialOrder()" style="background:rgba(240,192,64,0.15);border-color:var(--gold);color:var(--gold);">📋 순서·제목 일괄 저장</button>
+      </div>
       <div id="examMaterialList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
     </div>
   </div>
@@ -7408,9 +7413,17 @@ async function loadExamMaterials() {
               </summary>
               <div style="padding-bottom:10px;">
                 ${groups[academy].map((v, i) => `
-                  <div class="student-item">
-                    <div class="student-name">${i+1}. ${v.title}</div>
-                    <span class="student-meta" style="font-size:11px;">${v.pdfUrl ? `📄 PDF <a href="${v.pdfUrl}" target="_blank" style="color:var(--gold);">열기</a>` : `Vimeo: ${v.vimeoId}`}</span>
+                  <div class="assign-item" style="flex-wrap:wrap;gap:8px;align-items:center;
+                    border-top:1px solid rgba(255,255,255,0.04);">
+                    <input id="order-em-${v.id}" type="number" min="1" value="${v.order != null ? v.order : ''}"
+                      placeholder="순서"
+                      style="width:52px;padding:4px 6px;background:#1A1230;border:1px solid rgba(255,255,255,0.15);
+                        border-radius:6px;color:var(--gold);font-size:12px;font-family:inherit;text-align:center;
+                        -moz-appearance:textfield;color-scheme:dark;">
+                    <input id="title-em-${v.id}" type="text" value="${(v.title||'').replace(/"/g,'&quot;')}"
+                      style="flex:1;min-width:160px;padding:4px 8px;background:#1A1230;border:1px solid rgba(255,255,255,0.15);
+                        border-radius:6px;color:var(--off-white);font-size:12px;font-family:inherit;color-scheme:dark;">
+                    <span class="student-meta" style="font-size:11px;flex-shrink:0;">${v.pdfUrl ? `📄 PDF <a href="${v.pdfUrl}" target="_blank" style="color:var(--gold);">열기</a>` : `Vimeo: ${v.vimeoId}`}</span>
                     <select style="font-size:12px;" onchange="updateExamMaterialField('${v.id}','grade',this.value)">
                       <option value="" ${!v.grade ? 'selected' : ''}>학년 미지정</option>
                       <option value="고1" ${v.grade==='고1' ? 'selected' : ''}>고1</option>
@@ -7435,8 +7448,7 @@ async function loadExamMaterials() {
                     <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer;">
                       <input type="checkbox" ${v.active !== false ? 'checked' : ''} onchange="toggleExamMaterialActive('${v.id}', this.checked)"> 자료실에 노출
                     </label>
-                    <button class="btn btn-sm" ${i===0 ? 'disabled' : ''} onclick="moveExamMaterial('${academy}', ${i}, -1)">▲</button>
-                    <button class="btn btn-sm" ${i===groups[academy].length-1 ? 'disabled' : ''} onclick="moveExamMaterial('${academy}', ${i}, 1)">▼</button>
+                    <button class="btn btn-secondary btn-sm" onclick="saveExamMaterialRow('${v.id}')" style="background:rgba(240,192,64,0.15);border-color:var(--gold);color:var(--gold);">저장</button>
                     <button class="btn btn-danger btn-sm" onclick="deleteExamMaterial('${v.id}','${(v.title||'').replace(/'/g,"\\'")}')">삭제</button>
                   </div>`).join('')}
               </div>
@@ -7472,17 +7484,126 @@ window.updateExamMaterialField = async function(id, field, value) {
   }
 };
 
-window.moveExamMaterial = async function(academy, index, dir) {
-  const groupList = examMaterialsCache.filter(v => v.academy === academy);
-  const other = index + dir;
-  if (other < 0 || other >= groupList.length) return;
-  const a = groupList[index], b = groupList[other];
+// 강의 목록(renumberTagGroup)과 동일한 방식 — 학원(academy) 단위로 순서를 1..N 재부여
+async function renumberExamGroup(academy, edits) {
+  const editMap = new Map(edits);
+  const groupItems = examMaterialsCache.filter(v => v.academy === academy);
+  const writes = [];
+
+  editMap.forEach((num, id) => {
+    if (num == null) {
+      const v = groupItems.find(x => x.id === id);
+      if (v && v.order != null) {
+        writes.push(updateDoc(doc(db, 'examMaterials', id), { order: null }).then(() => { v.order = null; }));
+      }
+    }
+  });
+
+  const withKey = groupItems
+    .filter(v => !(editMap.has(v.id) && editMap.get(v.id) == null))
+    .map((v, idx) => {
+      const edited = editMap.has(v.id);
+      const num = edited ? editMap.get(v.id) : (v.order != null ? Number(v.order) : null);
+      return { v, idx, edited, key: num == null ? Infinity : num };
+    });
+
+  withKey.sort((a, b) => {
+    if (a.key !== b.key) return a.key - b.key;
+    if (a.edited !== b.edited) return a.edited ? -1 : 1;
+    return a.idx - b.idx;
+  });
+
+  withKey.forEach((item, i) => {
+    const newOrder = i + 1;
+    if (item.v.order !== newOrder) {
+      writes.push(updateDoc(doc(db, 'examMaterials', item.v.id), { order: newOrder }).then(() => { item.v.order = newOrder; }));
+    }
+  });
+
+  await Promise.all(writes);
+}
+
+// 행 저장 (순서 + 제목 함께) — 강의 목록의 saveRow와 동일한 방식
+window.saveExamMaterialRow = async (id) => {
+  const orderInput = document.getElementById('order-em-' + id);
+  const titleInput = document.getElementById('title-em-' + id);
+  const orderVal = orderInput ? orderInput.value.trim() : '';
+  const orderNum = orderVal === '' ? null : Number(orderVal);
+  const title = titleInput ? titleInput.value.trim() : '';
+
+  if (!title) { showToast('❌ 제목을 입력해주세요.'); return; }
+
   try {
-    await updateDoc(doc(db, 'examMaterials', a.id), { order: b.order });
-    await updateDoc(doc(db, 'examMaterials', b.id), { order: a.order });
+    const cached = examMaterialsCache.find(v => v.id === id);
+    const academy = cached ? cached.academy : null;
+
+    await updateDoc(doc(db, 'examMaterials', id), { title });
+    if (cached) cached.title = title;
+
+    if (academy) {
+      await renumberExamGroup(academy, [[id, orderNum]]);
+    } else {
+      await updateDoc(doc(db, 'examMaterials', id), { order: orderNum });
+      if (cached) cached.order = orderNum;
+    }
+    showToast('✅ 저장 완료');
     await loadExamMaterials();
   } catch(e) {
-    alert('순서 변경 오류: ' + e.message);
+    showToast('❌ 저장 실패: ' + e.message);
+  }
+};
+
+// 일괄 저장 (펼쳐진 학원 그룹 내 순서 + 제목 한번에 저장) — 강의 목록의 bulkSaveOrder와 동일한 방식
+window.bulkSaveExamMaterialOrder = async () => {
+  const inputs = document.querySelectorAll('input[id^="order-em-"]');
+  if (!inputs.length) { showToast('저장할 항목이 없습니다.'); return; }
+  let saved = 0;
+  const titlePromises = [];
+  const editsByAcademy = new Map(); // academy -> [[id, orderNum], ...]
+
+  inputs.forEach(input => {
+    const id = input.id.replace('order-em-', '');
+    const val = input.value.trim();
+    const orderNum = val === '' ? null : Number(val);
+    const titleInput = document.getElementById('title-em-' + id);
+    const title = titleInput ? titleInput.value.trim() : null;
+    const cached = examMaterialsCache.find(v => v.id === id);
+    if (!cached) return;
+
+    const orderChanged = !(cached.order == null && orderNum == null) && cached.order !== orderNum;
+    const titleChanged = !!title && cached.title !== title;
+    if (!orderChanged && !titleChanged) return;
+
+    if (titleChanged) {
+      titlePromises.push(
+        updateDoc(doc(db, 'examMaterials', id), { title }).then(() => { cached.title = title; })
+      );
+    }
+    if (orderChanged) {
+      const academy = cached.academy || '__no_academy__';
+      if (!editsByAcademy.has(academy)) editsByAcademy.set(academy, []);
+      editsByAcademy.get(academy).push([id, orderNum]);
+    }
+    saved++;
+  });
+
+  try {
+    await Promise.all(titlePromises);
+    for (const [academy, edits] of editsByAcademy) {
+      if (academy === '__no_academy__') {
+        for (const [id, orderNum] of edits) {
+          await updateDoc(doc(db, 'examMaterials', id), { order: orderNum });
+          const cached = examMaterialsCache.find(v => v.id === id);
+          if (cached) cached.order = orderNum;
+        }
+      } else {
+        await renumberExamGroup(academy, edits);
+      }
+    }
+    showToast(saved ? `✅ ${saved}건 저장 완료` : '변경된 내용이 없습니다.');
+    await loadExamMaterials();
+  } catch(e) {
+    showToast('❌ 일괄 저장 실패: ' + e.message);
   }
 };
 
