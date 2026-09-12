@@ -655,6 +655,7 @@
 
 <div class="subject-nav" id="subjectNav"></div>
 <div class="type-nav" id="typeNav"></div>
+<div class="type-nav" id="yearNav" style="display:none;"></div>
 
 <div class="materials" id="materialsContainer">
   <div class="empty-state">자료를 불러오는 중입니다…</div>
@@ -788,7 +789,9 @@ function renderSubjectNav(){
     e.target.style.color = academy ? '#fff' : 'var(--charcoal-deep)';
     currentSubjectFilter = subj;
     currentTypeFilter = '';
+    currentYearFilter = '';
     renderTypeNav();
+    renderYearNav();
     renderMaterials();
   });
 }
@@ -798,6 +801,9 @@ renderSubjectNav();
 // 과목 하위 분류 — 수학은 자료 유형(기출문제/유형정리/보충) 기준, 영어는 학년 기준으로 나눕니다.
 const MATERIAL_TYPES_MATH = ['고1 기출문제', '고2 기출문제', '유형정리', '송우찬수학학원 보충', '인어스수학학원 보충'];
 const MATERIAL_TYPES_ENGLISH = ['중1', '중2', '중3', '고1', '고2', '고3'];
+// 기출문제는 연도별로 한 번 더 나눠서 볼 수 있게 합니다.
+const YEAR_FILTERABLE_TYPES = ['고1 기출문제', '고2 기출문제'];
+const EXAM_YEARS = ['2025', '2024'];
 function currentTypeField(){
   return currentSubjectFilter === '영어' ? '학년' : '자료유형';
 }
@@ -824,11 +830,46 @@ function renderTypeNav(){
     [...nav.children].forEach(p=>p.classList.remove('active'));
     e.target.classList.add('active');
     currentTypeFilter = e.target.dataset.type;
+    currentYearFilter = '';
+    renderYearNav();
     renderMaterials();
   });
 }
 let currentTypeFilter = '';
+let currentYearFilter = '';
 renderTypeNav();
+
+// 고1/고2 기출문제를 선택했을 때만 연도 선택 탭을 보여줍니다.
+function renderYearNav(){
+  const yearNav = document.getElementById('yearNav');
+  if(!YEAR_FILTERABLE_TYPES.includes(currentTypeFilter)){
+    yearNav.style.display = 'none';
+    yearNav.innerHTML = '';
+    return;
+  }
+  yearNav.style.display = 'flex';
+  yearNav.innerHTML = '';
+  const all = document.createElement('div');
+  all.className = 'type-pill active';
+  all.textContent = '전체 연도';
+  all.dataset.year = '';
+  yearNav.appendChild(all);
+  EXAM_YEARS.forEach(y=>{
+    const pill = document.createElement('div');
+    pill.className = 'type-pill';
+    pill.textContent = y + '년';
+    pill.dataset.year = y;
+    yearNav.appendChild(pill);
+  });
+  yearNav.addEventListener('click', (e)=>{
+    if(!e.target.classList.contains('type-pill')) return;
+    [...yearNav.children].forEach(p=>p.classList.remove('active'));
+    e.target.classList.add('active');
+    currentYearFilter = e.target.dataset.year;
+    renderMaterials();
+  }, { once:false });
+}
+
 
 let ALL_ITEMS = [];
 
@@ -863,6 +904,7 @@ function renderMaterials(){
   let items = ALL_ITEMS.filter(i=>{
     if(currentSubjectFilter && i['과목'] !== currentSubjectFilter) return false;
     if(currentTypeFilter && i[currentTypeField()] !== currentTypeFilter) return false;
+    if(YEAR_FILTERABLE_TYPES.includes(currentTypeFilter) && currentYearFilter && i['연도'] !== currentYearFilter) return false;
     if(grade && i['학년'] !== grade) return false;
     if(keyword && !(i['자료명']||'').toLowerCase().includes(keyword)) return false;
     return true;
@@ -931,6 +973,9 @@ function renderMaterials(){
         const formatBadge = isPdf
           ? `<span style="font-size:0.66rem;font-weight:700;color:var(--gold);border:1px solid var(--gold);border-radius:20px;padding:1px 8px;margin-right:6px;vertical-align:1px;">PDF</span>`
           : '';
+        const yearBadge = item['연도']
+          ? `<span style="font-size:0.66rem;font-weight:700;color:var(--ink-soft);border:1px solid var(--line);border-radius:20px;padding:1px 8px;margin-right:6px;vertical-align:1px;">${item['연도']}년</span>`
+          : '';
 
         if(isPdf){
           // 저작권 문제로 PDF는 직접 미리보기/다운로드를 제공하지 않고,
@@ -939,7 +984,7 @@ function renderMaterials(){
           row.className = 'material-row';
           row.innerHTML = `
             <span class="grade-tag">${rowLogoHtml}${item['학원명']||''}</span>
-            ${formatBadge}<span class="material-row-title">${item['자료명']||'(제목 없음)'}</span>
+            ${formatBadge}${yearBadge}<span class="material-row-title">${item['자료명']||'(제목 없음)'}</span>
             <span class="meta">${item['업로드일']||''}</span>
             <span class="material-row-actions">
               <span class="material-action-btn" style="cursor:default;opacity:0.85;">담당 선생님께 요청</span>
@@ -964,7 +1009,7 @@ function renderMaterials(){
         }
         a.innerHTML = `
           <span class="grade-tag">${rowLogoHtml}${item['학원명']||''}</span>
-          ${formatBadge}<span class="material-row-title">${item['자료명']||'(제목 없음)'}</span>
+          ${formatBadge}${yearBadge}<span class="material-row-title">${item['자료명']||'(제목 없음)'}</span>
           <span class="meta">${item['업로드일']||''}</span>
         `;
         list.appendChild(a);
@@ -1058,6 +1103,7 @@ async function loadData(){
         // 예전에 "미정"으로 저장된 자료(주로 인어스수학학원)는 수학으로 취급합니다.
         '과목': (v.subject === '미정' ? '수학' : v.subject) || '',
         '자료유형': v.materialType || '',
+        '연도': v.year || '',
         '학년': v.grade || '',
         '자료명': v.title || '(제목 없음)',
         '링크': isVideo ? `https://vimeo.com/${v.vimeoId}` : (v.pdfUrl || v.fileUrl || ''),
