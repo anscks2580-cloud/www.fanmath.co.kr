@@ -909,7 +909,8 @@ function renderMaterials(){
           : '';
 
         if(isPdf){
-          // PDF는 클릭하면 바로 열리는 대신, 미리보기(새 탭에서 보기)/다운로드(파일로 저장)를 구분해서 제공합니다.
+          // 저작권 문제로 PDF는 직접 미리보기/다운로드를 제공하지 않고,
+          // 자료명만 목록에 올려서 해당 학원 담당 선생님께 직접 요청하도록 안내합니다.
           const row = document.createElement('div');
           row.className = 'material-row';
           row.innerHTML = `
@@ -917,29 +918,9 @@ function renderMaterials(){
             ${formatBadge}<span class="material-row-title">${item['자료명']||'(제목 없음)'}</span>
             <span class="meta">${item['업로드일']||''}</span>
             <span class="material-row-actions">
-              <a class="material-action-btn" href="${item['링크']}" target="_blank" rel="noopener">미리보기</a>
-              <a class="material-action-btn download" href="#">다운로드</a>
+              <span class="material-action-btn" style="cursor:default;opacity:0.85;">담당 선생님께 요청</span>
             </span>
           `;
-          const downloadBtn = row.querySelector('.download');
-          downloadBtn.addEventListener('click', async (e)=>{
-            e.preventDefault();
-            try{
-              const res = await fetch(item['링크']);
-              const blob = await res.blob();
-              const blobUrl = URL.createObjectURL(blob);
-              const tempA = document.createElement('a');
-              tempA.href = blobUrl;
-              tempA.download = (item['자료명']||'자료') + '.pdf';
-              document.body.appendChild(tempA);
-              tempA.click();
-              document.body.removeChild(tempA);
-              URL.revokeObjectURL(blobUrl);
-            }catch(err){
-              // 브라우저/네트워크 사정으로 강제 다운로드가 안 되면 새 탭으로라도 열어줍니다.
-              window.open(item['링크'], '_blank');
-            }
-          });
           list.appendChild(row);
           return;
         }
