@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>데이터 일괄 업로드 - 수강료 관리</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  body{font-family:sans-serif;max-width:720px;margin:40px auto;padding:0 16px;color:#222;}
+  .card{border:1px solid #e2e2e6;border-radius:12px;padding:20px;margin-bottom:20px;}
+  h2{font-size:16px;margin:0 0 10px;}
+  button{background:#1A1230;color:#fff;border:none;border-radius:8px;padding:10px 16px;cursor:pointer;font-size:14px;}
+  button:disabled{background:#aaa;cursor:not-allowed;}
+  input[type=file]{margin-bottom:10px;display:block;}
+  .log{background:#f5f6f8;border-radius:8px;padding:10px;font-size:13px;max-height:220px;overflow-y:auto;white-space:pre-wrap;margin-top:10px;}
+  .warn{background:#fff8e1;border:1px solid #f0c040;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:20px;}
+</style>
+</head>
+<body>
+<h1 style="font-size:20px;">수강료 관리 시스템 - 초기 데이터 업로드</h1>
+<div class="warn">⚠️ 이 페이지는 최초 1회 데이터 이관용입니다. 업로드가 끝나면 이 파일은 깃허브에서 삭제하거나 접근 못하게 옮겨두는 걸 추천드려요 (엑셀 원본에 개인정보가 있어서요).</div>
+
+<div class="card">
+  <h2>1. 학생명단 업로드 (students 컬렉션)</h2>
+  <input type="file" id="fileStudents" accept=".xlsx">
+  <button id="btnStudents">학생명단 업로드</button>
+  <div class="log" id="logStudents"></div>
+</div>
+
+<div class="card">
+  <h2>2. 미납목록 업로드 (billings 컬렉션, status=미납)</h2>
+  <p style="font-size:13px;color:#767676;">먼저 학생명단을 업로드해야 이름으로 매칭이 가능합니다.</p>
+  <input type="file" id="fileUnpaid" accept=".xlsx">
+  <button id="btnUnpaid">미납목록 업로드</button>
+  <div class="log" id="logUnpaid"></div>
+</div>
+
+<div class="card">
+  <h2>3. 납입목록 업로드 (billings 컬렉션, status=완납)</h2>
+  <input type="file" id="filePaid" accept=".xlsx">
+  <button id="btnPaid">납입목록 업로드</button>
+  <div class="log" id="logPaid"></div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAcUD_Ai4sewIabN3MXFJumNsI3ZaV-j34",
+  authDomain: "tuition-916ab.firebaseapp.com",
+  projectId: "tuition-916ab",
+  storageBucket: "tuition-916ab.firebasestorage.app",
+  messagingSenderId: "775990692835",
+  appId: "1:775990692835:web:606a0650cd867ca2c26ed6"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+function readExcel(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      resolve(XLSX.utils.sheet_to_json(ws, { defval: '' }));
+    };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function log(el, msg) {
+  el.textContent += msg + '\n';
+  el.scrollTop = el.scrollHeight;
+}
+
+async function batchWrite(collection, docs, buildDoc) {
+  let count = 0;
+  let batch = db.batch();
+  for (let i = 0; i < docs.length; i++) {
+    const ref = db.collection(collection).doc();
+    batch.set(ref, buildDoc(docs[i]));
+    count++;
+    if (count % 400 === 0) {
+      await batch.commit();
+      batch = db.batch();
+      await new Promise(r => setTimeout(r, 300));
+    }
+  }
+  await batch.commit();
+  return count;
+}
+
+/* 1. 학생명단 업로드 */
+document.getElementById('btnStudents').addEventListener('click', async () => {
+  const file = document.getElementById('fileStudents').files[0];
+  const logEl = document.getElementById('logStudents');
+  logEl.textContent = '';
+  if (!file) { alert('파일을 선택하세요.'); return; }
+  const rows = await readExcel(file);
+  log(logEl, `${rows.length}건 읽음. 업로드 중...`);
+  const count = await batchWrite('students', rows, (r) => ({
+    name: r['이름'] || '',
+    branch: r['지점'] || '평촌관',
+    status: '재원',
+    parentPhone: String(r['부모핸드폰번호'] || ''),
+    studentPhone: String(r['학생핸드폰번호'] || ''),
+    className: r['반명'] || '',
+    consultDate: r['최초상담일'] || '',
+    school: r['학교명'] || '',
+    grade: r['학년구분'] || '',
+    classes: r['반명'] ? [r['반명']] : [],
+    admitDate: '', withdrawDate: '',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }));
+  log(logEl, `완료: ${count}건 업로드됨.`);
+});
+
+/* 이름 -> studentId 매핑 캐시 */
+let nameToIdCache = null;
+async function getNameToIdMap() {
+  if (nameToIdCache) return nameToIdCache;
+  const snap = await db.collection('students').get();
+  const map = {};
+  snap.forEach(doc => { map[doc.data().name] = doc.id; });
+  nameToIdCache = map;
+  return map;
+}
+
+/* 2. 미납목록 업로드 */
+document.getElementById('btnUnpaid').addEventListener('click', async () => {
+  const file = document.getElementById('fileUnpaid').files[0];
+  const logEl = document.getElementById('logUnpaid');
+  logEl.textContent = '';
+  if (!file) { alert('파일을 선택하세요.'); return; }
+  const rows = await readExcel(file);
+  const nameMap = await getNameToIdMap();
+  log(logEl, `${rows.length}건 읽음. 학생 매칭 중...`);
+  let matched = 0, unmatched = [];
+  const validRows = rows.filter(r => {
+    const id = nameMap[r['이름']];
+    if (id) { matched++; return true; }
+    unmatched.push(r['이름']);
+    return false;
+  });
+  if (unmatched.length) log(logEl, `매칭 안 된 학생(${unmatched.length}명): ${[...new Set(unmatched)].join(', ')}`);
+  const count = await batchWrite('billings', validRows, (r) => ({
+    studentId: nameMap[r['이름']],
+    studentName: r['이름'],
+    branch: r['지점'] || '',
+    item: r['항목'] || '',
+    amount: Number(r['미납금액']) || 0,
+    paidAmount: 0,
+    status: '미납',
+    dueDate: r['납입기한'] || '',
+    paidDate: '', paymentMethod: '',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }));
+  log(logEl, `완료: ${count}건 업로드됨 (매칭 ${matched}/${rows.length}).`);
+});
+
+/* 3. 납입목록 업로드 */
+document.getElementById('btnPaid').addEventListener('click', async () => {
+  const file = document.getElementById('filePaid').files[0];
+  const logEl = document.getElementById('logPaid');
+  logEl.textContent = '';
+  if (!file) { alert('파일을 선택하세요.'); return; }
+  const rows = await readExcel(file);
+  const nameMap = await getNameToIdMap();
+  log(logEl, `${rows.length}건 읽음. 학생 매칭 중...`);
+  let matched = 0, unmatched = [];
+  const validRows = rows.filter(r => {
+    const id = nameMap[r['이름']];
+    if (id) { matched++; return true; }
+    unmatched.push(r['이름']);
+    return false;
+  });
+  if (unmatched.length) log(logEl, `매칭 안 된 학생(${unmatched.length}명): ${[...new Set(unmatched)].join(', ')}`);
+  const count = await batchWrite('billings', validRows, (r) => ({
+    studentId: nameMap[r['이름']],
+    studentName: r['이름'],
+    branch: r['지점'] || '',
+    item: r['항목'] || '',
+    amount: Number(r['청구금액']) || 0,
+    paidAmount: Number(r['납부금액']) || 0,
+    status: '완납',
+    dueDate: r['청구일'] || '',
+    paidDate: r['납부일'] || '',
+    paymentMethod: r['결제수단'] || '',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }));
+  log(logEl, `완료: ${count}건 업로드됨 (매칭 ${matched}/${rows.length}).`);
+});
+</script>
+</body>
+</html>
