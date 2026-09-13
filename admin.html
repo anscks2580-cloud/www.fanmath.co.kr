@@ -7564,6 +7564,18 @@ function renderExamPdfFileList(){
 let examMaterialsCache = [];
 async function loadExamMaterials() {
   try {
+    // 다시 그리기 전에, 현재 열려 있던 아코디언(과목-학원별)과 체크된 선택 항목을 기억해뒀다가
+    // 렌더링 후 그대로 복원합니다.
+    const openKeys = new Set(
+      [...document.querySelectorAll('#examMaterialList details[data-key]')]
+        .filter(d => d.open)
+        .map(d => d.dataset.key)
+    );
+    const checkedIds = new Set(
+      [...document.querySelectorAll('#examMaterialList .exam-material-select:checked')]
+        .map(el => el.dataset.id)
+    );
+
     const snap = await getDocs(query(collection(db, 'examMaterials'), orderBy('order', 'asc')));
     const list = [];
     snap.forEach(d => list.push({ id: d.id, ...d.data() }));
@@ -7597,7 +7609,7 @@ async function loadExamMaterials() {
             ${subject === '수학' ? '📐' : '🔤'} ${subject} (${subjectItems.length}개)
           </div>
           ${order.map(academy => `
-            <details style="margin-bottom:10px;background:rgba(255,255,255,0.03);border-radius:8px;padding:2px 14px;">
+            <details data-key="${subject}::${academy}" ${openKeys.has(`${subject}::${academy}`) ? 'open' : ''} style="margin-bottom:10px;background:rgba(255,255,255,0.03);border-radius:8px;padding:2px 14px;">
               <summary style="cursor:pointer;font-size:13px;font-weight:600;color:var(--off-white);padding:10px 0;">
                 ${academy} <span style="color:var(--muted);font-weight:400;">(${groups[academy].length}개)</span>
               </summary>
@@ -7664,6 +7676,12 @@ async function loadExamMaterials() {
           `).join('')}
         </div>`;
     }).join('');
+
+    // 재렌더링 전에 체크돼 있던 선택 항목 복원
+    checkedIds.forEach(id => {
+      const box = el.querySelector(`.exam-material-select[data-id="${id}"]`);
+      if (box) box.checked = true;
+    });
   } catch(e) {
     document.getElementById('examMaterialList').innerHTML =
       `<div style="color:#ff9090;font-size:13px;">오류: ${e.message}</div>`;
