@@ -978,16 +978,22 @@ function renderMaterials(){
           : '';
 
         if(isPdf){
-          // 저작권 문제로 PDF는 직접 미리보기/다운로드를 제공하지 않고,
+          // 저작권 문제로 PDF는 기본적으로 직접 미리보기/다운로드를 제공하지 않고,
           // 자료명만 목록에 올려서 해당 학원 담당 선생님께 직접 요청하도록 안내합니다.
+          // 단, admin.html에서 개별적으로 다운로드를 허용한 자료(주로 영어)는
+          // "다운로드"와 "미리보기" 두 버튼을 보여줍니다.
           const row = document.createElement('div');
           row.className = 'material-row';
+          const actionsHtml = item['다운로드허용']
+            ? `<a class="material-action-btn" href="${item['링크']}" download target="_blank" rel="noopener">다운로드</a>
+               <a class="material-action-btn" href="${item['링크']}" target="_blank" rel="noopener" style="margin-left:6px;">미리보기</a>`
+            : `<span class="material-action-btn" style="cursor:default;opacity:0.85;">담당 선생님께 요청</span>`;
           row.innerHTML = `
             <span class="grade-tag">${rowLogoHtml}${item['학원명']||''}</span>
             ${formatBadge}${yearBadge}<span class="material-row-title">${item['자료명']||'(제목 없음)'}</span>
             <span class="meta">${item['업로드일']||''}</span>
             <span class="material-row-actions">
-              <span class="material-action-btn" style="cursor:default;opacity:0.85;">담당 선생님께 요청</span>
+              ${actionsHtml}
             </span>
           `;
           list.appendChild(row);
@@ -1110,6 +1116,8 @@ async function loadData(){
         '업로드일': (v.createdAt || '').slice(0,10),
         '썸네일': isVideo ? `https://vumbnail.com/${v.vimeoId}.jpg` : '',
         '형식': isVideo ? '영상' : 'PDF',
+        // admin.html에서 개별적으로 다운로드를 허용한 PDF만 true. (기본은 미허용 = 담당 선생님께 요청)
+        '다운로드허용': !isVideo && !!v.downloadEnabled && !!v.pdfUrl,
       });
     });
     ALL_ITEMS = items;
