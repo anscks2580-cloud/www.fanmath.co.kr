@@ -7607,12 +7607,14 @@ async function loadExamMaterials() {
                       style="flex:1;min-width:160px;padding:4px 8px;background:#1A1230;border:1px solid rgba(255,255,255,0.15);
                         border-radius:6px;color:var(--off-white);font-size:12px;font-family:inherit;color-scheme:dark;">
                     <span class="student-meta" style="font-size:11px;flex-shrink:0;display:flex;align-items:center;gap:6px;">
-                      ${v.vimeoId ? `Vimeo: ${v.vimeoId}` : (v.pdfUrl ? `
-                        📄 <a href="${v.pdfUrl}" target="_blank" style="color:var(--gold);">다운로드 열기</a>
-                        <button type="button" class="btn btn-danger btn-sm" style="padding:2px 8px;font-size:11px;" onclick="removeExamMaterialFile('${v.id}')">다운로드 해제</button>
+                      ${v.vimeoId ? `Vimeo: ${v.vimeoId}` : (v.pdfPath ? `
+                        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--muted);">
+                          <input type="checkbox" ${v.pdfUrl ? 'checked' : ''} onchange="toggleExamMaterialDownload('${v.id}','${v.pdfPath.replace(/'/g,"\\'")}', this.checked)"> 다운로드 허용
+                        </label>
+                        ${v.pdfUrl ? `<a href="${v.pdfUrl}" target="_blank" style="color:var(--gold);">📄 열기</a>` : ''}
                       ` : `
                         <span style="color:var(--muted);">제목만 등록됨</span>
-                        <button type="button" class="btn btn-secondary btn-sm" style="padding:2px 8px;font-size:11px;" onclick="document.getElementById('file-em-${v.id}').click()">📎 파일 첨부(다운로드 허용)</button>
+                        <button type="button" class="btn btn-secondary btn-sm" style="padding:2px 8px;font-size:11px;" onclick="document.getElementById('file-em-${v.id}').click()">📎 파일 첨부</button>
                         <input type="file" id="file-em-${v.id}" accept="application/pdf" style="display:none;" onchange="uploadExamMaterialFile('${v.id}', this.files[0])">
                       `)}
                     </span>
@@ -7660,8 +7662,10 @@ async function loadExamMaterials() {
   }
 }
 
-// 이미 "제목만 등록"된 자료 중 선별적으로 실제 PDF 파일을 첨부해 다운로드를 허용합니다.
-// (저작권 문제로 기본은 파일 미저장 방식이지만, 필요한 자료만 개별적으로 실제 파일을 올려 열람/다운로드 가능하게 함)
+// 이미 "제목만 등록"된 자료 중 선별적으로 실제 PDF 파일을 첨부합니다.
+// (저작권 문제로 기본은 파일 미저장 방식이지만, 필요한 자료만 개별적으로 실제 파일을 Storage에 올려둠)
+// 한 번 첨부하면 pdfPath(저장 경로)는 계속 남아있고, 다운로드 허용 여부는 체크박스로 pdfUrl만 껐다 켰다 하므로
+// 나중에 다운로드를 다시 켤 때 재업로드가 필요 없습니다.
 window.uploadExamMaterialFile = async function(id, file) {
   if (!file) return;
   if (file.type !== 'application/pdf') { alert('PDF 파일만 첨부할 수 있습니다.'); return; }
@@ -7670,6 +7674,7 @@ window.uploadExamMaterialFile = async function(id, file) {
     const fileRef = ref(storage, path);
     await uploadBytes(fileRef, file);
     const url = await getDownloadURL(fileRef);
+    // 첨부 직후에는 기본적으로 다운로드를 허용 상태로 켜 둡니다. 이후에는 체크박스로만 제어합니다.
     await updateDoc(doc(db, 'examMaterials', id), { pdfUrl: url, pdfPath: path });
     await loadExamMaterials();
   } catch(e) {
@@ -7677,14 +7682,19 @@ window.uploadExamMaterialFile = async function(id, file) {
   }
 };
 
-// 첨부했던 파일의 다운로드 링크를 다시 막습니다. (Storage의 실제 파일은 남겨두고 문서의 pdfUrl만 비웁니다)
-window.removeExamMaterialFile = async function(id) {
-  if (!confirm('이 자료의 다운로드를 다시 막을까요? (제목만 등록된 상태로 되돌아갑니다)')) return;
+// 체크박스 클릭 한 번으로 다운로드 허용/해제를 저장합니다. pdfPath는 그대로 두고 pdfUrl만 켜고 끕니다.
+window.toggleExamMaterialDownload = async function(id, pdfPath, enabled) {
   try {
-    await updateDoc(doc(db, 'examMaterials', id), { pdfUrl: '' });
+    if (enabled) {
+      const url = await getDownloadURL(ref(storage, pdfPath));
+      await updateDoc(doc(db, 'examMaterials', id), { pdfUrl: url });
+    } else {
+      await updateDoc(doc(db, 'examMaterials', id), { pdfUrl: '' });
+    }
     await loadExamMaterials();
   } catch(e) {
-    alert('해제 실패: ' + e.message);
+    alert('변경 실패: ' + e.message);
+    loadExamMaterials();
   }
 };
 
