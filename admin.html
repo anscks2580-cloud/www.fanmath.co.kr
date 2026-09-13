@@ -7607,11 +7607,11 @@ async function loadExamMaterials() {
                       style="flex:1;min-width:160px;padding:4px 8px;background:#1A1230;border:1px solid rgba(255,255,255,0.15);
                         border-radius:6px;color:var(--off-white);font-size:12px;font-family:inherit;color-scheme:dark;">
                     <span class="student-meta" style="font-size:11px;flex-shrink:0;display:flex;align-items:center;gap:6px;">
-                      ${v.vimeoId ? `Vimeo: ${v.vimeoId}` : (v.pdfPath ? `
+                      ${v.vimeoId ? `Vimeo: ${v.vimeoId}` : (v.pdfUrl ? `
                         <label style="display:flex;align-items:center;gap:4px;cursor:pointer;color:var(--muted);">
-                          <input type="checkbox" ${v.pdfUrl ? 'checked' : ''} onchange="toggleExamMaterialDownload('${v.id}','${v.pdfPath.replace(/'/g,"\\'")}', this.checked)"> 다운로드 허용
+                          <input type="checkbox" ${v.downloadEnabled !== false ? 'checked' : ''} onchange="toggleExamMaterialDownload('${v.id}', this.checked)"> 다운로드 허용
                         </label>
-                        ${v.pdfUrl ? `<a href="${v.pdfUrl}" target="_blank" style="color:var(--gold);">📄 열기</a>` : ''}
+                        <a href="${v.pdfUrl}" target="_blank" style="color:var(--gold);">📄 미리보기</a>
                       ` : `
                         <span style="color:var(--muted);">제목만 등록됨</span>
                         <button type="button" class="btn btn-secondary btn-sm" style="padding:2px 8px;font-size:11px;" onclick="document.getElementById('file-em-${v.id}').click()">📎 파일 첨부</button>
@@ -7662,10 +7662,8 @@ async function loadExamMaterials() {
   }
 }
 
-// 이미 "제목만 등록"된 자료 중 선별적으로 실제 PDF 파일을 첨부합니다.
-// (저작권 문제로 기본은 파일 미저장 방식이지만, 필요한 자료만 개별적으로 실제 파일을 Storage에 올려둠)
-// 한 번 첨부하면 pdfPath(저장 경로)는 계속 남아있고, 다운로드 허용 여부는 체크박스로 pdfUrl만 껐다 켰다 하므로
-// 나중에 다운로드를 다시 켤 때 재업로드가 필요 없습니다.
+// 이미 실제 파일이 Storage에 올라가서 pdfUrl이 있는 자료에 대해, 새로 파일을 올릴 필요 없이
+// downloadEnabled 플래그만 체크박스로 켜고 끕니다. (실제 파일 링크(pdfUrl)는 그대로 보존)
 window.uploadExamMaterialFile = async function(id, file) {
   if (!file) return;
   if (file.type !== 'application/pdf') { alert('PDF 파일만 첨부할 수 있습니다.'); return; }
@@ -7674,23 +7672,18 @@ window.uploadExamMaterialFile = async function(id, file) {
     const fileRef = ref(storage, path);
     await uploadBytes(fileRef, file);
     const url = await getDownloadURL(fileRef);
-    // 첨부 직후에는 기본적으로 다운로드를 허용 상태로 켜 둡니다. 이후에는 체크박스로만 제어합니다.
-    await updateDoc(doc(db, 'examMaterials', id), { pdfUrl: url, pdfPath: path });
+    await updateDoc(doc(db, 'examMaterials', id), { pdfUrl: url, downloadEnabled: true });
     await loadExamMaterials();
   } catch(e) {
     alert('파일 첨부 실패: ' + e.message);
   }
 };
 
-// 체크박스 클릭 한 번으로 다운로드 허용/해제를 저장합니다. pdfPath는 그대로 두고 pdfUrl만 켜고 끕니다.
-window.toggleExamMaterialDownload = async function(id, pdfPath, enabled) {
+// 체크박스 클릭 한 번으로 다운로드 허용/해제를 저장합니다. 실제 파일(pdfUrl)은 건드리지 않고
+// downloadEnabled 값만 바꿔서, 학생 화면(자료실)에서 이 값을 보고 다운로드 버튼을 보여줄지 결정하게 합니다.
+window.toggleExamMaterialDownload = async function(id, enabled) {
   try {
-    if (enabled) {
-      const url = await getDownloadURL(ref(storage, pdfPath));
-      await updateDoc(doc(db, 'examMaterials', id), { pdfUrl: url });
-    } else {
-      await updateDoc(doc(db, 'examMaterials', id), { pdfUrl: '' });
-    }
+    await updateDoc(doc(db, 'examMaterials', id), { downloadEnabled: enabled });
     await loadExamMaterials();
   } catch(e) {
     alert('변경 실패: ' + e.message);
