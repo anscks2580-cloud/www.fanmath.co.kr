@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>수강료 관리 - 송우찬수학학원</title>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<style>
+  :root{
+    --accent:#1A1230; --gold:#F0C040; --bg:#f5f6f8; --card:#ffffff;
+    --border:#e2e2e6; --text:#222; --sub:#767676; --danger:#d64545; --success:#1c8a4b;
+  }
+  *{box-sizing:border-box;}
+  body{font-family:'Pretendard',-apple-system,sans-serif;background:var(--bg);margin:0;color:var(--text);}
+  .wrap{max-width:1100px;margin:0 auto;padding:24px 16px;}
+  h1{font-size:20px;margin:0 0 16px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:16px;}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+  input[type=text],input[type=tel],input[type=number],select,textarea{
+    border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;font-family:inherit;
+  }
+  button{
+    border:1px solid var(--border);background:#fff;border-radius:8px;padding:8px 14px;
+    font-size:13px;cursor:pointer;font-family:inherit;
+  }
+  button:hover{background:#f0f0f0;}
+  .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .btn-primary:hover{background:#2a1e4a;}
+  .btn-danger{color:var(--danger);border-color:var(--danger);}
+  .btn-success{background:var(--success);color:#fff;border-color:var(--success);}
+  .badge{font-size:12px;padding:3px 10px;border-radius:20px;}
+  .badge-branch{background:#e6f1fb;color:#0c447c;}
+  .badge-active{background:#eaf3de;color:#27500a;}
+  .badge-out{background:#fcebeb;color:#791f1f;}
+  .grid2{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{padding:7px 6px;text-align:left;border-bottom:1px solid var(--border);}
+  th{color:var(--sub);font-weight:500;}
+  .tab{padding:6px 14px;border-radius:8px;font-size:13px;cursor:pointer;border:1px solid var(--border);background:#fff;}
+  .tab.active{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .class-pill{display:flex;justify-content:space-between;align-items:center;background:#f5f6f8;border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:13px;margin-bottom:6px;}
+  .hidden{display:none;}
+  .field-row{display:flex;gap:8px;margin-bottom:6px;font-size:13px;}
+  .field-row label{width:78px;color:var(--sub);flex-shrink:0;padding-top:6px;}
+  .field-row input,.field-row select{flex:1;}
+  #searchResults{position:absolute;background:#fff;border:1px solid var(--border);border-radius:8px;max-height:200px;overflow-y:auto;z-index:10;width:240px;}
+  #searchResults div{padding:8px 10px;cursor:pointer;font-size:13px;}
+  #searchResults div:hover{background:#f5f6f8;}
+  .status-msg{font-size:12px;color:var(--sub);margin-top:6px;}
+  .config-warning{background:#fff8e1;border:1px solid #f0c040;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:16px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>수강료 · 미납 관리 — 평촌관</h1>
+
+  <div id="configWarning" class="config-warning hidden">
+    Firebase 설정이 비어 있어 데모(로컬 임시 데이터)로 동작 중입니다. 아래 <code>firebaseConfig</code>를 새로 만든 Firebase 프로젝트 값으로 교체하면 실제 데이터와 연동됩니다.
+  </div>
+
+  <!-- 검색 + 액션 바 -->
+  <div class="card">
+    <div class="row" style="position:relative;">
+      <input type="text" id="searchInput" placeholder="학생 이름 검색" style="width:220px;">
+      <div id="searchResults" class="hidden" style="top:40px;left:0;"></div>
+      <span id="branchBadge" class="badge badge-branch hidden"></span>
+      <span id="statusBadge" class="badge hidden"></span>
+      <div style="margin-left:auto;display:flex;gap:6px;">
+        <button class="btn-success" id="btnNewStudent">＋ 입력준비(신규입학)</button>
+        <button id="btnEdit">수정</button>
+        <button class="btn-danger" id="btnWithdraw">퇴원처리</button>
+      </div>
+    </div>
+    <div id="statusMsg" class="status-msg"></div>
+  </div>
+
+  <!-- 기본정보 / 수강반 -->
+  <div class="grid2">
+    <div class="card">
+      <div class="row" style="justify-content:space-between;margin-bottom:8px;">
+        <b style="font-size:13px;color:var(--sub);">기본정보</b>
+      </div>
+      <div id="basicInfoView">
+        <table>
+          <tr><td style="color:var(--sub);width:70px;">이름</td><td id="v_name">-</td><td style="color:var(--sub);width:70px;">지점</td><td id="v_branch">-</td></tr>
+          <tr><td style="color:var(--sub);">부모HP</td><td id="v_parentPhone">-</td><td style="color:var(--sub);">학생HP</td><td id="v_studentPhone">-</td></tr>
+          <tr><td style="color:var(--sub);">학교</td><td id="v_school">-</td><td style="color:var(--sub);">학년</td><td id="v_grade">-</td></tr>
+          <tr><td style="color:var(--sub);">입학일</td><td id="v_admitDate">-</td><td style="color:var(--sub);">퇴원일</td><td id="v_withdrawDate">-</td></tr>
+        </table>
+      </div>
+      <div id="basicInfoForm" class="hidden">
+        <div class="field-row"><label>이름</label><input type="text" id="f_name"></div>
+        <div class="field-row"><label>지점</label>
+          <select id="f_branch"><option>평촌관</option><option>산본관</option></select>
+        </div>
+        <div class="field-row"><label>부모HP</label><input type="tel" id="f_parentPhone" placeholder="010-0000-0000"></div>
+        <div class="field-row"><label>학생HP</label><input type="tel" id="f_studentPhone" placeholder="010-0000-0000"></div>
+        <div class="field-row"><label>학교</label><input type="text" id="f_school"></div>
+        <div class="field-row"><label>학년</label><input type="text" id="f_grade" placeholder="예: 고2"></div>
+        <div class="row" style="margin-top:8px;">
+          <button class="btn-primary" id="btnSaveStudent">입력</button>
+          <button id="btnCancelForm">취소</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <b style="font-size:13px;color:var(--sub);">수강반</b>
+      <div id="classList" style="margin-top:8px;"></div>
+      <div class="row" style="margin-top:6px;">
+        <input type="text" id="newClassInput" placeholder="반명 입력 (예: 고2 1-A)" style="flex:1;">
+        <button id="btnAddClass">추가</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 미납/납입 탭 -->
+  <div class="card">
+    <div class="row" style="margin-bottom:10px;">
+      <div class="tab active" data-tab="unpaid">미납내역</div>
+      <div class="tab" data-tab="paid">납입이력</div>
+    </div>
+
+    <div id="tab-unpaid">
+      <table>
+        <thead><tr><th></th><th>항목</th><th>내용</th><th>금액</th><th>납입기한</th></tr></thead>
+        <tbody id="unpaidBody"></tbody>
+      </table>
+      <div class="row" style="margin-top:10px;">
+        <span style="font-size:12px;color:var(--sub);">대상납입액</span>
+        <b id="targetAmount">0</b>원
+        <input type="number" id="actualAmount" placeholder="실제납입액" style="width:110px;">
+        <select id="payMethod"><option>현금</option><option>카드</option><option>계좌이체</option></select>
+        <button class="btn-primary" id="btnPay">납입처리</button>
+      </div>
+    </div>
+
+    <div id="tab-paid" class="hidden">
+      <table>
+        <thead><tr><th>항목</th><th>청구금액</th><th>납부금액</th><th>납부일</th><th>결제수단</th></tr></thead>
+        <tbody id="paidBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 문자/알림톡 -->
+  <div class="card">
+    <b style="font-size:13px;color:var(--sub);">문자·알림톡 발송</b>
+    <div class="row" style="margin:8px 0;">
+      <button class="btn-primary" id="btnSendPayLink">선택 미납건 결제톡 발송</button>
+      <button id="btnSendSms">문자 발송</button>
+      <label style="font-size:13px;"><input type="checkbox" id="sendToParent" checked> 학부모</label>
+      <label style="font-size:13px;"><input type="checkbox" id="sendToStudent"> 학생</label>
+    </div>
+    <textarea id="smsContent" style="width:100%;min-height:50px;" placeholder="발송 내용이 여기에 자동 채워집니다"></textarea>
+    <div class="status-msg" id="smsStatus"></div>
+  </div>
+</div>
+
+<script>
+/* ====================== Firebase 설정 ======================
+   새로 만든 독립 Firebase 프로젝트의 설정값으로 교체하세요.
+   Firebase 콘솔 > 프로젝트 설정 > 일반 > 내 앱 > SDK 설정에서 복사
+================================================================ */
+const firebaseConfig = {
+  apiKey: "",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
+};
+
+let db = null;
+let useLocalMock = false;
+
+try {
+  if (firebaseConfig.apiKey) {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.firestore();
+  } else {
+    useLocalMock = true;
+  }
+} catch (e) {
+  useLocalMock = true;
+}
+
+if (useLocalMock) {
+  document.getElementById('configWarning').classList.remove('hidden');
+}
+
+/* ====================== 로컬 목업 데이터 (Firebase 미연결 시) ====================== */
+const mockStudents = {
+  "신지호": {
+    id: "mock_sinjiho", name: "신지호", branch: "평촌관", status: "재원",
+    parentPhone: "010-2004-8097", studentPhone: "010-4568-0232",
+    school: "안양고", grade: "고3", admitDate: "2025-06-03", withdrawDate: "",
+    classes: ["(P)교재", "고등(과외)"]
+  }
+};
+const mockUnpaid = {
+  "mock_sinjiho": [
+    { id: "u1", item: "교재비", desc: "수학의 법칙 라이트약점체크", amount: 12000, dueDate: "2026-01-22" },
+    { id: "u2", item: "교재비", desc: "세쌍둥이 심화-수학2", amount: 12000, dueDate: "2026-01-24" },
+    { id: "u3", item: "교재비", desc: "세쌍둥이 개념편 확통", amount: 12000, dueDate: "2026-02-28" }
+  ]
+};
+const mockPaid = {
+  "mock_sinjiho": [
+    { item: "수강료", amount: 1200000, paidAmount: 1200000, paidDate: "2026-01-09", method: "현금" },
+    { item: "수강료", amount: 1200000, paidAmount: 1200000, paidDate: "2026-02-02", method: "현금" }
+  ]
+};
+
+/* ====================== 상태 ====================== */
+let currentStudent = null;
+let currentUnpaid = [];
+let currentPaid = [];
+
+/* ====================== 검색 ====================== */
+const searchInput = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
+
+searchInput.addEventListener('input', async () => {
+  const q = searchInput.value.trim();
+  if (!q) { searchResults.classList.add('hidden'); return; }
+  let matches = [];
+  if (useLocalMock) {
+    matches = Object.values(mockStudents).filter(s => s.name.includes(q));
+  } else {
+    const snap = await db.collection('students')
+      .where('name', '>=', q).where('name', '<=', q + '\uf8ff').limit(10).get();
+    matches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+  if (matches.length === 0) { searchResults.classList.add('hidden'); return; }
+  searchResults.innerHTML = matches.map(m =>
+    `<div data-id="${m.id}">${m.name} (${m.branch || ''})</div>`
+  ).join('');
+  searchResults.classList.remove('hidden');
+  searchResults.querySelectorAll('div').forEach(el => {
+    el.addEventListener('click', () => loadStudent(el.dataset.id, matches.find(m => m.id === el.dataset.id)));
+  });
+});
+
+async function loadStudent(id, data) {
+  searchResults.classList.add('hidden');
+  searchInput.value = data.name;
+  currentStudent = { id, ...data };
+  renderBasicInfo(currentStudent);
+  await loadBilling(id);
+  document.getElementById('statusMsg').textContent = `${data.name} 학생 정보를 불러왔습니다.`;
+}
+
+function renderBasicInfo(s) {
+  document.getElementById('v_name').textContent = s.name || '-';
+  document.getElementById('v_branch').textContent = s.branch || '-';
+  document.getElementById('v_parentPhone').textContent = s.parentPhone || '-';
+  document.getElementById('v_studentPhone').textContent = s.studentPhone || '-';
+  document.getElementById('v_school').textContent = s.school || '-';
+  document.getElementById('v_grade').textContent = s.grade || '-';
+  document.getElementById('v_admitDate').textContent = s.admitDate || '-';
+  document.getElementById('v_withdrawDate').textContent = s.withdrawDate || '-';
+
+  const branchBadge = document.getElementById('branchBadge');
+  branchBadge.textContent = s.branch || '';
+  branchBadge.classList.remove('hidden');
+
+  const statusBadge = document.getElementById('statusBadge');
+  statusBadge.textContent = s.status || '재원';
+  statusBadge.className = 'badge ' + (s.status === '퇴원' ? 'badge-out' : 'badge-active');
+  statusBadge.classList.remove('hidden');
+
+  const classList = document.getElementById('classList');
+  classList.innerHTML = (s.classes || []).map(c =>
+    `<div class="class-pill"><span>${c}</span><button onclick="removeClass('${c}')">삭제</button></div>`
+  ).join('') || '<div class="status-msg">등록된 반이 없습니다.</div>';
+
+  document.getElementById('basicInfoView').classList.remove('hidden');
+  document.getElementById('basicInfoForm').classList.add('hidden');
+}
+
+async function loadBilling(studentId) {
+  if (useLocalMock) {
+    currentUnpaid = mockUnpaid[studentId] || [];
+    currentPaid = mockPaid[studentId] || [];
+  } else {
+    const unpaidSnap = await db.collection('billings')
+      .where('studentId', '==', studentId).where('status', '==', '미납').get();
+    currentUnpaid = unpaidSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+    const paidSnap = await db.collection('billings')
+      .where('studentId', '==', studentId).where('status', '==', '완납').get();
+    currentPaid = paidSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }
+  renderUnpaid();
+  renderPaid();
+}
+
+function renderUnpaid() {
+  const body = document.getElementById('unpaidBody');
+  body.innerHTML = currentUnpaid.map(u => `
+    <tr>
+      <td><input type="checkbox" class="unpaid-check" data-id="${u.id}" checked></td>
+      <td>${u.item}</td><td>${u.desc || ''}</td>
+      <td>${u.amount.toLocaleString()}</td><td>${u.dueDate || ''}</td>
+    </tr>`).join('') || '<tr><td colspan="5" class="status-msg">미납 내역이 없습니다.</td></tr>';
+  body.querySelectorAll('.unpaid-check').forEach(cb => cb.addEventListener('change', updateTargetAmount));
+  updateTargetAmount();
+}
+
+function renderPaid() {
+  const body = document.getElementById('paidBody');
+  body.innerHTML = currentPaid.map(p => `
+    <tr><td>${p.item}</td><td>${p.amount.toLocaleString()}</td>
+    <td>${p.paidAmount.toLocaleString()}</td><td>${p.paidDate || ''}</td><td>${p.method || ''}</td></tr>
+  `).join('') || '<tr><td colspan="5" class="status-msg">납입 이력이 없습니다.</td></tr>';
+}
+
+function getCheckedUnpaid() {
+  const ids = Array.from(document.querySelectorAll('.unpaid-check:checked')).map(cb => cb.dataset.id);
+  return currentUnpaid.filter(u => ids.includes(u.id));
+}
+
+function updateTargetAmount() {
+  const total = getCheckedUnpaid().reduce((sum, u) => sum + u.amount, 0);
+  document.getElementById('targetAmount').textContent = total.toLocaleString();
+  document.getElementById('actualAmount').value = total;
+  updateSmsPreview();
+}
+
+function updateSmsPreview() {
+  if (!currentStudent) return;
+  const total = getCheckedUnpaid().reduce((sum, u) => sum + u.amount, 0);
+  document.getElementById('smsContent').value =
+    `[송우찬수학학원] ${currentStudent.name} 학생 미납금 ${total.toLocaleString()}원 안내드립니다. 아래 링크로 결제 부탁드립니다.\n(결제링크: 시스템 연동 후 자동 삽입)`;
+}
+
+/* ====================== 탭 전환 ====================== */
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-unpaid').classList.toggle('hidden', tab.dataset.tab !== 'unpaid');
+    document.getElementById('tab-paid').classList.toggle('hidden', tab.dataset.tab !== 'paid');
+  });
+});
+
+/* ====================== 신규입학 / 수정 / 퇴원 ====================== */
+document.getElementById('btnNewStudent').addEventListener('click', () => {
+  currentStudent = null;
+  ['f_name','f_parentPhone','f_studentPhone','f_school','f_grade'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f_branch').value = '평촌관';
+  document.getElementById('basicInfoView').classList.add('hidden');
+  document.getElementById('basicInfoForm').classList.remove('hidden');
+  document.getElementById('statusMsg').textContent = '신규 학생 정보를 입력하세요.';
+});
+
+document.getElementById('btnEdit').addEventListener('click', () => {
+  if (!currentStudent) { alert('먼저 학생을 검색해서 선택하세요.'); return; }
+  document.getElementById('f_name').value = currentStudent.name || '';
+  document.getElementById('f_branch').value = currentStudent.branch || '평촌관';
+  document.getElementById('f_parentPhone').value = currentStudent.parentPhone || '';
+  document.getElementById('f_studentPhone').value = currentStudent.studentPhone || '';
+  document.getElementById('f_school').value = currentStudent.school || '';
+  document.getElementById('f_grade').value = currentStudent.grade || '';
+  document.getElementById('basicInfoView').classList.add('hidden');
+  document.getElementById('basicInfoForm').classList.remove('hidden');
+});
+
+document.getElementById('btnCancelForm').addEventListener('click', () => {
+  document.getElementById('basicInfoForm').classList.add('hidden');
+  document.getElementById('basicInfoView').classList.remove('hidden');
+});
+
+document.getElementById('btnSaveStudent').addEventListener('click', async () => {
+  const data = {
+    name: document.getElementById('f_name').value.trim(),
+    branch: document.getElementById('f_branch').value,
+    parentPhone: document.getElementById('f_parentPhone').value.trim(),
+    studentPhone: document.getElementById('f_studentPhone').value.trim(),
+    school: document.getElementById('f_school').value.trim(),
+    grade: document.getElementById('f_grade').value.trim(),
+  };
+  if (!data.name) { alert('이름을 입력하세요.'); return; }
+
+  if (currentStudent && currentStudent.id) {
+    // 수정
+    if (!useLocalMock) {
+      await db.collection('students').doc(currentStudent.id).update(data);
+    }
+    currentStudent = { ...currentStudent, ...data };
+    document.getElementById('statusMsg').textContent = '학생 정보가 수정되었습니다.';
+  } else {
+    // 신규 입학
+    data.status = '재원';
+    data.admitDate = new Date().toISOString().slice(0,10);
+    data.withdrawDate = '';
+    data.classes = [];
+    if (!useLocalMock) {
+      const ref = await db.collection('students').add(data);
+      currentStudent = { id: ref.id, ...data };
+    } else {
+      const id = 'mock_' + Date.now();
+      mockStudents[data.name] = { id, ...data };
+      currentStudent = { id, ...data };
+    }
+    document.getElementById('statusMsg').textContent = '신규 학생이 입학 처리되었습니다.';
+  }
+  renderBasicInfo(currentStudent);
+  await loadBilling(currentStudent.id);
+});
+
+document.getElementById('btnWithdraw').addEventListener('click', async () => {
+  if (!currentStudent) { alert('먼저 학생을 검색해서 선택하세요.'); return; }
+  if (!confirm(`${currentStudent.name} 학생을 퇴원 처리하시겠습니까?`)) return;
+  const withdrawDate = new Date().toISOString().slice(0,10);
+  if (!useLocalMock) {
+    await db.collection('students').doc(currentStudent.id).update({ status: '퇴원', withdrawDate });
+  }
+  currentStudent.status = '퇴원';
+  currentStudent.withdrawDate = withdrawDate;
+  renderBasicInfo(currentStudent);
+  document.getElementById('statusMsg').textContent = '퇴원 처리되었습니다.';
+});
+
+/* ====================== 반 추가/삭제 ====================== */
+document.getElementById('btnAddClass').addEventListener('click', async () => {
+  const val = document.getElementById('newClassInput').value.trim();
+  if (!val || !currentStudent) return;
+  const classes = [...(currentStudent.classes || []), val];
+  if (!useLocalMock) await db.collection('students').doc(currentStudent.id).update({ classes });
+  currentStudent.classes = classes;
+  renderBasicInfo(currentStudent);
+  document.getElementById('newClassInput').value = '';
+});
+
+window.removeClass = async function(name) {
+  if (!currentStudent) return;
+  const classes = (currentStudent.classes || []).filter(c => c !== name);
+  if (!useLocalMock) await db.collection('students').doc(currentStudent.id).update({ classes });
+  currentStudent.classes = classes;
+  renderBasicInfo(currentStudent);
+};
+
+/* ====================== 납입처리 ====================== */
+document.getElementById('btnPay').addEventListener('click', async () => {
+  const checked = getCheckedUnpaid();
+  if (checked.length === 0) { alert('납입 처리할 항목을 선택하세요.'); return; }
+  const method = document.getElementById('payMethod').value;
+  const today = new Date().toISOString().slice(0,10);
+
+  for (const u of checked) {
+    if (!useLocalMock) {
+      await db.collection('billings').doc(u.id).update({
+        status: '완납', paidAmount: u.amount, paidDate: today, paymentMethod: method
+      });
+    } else {
+      mockPaid[currentStudent.id] = mockPaid[currentStudent.id] || [];
+      mockPaid[currentStudent.id].push({ item: u.item, amount: u.amount, paidAmount: u.amount, paidDate: today, method });
+      mockUnpaid[currentStudent.id] = (mockUnpaid[currentStudent.id] || []).filter(x => x.id !== u.id);
+    }
+  }
+  document.getElementById('statusMsg').textContent = `${checked.length}건 납입 처리되었습니다.`;
+  await loadBilling(currentStudent.id);
+});
+
+/* ====================== 문자/알림톡 발송 (연동 전 시뮬레이션) ====================== */
+document.getElementById('btnSendPayLink').addEventListener('click', () => {
+  if (!currentStudent) { alert('학생을 먼저 선택하세요.'); return; }
+  const checked = getCheckedUnpaid();
+  if (checked.length === 0) { alert('발송할 미납 항목을 선택하세요.'); return; }
+  updateSmsPreview();
+  const targets = [];
+  if (document.getElementById('sendToParent').checked) targets.push('학부모(' + currentStudent.parentPhone + ')');
+  if (document.getElementById('sendToStudent').checked) targets.push('학생(' + currentStudent.studentPhone + ')');
+  document.getElementById('smsStatus').textContent =
+    `[시뮬레이션] ${targets.join(', ')}에게 결제톡이 발송됩니다. 실제 발송은 알림톡 API(알리고 등) 연동 후 동작합니다.`;
+});
+
+document.getElementById('btnSendSms').addEventListener('click', () => {
+  if (!currentStudent) { alert('학생을 먼저 선택하세요.'); return; }
+  const targets = [];
+  if (document.getElementById('sendToParent').checked) targets.push('학부모(' + currentStudent.parentPhone + ')');
+  if (document.getElementById('sendToStudent').checked) targets.push('학생(' + currentStudent.studentPhone + ')');
+  document.getElementById('smsStatus').textContent =
+    `[시뮬레이션] ${targets.join(', ')}에게 문자가 발송됩니다. 실제 발송은 문자 API 연동 후 동작합니다.`;
+});
+
+/* 데모 편의: 목업 모드일 때 시작 시 신지호로 자동 검색 예시 안내 */
+if (useLocalMock) {
+  document.getElementById('statusMsg').textContent = '검색창에 "신지호"를 입력해 데모 데이터를 확인해보세요.';
+}
+</script>
+</body>
+</html>
