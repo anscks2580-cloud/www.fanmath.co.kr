@@ -1882,7 +1882,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { initializeApp as initializeSecondaryApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, deleteDoc, updateDoc, query, where, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getStorage, ref, getDownloadURL, listAll, uploadBytes } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { getStorage, ref, getDownloadURL, listAll, uploadBytes, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 
 
@@ -7841,9 +7841,23 @@ window.bulkSaveExamMaterialOrder = async () => {
   }
 };
 
-window.deleteExamMaterial = async function(id, title) {
-  if (!confirm(`"${title}" 자료를 삭제하시겠습니까?`)) return;
+// examMaterials 문서를 지우면서, 실제 PDF 파일이 Storage에 첨부돼 있던 자료(pdfUrl 있음)는
+// 그 파일도 함께 삭제합니다. (Vimeo 원본 영상은 우리 쪽 소유가 아니므로 건드리지 않습니다)
+async function deleteExamMaterialStorageFile(v) {
+  if (!v || !v.pdfUrl) return;
   try {
+    await deleteObject(ref(storage, v.pdfUrl));
+  } catch(e) {
+    // 파일이 이미 없거나 삭제 권한이 없는 경우 등은 조용히 건너뜁니다.
+  }
+}
+
+window.deleteExamMaterial = async function(id, title) {
+  const v = examMaterialsCache.find(m => m.id === id);
+  const hasFile = !!(v && v.pdfUrl);
+  if (!confirm(`"${title}" 자료를 삭제하시겠습니까?${hasFile ? '\n(첨부된 실제 PDF 파일도 Storage에서 함께 삭제됩니다)' : ''}`)) return;
+  try {
+    await deleteExamMaterialStorageFile(v);
     await deleteDoc(doc(db, 'examMaterials', id));
     await loadExamMaterials();
   } catch(e) {
@@ -7851,16 +7865,23 @@ window.deleteExamMaterial = async function(id, title) {
   }
 };
 
-// 체크박스로 선택된 자료만 골라 한 번에 삭제합니다. (Vimeo 원본 영상이나 Storage의 실제 PDF 파일은 지우지 않고,
-// examMaterials 컬렉션의 등록 문서만 지웁니다 — 자료실(exam) 목록에서 사라지는 효과)
+// 체크박스로 선택된 자료만 골라 한 번에 삭제합니다. examMaterials 등록 문서뿐 아니라,
+// 실제 PDF 파일이 Storage에 첨부돼 있던 자료는 그 파일도 함께 지웁니다.
+// (Vimeo 원본 영상은 우리 쪽 소유가 아니므로 건드리지 않습니다)
 window.bulkDeleteSelectedExamMaterials = async function() {
   const checked = [...document.querySelectorAll('.exam-material-select:checked')].map(el => el.dataset.id);
   if (!checked.length) { alert('삭제할 자료를 먼저 선택해주세요.'); return; }
-  if (!confirm(`선택한 자료 ${checked.length}개를 삭제하시겠습니까?\n(Vimeo 원본 영상이나 첨부된 PDF 파일 자체는 삭제되지 않고, 자료실 목록에서만 사라집니다)`)) return;
+  const fileCount = checked.filter(id => {
+    const v = examMaterialsCache.find(m => m.id === id);
+    return v && v.pdfUrl;
+  }).length;
+  if (!confirm(`선택한 자료 ${checked.length}개를 삭제하시겠습니까?${fileCount ? `\n(이 중 ${fileCount}개는 첨부된 실제 PDF 파일도 Storage에서 함께 삭제됩니다)` : '\n(Vimeo 원본 영상은 삭제되지 않고, 자료실 목록에서만 사라집니다)'}`)) return;
   const statusEl = document.getElementById('examSyncStatus');
   let deleted = 0, failed = 0;
   for (const id of checked) {
     try {
+      const v = examMaterialsCache.find(m => m.id === id);
+      await deleteExamMaterialStorageFile(v);
       await deleteDoc(doc(db, 'examMaterials', id));
       deleted++;
     } catch(e) {
