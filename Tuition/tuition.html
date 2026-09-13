@@ -64,6 +64,7 @@
   <div class="card">
     <div class="row" style="position:relative;">
       <input type="text" id="searchInput" placeholder="학생 이름 검색" style="width:220px;">
+      <button class="btn-primary" id="btnSearch">검색</button>
       <div id="searchResults" class="hidden" style="top:40px;left:0;"></div>
       <span id="branchBadge" class="badge badge-branch hidden"></span>
       <span id="statusBadge" class="badge hidden"></span>
@@ -165,12 +166,12 @@
    Firebase 콘솔 > 프로젝트 설정 > 일반 > 내 앱 > SDK 설정에서 복사
 ================================================================ */
 const firebaseConfig = {
-  apiKey: "",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: ""
+  apiKey: "AIzaSyAcUD_Ai4sewIabN3MXFJumNsI3ZaV-j34",
+  authDomain: "tuition-916ab.firebaseapp.com",
+  projectId: "tuition-916ab",
+  storageBucket: "tuition-916ab.firebasestorage.app",
+  messagingSenderId: "775990692835",
+  appId: "1:775990692835:web:606a0650cd867ca2c26ed6"
 };
 
 let db = null;
@@ -223,18 +224,32 @@ let currentPaid = [];
 const searchInput = document.getElementById('searchInput');
 const searchResults = document.getElementById('searchResults');
 
-searchInput.addEventListener('input', async () => {
+async function runSearch() {
   const q = searchInput.value.trim();
   if (!q) { searchResults.classList.add('hidden'); return; }
+  document.getElementById('statusMsg').textContent = '검색 중...';
   let matches = [];
-  if (useLocalMock) {
-    matches = Object.values(mockStudents).filter(s => s.name.includes(q));
-  } else {
-    const snap = await db.collection('students')
-      .where('name', '>=', q).where('name', '<=', q + '\uf8ff').limit(10).get();
-    matches = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+  try {
+    if (useLocalMock) {
+      matches = Object.values(mockStudents).filter(s => s.name.includes(q));
+    } else {
+      // 1차: 전체 학생을 불러와 이름에 포함되는지로 검색 (부분일치, 소량 데이터라 성능 문제 없음)
+      const snap = await db.collection('students').get();
+      matches = snap.docs
+        .map(d => ({ id: d.id, ...d.data() }))
+        .filter(s => (s.name || '').includes(q));
+    }
+  } catch (e) {
+    document.getElementById('statusMsg').textContent = '검색 중 오류: ' + e.message;
+    console.error(e);
+    return;
   }
-  if (matches.length === 0) { searchResults.classList.add('hidden'); return; }
+  if (matches.length === 0) {
+    searchResults.classList.add('hidden');
+    document.getElementById('statusMsg').textContent = `"${q}" 검색 결과가 없습니다. (등록된 이름과 정확히 일치하는지 확인해주세요)`;
+    return;
+  }
+  document.getElementById('statusMsg').textContent = `${matches.length}명 검색됨.`;
   searchResults.innerHTML = matches.map(m =>
     `<div data-id="${m.id}">${m.name} (${m.branch || ''})</div>`
   ).join('');
@@ -242,7 +257,11 @@ searchInput.addEventListener('input', async () => {
   searchResults.querySelectorAll('div').forEach(el => {
     el.addEventListener('click', () => loadStudent(el.dataset.id, matches.find(m => m.id === el.dataset.id)));
   });
-});
+}
+
+searchInput.addEventListener('input', runSearch);
+document.getElementById('btnSearch').addEventListener('click', runSearch);
+searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') runSearch(); });
 
 async function loadStudent(id, data) {
   searchResults.classList.add('hidden');
