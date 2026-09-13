@@ -786,7 +786,8 @@
         padding:10px 14px;background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);
         border-radius:8px;margin-bottom:12px;">
         <button class="btn btn-secondary btn-sm" onclick="bulkSaveExamMaterialOrder()" style="background:rgba(240,192,64,0.15);border-color:var(--gold);color:var(--gold);">📋 순서·제목 일괄 저장</button>
-        <button class="btn btn-danger btn-sm" onclick="bulkDeleteAllExamMaterials()">🗑️ 등록된 자료 전체 삭제</button>
+        <button class="btn btn-secondary btn-sm" onclick="toggleAllExamMaterialSelect()">☑️ 전체 선택/해제</button>
+        <button class="btn btn-danger btn-sm" onclick="bulkDeleteSelectedExamMaterials()">🗑️ 선택 삭제</button>
       </div>
       <div id="examMaterialList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
     </div>
@@ -7599,6 +7600,7 @@ async function loadExamMaterials() {
                 ${groups[academy].map((v, i) => `
                   <div class="assign-item" style="flex-wrap:wrap;gap:8px;align-items:center;
                     border-top:1px solid rgba(255,255,255,0.04);">
+                    <input type="checkbox" class="exam-material-select" data-id="${v.id}" style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer;flex-shrink:0;">
                     <input id="order-em-${v.id}" type="number" min="1" value="${v.order != null ? v.order : ''}"
                       placeholder="순서"
                       style="width:52px;padding:4px 6px;background:#1A1230;border:1px solid rgba(255,255,255,0.15);
@@ -7849,26 +7851,33 @@ window.deleteExamMaterial = async function(id, title) {
   }
 };
 
-// 등록된 중간고사 자료를 한 번에 전부 삭제합니다. (Vimeo 원본 영상이나 Storage의 실제 PDF 파일은 지우지 않고,
+// 체크박스로 선택된 자료만 골라 한 번에 삭제합니다. (Vimeo 원본 영상이나 Storage의 실제 PDF 파일은 지우지 않고,
 // examMaterials 컬렉션의 등록 문서만 지웁니다 — 자료실(exam) 목록에서 사라지는 효과)
-window.bulkDeleteAllExamMaterials = async function() {
-  const count = examMaterialsCache.length;
-  if (!count) { alert('삭제할 자료가 없습니다.'); return; }
-  if (!confirm(`등록된 중간고사 자료 ${count}개를 전부 삭제하시겠습니까?\n(Vimeo 원본 영상이나 첨부된 PDF 파일 자체는 삭제되지 않고, 자료실 목록에서만 사라집니다)`)) return;
-  if (!confirm('정말로 전체 삭제하시겠습니까? 되돌릴 수 없습니다.')) return;
+window.bulkDeleteSelectedExamMaterials = async function() {
+  const checked = [...document.querySelectorAll('.exam-material-select:checked')].map(el => el.dataset.id);
+  if (!checked.length) { alert('삭제할 자료를 먼저 선택해주세요.'); return; }
+  if (!confirm(`선택한 자료 ${checked.length}개를 삭제하시겠습니까?\n(Vimeo 원본 영상이나 첨부된 PDF 파일 자체는 삭제되지 않고, 자료실 목록에서만 사라집니다)`)) return;
   const statusEl = document.getElementById('examSyncStatus');
   let deleted = 0, failed = 0;
-  for (const v of examMaterialsCache) {
+  for (const id of checked) {
     try {
-      await deleteDoc(doc(db, 'examMaterials', v.id));
+      await deleteDoc(doc(db, 'examMaterials', id));
       deleted++;
     } catch(e) {
       failed++;
     }
-    if (statusEl) statusEl.textContent = `삭제 중... (${deleted + failed}/${count})`;
+    if (statusEl) statusEl.textContent = `삭제 중... (${deleted + failed}/${checked.length})`;
   }
   if (statusEl) statusEl.textContent = `✅ ${deleted}개 삭제 완료${failed ? ` · 실패 ${failed}개` : ''}`;
   await loadExamMaterials();
+};
+
+// 목록에 보이는 체크박스를 전체 선택하거나, 하나라도 선택돼 있으면 전체 해제합니다.
+window.toggleAllExamMaterialSelect = function() {
+  const boxes = [...document.querySelectorAll('.exam-material-select')];
+  if (!boxes.length) return;
+  const shouldCheck = boxes.some(b => !b.checked);
+  boxes.forEach(b => b.checked = shouldCheck);
 };
 
 
