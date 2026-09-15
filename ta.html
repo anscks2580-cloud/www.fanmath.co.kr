@@ -51,9 +51,53 @@
 .empty { color:var(--muted); font-size:13px; }
 
 @media(max-width:640px){ .admin-tabs{ overflow-x:auto; flex-wrap:nowrap; } }
+
+/* ── 로그인 화면 ── */
+#loginScreen { display:flex; align-items:center; justify-content:center; min-height:100vh; }
+#portalScreen { display:none; }
+.login-card {
+  background:linear-gradient(145deg,#231848 0%,#1A1230 100%);
+  border:1px solid rgba(240,192,64,0.2);
+  border-radius:20px; padding:48px 40px; width:100%; max-width:400px;
+  box-shadow:0 1px 0 rgba(240,192,64,0.5), 0 24px 60px rgba(0,0,0,0.5);
+  position:relative; overflow:hidden;
+}
+.login-card::before {
+  content:''; position:absolute; top:0; left:10%; right:10%; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(240,192,64,0.8),transparent);
+}
+.login-card-title { font-size:20px; font-weight:700; text-align:center; margin-bottom:4px; }
+.login-card-sub   { font-size:13px; color:var(--muted); text-align:center; margin-bottom:28px; }
+.btn-login-full { width:100%; padding:13px; background:var(--gold); color:var(--bg); font-size:15px; font-weight:700; border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
+.login-footer-link { text-align:center; margin-top:20px; font-size:12px; color:var(--muted); }
+.login-footer-link a { color:var(--gold); text-decoration:none; }
 </style>
 </head>
 <body>
+
+<!-- ══════════ 로그인 화면 ══════════ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-card-title">조교 페이지</div>
+    <div class="login-card-sub">송우찬수학학원 교직원 전용</div>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label>아이디 (이름)</label>
+      <input type="text" id="ta-name" placeholder="예: 홍길동" autocomplete="username">
+    </div>
+    <div class="form-group" style="margin-bottom:20px;">
+      <label>비밀번호</label>
+      <input type="password" id="ta-pw" placeholder="비밀번호 입력" autocomplete="current-password">
+    </div>
+    <button class="btn-login-full" id="ta-loginBtn" onclick="loginTA()">로그인</button>
+    <div class="alert err" id="ta-err" style="display:none; margin-top:14px;"></div>
+    <div class="login-footer-link">
+      계정 문의: 원장 | <a href="index.html">← 홈으로</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ 조교 화면 ══════════ -->
+<div id="portalScreen">
 <div class="admin-wrap">
   <div class="admin-header">
     <div>
@@ -113,10 +157,11 @@
     </div>
   </div>
 </div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signOut, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, doc, getDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -141,7 +186,30 @@ window.switchTab = function(id, btn) {
 
 window.doLogout = async function() {
   await signOut(auth);
-  window.location.href = 'login.html';
+};
+
+// ── 엔터키 로그인 ──
+['ta-name','ta-pw'].forEach(id => {
+  document.getElementById(id)?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.loginTA();
+  });
+});
+
+// 조교 로그인
+window.loginTA = async function() {
+  const name = document.getElementById('ta-name').value.trim();
+  const pw   = document.getElementById('ta-pw').value;
+  const err  = document.getElementById('ta-err');
+  const btn  = document.getElementById('ta-loginBtn');
+  if (!name || !pw) { err.textContent = '이름과 비밀번호를 입력해주세요.'; err.style.display='block'; return; }
+  btn.textContent = '로그인 중...'; btn.disabled = true;
+  try {
+    await signInWithEmailAndPassword(auth, name + '@songmath.kr', pw);
+    err.style.display = 'none';
+  } catch(e) {
+    err.textContent = '이름 또는 비밀번호가 올바르지 않습니다.'; err.style.display='block';
+    btn.textContent = '로그인'; btn.disabled = false;
+  }
 };
 
 function esc(s) {
@@ -336,15 +404,20 @@ window.loadTasks = async function() {
   }).join('');
 };
 
+function showLogin()  { document.getElementById('loginScreen').style.display='flex';  document.getElementById('portalScreen').style.display='none'; }
+function showPortal() { document.getElementById('loginScreen').style.display='none';  document.getElementById('portalScreen').style.display='block'; }
+
 // 조교 권한 확인
 onAuthStateChanged(auth, async (user) => {
-  if (!user) { window.location.href = 'login.html'; return; }
+  if (!user) { showLogin(); return; }
   const tDoc = await getDoc(doc(db, 'teachers', user.uid));
   if (!tDoc.exists() || tDoc.data().role !== 'ta') {
-    window.location.href = 'login.html';
+    await signOut(auth);
+    showLogin();
     return;
   }
   document.getElementById('taName').textContent = `${tDoc.data().name} 조교님 · ${tDoc.data().branch || ''}`;
+  showPortal();
   await Promise.all([loadClinicRoom(), loadHomework(), loadAnswerKeys(), loadTasks(), loadTaMyboxLink()]);
 });
 </script>

@@ -249,9 +249,53 @@
   display:inline-block; font-size:11px; padding:3px 8px; border-radius:6px;
   background:rgba(240,192,64,0.12); color:var(--gold); margin-bottom:6px;
 }
+
+/* ── 로그인 화면 ── */
+#loginScreen { display:flex; align-items:center; justify-content:center; min-height:100vh; }
+#portalScreen { display:none; }
+.login-card {
+  background:linear-gradient(145deg,#231848 0%,#1A1230 100%);
+  border:1px solid rgba(240,192,64,0.2);
+  border-radius:20px; padding:48px 40px; width:100%; max-width:400px;
+  box-shadow:0 1px 0 rgba(240,192,64,0.5), 0 24px 60px rgba(0,0,0,0.5);
+  position:relative; overflow:hidden;
+}
+.login-card::before {
+  content:''; position:absolute; top:0; left:10%; right:10%; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(240,192,64,0.8),transparent);
+}
+.login-card-title { font-size:20px; font-weight:700; text-align:center; margin-bottom:4px; }
+.login-card-sub   { font-size:13px; color:var(--muted); text-align:center; margin-bottom:28px; }
+.btn-login-full { width:100%; padding:13px; background:var(--gold); color:var(--bg); font-size:15px; font-weight:700; border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
+.login-footer-link { text-align:center; margin-top:20px; font-size:12px; color:var(--muted); }
+.login-footer-link a { color:var(--gold); text-decoration:none; }
 </style>
 </head>
 <body>
+
+<!-- ══════════ 로그인 화면 ══════════ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-card-title">관리자 페이지</div>
+    <div class="login-card-sub">송우찬수학학원 관리부 전용</div>
+    <div class="form-group" style="margin-bottom:14px;">
+      <label>아이디 (이메일)</label>
+      <input type="email" id="a-email" placeholder="이메일 입력" autocomplete="username">
+    </div>
+    <div class="form-group" style="margin-bottom:20px;">
+      <label>비밀번호</label>
+      <input type="password" id="a-pw" placeholder="비밀번호 입력" autocomplete="current-password">
+    </div>
+    <button class="btn-login-full" id="a-loginBtn" onclick="loginAdmin()">로그인</button>
+    <div class="alert err" id="a-err" style="display:none; margin-top:14px;"></div>
+    <div class="login-footer-link">
+      계정 문의: 대표원장 | <a href="index.html">← 홈으로</a>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════ 관리자 화면 ══════════ -->
+<div id="portalScreen">
 <nav>
   <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#F0EDF8;flex-shrink:0;">
     <img src="swc-logo.svg" style="height:30px;width:30px;object-fit:contain;" alt="SWC">
@@ -1507,6 +1551,18 @@
 
   <!-- 학생 출결 -->
   <div class="tab-panel" id="tab-attendance">
+    <div class="card" style="border-color:rgba(240,192,64,0.4);">
+      <h3>📶 오늘의 출결코드 (학부모 앱 자가 출석체크용)</h3>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;">
+        학생/학부모가 학부모 앱에서 이 코드를 입력하면 자동으로 출석체크되고, 등록된 학부모에게 등원 알림이 발송됩니다.
+        매일 등원 전 코드를 새로 발급해주세요.
+      </p>
+      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+        <div id="dailyCodeDisplay" style="font-size:28px;font-weight:800;letter-spacing:6px;color:var(--gold);min-width:140px;">------</div>
+        <button class="btn btn-sm btn-primary" onclick="generateDailyCode()">🔄 오늘의 코드 새로 발급</button>
+        <span id="dailyCodeStatus" style="font-size:12px;color:var(--muted);"></span>
+      </div>
+    </div>
     <div class="card">
       <h3>✅ 출결 체크</h3>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
@@ -1876,10 +1932,11 @@
     </div>
   </div>
 </div>
+</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updatePassword, EmailAuthProvider, reauthenticateWithCredential } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updatePassword, EmailAuthProvider, reauthenticateWithCredential, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { initializeApp as initializeSecondaryApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, deleteDoc, updateDoc, query, where, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, getDownloadURL, listAll, uploadBytes, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
@@ -2051,12 +2108,16 @@ let studentsCache = [];
 let videosCache = [];
 window.videosCache = videosCache;
 
+function showLogin()  { document.getElementById('loginScreen').style.display='flex';  document.getElementById('portalScreen').style.display='none'; }
+function showPortal() { document.getElementById('loginScreen').style.display='none';  document.getElementById('portalScreen').style.display='block'; }
+
 // 관리자 확인
 onAuthStateChanged(auth, async (user) => {
-  if (!user) { window.location.href = 'login.html'; return; }
+  if (!user) { showLogin(); return; }
   const adminDoc = await getDoc(doc(db, 'admins', user.uid));
-  if (!adminDoc.exists()) { window.location.href = 'index.html'; return; }
+  if (!adminDoc.exists()) { await signOut(auth); showLogin(); return; }
   document.getElementById('adminName').textContent = user.email;
+  showPortal();
   await loadStudents();
   await loadVideos();
   await loadGroupNames();
@@ -2067,6 +2128,30 @@ onAuthStateChanged(auth, async (user) => {
   setupTeacherExcelDrop();
 });
 
+// ── 엔터키 로그인 ──
+['a-email','a-pw'].forEach(id => {
+  document.getElementById(id)?.addEventListener('keydown', e => {
+    if (e.key === 'Enter') window.loginAdmin();
+  });
+});
+
+// 관리자 로그인
+window.loginAdmin = async function() {
+  const email = document.getElementById('a-email').value.trim();
+  const pw    = document.getElementById('a-pw').value;
+  const err   = document.getElementById('a-err');
+  const btn   = document.getElementById('a-loginBtn');
+  if (!email || !pw) { err.textContent = '이메일과 비밀번호를 입력해주세요.'; err.style.display='block'; return; }
+  btn.textContent = '로그인 중...'; btn.disabled = true;
+  try {
+    await signInWithEmailAndPassword(auth, email, pw);
+    err.style.display = 'none';
+  } catch(e) {
+    err.textContent = '이메일 또는 비밀번호가 올바르지 않습니다.'; err.style.display='block';
+    btn.textContent = '로그인'; btn.disabled = false;
+  }
+};
+
 window.switchTab = (id, btn) => {
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
@@ -2074,7 +2159,7 @@ window.switchTab = (id, btn) => {
   btn.classList.add('active');
 };
 
-window.doLogout = async () => { await signOut(auth); window.location.href = 'login.html'; };
+window.doLogout = async () => { await signOut(auth); };
 
 // ── 학생 로드 ──
 async function loadStudents() {
@@ -5594,6 +5679,46 @@ window.initAttendanceTab = function() {
   attCurrentDate = new Date();
   attStatus = {};
   renderAttendance();
+  loadDailyCode();
+};
+
+function todayKSTStr() {
+  const d = new Date();
+  const k = new Date(d.toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+  return `${k.getFullYear()}-${String(k.getMonth() + 1).padStart(2, '0')}-${String(k.getDate()).padStart(2, '0')}`;
+}
+
+window.loadDailyCode = async function() {
+  const disp = document.getElementById('dailyCodeDisplay');
+  const status = document.getElementById('dailyCodeStatus');
+  if (!disp) return;
+  try {
+    const snap = await getDoc(doc(db, 'settings', 'dailyCode'));
+    const today = todayKSTStr();
+    if (snap.exists() && snap.data().date === today) {
+      disp.textContent = snap.data().code;
+      status.textContent = `오늘(${today}) 발급된 코드입니다.`;
+    } else {
+      disp.textContent = '------';
+      status.textContent = '오늘 아직 코드가 발급되지 않았습니다. 발급 버튼을 눌러주세요.';
+    }
+  } catch (e) {
+    status.textContent = '코드 조회 오류: ' + e.message;
+  }
+};
+
+window.generateDailyCode = async function() {
+  const disp = document.getElementById('dailyCodeDisplay');
+  const status = document.getElementById('dailyCodeStatus');
+  const code = String(Math.floor(1000 + Math.random() * 9000));
+  const today = todayKSTStr();
+  try {
+    await setDoc(doc(db, 'settings', 'dailyCode'), { code, date: today, updatedAt: Timestamp.now() });
+    disp.textContent = code;
+    status.textContent = `${today} 코드 발급 완료!`;
+  } catch (e) {
+    status.textContent = '발급 실패: ' + e.message;
+  }
 };
 
 window.changeAttDay = function(delta) {
