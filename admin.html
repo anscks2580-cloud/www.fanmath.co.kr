@@ -2108,24 +2108,43 @@ let studentsCache = [];
 let videosCache = [];
 window.videosCache = videosCache;
 
-function showLogin()  { document.getElementById('loginScreen').style.display='flex';  document.getElementById('portalScreen').style.display='none'; }
+function resetLoginBtn() {
+  const btn = document.getElementById('a-loginBtn');
+  if (btn) { btn.textContent = '로그인'; btn.disabled = false; }
+}
+function showLogin()  { document.getElementById('loginScreen').style.display='flex';  document.getElementById('portalScreen').style.display='none'; resetLoginBtn(); }
 function showPortal() { document.getElementById('loginScreen').style.display='none';  document.getElementById('portalScreen').style.display='block'; }
 
 // 관리자 확인
 onAuthStateChanged(auth, async (user) => {
   if (!user) { showLogin(); return; }
-  const adminDoc = await getDoc(doc(db, 'admins', user.uid));
-  if (!adminDoc.exists()) { await signOut(auth); showLogin(); return; }
-  document.getElementById('adminName').textContent = user.email;
-  showPortal();
-  await loadStudents();
-  await loadVideos();
-  await loadGroupNames();
-  renderFolderAccordion();
-  await loadTeachers();
-  renderTagChecklist('n-tagChecklist', []);
-  setupExcelDrop();
-  setupTeacherExcelDrop();
+  try {
+    const adminDoc = await getDoc(doc(db, 'admins', user.uid));
+    if (!adminDoc.exists()) {
+      const err = document.getElementById('a-err');
+      err.textContent = '관리자 권한이 없는 계정입니다. (uid: ' + user.uid + ')';
+      err.style.display = 'block';
+      await signOut(auth);
+      showLogin();
+      return;
+    }
+    document.getElementById('adminName').textContent = user.email;
+    showPortal();
+    await loadStudents();
+    await loadVideos();
+    await loadGroupNames();
+    renderFolderAccordion();
+    await loadTeachers();
+    renderTagChecklist('n-tagChecklist', []);
+    setupExcelDrop();
+    setupTeacherExcelDrop();
+  } catch(e) {
+    console.error('관리자 확인 중 오류:', e);
+    const err = document.getElementById('a-err');
+    err.textContent = '관리자 확인 중 오류가 발생했습니다: ' + e.code + ' / ' + e.message;
+    err.style.display = 'block';
+    showLogin();
+  }
 });
 
 // ── 엔터키 로그인 ──
