@@ -194,8 +194,6 @@
   <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;"><div id="navUserArea" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
     <a href="login.html" id="navLoginBtn" style="font-size:13px;color:var(--gold);text-decoration:none;padding:7px 16px;border:1px solid var(--border);border-radius:6px;white-space:nowrap;display:none;">로그인</a>
     <span id="navUserName" style="font-size:13px;color:var(--muted);white-space:nowrap;display:none;"></span>
-    <a id="navTeacherBtn" href="teacher.html" style="font-size:12px;color:var(--gold);text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:6px;white-space:nowrap;display:none;">선생님 포탈</a>
-    <a id="navAdminBtn" href="admin.html" style="font-size:12px;color:var(--gold);text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:6px;white-space:nowrap;display:none;">관리자 페이지</a>
     <button id="navLogoutBtn" onclick="doNavLogout()" style="font-size:12px;color:var(--muted);background:rgba(255,255,255,0.06);border:1px solid var(--border-soft);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:inherit;white-space:nowrap;display:none;">로그아웃</button>
   </div><button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="메뉴">
     <span></span><span></span><span></span>
@@ -432,29 +430,18 @@ onAuthStateChanged(auth, async (user) => {
 
   if (user) {
     const studentDoc = await getDoc(doc(db, 'students', user.uid));
-    const adminDoc   = await getDoc(doc(db, 'admins',   user.uid));
-    const teacherDoc = await getDoc(doc(db, 'teachers', user.uid));
     let nameHtml;
     if (studentDoc.exists()) {
       const d = studentDoc.data();
       nameHtml = `${d.branch || ''} | ${d.grade || ''} <b style="color:var(--off-white);font-weight:700;">${d.name}</b> 학생`;
-    } else if (adminDoc.exists()) {
-      nameHtml = '관리자';
-    } else if (teacherDoc.exists()) {
-      const d = teacherDoc.data();
-      nameHtml = `${d.branch || ''} | <b style="color:var(--off-white);font-weight:700;">${d.name}</b> 선생님`;
     } else {
       nameHtml = user.email;
     }
 
-    const adminBtn   = document.getElementById('navAdminBtn');
-    const teacherBtn = document.getElementById('navTeacherBtn');
     loginBtn.style.display = 'none';
     userName.style.display = 'inline';
     userName.innerHTML = nameHtml;
     logoutBtn.style.display = 'inline';
-    if (adminDoc.exists()   && adminBtn)   adminBtn.style.display   = 'inline';
-    if (teacherDoc.exists() && teacherBtn) teacherBtn.style.display = 'inline';
   } else {
     loginBtn.style.display = 'inline';
     userName.style.display = 'none';
