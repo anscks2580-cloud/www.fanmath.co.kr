@@ -6,16 +6,16 @@
 <title>전임강사 매뉴얼 | 송우찬수학학원</title>
 <style>
   :root{
-    --bg:#1b1430;
-    --bg-panel:#241c3d;
-    --bg-card:#2c2249;
-    --line:#3a2f5c;
-    --gold:#d4a843;
-    --gold-soft:#e8c877;
-    --text:#f1ede5;
-    --text-dim:#b7aed0;
+    --bg:#1a1230;
+    --bg-panel:#1e1638;
+    --bg-card:#251c42;
+    --line:rgba(255,255,255,0.1);
+    --gold:#f0c040;
+    --gold-soft:#f0c040;
+    --text:#f5f2ec;
+    --text-dim:#b8b0cf;
     --text-faint:#8a80a8;
-    --mark:#d4a843;
+    --mark:#f0c040;
   }
   *{box-sizing:border-box;}
   html{scroll-behavior:smooth;}
@@ -76,7 +76,7 @@
   /* ===== Layout ===== */
   .layout{
     display:grid;
-    grid-template-columns:minmax(0,1fr) 300px;
+    grid-template-columns:minmax(0,1fr) 240px;
     gap:0;
     max-width:1280px;
     margin:0 auto;
@@ -94,9 +94,10 @@
     align-self:start;
     height:100vh;
     overflow-y:auto;
-    padding:28px 22px 40px;
+    padding:24px 16px 40px 20px;
     border-left:1px solid var(--line);
     background:var(--bg-panel);
+    scrollbar-width:thin;
   }
   .search-box{
     position:relative;
@@ -277,7 +278,7 @@
   }
   .hit-nav{
     position:fixed;
-    bottom:20px;right:calc(300px + 24px);
+    bottom:20px;right:calc(240px + 20px);
     background:var(--bg-card);
     border:1px solid var(--gold);
     color:var(--text);
@@ -300,7 +301,7 @@
     border-top:1px solid var(--line);
   }
 
-  @media (max-width:920px){
+  @media (max-width:640px){
     .layout{grid-template-columns:1fr;}
     aside{
       position:relative;height:auto;
