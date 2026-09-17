@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>전임강사 매뉴얼 | 송우찬수학학원</title>
+<style>
+  :root{
+    --bg:#1b1430;
+    --bg-panel:#241c3d;
+    --bg-card:#2c2249;
+    --line:#3a2f5c;
+    --gold:#d4a843;
+    --gold-soft:#e8c877;
+    --text:#f1ede5;
+    --text-dim:#b7aed0;
+    --text-faint:#8a80a8;
+    --mark:#d4a843;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Noto Sans KR","Malgun Gothic",sans-serif;
+    line-height:1.7;
+    -webkit-user-select:none;
+    -moz-user-select:none;
+    -ms-user-select:none;
+    user-select:none;
+  }
+  #search-input{
+    -webkit-user-select:text;
+    user-select:text;
+  }
+  h1,h2,h3,h4{
+    font-family:"Noto Serif KR","Noto Sans KR",serif;
+    color:var(--text);
+    font-weight:700;
+  }
+  a{color:var(--gold-soft);text-decoration:none;}
+
+  /* ===== Header ===== */
+  header{
+    padding:32px 5vw 24px;
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#221a3c 0%, var(--bg) 100%);
+  }
+  header .eyebrow{
+    color:var(--gold);
+    font-size:13px;
+    letter-spacing:.02em;
+    margin:0 0 6px;
+  }
+  header h1{
+    font-size:clamp(24px,3.4vw,34px);
+    margin:0 0 6px;
+  }
+  header p.sub{
+    color:var(--text-dim);
+    margin:0;
+    font-size:14.5px;
+  }
+  .pdf-link{
+    display:inline-block;
+    margin-top:14px;
+    font-size:13.5px;
+    color:var(--text-dim);
+    border:1px solid var(--line);
+    padding:7px 14px;
+    border-radius:3px;
+  }
+  .pdf-link:hover{border-color:var(--gold);color:var(--gold-soft);}
+
+  /* ===== Layout ===== */
+  .layout{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 300px;
+    gap:0;
+    max-width:1280px;
+    margin:0 auto;
+    align-items:start;
+  }
+  main{
+    padding:36px 5vw 80px 5vw;
+    min-width:0;
+  }
+
+  /* ===== TOC / search sidebar ===== */
+  aside{
+    position:sticky;
+    top:0;
+    align-self:start;
+    height:100vh;
+    overflow-y:auto;
+    padding:28px 22px 40px;
+    border-left:1px solid var(--line);
+    background:var(--bg-panel);
+  }
+  .search-box{
+    position:relative;
+    margin-bottom:18px;
+  }
+  .search-box input{
+    width:100%;
+    padding:10px 34px 10px 12px;
+    border-radius:4px;
+    border:1px solid var(--line);
+    background:var(--bg);
+    color:var(--text);
+    font-size:14px;
+    font-family:inherit;
+  }
+  .search-box input:focus{outline:none;border-color:var(--gold);}
+  .search-box .icon{
+    position:absolute;right:10px;top:50%;transform:translateY(-50%);
+    color:var(--text-faint);
+    font-size:14px;
+    pointer-events:none;
+  }
+  #search-count{
+    font-size:12px;
+    color:var(--text-faint);
+    margin:-10px 0 16px;
+    min-height:14px;
+  }
+  .toc-title{
+    font-size:11px;
+    letter-spacing:.08em;
+    color:var(--text-faint);
+    margin:0 0 10px;
+  }
+  nav.toc ul{list-style:none;margin:0;padding:0;}
+  nav.toc > ul > li{margin-bottom:2px;}
+  nav.toc a.chapter{
+    display:block;
+    padding:8px 8px;
+    border-radius:4px;
+    color:var(--text);
+    font-size:14.5px;
+    font-weight:700;
+  }
+  nav.toc a.chapter:hover{background:var(--bg-card);}
+  nav.toc a.chapter.active{color:var(--gold-soft);background:var(--bg-card);}
+  nav.toc ul.sub{margin:2px 0 8px 10px;padding-left:10px;border-left:1px solid var(--line);}
+  nav.toc ul.sub li{margin:0;}
+  nav.toc ul.sub a{
+    display:block;
+    padding:5px 8px;
+    font-size:13.3px;
+    color:var(--text-dim);
+    border-radius:3px;
+  }
+  nav.toc ul.sub a:hover{color:var(--gold-soft);background:var(--bg-card);}
+  nav.toc ul.sub a.active{color:var(--gold-soft);}
+  .toc-hidden{display:none !important;}
+
+  /* ===== Content ===== */
+  section.chapter{
+    padding-top:52px;
+    margin-top:-52px; /* offset for sticky scroll landing */
+    border-top:1px solid var(--line);
+  }
+  section.chapter:first-of-type{border-top:none;}
+  section.chapter h2{
+    font-size:22px;
+    color:var(--gold-soft);
+    margin:18px 0 4px;
+  }
+  section.chapter > .chapter-num{
+    font-size:12px;
+    color:var(--text-faint);
+    letter-spacing:.06em;
+  }
+  h3.topic{
+    font-size:17px;
+    margin:30px 0 8px;
+    padding-top:30px;
+    scroll-margin-top:20px;
+  }
+  h4.subtopic{
+    font-size:15px;
+    color:var(--gold-soft);
+    margin:20px 0 6px;
+  }
+  p{color:var(--text);margin:8px 0;font-size:15px;}
+  p.note{
+    color:var(--text-dim);
+    font-size:13.7px;
+    background:var(--bg-card);
+    border-left:3px solid var(--gold);
+    padding:10px 14px;
+    border-radius:0 4px 4px 0;
+    margin:12px 0;
+  }
+  ul.plain{margin:8px 0;padding-left:20px;color:var(--text);font-size:15px;}
+  ul.plain li{margin:4px 0;}
+
+  table{
+    border-collapse:collapse;
+    width:100%;
+    margin:14px 0 20px;
+    font-size:13.8px;
+    background:#faf6ea;
+    border-radius:4px;
+    overflow:hidden;
+    box-shadow:0 2px 10px rgba(0,0,0,.25);
+  }
+  th,td{
+    border:1px solid #e3d9b8;
+    padding:9px 10px;
+    text-align:center;
+  }
+  th{background:#e9c96b;color:#2a1f00;font-weight:700;}
+  td{color:#3a3020;background:#faf6ea;}
+  .table-caption{font-size:12.5px;color:var(--text-faint);margin:-14px 0 14px;}
+
+  /* ===== 소단원 없는 짧은 챕터(Ⅴ,Ⅵ) 강조 ===== */
+  section.chapter.emphasis{
+    padding:34px 30px;
+    margin-top:36px;
+    background:var(--bg-panel);
+    border:1px solid var(--gold);
+    border-radius:8px;
+  }
+  section.chapter.emphasis .chapter-num{
+    font-size:15px;
+    color:var(--gold);
+  }
+  section.chapter.emphasis h2{
+    font-size:30px;
+    margin:6px 0 14px;
+  }
+  section.chapter.emphasis p{
+    font-size:16.5px;
+    line-height:1.85;
+  }
+
+  .steps{counter-reset:step;margin:14px 0;padding:0;list-style:none;}
+  .steps li{
+    counter-increment:step;
+    position:relative;
+    padding:4px 0 4px 30px;
+    color:var(--text);
+    font-size:14.5px;
+    margin-bottom:6px;
+  }
+  .steps li::before{
+    content:counter(step);
+    position:absolute;left:0;top:3px;
+    width:20px;height:20px;
+    border-radius:50%;
+    background:var(--bg-card);
+    border:1px solid var(--gold);
+    color:var(--gold-soft);
+    font-size:11.5px;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  .contact-card{
+    display:flex;gap:24px;flex-wrap:wrap;
+    background:var(--bg-card);
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:16px 18px;
+    margin:14px 0;
+  }
+  .contact-card div{font-size:14px;color:var(--text-dim);}
+  .contact-card b{color:var(--text);display:block;font-size:13px;margin-bottom:2px;}
+
+  mark{
+    background:var(--gold);
+    color:#2a1f00;
+    border-radius:2px;
+    padding:0 1px;
+  }
+  .hit-nav{
+    position:fixed;
+    bottom:20px;right:calc(300px + 24px);
+    background:var(--bg-card);
+    border:1px solid var(--gold);
+    color:var(--text);
+    padding:8px 14px;
+    border-radius:20px;
+    font-size:13px;
+    display:none;
+    z-index:50;
+    box-shadow:0 6px 20px rgba(0,0,0,.4);
+  }
+  .hit-nav button{
+    background:none;border:none;color:var(--gold-soft);cursor:pointer;font-size:13px;margin-left:8px;
+  }
+
+  footer{
+    text-align:center;
+    padding:26px;
+    color:var(--text-faint);
+    font-size:12.5px;
+    border-top:1px solid var(--line);
+  }
+
+  @media (max-width:920px){
+    .layout{grid-template-columns:1fr;}
+    aside{
+      position:relative;height:auto;
+      border-left:none;border-bottom:1px solid var(--line);
+      order:-1;
+    }
+    nav.toc{max-height:280px;overflow-y:auto;}
+    .hit-nav{right:24px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <p class="eyebrow">송우찬수학학원 · 평촌관 / 산본관</p>
+  <h1>전임강사 매뉴얼</h1>
+  <p class="sub">초·중등부 전임강사를 위한 수업 운영 가이드 · ver.6</p>
+</header>
+
+<div class="layout">
+  <main id="content">
+
+    <!-- ============ 챕터 Ⅰ ============ -->
+    <section class="chapter" id="ch1">
+      <p class="chapter-num">Ⅰ</p>
+      <h2>전임강사 주요 업무 – 초·중등부</h2>
+
+      <h3 class="topic" id="ch1-1">1. 수업진행</h3>
+
+      <h4 class="subtopic" id="ch1-1-1">1-1. 진도</h4>
+      <p>송우찬수학학원은 현행위주의 수업을 진행하는 학원으로, 최대 1년, 평균 6개월 선행이 진행됩니다.</p>
+
+      <h4 class="subtopic" id="ch1-1-2">1-2. 수업</h4>
+      <p>학생이 등원하면 일일테스트(이전 수업시간 진도에 대한 내용)를 진행합니다. 일일테스트는 이전 시간 진도에 대한 복습 형태로 진행하며, 난이도는 어렵지 않게 제작합니다.</p>
+      <ol class="steps">
+        <li>학생들 숙제를 걷어 채점 후 개별적인 첨삭 진행</li>
+        <li>첨삭 후 약 10분의 쉬는시간</li>
+        <li>판서식으로 진도 나가는 수업 진행</li>
+        <li>수업 종료 후 학생들은 클리닉실로 이동하여 개인별 오답시험지 풀이 (매쓰플랫 사용법은 8번 참고)</li>
+      </ol>
+
+      <p><b>중등부 수업시간</b></p>
+      <p class="table-caption">월수금반</p>
+      <table>
+        <tr><th>시간</th><th>담임선생님 수업(판서)</th><th>클리닉 수업</th></tr>
+        <tr><td>1타임 3:30~6:00</td><td>3:30~5:00</td><td>5:00~6:00</td></tr>
+        <tr><td>2타임 5:00~7:00</td><td>5:00~6:30</td><td>6:30~7:00</td></tr>
+        <tr><td>3타임 6:30~8:30</td><td>6:30~8:00</td><td>8:00~8:30</td></tr>
+        <tr><td>4타임 8:00~10:00</td><td colspan="2">담당선생님 수업(2H)</td></tr>
+      </table>
+
+      <p class="table-caption">화목반</p>
+      <table>
+        <tr><th>시간</th><th>담임선생님 수업(판서)</th><th>클리닉 수업</th></tr>
+        <tr><td>1타임 3:30~6:00</td><td>3:30~5:00</td><td>5:00~6:00</td></tr>
+        <tr><td>2타임 5:00~8:00</td><td>5:00~7:00</td><td>7:00~8:00</td></tr>
+        <tr><td>3타임 7:00~10:00</td><td>7:00~8:00</td><td>7:00~8:00</td></tr>
+      </table>
+      <p class="note">월수금 4타임 수업은 클리닉 시간이 따로 없이 2시간 모두 담당선생님이 수업합니다.<br>
+      화목반 3타임 수업은 클리닉 1시간 진행 후 담당선생님 수업이 진행되며, 모든 수업 시작 전 3타임 재원생들의 클리닉 시험지가 원활히 전달되도록 합니다.</p>
+
+      <p><b>겨울방학 기간 진도</b></p>
+      <ul class="plain">
+        <li>다음 학년 1학기 수업 '기본진도' + 심화진도 진행</li>
+        <li>기본진도 마무리 후 심화진도 진행</li>
+        <li>선행진도: 기본진도 마무리 후 심화진도와 병행하며, 선행 정도는 선생님 상황에 따라 진행 가능</li>
+      </ul>
+
+      <h3 class="topic" id="ch1-2">2. 클리닉</h3>
+      <p>모든 학생들이 수업 전/후 진행하는 오답 문제 풀이 시간입니다. 학생들이 클리닉 강의실로 이동하면, 채점과 첨삭은 조교 선생님들이 진행합니다. 조교 선생님들에게 기본적인 문제와 답지를 전달해 주셔야 원활하게 진행됩니다.</p>
+      <p>일찍 귀가하는 등 개별 사정이 있는 학생은 조교 선생님들께 귀가 시간을 정확히 전달해 주세요. 클리닉 강의실에 학생이 몰려 첨삭이 밀리는 시간대가 있으니, 담당 반 학생들의 클리닉 시간이 잘 활용되는지 때때로 확인하는 것이 좋습니다.</p>
+      <p class="note">조교는 모두 학원 졸업생입니다. <b style="color:var(--text)">산본관 조교는 송우찬 원장 T</b>, <b style="color:var(--text)">평촌관 조교는 송문찬 원장 T</b> 관리이므로, 조교 관련 문의는 해당 원장 T에게 부탁드립니다.</p>
+
+      <h3 class="topic" id="ch1-3">3. 교재</h3>
+      <h4 class="subtopic">3-1. 수업에 사용되는 교재</h4>
+      <table>
+        <tr><th>시중교재</th><th>자체교재</th></tr>
+        <tr><td>기본진도·심화진도 진행<br>쎈, 풍산자, 개념플러스유형 등</td><td>선행진도<br>판매쓰 시리즈</td></tr>
+      </table>
+
+      <h4 class="subtopic">3-2. 교재 주문</h4>
+      <p>교재 주문은 학원친구 채팅방(교재-각 관)에서 가능합니다. 사용할 교재, 학생 또는 반을 작성해 주시면 관리부에서 주문합니다.</p>
+      <ul class="plain">
+        <li>대부분 교재는 주문 익일 입고 → 관리부 입고·판매처리 후 선생님께 전달</li>
+        <li>최소 하루 전 주문해야 익일 사용 가능</li>
+        <li>금요일 주문 시 차주 월요일 배송 → 토요일 사용은 목요일까지 주문 권장</li>
+        <li>신입생 당일 등원 시: 관리부 또는 원장선생님께 사유·내용 말씀해 주시면 서점에서 구입</li>
+      </ul>
+      <p class="note">시중교재는 주중 전날 주문 시 익일 수령 가능하나, <b style="color:var(--text)">판매쓰 교재는 자체 교재</b>이므로 평촌관·산본관 각각 재고 보유. 재고 소진 시 4~5일 소요되므로 시중교재보다 일찍 주문 요청 부탁드립니다.</p>
+
+      <h3 class="topic" id="ch1-4">4. 반별 보충</h3>
+      <p>선생님(본인) 개인사유 / 학생 사유 / 휴강일정으로 인한 보충 세 가지로 구분됩니다.</p>
+      <h4 class="subtopic">1) 선생님 개인사유 보충</h4>
+      <p>정규수업과 동일하게 진행합니다. 초·중등부는 주말 수업이 없으므로 학생 시간을 고려해 주말에 보충을 잡아주시면 됩니다.</p>
+      <h4 class="subtopic">2) 학생 사유 보충 — 온라인 학습관 영상강의(기본)</h4>
+      <p>학원에서 영상강의 녹화가 가능합니다. 학생이 추가로 등원하여 강의 시청 후 클리닉 강의실에서 문제풀이를 진행하도록 합니다. 집에서도 시청 가능하지만, 최대한 등원하여 시청하게 합니다. 학부모님이 재택 시청을 보충으로 인식하지 않는 경우가 있기 때문입니다.</p>
+      <h4 class="subtopic">3) 이외 상황</h4>
+      <p>장기 가족여행, 장기 병결 등 보충 시간 확보가 어려운 경우 원장선생님께 말씀드려 수강료를 합리적으로 정산할 수 있도록 공유합니다.</p>
+
+      <h3 class="topic" id="ch1-5">5. 신입생 입학 상담</h3>
+      <p>신입생 입학상담은 첫 등원 수업 시작일 기준 7일 뒤 진행합니다. 학부모님께 유선으로 학생의 기본 내용과 앞으로 진행될 수업 부분을 안내합니다.</p>
+      <p class="note">학부모님 전화번호는 관리부에 요청합니다.</p>
+
+      <h3 class="topic" id="ch1-6">6. 토요추가 클리닉</h3>
+      <p>학생의 성취도가 부족하다고 판단될 때(주중), 지정 학생이 토요일에 등원하여 추가로 진행합니다. 매주 금요일 해당 학생·학부모님께 문자발송 및 출석을 위해 관리부에서 추가클리닉 명단을 취합받습니다.</p>
+      <p class="note">필요 내용: <b style="color:var(--text)">학생명, 등원시간, 사용해야 하는 교재</b> — 문자발송을 위해 최대한 빠르게 공유 부탁드립니다.<br>
+      추가 클리닉 조사는 학원 홈페이지 선생님 페이지에 입력하는 형태로 진행됩니다. (입력 방법: <a href="#ch4-2">Ⅳ. 학원 홈페이지</a> 참고)</p>
+
+      <h3 class="topic" id="ch1-7">7. 방학특강 (겨울방학: 5주 / 여름방학: 4주)</h3>
+      <table>
+        <tr><th>겨울방학 특강</th><td style="text-align:left">月 첫째 또는 둘째 주 개강. 월수금반은 수업시간이 늘어나며, 화목반은 토요일에 추가 등원.<br>월수금반 5주간 총 15회 진행, 화목반 5회 수업 추가.</td></tr>
+        <tr><th>여름방학 특강</th><td style="text-align:left">학교별 방학 일정을 고려해 7월 3주차(예상) 시작. 월수금·화목반 모두 겨울방학 특강과 같은 요일로 진행.<br>4주 수업으로 월수금반 12회 진행, 화목반 4회 수업 추가.</td></tr>
+      </table>
+      <p>방학특강 시작 전, 학부모님·학생들에게 안내 문자가 전송됩니다.</p>
+      <ul class="plain">
+        <li>여름방학은 학교별 개학 일정이 달라 마지막 주차를 듣지 못하는 학생이 있을 수 있어, 광복절과 주말을 이용해 보충</li>
+        <li>겨울방학은 설 명절 기간이 포함되어 5주 이후로 연장, 마지막 특강 수업 횟수에 맞춰 진행</li>
+        <li>특강은 추가 수강료가 발생하므로 학부모님이 예민한 부분 — 횟수에 맞춰 빠짐없이 진행</li>
+        <li>여행·개인사정으로 진행 못한 경우 보충으로 해결 권장, 불가능 시 원장님과 상의</li>
+      </ul>
+      <p class="note">방학 특강은 의무 수강이 기본이나, 수강을 원하지 않는 경우가 간혹 있어 원장님과 상의 부탁드립니다.</p>
+
+      <h3 class="topic" id="ch1-8">8. 매쓰플랫</h3>
+      <p>문제를 단원/유형별로 숙제·클리닉·일일테스트에 사용합니다. 학생별 오답을 입력하면 자동으로 오답유형 시험지를 만들 수 있습니다.</p>
+
+      <h4 class="subtopic">8-1. 매쓰플랫로 시험지 만들기</h4>
+      <ol class="steps">
+        <li>teacher.mathflat.com 접속 &gt; 로그인</li>
+        <li>오른쪽 상단 &gt; 학습지 만들기</li>
+        <li>학년, 문제 수, 문제 유형 등 선택</li>
+        <li>선별된 문제 확인 및 수정</li>
+        <li>학습지 제목 및 디자인 설정</li>
+        <li>학습지 제작 완료 &gt; PDF 다운로드 &gt; 복사하여 학생 배부</li>
+      </ol>
+      <p class="note">출제하기를 눌러 학생을 선택하여 출제 완료해야 오답 입력이 가능합니다.</p>
+
+      <h4 class="subtopic">8-2. 학생별 오답 입력 방법</h4>
+      <ol class="steps">
+        <li>매쓰플랫 상단 '수업' &gt; 출제완료된 문제 확인</li>
+        <li>좌측 학생이름 클릭 &gt; 채점 &gt; 오답 입력</li>
+        <li>우측 상단 '오답학습지 만들기' &gt; 팝업에서 옵션 선택</li>
+        <li>학습지 제작 완료 &gt; 수업준비 &gt; 해당 학생 오답 학습지 제작 &gt; PDF 다운로드</li>
+      </ol>
+      <p class="note">채점 입력 결과는 한 달에 한 번 월말보고서로 학부모님께 전달되므로 오답 입력에 주의해 주세요.</p>
+
+      <h3 class="topic" id="ch1-9">9. 월말보고서</h3>
+      <p>매쓰플랫 채점을 바탕으로 학부모님께 전달되는 보고서이며, 매월 말일 진행합니다. 학생들의 오답입력이 충분히 되어 있어야 보고서 추출이 가능합니다.</p>
+      <h4 class="subtopic">작성 방법</h4>
+      <ol class="steps">
+        <li>매쓰플랫 로그인 &gt; 수업 &gt; 좌측 하단 학생이름 선택 &gt; 보고서</li>
+        <li>우측 '보고서 만들기' &gt; 항목 선택 &gt; 다음단계</li>
+        <li>선생님 의견 작성 — 학부모님께 전달되는 보고서이니 코멘트 작성에 신경 써주세요</li>
+      </ol>
+      <p class="note"><b style="color:var(--text)">선생님 코멘트 작성 예시</b><br>
+      "안녕하세요, 송우찬수학학원 강사 ★★★입니다. … 10월 월말평가 난이도가 쉽지 않아 ●●이가 조금 어렵게 느껴진 것 같습니다. 공통 문항 20문제 중 12문제, 반별 문항 10문제 중 2문제 맞았습니다. 원, 회전체 단원은 중학교 수학에서도 나오는 개념이라 복습이 필요하다고 판단됩니다. 추가 보충으로 보완하겠습니다. 감사합니다!"</p>
+    </section>
+
+    <!-- ============ 챕터 Ⅱ ============ -->
+    <section class="chapter" id="ch2">
+      <p class="chapter-num">Ⅱ</p>
+      <h2>내신대비</h2>
+
+      <h3 class="topic" id="ch2-1">1. 기간</h3>
+      <p>내신대비는 약 4주간 진행되며, 학사 일정에 따라 변동될 수 있습니다.</p>
+      <ul class="plain">
+        <li>1학기 중간고사 기간 – 한 달간 (4월)</li>
+        <li>1학기 기말고사 기간 – 6월 2주차 ~ 7월 1주차</li>
+        <li>2학기 중간고사 기간 – 한 달간 (9월)</li>
+        <li>2학기 기말고사 기간 – 11월 2주차 ~ 12월 1주차</li>
+      </ul>
+      <p>내신대비기간 중 1·2차 모의테스트가 진행됩니다.</p>
+      <ul class="plain">
+        <li><b style="color:var(--text)">1차 모의테스트</b>: 시험기간 첫 주차 시행, 시험 일주일 전 문제은행(80문제) 배부(답안지 미제공, 학생 스스로 풀이). 응시결과는 단원체크지에 작성해 현재 성취도 파악</li>
+        <li><b style="color:var(--text)">2차 모의테스트</b>: 시험기간 마지막 주차 시행, 작년 기출문제로 응시</li>
+      </ul>
+
+      <h3 class="topic" id="ch2-2">2. 내신대비 교재</h3>
+      <table>
+        <tr><th>시중교재</th><th>자체교재</th></tr>
+        <tr><td>반별 성취도에 따라 담당선생님 결정<br>(기존 사용 교재 이어서 사용 가능)</td><td>내신대비스타트 — 1차 모의테스트 시행 후 반별 배부<br>학년별 교재 사용, 문제풀이 교재</td></tr>
+      </table>
+
+      <h3 class="topic" id="ch2-3">3. 기출문제</h3>
+      <p class="note">기출문제 관리자: <b style="color:var(--text)">송문찬 원장님</b> · 배부 기간: 시험기간 중반<br>
+      배부 전 필요한 시험지가 있으면 담당자(송문찬 원장님)에게 요청, 배부 후 추가 자료도 요청 가능합니다.</p>
+
+      <h3 class="topic" id="ch2-4">4. 자료요청</h3>
+      <p>족보닷컴 자료 혹은 기출문제를 포함한 수업 필요 자료는 담당자인 <b>송문찬 원장님</b>(평촌/산본관)께 요청합니다.</p>
+      <p class="note">원장님도 수업·상담 외 업무가 있어 시간이 소요될 수 있으나, 확인하는 대로 송부드립니다.</p>
+
+      <h3 class="topic" id="ch2-5">5. 내신대비 추가 클리닉</h3>
+      <p class="note"><b style="color:var(--text)">의무사항 아님.</b> 시험기간에 등원시간이 당연히 늘어나야 한다고 생각하시는 학부모님이 있어, 수업시간 전후 또는 주말 동안 추가클리닉 진행을 부탁드립니다.</p>
+      <p>시험기간에는 토요추가클리닉 대신 토요일을 이용해 내신대비에 신경 써주시는 것을 추천드립니다.</p>
+
+      <h3 class="topic" id="ch2-6">6. 직전대비</h3>
+      <p>수학시험(학교 지필평가) 전날 진행되는 보충입니다. 시험기간 중 관리부에서 선생님별 직전대비 보충일정을 조사합니다.</p>
+      <ul class="plain">
+        <li>중등 직전대비는 약 2시간 진행</li>
+        <li>월요일이 시험인 학교 학생은 일요일에 진행하며, 일정은 학생과 조율</li>
+      </ul>
+    </section>
+
+    <!-- ============ 챕터 Ⅲ ============ -->
+    <section class="chapter" id="ch3">
+      <p class="chapter-num">Ⅲ</p>
+      <h2>시간표 변경</h2>
+
+      <h3 class="topic" id="ch3-1">1. 기간별 시간표 변경 (방학특강)</h3>
+      <ul class="plain">
+        <li>초등부: 방학특강 수업 없음, 금요일 추가클리닉 시행</li>
+        <li>중등부 월수금반: 수업 시간이 전후로 늘어남</li>
+        <li>중등부 화목반: 토요일 수업 1회 추가</li>
+      </ul>
+
+      <p class="table-caption">월수금반 [학기중]</p>
+      <table>
+        <tr><th>시간</th><th>담임선생님 수업(판서)</th><th>클리닉 수업</th></tr>
+        <tr><td>1타임 3:30~6:00</td><td>3:30~5:00</td><td>5:00~6:00</td></tr>
+        <tr><td>2타임 5:00~7:00</td><td>5:00~6:30</td><td>6:30~7:00</td></tr>
+        <tr><td>3타임 6:30~8:30</td><td>6:30~8:00</td><td>8:00~8:30</td></tr>
+        <tr><td>4타임 8:00~10:00</td><td colspan="2">담당선생님 수업(2H)</td></tr>
+      </table>
+
+      <p class="table-caption">월수금반 [방학특강 기간]</p>
+      <table>
+        <tr><th>시간</th><th>담임선생님 수업(판서)</th><th>클리닉 수업</th></tr>
+        <tr><td>1타임 1:30~4:00</td><td>1:30~3:00</td><td>3:00~4:00</td></tr>
+        <tr><td>2타임 3:00~6:00</td><td>3:00~5:10</td><td>5:10~6:00</td></tr>
+        <tr><td>3타임 5:00~8:00</td><td>5:10~7:20</td><td>5:00~5:10, 7:20~8:00</td></tr>
+        <tr><td>4타임 7:00~10:00</td><td>7:00~7:50</td><td>7:50~10:00</td></tr>
+      </table>
+      <p class="note">월수금반: 2시간 10분 수업 + 50분 클리닉 수업으로 변경</p>
+
+      <p class="table-caption">화목반 [학기중]</p>
+      <table>
+        <tr><th>시간</th><th>담임선생님 수업(판서)</th><th>클리닉 수업</th></tr>
+        <tr><td>1타임 3:30~6:00</td><td>3:30~5:00</td><td>5:00~6:00</td></tr>
+        <tr><td>2타임 5:00~8:00</td><td>5:00~7:00</td><td>7:00~8:00</td></tr>
+        <tr><td>3타임 7:00~10:00</td><td>7:00~8:00</td><td>7:00~8:00</td></tr>
+      </table>
+
+      <p class="table-caption">화목반 토요일 시간표 [방학특강 기간]</p>
+      <table>
+        <tr><th>시간</th><th>담임선생님 수업(판서)</th><th>클리닉 수업</th></tr>
+        <tr><td>1타임 10:00~13:00</td><td>10:00~12:00</td><td>12:00~13:00</td></tr>
+        <tr><td>2타임 12:00~15:00</td><td>12:00~14:00</td><td>14:00~15:00</td></tr>
+      </table>
+      <p class="note">화목반: 화·목 시간표 변경 없음, 토요일 수업만 추가. 오전 10시부터 2시간 수업 + 1시간 클리닉. 2타임 수업 종료 후 학생들이 클리닉 강의실로 이동하면 담당 선생님은 퇴근 가능합니다.</p>
+
+      <h3 class="topic" id="ch3-2">2. 개인·학생 사유 시간표 변경</h3>
+      <p>타학원 시간표 변경이나 개인사유 등으로 인한 전반 관련 건은, 담당선생님 변경 없이 시간표를 변경하는 것을 최대한 우선 추천드립니다. 불가능 시 각 관의 원장선생님과 상의 부탁드립니다.</p>
+    </section>
+
+    <!-- ============ 챕터 Ⅳ ============ -->
+    <section class="chapter" id="ch4">
+      <p class="chapter-num">Ⅳ</p>
+      <h2>학원 홈페이지 (온라인 학습관, 선생님 페이지)</h2>
+
+      <h3 class="topic" id="ch4-1">1. 학생용 홈페이지 — fanmath.co.kr</h3>
+      <p>학원 재학생들은 학생용 홈페이지에서 영상강의를 모두 수강할 수 있습니다. 아이디는 이름, 비밀번호는 본인 핸드폰 번호입니다.</p>
+      <p>신규 학생 등록은 관리부에서 진행하며, 담당 선생님과 학년 기준으로 영상강의 수강이 구성됩니다. 다른 학년·선생님 강의를 수강해야 하는 경우 관리부로 말씀해 주시면 수정 가능합니다.</p>
+
+      <h3 class="topic" id="ch4-2">2. 선생님용 홈페이지 — fanmath.co.kr/teacher.html</h3>
+      <p>선생님 전용 홈페이지입니다. 아이디는 이름, 비밀번호는 <b>88998899</b>입니다. 학생용 홈페이지와 연결되어 있지 않아 주소를 직접 입력해야 접속 가능합니다.</p>
+      <p>이 홈페이지에서 주간성취도, 월말보고서, 토요클리닉 조사를 진행합니다.</p>
+      <table>
+        <tr><th>항목</th><th>제출 주기</th><th>비고</th></tr>
+        <tr><td>주간성취도</td><td>매주 화요일</td><td>이번주 화요일 제출분은 전주 1주일 성취도 작성</td></tr>
+        <tr><td>월말보고서</td><td>매월 말일</td><td>매쓰플랫에서 작성한 내용을 PDF로 다운로드해 업로드</td></tr>
+        <tr><td>토요클리닉 조사</td><td>매주 금요일</td><td>해당 주 학생별 성취도에 따라 작성</td></tr>
+      </table>
+      <p class="note">해당 자료는 모두 최대한 빠르게 입력 부탁드립니다. 퇴근 직전 업로드/입력 시 관리부 전달이 어려우니, 해당 요일 출근 후 제일 먼저 처리해 주세요.</p>
+
+      <h4 class="subtopic">영상강의 업로드</h4>
+      <p>영상강의 업로드는 각 관 원장님이 담당합니다. 아래 이메일로 영상강의 전송 후 학원친구로 전송완료 메시지를 보내주시면 업로드해 드립니다.</p>
+      <div class="contact-card">
+        <div><b>평촌관 · 송문찬 원장님</b>smc1823@nate.com</div>
+        <div><b>산본관 · 송우찬 원장님</b>dncksfly@naver.com</div>
+      </div>
+      <p class="note">영상강의 발송 시 파일명은 강의명으로 해 주세요. 발송 후 누락되는 경우가 있으니 원장선생님께 확인 부탁드립니다. (학원친구 메신저 사용 가능)</p>
+    </section>
+
+    <!-- ============ 챕터 Ⅴ ============ -->
+    <section class="chapter emphasis" id="ch5">
+      <p class="chapter-num">Ⅴ</p>
+      <h2>개인 휴가</h2>
+      <p>학교의 학사일정과 원내 일정에 따라 사용이 가능합니다. 전임강사 대부분은 여름방학 종료 후(8월 3주차~), 겨울방학 특강 종료 후(2월 3주차~) 사용하고 있습니다.</p>
+      <p>중등부는 주말 수업이 없어 수~일 또는 토~화 일정으로 사용하고 있습니다. 휴가기간 동안 학생들은 본 일정에 맞춰 등원하며, 선생님이 만들어둔 시험지를 풀고 클리닉 수업 종료 후 귀가합니다.</p>
+      <p class="note">휴가 전, 원장선생님과 관리부에게 인수인계 파일 전송 및 시험지 복사본 전달이 필요합니다.</p>
+    </section>
+
+    <!-- ============ 챕터 Ⅵ ============ -->
+    <section class="chapter emphasis" id="ch6">
+      <p class="chapter-num">Ⅵ</p>
+      <h2>학원 전체 휴강 일정 및 보충</h2>
+      <p>원의 휴강일정은 연초에 1년간의 일정을 정해 공지합니다.</p>
+      <p class="note">휴강일정 중 설 연휴는 매번 겨울방학 특강기간 내에 있어, 2회의 휴강에 대해 겨울방학 특강 종료 후 1회 보충이 진행됩니다.<br>
+      보충수업 일정은 방학특강 마지막 주차에 조사합니다.</p>
+    </section>
+
+  </main>
+
+  <aside>
+    <div class="search-box">
+      <input type="text" id="search-input" placeholder="매뉴얼 내용 검색 (예: 클리닉, 교재 주문)">
+      <span class="icon">🔎</span>
+    </div>
+    <div id="search-count"></div>
+
+    <p class="toc-title">목차</p>
+    <nav class="toc" id="toc">
+      <ul>
+        <li>
+          <a class="chapter" href="#ch1" data-target="ch1">Ⅰ. 전임강사 주요 업무</a>
+          <ul class="sub">
+            <li><a href="#ch1-1" data-target="ch1-1">1. 수업진행</a></li>
+            <li><a href="#ch1-2" data-target="ch1-2">2. 클리닉</a></li>
+            <li><a href="#ch1-3" data-target="ch1-3">3. 교재</a></li>
+            <li><a href="#ch1-4" data-target="ch1-4">4. 반별 보충</a></li>
+            <li><a href="#ch1-5" data-target="ch1-5">5. 신입생 입학 상담</a></li>
+            <li><a href="#ch1-6" data-target="ch1-6">6. 토요추가 클리닉</a></li>
+            <li><a href="#ch1-7" data-target="ch1-7">7. 방학특강</a></li>
+            <li><a href="#ch1-8" data-target="ch1-8">8. 매쓰플랫</a></li>
+            <li><a href="#ch1-9" data-target="ch1-9">9. 월말보고서</a></li>
+          </ul>
+        </li>
+        <li>
+          <a class="chapter" href="#ch2" data-target="ch2">Ⅱ. 내신대비</a>
+          <ul class="sub">
+            <li><a href="#ch2-1" data-target="ch2-1">1. 기간</a></li>
+            <li><a href="#ch2-2" data-target="ch2-2">2. 내신대비 교재</a></li>
+            <li><a href="#ch2-3" data-target="ch2-3">3. 기출문제</a></li>
+            <li><a href="#ch2-4" data-target="ch2-4">4. 자료요청</a></li>
+            <li><a href="#ch2-5" data-target="ch2-5">5. 내신대비 추가 클리닉</a></li>
+            <li><a href="#ch2-6" data-target="ch2-6">6. 직전대비</a></li>
+          </ul>
+        </li>
+        <li>
+          <a class="chapter" href="#ch3" data-target="ch3">Ⅲ. 시간표 변경</a>
+          <ul class="sub">
+            <li><a href="#ch3-1" data-target="ch3-1">1. 기간별 시간표 변경</a></li>
+            <li><a href="#ch3-2" data-target="ch3-2">2. 개인·학생 사유 변경</a></li>
+          </ul>
+        </li>
+        <li>
+          <a class="chapter" href="#ch4" data-target="ch4">Ⅳ. 학원 홈페이지</a>
+          <ul class="sub">
+            <li><a href="#ch4-1" data-target="ch4-1">1. 학생용 홈페이지</a></li>
+            <li><a href="#ch4-2" data-target="ch4-2">2. 선생님용 홈페이지</a></li>
+          </ul>
+        </li>
+        <li><a class="chapter" href="#ch5" data-target="ch5">Ⅴ. 개인 휴가</a></li>
+        <li><a class="chapter" href="#ch6" data-target="ch6">Ⅵ. 휴강 일정 및 보충</a></li>
+      </ul>
+    </nav>
+  </aside>
+</div>
+
+<div class="hit-nav" id="hit-nav">
+  <span id="hit-label">0 / 0</span>
+  <button id="hit-prev">▲</button>
+  <button id="hit-next">▼</button>
+  <button id="hit-clear">닫기</button>
+</div>
+
+<footer>송우찬수학학원 전임강사 매뉴얼 · 내부 열람용</footer>
+
+<script>
+(function(){
+  // ---- 복사/우클릭 방지 ----
+  document.addEventListener('contextmenu', e=>{
+    if(e.target.id !== 'search-input') e.preventDefault();
+  });
+  document.addEventListener('copy', e=>{
+    if(document.activeElement && document.activeElement.id === 'search-input') return;
+    e.preventDefault();
+  });
+  document.addEventListener('selectstart', e=>{
+    if(e.target.id === 'search-input') return;
+    e.preventDefault();
+  });
+
+  const tocLinks = Array.from(document.querySelectorAll('#toc a'));
+  const searchInput = document.getElementById('search-input');
+  const searchCount = document.getElementById('search-count');
+  const hitNav = document.getElementById('hit-nav');
+  const hitLabel = document.getElementById('hit-label');
+  const content = document.getElementById('content');
+
+  // ---- TOC 스크롤 스파이 ----
+  const sectionsWithId = Array.from(document.querySelectorAll('main [id]'));
+  function onScroll(){
+    let current = null;
+    const scrollPos = window.scrollY + 90;
+    for(const el of sectionsWithId){
+      if(el.offsetTop <= scrollPos) current = el.id;
+    }
+    tocLinks.forEach(a=>{
+      a.classList.toggle('active', a.dataset.target === current);
+    });
+  }
+  window.addEventListener('scroll', onScroll, {passive:true});
+  onScroll();
+
+  // ---- 검색 기능 ----
+  let marks = [];
+  let currentHit = -1;
+  const originalHTML = new Map();
+
+  function clearHighlights(){
+    marks.forEach(m=>{
+      const parent = m.parentNode;
+      parent.replaceChild(document.createTextNode(m.textContent), m);
+      parent.normalize();
+    });
+    marks = [];
+    currentHit = -1;
+    hitNav.style.display = 'none';
+    searchCount.textContent = '';
+    tocLinks.forEach(a=>{
+      a.parentElement.classList.remove('toc-hidden');
+    });
+  }
+
+  function walkAndHighlight(root, term){
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+      acceptNode(node){
+        if(!node.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        if(node.parentElement.closest('aside, script, style')) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const targets = [];
+    let n;
+    while(n = walker.nextNode()) targets.push(n);
+
+    const lower = term.toLowerCase();
+    targets.forEach(node=>{
+      const text = node.nodeValue;
+      const lowerText = text.toLowerCase();
+      let idx = lowerText.indexOf(lower);
+      if(idx === -1) return;
+
+      const frag = document.createDocumentFragment();
+      let lastIndex = 0;
+      while(idx !== -1){
+        frag.appendChild(document.createTextNode(text.slice(lastIndex, idx)));
+        const mark = document.createElement('mark');
+        mark.textContent = text.slice(idx, idx+term.length);
+        frag.appendChild(mark);
+        marks.push(mark);
+        lastIndex = idx + term.length;
+        idx = lowerText.indexOf(lower, lastIndex);
+      }
+      frag.appendChild(document.createTextNode(text.slice(lastIndex)));
+      node.parentNode.replaceChild(frag, node);
+    });
+  }
+
+  function goToHit(i){
+    if(marks.length === 0) return;
+    currentHit = (i + marks.length) % marks.length;
+    marks.forEach(m=>m.style.outline='none');
+    const m = marks[currentHit];
+    m.style.outline = '2px solid #fff';
+    m.scrollIntoView({behavior:'smooth', block:'center'});
+    hitLabel.textContent = (currentHit+1) + ' / ' + marks.length;
+  }
+
+  function runSearch(term){
+    clearHighlights();
+    term = term.trim();
+    if(term.length < 1){ return; }
+
+    walkAndHighlight(content, term);
+
+    if(marks.length > 0){
+      hitNav.style.display = 'flex';
+      hitNav.style.alignItems = 'center';
+      searchCount.textContent = marks.length + '건 검색됨';
+      goToHit(0);
+    } else {
+      searchCount.textContent = '검색 결과가 없습니다';
+    }
+
+    // 목차 필터: 검색어를 제목에 포함하는 항목만 표시(참고용, 본문 검색과 별개)
+    tocLinks.forEach(a=>{
+      const matches = a.textContent.toLowerCase().includes(term.toLowerCase());
+      a.parentElement.classList.toggle('toc-hidden', term.length>0 && !matches && marks.length>0 ? false : false);
+    });
+  }
+
+  let debounce;
+  searchInput.addEventListener('input', (e)=>{
+    clearTimeout(debounce);
+    const val = e.target.value;
+    debounce = setTimeout(()=>runSearch(val), 250);
+  });
+
+  document.getElementById('hit-next').addEventListener('click', ()=>goToHit(currentHit+1));
+  document.getElementById('hit-prev').addEventListener('click', ()=>goToHit(currentHit-1));
+  document.getElementById('hit-clear').addEventListener('click', ()=>{
+    searchInput.value = '';
+    clearHighlights();
+  });
+
+  searchInput.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){
+      e.preventDefault();
+      goToHit(currentHit+1);
+    }
+  });
+})();
+</script>
+
+</body>
+</html>
