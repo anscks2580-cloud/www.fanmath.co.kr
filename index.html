@@ -204,6 +204,23 @@
 }
 .notice-x:hover { background: rgba(0,0,0,0.75); }
 
+.notice-img-wrap a, .notice-img-wrap img { display:block; }
+.notice-slide { display:none; }
+.notice-slide.active { display:block; }
+.notice-nav {
+  position:absolute; top:50%; transform:translateY(-50%); z-index:2;
+  width:38px; height:38px; border:none; border-radius:50%;
+  background:rgba(0,0,0,0.5); color:#fff; font-size:20px; line-height:1;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.notice-nav:hover { background:rgba(0,0,0,0.75); }
+.notice-nav.prev { left:8px; }
+.notice-nav.next { right:8px; }
+.notice-dots { display:flex; gap:6px; align-items:center; }
+.notice-dot { width:7px; height:7px; border-radius:50%; background:rgba(255,255,255,0.3); border:none; padding:0; cursor:pointer; }
+.notice-dot.active { background:var(--gold, #f0c040); width:18px; border-radius:100px; }
+.notice-actions-right { display:flex; align-items:center; gap:12px; }
+
 @media (max-width: 480px) {
   .notice-overlay { padding: 8px; }
   .notice-box { max-height: 95vh; border-radius: 12px; }
@@ -246,18 +263,22 @@
   <a href="consult.html" style="color:var(--bg);text-decoration:none;font-size:13px;font-weight:700;display:flex;align-items:center;gap:6px;">🖊️ 처음 오시나요? 상담 신청서 온라인으로 작성하기 →</a>
 </div>
 
+<!-- 공지 팝업: 관리자 페이지 > 홈페이지 팝업에서 등록·관리 -->
 <div class="notice-overlay hidden" id="noticePopup">
   <div class="notice-box">
     <button class="notice-x" onclick="closeNoticePopup()" aria-label="닫기">✕</button>
-    <div class="notice-img-wrap">
-      <img src="notice-popup.jpg" alt="추석 연휴 극복 & 중간고사 대비 연합 자습 안내">
-    </div>
+    <button class="notice-nav prev" id="noticePrev" onclick="moveNoticeSlide(-1)" aria-label="이전" style="display:none;">‹</button>
+    <button class="notice-nav next" id="noticeNext" onclick="moveNoticeSlide(1)" aria-label="다음" style="display:none;">›</button>
+    <div class="notice-img-wrap" id="noticeSlides"></div>
     <div class="notice-actions">
       <label class="notice-hide-today">
         <input type="checkbox" id="noticeHideToday">
         오늘 하루 보지 않기
       </label>
-      <button class="notice-close-btn" onclick="closeNoticePopup()">닫기</button>
+      <div class="notice-actions-right">
+        <div class="notice-dots" id="noticeDots"></div>
+        <button class="notice-close-btn" onclick="closeNoticePopup()">닫기</button>
+      </div>
     </div>
   </div>
 </div>
@@ -541,26 +562,6 @@
   <span class="kakao-float-label">카카오톡 문의</span>
 </a>
 <script>
-(function() {
-  var NOTICE_KEY = 'notice_hide_until_2026_09_27';
-  var hideUntil = localStorage.getItem(NOTICE_KEY);
-  var today = new Date().toDateString();
-  if (hideUntil === today) return;
-  document.addEventListener('DOMContentLoaded', function() {
-    var popup = document.getElementById('noticePopup');
-    if (popup) popup.classList.remove('hidden');
-  });
-})();
-
-function closeNoticePopup() {
-  var popup = document.getElementById('noticePopup');
-  var checkbox = document.getElementById('noticeHideToday');
-  if (checkbox && checkbox.checked) {
-    localStorage.setItem('notice_hide_until_2026_09_27', new Date().toDateString());
-  }
-  if (popup) popup.classList.add('hidden');
-}
-
 function toggleMenu() {
   var btn = document.getElementById('hamburger');
   var menu = document.getElementById('mobileMenu');
@@ -579,7 +580,7 @@ document.addEventListener('click', function(e) {
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
 const firebaseConfig = {
@@ -620,6 +621,93 @@ onAuthStateChanged(auth, async (user) => {
     logoutBtn.style.display = 'none';
   }
 });
+
+// ══ 공지 팝업 (관리자 페이지 > 홈페이지 팝업에서 관리) ══
+const NOTICE_HIDE_KEY = 'home_popup_hide';
+let noticeSig = '';
+let noticeIdx = 0;
+let noticeCount = 0;
+
+function noticeToday() {
+  const d = new Date(), p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+}
+function noticeEsc(v) {
+  return String(v || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+window.moveNoticeSlide = function(dir) {
+  if (noticeCount < 2) return;
+  noticeIdx = (noticeIdx + dir + noticeCount) % noticeCount;
+  document.querySelectorAll('#noticeSlides .notice-slide').forEach((el, i) => el.classList.toggle('active', i === noticeIdx));
+  document.querySelectorAll('#noticeDots .notice-dot').forEach((el, i) => el.classList.toggle('active', i === noticeIdx));
+  document.getElementById('noticeSlides').scrollTop = 0;
+};
+
+window.closeNoticePopup = function() {
+  const cb = document.getElementById('noticeHideToday');
+  if (cb && cb.checked) {
+    try { localStorage.setItem(NOTICE_HIDE_KEY, JSON.stringify({ date: noticeToday(), sig: noticeSig })); } catch(e) {}
+  }
+  document.getElementById('noticePopup').classList.add('hidden');
+};
+
+async function loadNoticePopups() {
+  try {
+    const snap = await getDocs(collection(db, 'homePopups'));
+    const t = noticeToday();
+    const list = [];
+    snap.forEach(d => {
+      const x = d.data();
+      if (!x.enabled || !x.imageUrl) return;
+      if (x.startDate && t < x.startDate) return;
+      if (x.endDate && t > x.endDate) return;
+      list.push({ id: d.id, ...x });
+    });
+    if (!list.length) return;
+    list.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
+    // 팝업 구성이 바뀌면 "오늘 하루 보지 않기"를 눌렀어도 새 팝업은 다시 보이게
+    noticeSig = list.map(x => x.id + ':' + (x.updatedAt?.seconds || 0)).join('|');
+    try {
+      const saved = JSON.parse(localStorage.getItem(NOTICE_HIDE_KEY) || 'null');
+      if (saved && saved.date === t && saved.sig === noticeSig) return;
+    } catch(e) {}
+
+    noticeCount = list.length;
+    noticeIdx = 0;
+    document.getElementById('noticeSlides').innerHTML = list.map((x, i) => {
+      const img = `<img src="${noticeEsc(x.imageUrl)}" alt="${noticeEsc(x.title)}">`;
+      const link = x.linkUrl
+        ? `<a href="${noticeEsc(x.linkUrl)}"${/^https?:\/\//i.test(x.linkUrl) && !x.linkUrl.includes(location.host) ? ' target="_blank" rel="noopener"' : ''}>${img}</a>`
+        : img;
+      return `<div class="notice-slide${i === 0 ? ' active' : ''}">${link}</div>`;
+    }).join('');
+
+    const multi = noticeCount > 1;
+    document.getElementById('noticePrev').style.display = multi ? 'flex' : 'none';
+    document.getElementById('noticeNext').style.display = multi ? 'flex' : 'none';
+    document.getElementById('noticeDots').innerHTML = multi
+      ? list.map((_, i) => `<button class="notice-dot${i === 0 ? ' active' : ''}" onclick="moveNoticeSlide(${i} - window.__noticeIdx())" aria-label="${i + 1}번 팝업"></button>`).join('')
+      : '';
+    document.getElementById('noticePopup').classList.remove('hidden');
+
+    // 모바일 스와이프로 넘기기
+    if (multi) {
+      const wrap = document.getElementById('noticeSlides');
+      let sx = 0, sy = 0;
+      wrap.addEventListener('touchstart', e => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+      wrap.addEventListener('touchend', e => {
+        const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+        if (Math.abs(dx) > 50 && Math.abs(dx) > Math.abs(dy) * 1.5) moveNoticeSlide(dx < 0 ? 1 : -1);
+      }, { passive: true });
+    }
+  } catch(e) {
+    console.error('팝업 불러오기 실패', e);
+  }
+}
+window.__noticeIdx = () => noticeIdx;
+loadNoticePopups();
 
 window.doNavLogout = async function() {
   const auth = getAuth();

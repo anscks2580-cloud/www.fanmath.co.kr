@@ -302,6 +302,28 @@
 }
 .consult-src.web { background: rgba(255,255,255,0.06); color: var(--muted); }
 
+/* ── 홈페이지 팝업 관리 ── */
+.hp-item {
+  display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;
+  background:rgba(255,255,255,0.03); border:1px solid var(--border-soft);
+  border-radius:12px; padding:14px; margin-bottom:10px;
+}
+.hp-item.off { opacity:0.55; }
+.hp-thumb { width:120px; height:150px; object-fit:cover; object-position:top; border-radius:8px; background:#000; cursor:zoom-in; flex-shrink:0; }
+.hp-info { flex:1; min-width:200px; }
+.hp-title { font-size:15px; font-weight:700; margin-bottom:6px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.hp-meta { font-size:12px; color:var(--muted); line-height:1.7; word-break:break-all; }
+.hp-badge { font-size:11px; font-weight:700; padding:3px 9px; border-radius:100px; }
+.hp-badge.live { background:rgba(76,175,80,0.15); color:#6fcf73; }
+.hp-badge.wait { background:rgba(240,192,64,0.12); color:var(--gold); }
+.hp-badge.end, .hp-badge.off { background:rgba(255,255,255,0.06); color:var(--muted); }
+.hp-actions { display:flex; gap:6px; flex-wrap:wrap; margin-top:10px; }
+.hp-switch { position:relative; width:46px; height:26px; border-radius:100px; border:none; cursor:pointer; background:rgba(255,255,255,0.15); transition:background .15s; flex-shrink:0; }
+.hp-switch::after { content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; transition:left .15s; }
+.hp-switch.on { background:#4caf50; }
+.hp-switch.on::after { left:23px; }
+.hp-preview { max-width:220px; max-height:260px; border-radius:8px; display:none; margin-top:8px; border:1px solid var(--border-soft); }
+
 /* ── QR 상담지 모달 ── */
 #consultQrModal {
   position:fixed; inset:0; z-index:99998; display:none; align-items:center; justify-content:center;
@@ -590,6 +612,7 @@ body.ck-lock { overflow:hidden; }
     <button class="admin-tab" onclick="switchTab('exammaterials',this);initExamMaterialsTab()">📝 중간고사 자료</button>
     <button class="admin-tab" onclick="switchTab('consult',this);initConsultTab()">📥 상담 신청</button>
     <button class="admin-tab" onclick="switchTab('notice',this);initNoticeTab()">📢 공지사항</button>
+    <button class="admin-tab" onclick="switchTab('homepopup',this);initHomePopupTab()">🪟 홈페이지 팝업</button>
   </div>
 
   <!-- 학생 관리 -->
@@ -1128,6 +1151,45 @@ body.ck-lock { overflow:hidden; }
         <span style="font-size:12px;color:var(--muted);line-height:1.5;">태블릿: 학생·학부모님께 태블릿을 드려 직접 입력 (종료는 우측 상단 <b style="color:var(--gold);">길게 누르기</b>)<br>QR: 상담 오신 분 휴대폰으로 스캔 → 입력 후 전송하면 이 목록에 바로 저장</span>
       </div>
       <div id="consultList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <!-- 홈페이지 팝업 관리 -->
+  <div class="tab-panel" id="tab-homepopup">
+    <div class="card">
+      <h3 id="hp-form-title">🪟 홈페이지 팝업 등록</h3>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6;">
+        홈페이지(index.html) 첫 화면에 뜨는 팝업입니다. 여러 개를 켜두면 팝업 안에서 좌우로 넘겨볼 수 있고, 기간을 정하면 그 기간에만 자동으로 뜹니다.
+      </div>
+      <input type="hidden" id="hp-edit-id">
+      <div class="form-row">
+        <div class="form-group"><label>제목 (관리용 · 이미지 설명)</label><input type="text" id="hp-title" placeholder="예: 2학기 기말고사 대비 특강 안내"></div>
+        <div class="form-group"><label>클릭 시 이동 링크 (선택)</label><input type="text" id="hp-link" placeholder="예: consult.html 또는 https://..."></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>노출 시작일 (선택)</label><input type="date" id="hp-start"></div>
+        <div class="form-group"><label>노출 종료일 (선택)</label><input type="date" id="hp-end"></div>
+      </div>
+      <div class="form-group">
+        <label id="hp-image-label">팝업 이미지</label>
+        <input type="file" id="hp-image" accept="image/*" onchange="previewHomePopupImage(this)">
+        <img id="hp-preview" class="hp-preview" alt="">
+        <div style="font-size:11.5px;color:var(--muted);margin-top:6px;">세로로 긴 이미지도 팝업 안에서 스크롤됩니다. 가로 폭 1000~1300px 정도 권장.</div>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:6px 0 16px;cursor:pointer;">
+        <input type="checkbox" id="hp-enabled" checked> 등록 후 바로 홈페이지에 띄우기
+      </label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-primary" id="hp-save-btn" onclick="saveHomePopup()">팝업 등록</button>
+        <button class="btn btn-secondary" id="hp-cancel-btn" onclick="resetHomePopupForm()" style="display:none;">수정 취소</button>
+      </div>
+      <div id="hpMsg" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="card">
+      <h3>📋 등록된 팝업</h3>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;">스위치로 바로 켜고 끌 수 있고, ↑↓로 팝업 안에서 보이는 순서를 바꿉니다.</div>
+      <div id="hpList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
     </div>
   </div>
 
@@ -9118,6 +9180,193 @@ window.submitConsultKiosk = async function() {
   }
 };
 
+// ══════ 홈페이지 팝업 관리 (index.html 첫 화면 팝업) ══════
+let hpData = [];
+
+function hpToday() {
+  const d = new Date(), p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+}
+function hpStatus(x) {
+  if (!x.enabled) return { cls:'off', label:'꺼짐' };
+  const t = hpToday();
+  if (x.startDate && t < x.startDate) return { cls:'wait', label:'노출 예정' };
+  if (x.endDate && t > x.endDate) return { cls:'end', label:'기간 종료' };
+  return { cls:'live', label:'노출 중' };
+}
+function hpEsc(v) { return escapeConsultHtml(v || ''); }
+
+window.previewHomePopupImage = function(input) {
+  const img = document.getElementById('hp-preview');
+  const f = input.files && input.files[0];
+  if (!f) { img.style.display = 'none'; return; }
+  img.src = URL.createObjectURL(f);
+  img.style.display = 'block';
+};
+
+window.resetHomePopupForm = function() {
+  ['hp-edit-id','hp-title','hp-link','hp-start','hp-end'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('hp-image').value = '';
+  document.getElementById('hp-preview').style.display = 'none';
+  document.getElementById('hp-enabled').checked = true;
+  document.getElementById('hp-form-title').textContent = '🪟 홈페이지 팝업 등록';
+  document.getElementById('hp-image-label').textContent = '팝업 이미지';
+  document.getElementById('hp-save-btn').textContent = '팝업 등록';
+  document.getElementById('hp-cancel-btn').style.display = 'none';
+};
+
+window.initHomePopupTab = async function() {
+  const el = document.getElementById('hpList');
+  el.innerHTML = '<div style="color:var(--muted);font-size:13px;">불러오는 중...</div>';
+  try {
+    const snap = await getDocs(collection(db, 'homePopups'));
+    hpData = [];
+    snap.forEach(d => hpData.push({ id: d.id, ...d.data() }));
+    hpData.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    renderHomePopupList();
+  } catch(e) {
+    el.innerHTML = `<div style="color:#ff9090;font-size:13px;">오류: ${e.message}</div>`;
+  }
+};
+
+function renderHomePopupList() {
+  const el = document.getElementById('hpList');
+  if (!hpData.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;">등록된 팝업이 없습니다. 위에서 이미지를 올려 등록하세요.</div>';
+    return;
+  }
+  el.innerHTML = hpData.map((x, i) => {
+    const st = hpStatus(x);
+    const period = (x.startDate || x.endDate)
+      ? `${x.startDate || '처음부터'} ~ ${x.endDate || '계속'}` : '기간 제한 없음';
+    return `
+      <div class="hp-item ${x.enabled ? '' : 'off'}">
+        <img class="hp-thumb" src="${x.imageUrl}" alt="" onclick="window.open('${x.imageUrl}','_blank')">
+        <div class="hp-info">
+          <div class="hp-title">
+            <button class="hp-switch ${x.enabled ? 'on' : ''}" title="켜기/끄기" onclick="toggleHomePopup('${x.id}')"></button>
+            ${hpEsc(x.title) || '(제목 없음)'}
+            <span class="hp-badge ${st.cls}">${st.label}</span>
+          </div>
+          <div class="hp-meta">
+            📅 ${period}<br>
+            🔗 ${x.linkUrl ? hpEsc(x.linkUrl) : '링크 없음'}
+          </div>
+          <div class="hp-actions">
+            <button class="btn btn-secondary btn-sm" onclick="moveHomePopup(${i},-1)" ${i === 0 ? 'disabled' : ''}>↑</button>
+            <button class="btn btn-secondary btn-sm" onclick="moveHomePopup(${i},1)" ${i === hpData.length - 1 ? 'disabled' : ''}>↓</button>
+            <button class="btn btn-secondary btn-sm" onclick="editHomePopup('${x.id}')">✏️ 수정 / 사진 교체</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteHomePopup('${x.id}')">삭제</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+window.saveHomePopup = async function() {
+  const editId = document.getElementById('hp-edit-id').value;
+  const title = document.getElementById('hp-title').value.trim();
+  const linkUrl = document.getElementById('hp-link').value.trim();
+  const startDate = document.getElementById('hp-start').value;
+  const endDate = document.getElementById('hp-end').value;
+  const enabled = document.getElementById('hp-enabled').checked;
+  const file = document.getElementById('hp-image').files[0];
+
+  if (!editId && !file) { showMsg('hpMsg', '팝업 이미지를 선택하세요.', 'error'); return; }
+  if (startDate && endDate && startDate > endDate) { showMsg('hpMsg', '종료일이 시작일보다 빠릅니다.', 'error'); return; }
+
+  const btn = document.getElementById('hp-save-btn');
+  const btnText = btn.textContent;
+  btn.disabled = true;
+  try {
+    const payload = { title, linkUrl, startDate, endDate, enabled, updatedAt: Timestamp.now() };
+    let oldPath = '';
+    if (file) {
+      btn.textContent = '사진 업로드 중...';
+      const path = `homePopups/${Date.now()}_${file.name.replace(/[^\w.\-가-힣]/g, '_')}`;
+      const fileRef = ref(storage, path);
+      await uploadBytes(fileRef, file);
+      payload.imageUrl = await getDownloadURL(fileRef);
+      payload.imagePath = path;
+      if (editId) oldPath = hpData.find(x => x.id === editId)?.imagePath || '';
+    }
+    btn.textContent = '저장 중...';
+    if (editId) {
+      await updateDoc(doc(db, 'homePopups', editId), payload);
+      if (oldPath) { try { await deleteObject(ref(storage, oldPath)); } catch(e) {} }
+      showToast('팝업이 수정되었습니다');
+    } else {
+      payload.order = hpData.length ? Math.max(...hpData.map(x => x.order ?? 0)) + 1 : 0;
+      payload.createdAt = Timestamp.now();
+      await addDoc(collection(db, 'homePopups'), payload);
+      showToast('팝업이 등록되었습니다');
+    }
+    resetHomePopupForm();
+    await initHomePopupTab();
+  } catch(e) {
+    showMsg('hpMsg', '오류: ' + e.message, 'error');
+  } finally {
+    btn.disabled = false;
+    if (btn.textContent.includes('중...')) btn.textContent = btnText;
+  }
+};
+
+window.editHomePopup = function(id) {
+  const x = hpData.find(v => v.id === id);
+  if (!x) return;
+  document.getElementById('hp-edit-id').value = id;
+  document.getElementById('hp-title').value = x.title || '';
+  document.getElementById('hp-link').value = x.linkUrl || '';
+  document.getElementById('hp-start').value = x.startDate || '';
+  document.getElementById('hp-end').value = x.endDate || '';
+  document.getElementById('hp-enabled').checked = !!x.enabled;
+  document.getElementById('hp-image').value = '';
+  const pv = document.getElementById('hp-preview');
+  pv.src = x.imageUrl; pv.style.display = 'block';
+  document.getElementById('hp-form-title').textContent = '✏️ 팝업 수정';
+  document.getElementById('hp-image-label').textContent = '팝업 이미지 (교체할 때만 선택)';
+  document.getElementById('hp-save-btn').textContent = '수정 저장';
+  document.getElementById('hp-cancel-btn').style.display = '';
+  document.getElementById('tab-homepopup').scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+window.toggleHomePopup = async function(id) {
+  const x = hpData.find(v => v.id === id);
+  if (!x) return;
+  try {
+    await updateDoc(doc(db, 'homePopups', id), { enabled: !x.enabled, updatedAt: Timestamp.now() });
+    x.enabled = !x.enabled;
+    renderHomePopupList();
+    showToast(x.enabled ? '팝업을 켰습니다' : '팝업을 껐습니다');
+  } catch(e) { alert('오류: ' + e.message); }
+};
+
+window.moveHomePopup = async function(i, dir) {
+  const j = i + dir;
+  if (j < 0 || j >= hpData.length) return;
+  [hpData[i], hpData[j]] = [hpData[j], hpData[i]];
+  try {
+    await Promise.all(hpData.map((x, k) => {
+      if (x.order === k) return null;
+      x.order = k;
+      return updateDoc(doc(db, 'homePopups', x.id), { order: k });
+    }));
+    renderHomePopupList();
+  } catch(e) { alert('오류: ' + e.message); initHomePopupTab(); }
+};
+
+window.deleteHomePopup = async function(id) {
+  const x = hpData.find(v => v.id === id);
+  if (!x || !confirm(`"${x.title || '이 팝업'}"을(를) 삭제할까요?`)) return;
+  try {
+    await deleteDoc(doc(db, 'homePopups', id));
+    if (x.imagePath) { try { await deleteObject(ref(storage, x.imagePath)); } catch(e) {} }
+    if (document.getElementById('hp-edit-id').value === id) resetHomePopupForm();
+    showToast('삭제되었습니다');
+    await initHomePopupTab();
+  } catch(e) { alert('오류: ' + e.message); }
+};
+
 // ══════ QR 상담지 (상담 오신 분 휴대폰으로 입력) ══════
 let cqUnsub = null;
 let cqSession = '';
@@ -9410,6 +9659,8 @@ window.printConsultSheet = function(docId) {
       keywords:['상담','상담신청','문의','입학','신규상담','접수','상담지','태블릿','방문상담','상담자료','qr','QR','큐알'] },
     { id:'notice',       label:'공지사항',       icon:'', category:'ops',     tabId:'notice',       init:'initNoticeTab',
       keywords:['공지','공지사항','안내','알림','학부모'] },
+    { id:'homepopup',    label:'홈페이지 팝업',  icon:'', category:'content', tabId:'homepopup',    init:'initHomePopupTab',
+      keywords:['팝업','홈페이지','메인','배너','popup','공지팝업','이벤트'] },
 
     // ⑤ 관리자·설정
     { id:'teachers',     label:'선생님 관리',    icon:'',   category:'admin',   tabId:'teachers',     init:null,
