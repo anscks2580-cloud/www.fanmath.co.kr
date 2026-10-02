@@ -31,6 +31,119 @@
 .tab-panel { display:none; }
 .tab-panel.active { display:block; }
 
+/* ══ 관리자 메뉴 네비게이션 (카테고리·검색·최근 사용) ══ */
+.mnav { margin-bottom:28px; }
+.mnav[hidden], .mnav-recent[hidden] { display:none !important; }
+.mnav-top {
+  display:flex; align-items:flex-end; justify-content:space-between; gap:16px;
+  border-bottom:2px solid var(--border-soft);
+}
+.mnav-cats {
+  display:flex; gap:0; min-width:0; overflow-x:auto; scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+}
+.mnav-cats::-webkit-scrollbar { display:none; }
+.mnav-cat {
+  position:relative; flex-shrink:0; padding:12px 20px; background:none; border:none;
+  font-size:14px; font-weight:600; font-family:inherit; color:var(--muted);
+  cursor:pointer; white-space:nowrap; transition:color 0.2s;
+}
+.mnav-cat:hover { color:var(--off-white); }
+.mnav-cat::after {
+  content:''; position:absolute; bottom:-2px; left:0; right:0; height:2px;
+  background:var(--gold); transform:scaleX(0); transition:transform 0.2s;
+}
+.mnav-cat.active { color:var(--gold); }
+.mnav-cat.active::after { transform:scaleX(1); }
+.mnav-count {
+  display:inline-block; margin-left:6px; font-size:11px; font-weight:600;
+  color:var(--muted); opacity:0.7;
+}
+.mnav-cat.active .mnav-count { color:var(--gold); opacity:0.8; }
+/* 지금 열린 메뉴가 들어 있는 카테고리 (다른 카테고리를 보고 있을 때) */
+.mnav-cat.has-open:not(.active)::before {
+  content:''; position:absolute; top:10px; right:8px; width:5px; height:5px;
+  border-radius:50%; background:var(--gold);
+}
+.mnav-cat:focus-visible, .mnav-chip:focus-visible, .mnav-group .admin-tab:focus-visible,
+.mnav-result:focus-visible { outline:2px solid rgba(240,192,64,0.6); outline-offset:2px; }
+
+.mnav-search { position:relative; flex-shrink:0; width:240px; margin-bottom:8px; }
+.mnav-search input {
+  width:100%; box-sizing:border-box; padding:9px 13px;
+  background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px; color:var(--off-white); font-size:13px; font-family:inherit;
+  outline:none; transition:border-color 0.2s;
+}
+.mnav-search input:focus { border-color:rgba(240,192,64,0.5); }
+.mnav-search input::-webkit-search-cancel-button { filter:invert(0.7); }
+.mnav-results {
+  position:absolute; top:calc(100% + 6px); right:0; z-index:60;
+  width:min(340px, calc(100vw - 48px)); max-height:380px; overflow-y:auto;
+  background:#1A1230; border:1px solid rgba(240,192,64,0.25); border-radius:12px;
+  box-shadow:0 12px 32px rgba(0,0,0,0.45); padding:6px; display:none;
+}
+.mnav-results.open { display:block; }
+.mnav-result {
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  width:100%; padding:10px 12px; background:none; border:none; border-radius:8px;
+  font-family:inherit; text-align:left; cursor:pointer; color:var(--off-white);
+}
+.mnav-result.active, .mnav-result:hover { background:rgba(240,192,64,0.10); }
+.mnav-result-cat { display:block; font-size:11px; color:var(--muted); margin-bottom:2px; }
+.mnav-result-name { display:block; font-size:14px; font-weight:600; }
+.mnav-result-name mark { background:none; color:var(--gold); }
+.mnav-result-hint { flex-shrink:0; font-size:11px; color:var(--muted); }
+.mnav-result.is-open .mnav-result-hint { color:var(--gold); }
+.mnav-empty { padding:14px 12px; font-size:13px; color:var(--muted); }
+
+.mnav-recent { display:flex; align-items:center; gap:12px; padding-top:14px; flex-wrap:wrap; }
+.mnav-recent-label { font-size:12px; color:var(--muted); flex-shrink:0; }
+.mnav-recent-list { display:flex; gap:8px; flex-wrap:wrap; }
+.mnav-chip {
+  padding:6px 14px; border-radius:20px; font-size:12px; font-weight:600;
+  font-family:inherit; cursor:pointer; transition:all 0.18s;
+  background:rgba(255,255,255,0.05); border:1px solid var(--border-soft); color:var(--off-white);
+}
+.mnav-chip:hover { border-color:rgba(240,192,64,0.4); color:var(--gold); }
+.mnav-chip.active { background:rgba(240,192,64,0.15); border-color:var(--gold); color:var(--gold); }
+
+.mnav-group { display:none; padding-top:18px; }
+.mnav-group.active { display:block; }
+.mnav-group-title { font-size:12px; color:var(--muted); margin-bottom:10px; }
+.mnav-grid {
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(170px, 1fr)); gap:10px;
+}
+/* 기존 .admin-tab 버튼을 카테고리 안에서는 타일 형태로 표시 (클래스·onclick은 그대로) */
+.mnav-group .admin-tab {
+  display:flex; align-items:center; gap:8px; padding:13px 16px; text-align:left;
+  background:rgba(255,255,255,0.03); border:1px solid var(--border-soft); border-radius:10px;
+  font-size:13px; color:var(--off-white);
+  transition:border-color 0.18s, background 0.18s, color 0.18s;
+}
+.mnav-group .admin-tab::after { display:none; }
+.mnav-group .admin-tab:hover { border-color:rgba(240,192,64,0.4); color:var(--gold); }
+.mnav-group .admin-tab.active {
+  background:rgba(240,192,64,0.12); border-color:var(--gold); color:var(--gold);
+}
+
+.mnav-current {
+  margin-top:20px; padding-top:14px; border-top:1px solid var(--border-soft);
+  font-size:12px; color:var(--muted);
+}
+.mnav-current b { color:var(--off-white); font-weight:600; }
+.mnav-current .sep { margin:0 6px; opacity:0.6; }
+.mnav-current .now { color:var(--gold); font-weight:700; }
+
+@media(max-width:768px) {
+  .mnav-top { flex-direction:column-reverse; align-items:stretch; gap:10px; }
+  .mnav-search { width:100%; margin-bottom:0; }
+  .mnav-results { left:0; right:0; width:auto; }
+  .mnav-cat { padding:11px 14px; font-size:13px; }
+  .mnav-grid { grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:8px; }
+  .mnav-group .admin-tab { padding:12px 13px; }
+}
+
 .card {
   background:var(--bg-card); border:1px solid var(--border-soft);
   border-radius:14px; padding:26px; margin-bottom:20px;
@@ -314,7 +427,24 @@
     <p>학생 계정 관리 · 강의 배정 · 강의 목록 관리</p>
   </div>
 
-  <div class="admin-tabs">
+  <!-- ══ 관리자 메뉴 네비게이션: 아래 기존 탭 버튼들을 카테고리로 묶어 표시 (스크립트가 실패하면 기존 탭 줄이 그대로 보임) ══ -->
+  <div class="mnav" id="menuNav" hidden>
+    <div class="mnav-top">
+      <div class="mnav-cats" id="menuCats" role="tablist" aria-label="관리자 메뉴 카테고리"></div>
+      <div class="mnav-search">
+        <input type="search" id="menuSearch" placeholder="🔍 메뉴 검색..." autocomplete="off" aria-label="메뉴 검색" aria-controls="menuResults">
+        <div class="mnav-results" id="menuResults" role="listbox"></div>
+      </div>
+    </div>
+    <div class="mnav-recent" id="menuRecent" hidden>
+      <span class="mnav-recent-label">최근 사용</span>
+      <div class="mnav-recent-list" id="menuRecentList"></div>
+    </div>
+    <div id="menuGroups"></div>
+    <div class="mnav-current" id="menuCurrent"></div>
+  </div>
+
+  <div class="admin-tabs" id="legacyTabs">
     <button class="admin-tab active" onclick="switchTab('students',this)">학생 관리</button>
     <button class="admin-tab" onclick="switchTab('excel',this)">엑셀 일괄 등록</button>
     <button class="admin-tab" onclick="switchTab('classassign',this);initClassAssignTab()">🏫 반 배정</button>
@@ -427,6 +557,33 @@
   <div id="editStudentModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;">
     <div style="background:#1A1230;border:1px solid rgba(240,192,64,0.3);border-radius:16px;padding:28px;width:92%;max-width:500px;max-height:90vh;overflow-y:auto;">
       <h3 style="color:var(--gold);margin-bottom:20px;font-size:16px;">✏️ 학생 정보 수정</h3>
+
+      <!-- 🔐 로그인 정보 (이름 = 아이디, 전화번호 = 기본 비밀번호) -->
+      <div style="border:1px solid rgba(240,192,64,0.25);border-radius:10px;padding:14px 14px 4px;margin-bottom:18px;background:rgba(240,192,64,0.04);">
+        <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px;">🔐 로그인 정보</div>
+        <div id="edit-authStatus" style="font-size:12px;line-height:1.6;color:var(--muted);margin-bottom:12px;padding:8px 10px;border-radius:6px;background:rgba(255,255,255,0.03);">로그인 계정 확인 중...</div>
+        <div class="form-row">
+          <div class="form-group"><label>이름 (로그인 아이디)</label>
+            <input type="text" id="edit-name" placeholder="예: 홍길동">
+          </div>
+          <div class="form-group"><label>전화번호</label>
+            <input type="text" id="edit-phone" placeholder="01012345678">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:10px;">
+          <label>새 비밀번호 (비워두면 변경 안 함 · 6자 이상)</label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="edit-newpw" placeholder="새 비밀번호 입력" autocomplete="off" style="flex:1;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="fillPwWithPhone()" style="white-space:nowrap;">📱 전화번호로</button>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:10px;">
+          · 이름을 바꾸면 로그인 아이디도 같이 바뀝니다.<br>
+          · 전화번호를 바꾸고 비밀번호 칸을 비워두면, 비밀번호도 새 전화번호로 바뀝니다.<br>
+          · 로그인이 안 된다는 학생은 아래 버튼으로 <b style="color:var(--gold);">현재 이름·전화번호 그대로</b> 계정을 다시 맞춰주세요. (비밀번호 칸에 입력했으면 그 값으로, 비워두면 전화번호로 설정)
+        </div>
+        <button type="button" class="btn btn-primary btn-sm" style="margin-bottom:12px;" onclick="syncStudentAuth()">🔄 로그인 계정 즉시 맞추기</button>
+      </div>
 
       <div class="form-row">
         <div class="form-group"><label>학년</label>
@@ -1703,7 +1860,15 @@
   <div class="tab-panel" id="tab-watchstatus">
     <div class="card">
       <h3>📺 영상 시청현황</h3>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px;">
+        확인할 강의를 고르면, 그 강의에 영상 접근 권한이 있는 학생들의 수강 현황만 보여줍니다.<br>
+        강의를 고르지 않으면 강의별 요약이 나오고, 행을 누르면 해당 강의로 들어갑니다.
+      </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
+        <select id="ws-course" onchange="wsSelectCourse(this.value)"
+          style="padding:8px 12px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.6);border-radius:8px;color:var(--off-white);font-size:13px;font-weight:600;font-family:inherit;outline:none;color-scheme:dark;max-width:260px;">
+          <option value="">전체 강의 (요약)</option>
+        </select>
         <select id="ws-branch" onchange="renderWatchStatus()"
           style="padding:8px 12px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:dark;">
           <option value="">전체 관</option>
@@ -2285,6 +2450,11 @@ window.openEditModal = function(uid) {
   if (!s) return;
   editingStudentId = uid;
 
+  document.getElementById('edit-name').value  = s.name || '';
+  document.getElementById('edit-phone').value = s.phone || '';
+  document.getElementById('edit-newpw').value = '';
+  checkStudentAuth(uid);
+
   document.getElementById('edit-grade').value  = s.grade || '중1';
   document.getElementById('edit-branch').value = s.branch || '평촌관';
   document.getElementById('edit-classgroup').value = s.classGroup || '';
@@ -2315,8 +2485,101 @@ window.closeEditModal = function() {
   editingStudentId = null;
 };
 
+// ── 학생 로그인 계정(Auth) 관련 ──
+const STUDENT_EMAIL_DOMAIN = '@songmath.kr';
+
+function authErrMsg(e) {
+  const code = e?.code || '';
+  if (code === 'functions/not-found') {
+    return 'updateStudentAuth 클라우드 함수가 배포되어 있는지 확인해주세요.';
+  }
+  return e?.message || String(e);
+}
+
+function decodeLocalPart(email) {
+  const local = (email || '').split('@')[0];
+  try { return decodeURIComponent(local); } catch { return local; }
+}
+
+// 실제 Firebase Auth에 저장된 로그인 계정 상태 확인
+window.checkStudentAuth = async function(uid) {
+  const box = document.getElementById('edit-authStatus');
+  box.style.color = 'var(--muted)';
+  box.textContent = '로그인 계정 확인 중...';
+  try {
+    const fn = httpsCallable(functionsInstance, 'updateStudentAuth');
+    const res = await fn({ uid, checkOnly: true });
+    if (editingStudentId !== uid) return; // 그 사이 다른 학생 모달로 바뀐 경우
+    const d = res.data || {};
+    const s = studentsCache.find(st => st.id === uid) || {};
+    if (!d.exists) {
+      box.style.color = '#ff8a8a';
+      box.innerHTML = '⚠️ 로그인 계정(Auth)이 없습니다. 아래 <b>로그인 계정 즉시 맞추기</b>를 누르면 새로 만들어집니다.';
+      return;
+    }
+    const authName = decodeLocalPart(d.email);
+    const lastLogin = d.lastSignIn ? new Date(d.lastSignIn).toLocaleString('ko-KR') : '기록 없음';
+    const disabledTxt = d.disabled ? ' · <b style="color:#ff8a8a;">계정 비활성화됨</b>' : '';
+    if (authName === s.name && d.email === s.name + STUDENT_EMAIL_DOMAIN) {
+      box.style.color = '#7ee2a8';
+      box.innerHTML = `✅ 로그인 아이디 정상 (<b>${authName}</b>) · 최근 로그인: ${lastLogin}${disabledTxt}<br>
+        <span style="color:var(--muted);">※ 비밀번호는 보안상 조회가 안 됩니다. 로그인이 안 되면 비밀번호를 다시 설정해주세요.</span>`;
+    } else {
+      box.style.color = '#ffb86b';
+      box.innerHTML = `⚠️ 실제 로그인 아이디가 학생 이름과 다릅니다.<br>
+        · 등록된 이름: <b>${s.name || '-'}</b><br>
+        · 실제 로그인 아이디: <b>${authName || '-'}</b> <span style="color:var(--muted);">(${d.email || '-'})</span><br>
+        → <b>로그인 계정 즉시 맞추기</b>를 누르면 이름 기준으로 수정됩니다.${disabledTxt}`;
+    }
+  } catch (e) {
+    if (editingStudentId !== uid) return;
+    box.style.color = '#ff8a8a';
+    box.textContent = '로그인 계정 확인 실패: ' + authErrMsg(e);
+  }
+};
+
+window.fillPwWithPhone = function() {
+  const phone = document.getElementById('edit-phone').value.trim().replace(/-/g, '');
+  document.getElementById('edit-newpw').value = phone;
+};
+
+// 현재 입력된 이름/전화번호(또는 새 비밀번호) 기준으로 Auth 계정 강제 동기화
+window.syncStudentAuth = async function() {
+  if (!editingStudentId) return;
+  const uid   = editingStudentId;
+  const name  = document.getElementById('edit-name').value.trim();
+  const phone = document.getElementById('edit-phone').value.trim().replace(/-/g, '');
+  const newPw = document.getElementById('edit-newpw').value.trim();
+  const password = newPw || phone;
+
+  if (!name) { showMsg('editStudentMsg', '이름을 입력해주세요.', 'error'); return; }
+  if (!password || password.length < 6) {
+    showMsg('editStudentMsg', '비밀번호(또는 전화번호)는 6자 이상이어야 합니다.', 'error'); return;
+  }
+  if (!confirm(`로그인 계정을 아래처럼 설정합니다.\n\n아이디: ${name}\n비밀번호: ${password}\n\n진행할까요?`)) return;
+
+  try {
+    const fn = httpsCallable(functionsInstance, 'updateStudentAuth');
+    const res = await fn({ uid, name, password });
+    await updateDoc(doc(db, 'students', uid), { name, phone });
+    document.getElementById('edit-newpw').value = '';
+    showMsg('editStudentMsg', res.data?.created
+      ? '✅ 로그인 계정을 새로 만들었습니다.'
+      : '✅ 로그인 계정이 수정되었습니다.', 'success');
+    await loadStudents();
+    checkStudentAuth(uid);
+  } catch (e) {
+    showMsg('editStudentMsg', '오류: ' + authErrMsg(e), 'error');
+  }
+};
+
 window.saveEditStudent = async function() {
   if (!editingStudentId) return;
+  const uid        = editingStudentId;
+  const s          = studentsCache.find(st => st.id === uid) || {};
+  const name       = document.getElementById('edit-name').value.trim();
+  const phone      = document.getElementById('edit-phone').value.trim().replace(/-/g, '');
+  const newPw      = document.getElementById('edit-newpw').value.trim();
   const grade      = document.getElementById('edit-grade').value;
   const branch     = document.getElementById('edit-branch').value;
   const teacherUid = document.getElementById('edit-teacher').value;
@@ -2325,15 +2588,39 @@ window.saveEditStudent = async function() {
   const classGroup = document.getElementById('edit-classgroup').value.trim();
   const assignedTags = collectCheckedTags('edit-tagChecklist');
 
+  if (!name || !phone) { showMsg('editStudentMsg', '이름과 전화번호를 입력해주세요.', 'error'); return; }
+
+  const nameChanged  = name !== (s.name || '');
+  const phoneChanged = phone !== (s.phone || '');
+  // 비밀번호: 직접 입력값 우선, 없으면 전화번호가 바뀐 경우에만 새 전화번호로
+  const password = newPw || (phoneChanged ? phone : '');
+  if (password && password.length < 6) {
+    showMsg('editStudentMsg', '비밀번호는 6자 이상이어야 합니다.', 'error'); return;
+  }
+
   try {
-    await updateDoc(doc(db, 'students', editingStudentId), {
-      grade, branch, teacherUid, teacherName, days, classGroup, assignedTags
+    // 1) 로그인 정보가 바뀌는 경우 Auth 먼저 수정 (실패하면 Firestore도 건드리지 않음)
+    if (nameChanged || password) {
+      const msgs = [];
+      if (nameChanged) msgs.push(`아이디: ${s.name || '-'} → ${name}`);
+      if (password)    msgs.push(`비밀번호: ${password}`);
+      if (!confirm(`로그인 정보도 함께 변경됩니다.\n\n${msgs.join('\n')}\n\n진행할까요?`)) return;
+
+      const fn = httpsCallable(functionsInstance, 'updateStudentAuth');
+      const payload = { uid, name };
+      if (password) payload.password = password;
+      await fn(payload);
+    }
+
+    // 2) Firestore 학생 정보 저장
+    await updateDoc(doc(db, 'students', uid), {
+      name, phone, grade, branch, teacherUid, teacherName, days, classGroup, assignedTags
     });
-    showMsg('editStudentMsg', '✅ 저장 완료!', 'success');
+    showMsg('editStudentMsg', (nameChanged || password) ? '✅ 저장 완료! (로그인 정보 포함)' : '✅ 저장 완료!', 'success');
     await loadStudents();
     setTimeout(() => closeEditModal(), 900);
   } catch(e) {
-    showMsg('editStudentMsg', '오류: ' + e.message, 'error');
+    showMsg('editStudentMsg', '오류: ' + authErrMsg(e), 'error');
   }
 };
 
@@ -6567,6 +6854,23 @@ function wsFormatDate(ts) {
   } catch(e) { return '-'; }
 }
 
+let wsCourses = [];          // 접근 권한이 실제로 걸려 있는 강의 목록 [{tag,label,cat,order,videoCount}]
+let wsCourse = '';           // 선택한 강의(태그). '' = 전체 강의 요약
+
+// 강의(접근 권한 태그) 하나에 해당하는 영상 — 기존 매칭 규칙과 동일
+function wsVideosForTag(a, allVideos) {
+  a = (a || '').trim();
+  if (!a) return [];
+  return allVideos.filter(v => {
+    const tag = (v.tag || '').trim();
+    return a.endsWith('_') ? tag.startsWith(a) : (tag === a || tag.startsWith(a + '_'));
+  });
+}
+
+function wsEsc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
 async function loadWatchStatus(force) {
   if (wsLoaded && !force) { renderWatchStatus(); return; }
   document.getElementById('ws-list').innerHTML = '<div style="color:var(--muted);font-size:13px;">불러오는 중...</div>';
@@ -6576,25 +6880,63 @@ async function loadWatchStatus(force) {
   const progressMap = new Map();
   wsProgressCache.forEach(p => progressMap.set(`${p.studentUid}_${p.videoId}`, p));
 
+  // 강의 태그 → 표시명/카테고리 (강의 배정 화면과 같은 목록 기준)
+  const tagInfo = new Map();
+  let order = 0;
+  getTagCategories().forEach(cat => (cat.tags || []).forEach(t => {
+    if (!tagInfo.has(t.v)) tagInfo.set(t.v, { label: t.l, cat: cat.label, order: order++ });
+  }));
+
+  // 학생 × (접근 권한 강의) × 그 강의의 영상
+  const videosByTag = new Map();
+  const courseMap = new Map();
   wsAllRows = [];
   studentsCache.forEach(s => {
-    const assigned = wsGetStudentAssignedVideos(s, videosCache);
-    assigned.forEach(v => {
-      const p = progressMap.get(`${s.id}_${v.id}`);
-      wsAllRows.push({
-        studentUid: s.id, studentName: s.name || '', branch: s.branch || '', grade: s.grade || '',
-        teacherName: s.teacherName || '', videoId: v.id, videoTitle: v.title || '', tag: v.tag || '',
-        percent: p ? (p.percent || 0) : 0,
-        completed: p ? !!p.completed : false,
-        lastWatchedAt: p ? p.lastWatchedAt : null,
+    const tags = [...new Set((Array.isArray(s.assignedTags) ? s.assignedTags : [])
+      .map(t => (t || '').trim()).filter(Boolean))];
+    tags.forEach(a => {
+      if (!videosByTag.has(a)) videosByTag.set(a, wsVideosForTag(a, videosCache));
+      const vids = videosByTag.get(a);
+      if (!vids.length) return;
+      if (!courseMap.has(a)) {
+        const info = tagInfo.get(a) || { label: a, cat: '기타', order: 99999 };
+        courseMap.set(a, { tag: a, ...info, videoCount: vids.length });
+      }
+      vids.forEach(v => {
+        const p = progressMap.get(`${s.id}_${v.id}`);
+        wsAllRows.push({
+          courseTag: a,
+          studentUid: s.id, studentName: s.name || '', branch: s.branch || '', grade: s.grade || '',
+          teacherName: s.teacherName || '', videoId: v.id, videoTitle: v.title || '', tag: v.tag || '',
+          percent: p ? (p.percent || 0) : 0,
+          completed: p ? !!p.completed : false,
+          lastWatchedAt: p ? p.lastWatchedAt : null,
+        });
       });
     });
   });
+  wsCourses = [...courseMap.values()].sort((x, y) => x.order - y.order || x.label.localeCompare(y.label, 'ko'));
+
+  // 강의 선택 옵션 (카테고리별 묶음)
+  const courseSel = document.getElementById('ws-course');
+  const groups = [];
+  wsCourses.forEach(c => {
+    let g = groups.find(x => x.cat === c.cat);
+    if (!g) { g = { cat: c.cat, list: [] }; groups.push(g); }
+    g.list.push(c);
+  });
+  courseSel.innerHTML = '<option value="">전체 강의 (요약)</option>' + groups.map(g =>
+    `<optgroup label="${wsEsc(g.cat)}">${g.list.map(c => `<option value="${wsEsc(c.tag)}">${wsEsc(c.label)}</option>`).join('')}</optgroup>`
+  ).join('');
+  if (!courseMap.has(wsCourse)) wsCourse = '';
+  courseSel.value = wsCourse;
 
   // 담당T 필터 옵션 채우기
   const teacherSel = document.getElementById('ws-teacher');
+  const prevTeacher = teacherSel.value;
   const teachers = [...new Set(studentsCache.map(s => s.teacherName).filter(Boolean))].sort();
-  teacherSel.innerHTML = '<option value="">전체 담당T</option>' + teachers.map(t => `<option value="${t}">${t}</option>`).join('');
+  teacherSel.innerHTML = '<option value="">전체 담당T</option>' + teachers.map(t => `<option value="${wsEsc(t)}">${wsEsc(t)}</option>`).join('');
+  if (teachers.includes(prevTeacher)) teacherSel.value = prevTeacher;
 
   wsLoaded = true;
   renderWatchStatus();
@@ -6602,74 +6944,204 @@ async function loadWatchStatus(force) {
 
 window.initWatchStatusTab = function() { loadWatchStatus(false); };
 
+window.wsSelectCourse = function(tag) {
+  wsCourse = tag || '';
+  const sel = document.getElementById('ws-course');
+  if (sel && sel.value !== wsCourse) sel.value = wsCourse;
+  renderWatchStatus();
+};
+
+window.wsToggleDetail = function(i) {
+  const row = document.getElementById('ws-detail-' + i);
+  const arrow = document.getElementById('ws-arrow-' + i);
+  if (!row) return;
+  const open = row.style.display === 'none';
+  row.style.display = open ? '' : 'none';
+  if (arrow) arrow.textContent = open ? '▾' : '▸';
+};
+
+function wsBar(percent, color) {
+  return `
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div style="flex:1;height:6px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">
+        <div style="width:${percent}%;height:100%;background:${color};"></div>
+      </div>
+      <span style="font-size:11px;color:var(--muted);min-width:32px;text-align:right;">${percent}%</span>
+    </div>`;
+}
+
 window.renderWatchStatus = function renderWatchStatus() {
   const branch = document.getElementById('ws-branch').value;
   const teacher = document.getElementById('ws-teacher').value;
   const studentQ = (document.getElementById('ws-student').value || '').trim().toLowerCase();
   const videoQ = (document.getElementById('ws-video').value || '').trim().toLowerCase();
-  const status = document.getElementById('ws-status').value;
+  const statusSel = document.getElementById('ws-status');
+  const status = statusSel.value;
 
   let rows = wsAllRows;
   if (branch) rows = rows.filter(r => r.branch === branch);
   if (teacher) rows = rows.filter(r => r.teacherName === teacher);
   if (studentQ) rows = rows.filter(r => r.studentName.toLowerCase().includes(studentQ));
-  if (videoQ) rows = rows.filter(r => r.videoTitle.toLowerCase().includes(videoQ) || r.tag.toLowerCase().includes(videoQ));
-  if (status === 'unwatched') rows = rows.filter(r => r.percent === 0);
-  else if (status === 'inprogress') rows = rows.filter(r => r.percent > 0 && !r.completed);
-  else if (status === 'completed') rows = rows.filter(r => r.completed);
 
   const el = document.getElementById('ws-list');
   const summaryEl = document.getElementById('ws-summary');
-  const total = rows.length;
-  const completedCount = rows.filter(r => r.completed).length;
-  const unwatchedCount = rows.filter(r => r.percent === 0).length;
-  summaryEl.textContent = total ? `총 ${total}건 · 완료 ${completedCount} · 미시청 ${unwatchedCount}` : '';
+  const empty = msg => `<div style="color:var(--muted);font-size:13px;padding:20px 0;">${msg}</div>`;
 
-  if (!rows.length) {
-    el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px 0;">조건에 맞는 데이터가 없습니다.</div>';
+  // 상태 필터는 강의를 골랐을 때만 의미가 있음
+  statusSel.disabled = !wsCourse;
+  statusSel.style.opacity = wsCourse ? '1' : '0.45';
+
+  // ─────────── 강의를 고르지 않았을 때: 강의별 요약 ───────────
+  if (!wsCourse) {
+    const stats = new Map();
+    rows.forEach(r => {
+      let c = stats.get(r.courseTag);
+      if (!c) { c = { students: new Map(), pairs: 0, done: 0, sum: 0 }; stats.set(r.courseTag, c); }
+      c.pairs++; c.sum += r.percent; if (r.completed) c.done++;
+      let st = c.students.get(r.studentUid);
+      if (!st) { st = { n: 0, done: 0, watched: 0 }; c.students.set(r.studentUid, st); }
+      st.n++; if (r.completed) st.done++; if (r.percent > 0) st.watched++;
+    });
+    let list = wsCourses.filter(c => stats.has(c.tag));
+    if (videoQ) list = list.filter(c =>
+      c.label.toLowerCase().includes(videoQ) || c.tag.toLowerCase().includes(videoQ) ||
+      rows.some(r => r.courseTag === c.tag && r.videoTitle.toLowerCase().includes(videoQ)));
+
+    summaryEl.textContent = list.length ? `접근 권한이 걸린 강의 ${list.length}개` : '';
+    if (!list.length) { el.innerHTML = empty('조건에 맞는 강의가 없습니다.'); return; }
+
+    el.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="border-bottom:1px solid rgba(240,192,64,0.3);color:var(--gold);text-align:left;">
+            <th style="padding:8px 10px;">강의</th>
+            <th style="padding:8px 10px;">접근 학생</th>
+            <th style="padding:8px 10px;">영상</th>
+            <th style="padding:8px 10px;">평균 시청률</th>
+            <th style="padding:8px 10px;">전부 완료</th>
+            <th style="padding:8px 10px;">미시청</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${list.map(c => {
+            const st = stats.get(c.tag);
+            const avg = st.pairs ? Math.round(st.sum / st.pairs) : 0;
+            const studentArr = [...st.students.values()];
+            const allDone = studentArr.filter(x => x.done === x.n).length;
+            const none = studentArr.filter(x => x.watched === 0).length;
+            return `
+            <tr data-tag="${wsEsc(c.tag)}" onclick="wsSelectCourse(this.dataset.tag)"
+              style="border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;"
+              onmouseover="this.style.background='rgba(240,192,64,0.06)'" onmouseout="this.style.background=''">
+              <td style="padding:10px;">
+                <div style="font-weight:600;">${wsEsc(c.label)}</div>
+                <div style="font-size:11px;color:var(--muted);">${wsEsc(c.cat)}</div>
+              </td>
+              <td style="padding:10px;">${studentArr.length}명</td>
+              <td style="padding:10px;color:var(--muted);">${c.videoCount}개</td>
+              <td style="padding:10px;min-width:130px;">${wsBar(avg, avg >= 90 ? '#5FD98A' : 'var(--gold)')}</td>
+              <td style="padding:10px;color:#5FD98A;font-weight:600;">${allDone}명</td>
+              <td style="padding:10px;color:${none ? '#ff9090' : 'var(--muted)'};font-weight:600;">${none}명</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
     return;
   }
 
-  // 미시청 우선, 그 다음 시청률 낮은 순
-  rows = [...rows].sort((a, b) => {
-    if (a.percent !== b.percent) return a.percent - b.percent;
-    return a.studentName.localeCompare(b.studentName, 'ko');
-  });
+  // ─────────── 강의를 골랐을 때: 그 강의 접근 권한이 있는 학생만 ───────────
+  const course = wsCourses.find(c => c.tag === wsCourse);
+  rows = rows.filter(r => r.courseTag === wsCourse);
+  if (videoQ) rows = rows.filter(r => r.videoTitle.toLowerCase().includes(videoQ) || r.tag.toLowerCase().includes(videoQ));
 
-  el.innerHTML = `
+  const byStudent = new Map();
+  rows.forEach(r => {
+    let st = byStudent.get(r.studentUid);
+    if (!st) {
+      st = { name: r.studentName, branch: r.branch, teacherName: r.teacherName, grade: r.grade, videos: [] };
+      byStudent.set(r.studentUid, st);
+    }
+    st.videos.push(r);
+  });
+  let students = [...byStudent.values()].map(st => {
+    const n = st.videos.length;
+    const done = st.videos.filter(v => v.completed).length;
+    const unwatched = st.videos.filter(v => v.percent === 0).length;
+    const avg = n ? Math.round(st.videos.reduce((a, v) => a + v.percent, 0) / n) : 0;
+    const last = st.videos.reduce((m, v) => {
+      if (!v.lastWatchedAt) return m;
+      const t = v.lastWatchedAt.toDate ? v.lastWatchedAt.toDate().getTime() : new Date(v.lastWatchedAt).getTime();
+      return (!m || t > m.t) ? { t, ts: v.lastWatchedAt } : m;
+    }, null);
+    const state = done === n ? 'completed' : (unwatched === n ? 'unwatched' : 'inprogress');
+    return { ...st, n, done, unwatched, avg, last: last ? last.ts : null, state };
+  });
+  if (status) students = students.filter(st => st.state === status);
+  students.sort((a, b) => a.avg - b.avg || a.name.localeCompare(b.name, 'ko'));
+
+  const allDoneCnt = students.filter(st => st.state === 'completed').length;
+  const noneCnt = students.filter(st => st.state === 'unwatched').length;
+  summaryEl.textContent = students.length
+    ? `접근 학생 ${students.length}명 · 영상 ${course ? course.videoCount : 0}개 · 전부 완료 ${allDoneCnt}명 · 미시청 ${noneCnt}명`
+    : '';
+
+  const head = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+      <button class="btn btn-secondary btn-sm" onclick="wsSelectCourse('')">← 전체 강의</button>
+      <div style="font-size:15px;font-weight:700;color:var(--gold);">${wsEsc(course ? course.label : wsCourse)}</div>
+      <div style="font-size:12px;color:var(--muted);">${wsEsc(course ? course.cat : '')}</div>
+    </div>`;
+
+  if (!students.length) { el.innerHTML = head + empty('조건에 맞는 학생이 없습니다.'); return; }
+
+  el.innerHTML = head + `
     <table style="width:100%;border-collapse:collapse;font-size:13px;">
       <thead>
         <tr style="border-bottom:1px solid rgba(240,192,64,0.3);color:var(--gold);text-align:left;">
           <th style="padding:8px 10px;">학생</th>
           <th style="padding:8px 10px;">관/담당T</th>
-          <th style="padding:8px 10px;">영상 제목</th>
-          <th style="padding:8px 10px;">태그</th>
-          <th style="padding:8px 10px;">시청률</th>
+          <th style="padding:8px 10px;">평균 시청률</th>
+          <th style="padding:8px 10px;">완료</th>
           <th style="padding:8px 10px;">상태</th>
           <th style="padding:8px 10px;">마지막 시청</th>
+          <th style="padding:8px 10px;width:24px;"></th>
         </tr>
       </thead>
       <tbody>
-        ${rows.map(r => {
-          const barColor = r.completed ? '#5FD98A' : (r.percent > 0 ? 'var(--gold)' : 'rgba(255,255,255,0.15)');
-          const statusLabel = r.completed ? '✅ 완료' : (r.percent > 0 ? '⏳ 시청중' : '⚠️ 미시청');
-          const statusColor = r.completed ? '#5FD98A' : (r.percent > 0 ? 'var(--gold)' : '#ff9090');
+        ${students.map((st, i) => {
+          const barColor = st.state === 'completed' ? '#5FD98A' : (st.avg > 0 ? 'var(--gold)' : 'rgba(255,255,255,0.15)');
+          const statusLabel = st.state === 'completed' ? '✅ 완료' : (st.state === 'inprogress' ? '⏳ 시청중' : '⚠️ 미시청');
+          const statusColor = st.state === 'completed' ? '#5FD98A' : (st.state === 'inprogress' ? 'var(--gold)' : '#ff9090');
+          const videos = [...st.videos].sort((a, b) => a.videoTitle.localeCompare(b.videoTitle, 'ko', { numeric: true }));
           return `
-          <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
-            <td style="padding:8px 10px;font-weight:600;">${r.studentName}</td>
-            <td style="padding:8px 10px;color:var(--muted);">${r.branch}${r.teacherName ? ' · ' + r.teacherName + 'T' : ''}</td>
-            <td style="padding:8px 10px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.videoTitle}</td>
-            <td style="padding:8px 10px;color:var(--muted);font-size:11px;">${r.tag}</td>
-            <td style="padding:8px 10px;min-width:120px;">
-              <div style="display:flex;align-items:center;gap:6px;">
-                <div style="flex:1;height:6px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">
-                  <div style="width:${r.percent}%;height:100%;background:${barColor};"></div>
-                </div>
-                <span style="font-size:11px;color:var(--muted);min-width:32px;text-align:right;">${r.percent}%</span>
-              </div>
+          <tr onclick="wsToggleDetail(${i})" style="border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;"
+            onmouseover="this.style.background='rgba(240,192,64,0.06)'" onmouseout="this.style.background=''">
+            <td style="padding:9px 10px;font-weight:600;">${wsEsc(st.name)}${st.grade ? `<span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:6px;">${wsEsc(st.grade)}</span>` : ''}</td>
+            <td style="padding:9px 10px;color:var(--muted);">${wsEsc(st.branch)}${st.teacherName ? ' · ' + wsEsc(st.teacherName) + 'T' : ''}</td>
+            <td style="padding:9px 10px;min-width:130px;">${wsBar(st.avg, barColor)}</td>
+            <td style="padding:9px 10px;">${st.done} / ${st.n}</td>
+            <td style="padding:9px 10px;color:${statusColor};font-weight:600;font-size:12px;">${statusLabel}</td>
+            <td style="padding:9px 10px;color:var(--muted);font-size:12px;">${wsFormatDate(st.last)}</td>
+            <td style="padding:9px 10px;color:var(--muted);" id="ws-arrow-${i}">▸</td>
+          </tr>
+          <tr id="ws-detail-${i}" style="display:none;">
+            <td colspan="7" style="padding:4px 10px 14px 24px;background:rgba(255,255,255,0.02);">
+              <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                ${videos.map(v => {
+                  const c = v.completed ? '#5FD98A' : (v.percent > 0 ? 'var(--gold)' : 'rgba(255,255,255,0.15)');
+                  const lbl = v.completed ? '완료' : (v.percent > 0 ? '시청중' : '미시청');
+                  const lc = v.completed ? '#5FD98A' : (v.percent > 0 ? 'var(--gold)' : '#ff9090');
+                  return `
+                  <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+                    <td style="padding:7px 8px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${wsEsc(v.videoTitle)}</td>
+                    <td style="padding:7px 8px;min-width:120px;">${wsBar(v.percent, c)}</td>
+                    <td style="padding:7px 8px;color:${lc};font-weight:600;">${lbl}</td>
+                    <td style="padding:7px 8px;color:var(--muted);">${wsFormatDate(v.lastWatchedAt)}</td>
+                  </tr>`;
+                }).join('')}
+              </table>
             </td>
-            <td style="padding:8px 10px;color:${statusColor};font-weight:600;font-size:12px;">${statusLabel}</td>
-            <td style="padding:8px 10px;color:var(--muted);font-size:12px;">${wsFormatDate(r.lastWatchedAt)}</td>
           </tr>`;
         }).join('')}
       </tbody>
@@ -8455,6 +8927,366 @@ window.printConsultSheet = function(docId) {
   document.getElementById('printSheet').innerHTML = html;
   window.print();
 };
+</script>
+<script>
+/* ══════════════════════════════════════════════════════════════
+   관리자 메뉴 네비게이션 (카테고리 · 메뉴 검색 · 최근 사용)
+   - 기존 탭 버튼(.admin-tab)과 onclick(switchTab + init 함수)은 그대로 사용합니다.
+   - 메뉴를 추가할 때는 아래 ADMIN_MENUS에 한 줄만 추가하면
+     카테고리 목록 · 검색 · 최근 사용에 자동 반영됩니다.
+     (HTML에 해당 탭 버튼이 없으면 tabId/init으로 버튼을 자동 생성)
+   ══════════════════════════════════════════════════════════════ */
+(function () {
+  const ADMIN_MENU_CATEGORIES = [
+    { id: 'student', label: '학생·반 관리' },
+    { id: 'lesson',  label: '수업·학습 관리' },
+    { id: 'content', label: '콘텐츠·자료' },
+    { id: 'ops',     label: '운영·소통' },
+    { id: 'admin',   label: '관리자·설정' },
+  ];
+
+  // id: 메뉴 ID / label: 메뉴명 / icon: 아이콘 / category: 카테고리 ID
+  // tabId: 기존 탭 ID ('tab-' 뒤 부분, switchTab 첫 인자) / init: 기존 초기화 함수명 (버튼 자동 생성 시에만 사용)
+  // keywords: 검색 키워드
+  const ADMIN_MENUS = [
+    // ① 학생·반 관리
+    { id:'students',     label:'학생 관리',      icon:'',   category:'student', tabId:'students',     init:null,
+      keywords:['학생','원생','학생정보','원생정보','학생등록','신규등록','계정','학생계정','명단','삭제'] },
+    { id:'excel',        label:'엑셀 일괄 등록', icon:'',   category:'student', tabId:'excel',        init:null,
+      keywords:['엑셀','excel','일괄','일괄등록','대량등록','업로드','xlsx'] },
+    { id:'classassign',  label:'반 배정',        icon:'', category:'student', tabId:'classassign',  init:'initClassAssignTab',
+      keywords:['반','반배정','클래스','class','반편성','분반'] },
+    { id:'promotion',    label:'일괄 진급',      icon:'', category:'student', tabId:'promotion',    init:'initPromotionTab',
+      keywords:['진급','학년','학년변경','새학기','승급'] },
+    { id:'assign',       label:'강의 배정',      icon:'',   category:'student', tabId:'assign',       init:null,
+      keywords:['강의배정','배정','수강','권한','강의권한','태그'] },
+    { id:'attendance',   label:'학생 출결',      icon:'', category:'student', tabId:'attendance',   init:'initAttendanceTab',
+      keywords:['출결','출석','결석','지각','조퇴','출석부'] },
+    { id:'watchstatus',  label:'시청현황',       icon:'', category:'student', tabId:'watchstatus',  init:'initWatchStatusTab',
+      keywords:['시청','시청현황','수강현황','시청기록','학습현황','영상시청'] },
+
+    // ② 수업·학습 관리
+    { id:'videos',       label:'강의 목록',      icon:'',   category:'lesson',  tabId:'videos',       init:'renderFolderAccordion',
+      keywords:['강의','강의목록','영상','동영상','폴더','비메오','vimeo','인강'] },
+    { id:'progress',     label:'반별진도',       icon:'', category:'lesson',  tabId:'progress',     init:'initProgressTab',
+      keywords:['진도','반별진도','진도표','수업진도'] },
+    { id:'weekly',       label:'주간성취도',     icon:'', category:'lesson',  tabId:'weekly',       init:'initWeeklyTab',
+      keywords:['성취도','주간','주간성취도','테스트','점수','성적'] },
+    { id:'monthly',      label:'월말보고서',     icon:'', category:'lesson',  tabId:'monthly',      init:'initMonthlyTab',
+      keywords:['월말','월말보고서','보고서','리포트','학부모보고서','월간'] },
+    { id:'clinicroom',   label:'클리닉실',       icon:'', category:'lesson',  tabId:'clinicroom',   init:'initClinicRoomTab',
+      keywords:['클리닉','클리닉실','보충','질문'] },
+    { id:'satclinic',    label:'토요클리닉',     icon:'', category:'lesson',  tabId:'satclinic',    init:'initSatClinicTab',
+      keywords:['토요','토요클리닉','클리닉','주말','보충'] },
+    { id:'tamaterials',  label:'조교 자료',      icon:'', category:'lesson',  tabId:'tamaterials',  init:'initTaMaterialsTab',
+      keywords:['조교','조교자료','자료','ta','첨부'] },
+
+    // ③ 콘텐츠·자료
+    { id:'apexvideo',    label:'에이펙스 영상',  icon:'', category:'content', tabId:'apexvideo',    init:'initApexVideoTab',
+      keywords:['영상','에이펙스','apex','동영상'] },
+    { id:'promo',        label:'홍보영상',       icon:'', category:'content', tabId:'promo',        init:'initPromoTab',
+      keywords:['영상','홍보','홍보영상','프로모션','마케팅','동영상'] },
+    { id:'exammaterials',label:'중간고사 자료',  icon:'', category:'content', tabId:'exammaterials',init:'initExamMaterialsTab',
+      keywords:['중간고사','시험','내신','시험자료','기출','pdf','자료','기말'] },
+
+    // ④ 운영·소통
+    { id:'dailyreport',  label:'관리부 마감',    icon:'', category:'ops',     tabId:'dailyreport',  init:'initDailyReportTab',
+      keywords:['마감','관리부','일일','일일업무','업무보고','일일보고'] },
+    { id:'weeklylog',    label:'주간업무일지',   icon:'', category:'ops',     tabId:'weeklylog',    init:'initWeeklyLogTab',
+      keywords:['업무일지','주간','일지','업무','주간업무'] },
+    { id:'records',      label:'기록 조회',      icon:'', category:'ops',     tabId:'records',      init:'initRecordsTab',
+      keywords:['기록','조회','기록조회','히스토리','이력','지난기록'] },
+    { id:'consult',      label:'상담 신청',      icon:'', category:'ops',     tabId:'consult',      init:'initConsultTab',
+      keywords:['상담','상담신청','문의','입학','신규상담','접수'] },
+    { id:'notice',       label:'공지사항',       icon:'', category:'ops',     tabId:'notice',       init:'initNoticeTab',
+      keywords:['공지','공지사항','안내','알림','학부모'] },
+
+    // ⑤ 관리자·설정
+    { id:'teachers',     label:'선생님 관리',    icon:'',   category:'admin',   tabId:'teachers',     init:null,
+      keywords:['선생님','강사','조교','교사','선생님계정','강사계정','teacher'] },
+    { id:'adminmgmt',    label:'관리자 계정',    icon:'', category:'admin',   tabId:'adminmgmt',    init:'initAdminMgmtTab',
+      keywords:['관리자','관리자계정','비밀번호','비번','암호','계정','권한','설정','admin'] },
+  ];
+
+  const RECENT_KEY = 'swc_admin_recent_menus';
+  const RECENT_MAX = 6;
+  const RESULT_MAX = 8;
+
+  const $ = id => document.getElementById(id);
+  const nav = $('menuNav'), legacy = $('legacyTabs');
+  if (!nav || !legacy) return;
+
+  const catById = Object.fromEntries(ADMIN_MENU_CATEGORIES.map(c => [c.id, c]));
+  const menus = ADMIN_MENUS.filter(m => catById[m.category] && document.getElementById('tab-' + m.tabId));
+  const btnById = {};
+
+  // ── 기존 탭 버튼 찾기 (없으면 같은 방식의 onclick으로 생성) ──
+  function findLegacyBtn(tabId) {
+    return legacy.querySelector('.admin-tab[onclick^="switchTab(\'' + tabId + '\'"]');
+  }
+  menus.forEach(m => {
+    let btn = findLegacyBtn(m.tabId);
+    if (!btn) {
+      btn = document.createElement('button');
+      btn.className = 'admin-tab';
+      btn.setAttribute('onclick', "switchTab('" + m.tabId + "',this)" + (m.init ? ';' + m.init + '()' : ''));
+    }
+    btn.type = 'button';
+    btn.dataset.menuId = m.id;
+    btnById[m.id] = btn;
+  });
+
+  // 데이터에 등록 안 된 기존 버튼이 있으면 누락 없이 '관리자·설정'에 임시 배치
+  legacy.querySelectorAll('.admin-tab').forEach(btn => {
+    if (btn.dataset.menuId) return;
+    const mt = (btn.getAttribute('onclick') || '').match(/switchTab\('([^']+)'/);
+    if (!mt) return;
+    const id = 'extra-' + mt[1];
+    console.warn('[메뉴] ADMIN_MENUS에 없는 탭:', mt[1], '→ 관리자·설정에 임시 배치');
+    menus.push({ id, label: btn.textContent.trim(), icon:'', category:'admin', tabId: mt[1], init:null, keywords:[] });
+    btn.dataset.menuId = id;
+    btnById[id] = btn;
+  });
+  const menuById = Object.fromEntries(menus.map(m => [m.id, m]));
+  const menuByTab = Object.fromEntries(menus.map(m => [m.tabId, m]));
+
+  // ── 카테고리 탭 + 메뉴 그룹 구성 ──
+  const catsEl = $('menuCats'), groupsEl = $('menuGroups');
+  const catBtn = {}, groupEl = {};
+  ADMIN_MENU_CATEGORIES.forEach(c => {
+    const list = menus.filter(m => m.category === c.id);
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'mnav-cat';
+    b.setAttribute('role', 'tab');
+    b.innerHTML = esc(c.label) + '<span class="mnav-count">' + list.length + '</span>';
+    b.addEventListener('click', () => showCategory(c.id));
+    catsEl.appendChild(b);
+    catBtn[c.id] = b;
+
+    const g = document.createElement('div');
+    g.className = 'mnav-group';
+    g.setAttribute('role', 'tabpanel');
+    g.innerHTML = '<div class="mnav-group-title">' + esc(c.label) + '</div>';
+    const grid = document.createElement('div');
+    grid.className = 'mnav-grid';
+    list.forEach(m => {
+      const btn = btnById[m.id];
+      btn.textContent = (m.icon ? m.icon + ' ' : '') + m.label;
+      grid.appendChild(btn);
+    });
+    g.appendChild(grid);
+    groupsEl.appendChild(g);
+    groupEl[c.id] = g;
+  });
+
+  // 메뉴 버튼 클릭 시 최근 사용 기록 (기존 onclick은 그대로 실행됨)
+  groupsEl.addEventListener('click', e => {
+    const btn = e.target.closest('.admin-tab[data-menu-id]');
+    if (btn) pushRecent(btn.dataset.menuId);
+  });
+
+  legacy.style.display = 'none';
+  nav.hidden = false;
+
+  // ── 상태 표시 ──
+  let viewCat = null, openTab = null;
+
+  function showCategory(catId) {
+    viewCat = catId;
+    ADMIN_MENU_CATEGORIES.forEach(c => {
+      const on = c.id === catId;
+      catBtn[c.id].classList.toggle('active', on);
+      catBtn[c.id].setAttribute('aria-selected', on);
+      groupEl[c.id].classList.toggle('active', on);
+    });
+  }
+
+  function syncFromPanels() {
+    const panel = document.querySelector('.tab-panel.active');
+    const tabId = panel ? panel.id.replace(/^tab-/, '') : null;
+    const m = menuByTab[tabId];
+    if (tabId === openTab) return;
+    openTab = tabId;
+    ADMIN_MENU_CATEGORIES.forEach(c => catBtn[c.id].classList.toggle('has-open', !!m && m.category === c.id));
+    if (m) showCategory(m.category);
+    $('menuCurrent').innerHTML = m
+      ? '현재 열린 메뉴 <span class="sep"></span><b>' + esc(catById[m.category].label) + '</b><span class="sep">›</span><span class="now">' + esc((m.icon ? m.icon + ' ' : '') + m.label) + '</span>'
+      : '';
+    renderRecent();
+  }
+
+  // switchTab이 어디서 호출되든(기록 조회 → 해당 탭 열기 등) 화면 표시를 맞춰줌
+  const mo = new MutationObserver(syncFromPanels);
+  document.querySelectorAll('.tab-panel').forEach(p => mo.observe(p, { attributes:true, attributeFilter:['class'] }));
+
+  // ── 메뉴 이동: 기존 버튼을 그대로 클릭 (switchTab + 초기화 함수 원래대로 실행) ──
+  function openMenu(id) {
+    const btn = btnById[id];
+    if (!btn) return;
+    showCategory(menuById[id].category);
+    btn.click();
+  }
+
+  // ── 최근 사용 ──
+  function loadRecent() {
+    try {
+      const arr = JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+      return Array.isArray(arr) ? arr.filter(id => menuById[id]) : [];
+    } catch (e) { return []; }
+  }
+  function pushRecent(id) {
+    if (!menuById[id]) return;
+    const arr = [id, ...loadRecent().filter(x => x !== id)].slice(0, RECENT_MAX);
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify(arr)); } catch (e) {}
+    renderRecent();
+  }
+  function renderRecent() {
+    const arr = loadRecent();
+    const wrap = $('menuRecent'), list = $('menuRecentList');
+    wrap.hidden = arr.length === 0;
+    list.innerHTML = '';
+    arr.forEach(id => {
+      const m = menuById[id];
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'mnav-chip' + (m.tabId === openTab ? ' active' : '');
+      b.textContent = m.label;
+      b.title = catById[m.category].label + ' › ' + m.label;
+      b.addEventListener('click', () => openMenu(id));
+      list.appendChild(b);
+    });
+  }
+
+  // ── 메뉴 검색 ──
+  const CHO = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+  const norm = s => String(s).toLowerCase().replace(/[\s·・]/g, '');
+  const cho = s => Array.from(s).map(ch => {
+    const c = ch.charCodeAt(0) - 0xAC00;
+    return (c >= 0 && c < 11172) ? CHO[Math.floor(c / 588)] : ch;
+  }).join('');
+
+  const index = menus.map(m => ({
+    m,
+    label: norm(m.label),
+    labelCho: cho(norm(m.label)),
+    kws: (m.keywords || []).map(k => ({ raw: k, n: norm(k), c: cho(norm(k)) })),
+    cat: norm(catById[m.category].label),
+  }));
+
+  function search(raw) {
+    const q = norm(raw);
+    if (!q) return [];
+    const choOnly = /^[ㄱ-ㅎ]+$/.test(q);
+    const out = [];
+    index.forEach((it, order) => {
+      let score = 0, hint = '';
+      if (it.label === q) score = 100;
+      else if (it.label.startsWith(q)) score = 90;
+      else if (it.label.includes(q)) score = 80;
+      if (score < 70) {
+        for (const k of it.kws) {
+          let s = 0;
+          if (k.n === q) s = 70; else if (k.n.startsWith(q)) s = 60; else if (k.n.includes(q)) s = 50;
+          if (s > score) { score = s; hint = k.raw; }
+        }
+      }
+      if (choOnly && score < 45) {
+        if (it.labelCho.includes(q)) { score = 45; hint = ''; }
+        else {
+          const k = it.kws.find(k => k.c.includes(q));
+          if (k) { score = 35; hint = k.raw; }
+        }
+      }
+      if (!score && it.cat.includes(q)) score = 20;
+      if (score) out.push({ m: it.m, score, hint, order });
+    });
+    return out.sort((a, b) => b.score - a.score || a.order - b.order).slice(0, RESULT_MAX);
+  }
+
+  const input = $('menuSearch'), resultsEl = $('menuResults');
+  let results = [], activeIdx = 0;
+
+  function highlight(label, raw) {
+    const q = raw.trim().toLowerCase();
+    const i = q ? label.toLowerCase().indexOf(q) : -1;
+    if (i < 0) return esc(label);
+    return esc(label.slice(0, i)) + '<mark>' + esc(label.slice(i, i + q.length)) + '</mark>' + esc(label.slice(i + q.length));
+  }
+
+  function renderResults() {
+    const raw = input.value;
+    if (!raw.trim()) { closeResults(); return; }
+    results = search(raw);
+    activeIdx = 0;
+    if (!results.length) {
+      resultsEl.innerHTML = '<div class="mnav-empty">일치하는 메뉴가 없어요</div>';
+    } else {
+      resultsEl.innerHTML = results.map((r, i) => {
+        const isOpen = r.m.tabId === openTab;
+        const hint = isOpen ? '열려 있음' : (r.hint ? '키워드 ‘' + esc(r.hint) + '’' : '');
+        return '<button type="button" class="mnav-result' + (i === 0 ? ' active' : '') + (isOpen ? ' is-open' : '') +
+          '" role="option" data-idx="' + i + '">' +
+          '<span><span class="mnav-result-cat">' + esc(catById[r.m.category].label) + '</span>' +
+          '<span class="mnav-result-name">' + (r.m.icon ? esc(r.m.icon) + ' ' : '') + highlight(r.m.label, raw) + '</span></span>' +
+          (hint ? '<span class="mnav-result-hint">' + hint + '</span>' : '') +
+          '</button>';
+      }).join('');
+    }
+    resultsEl.classList.add('open');
+  }
+  function setActive(i) {
+    if (!results.length) return;
+    activeIdx = (i + results.length) % results.length;
+    resultsEl.querySelectorAll('.mnav-result').forEach((el, k) => {
+      el.classList.toggle('active', k === activeIdx);
+      if (k === activeIdx) el.scrollIntoView({ block:'nearest' });
+    });
+  }
+  function closeResults() { resultsEl.classList.remove('open'); resultsEl.innerHTML = ''; results = []; }
+  function choose(i) {
+    const r = results[i];
+    if (!r) return;
+    input.value = '';
+    closeResults();
+    input.blur();
+    openMenu(r.m.id);
+  }
+
+  input.addEventListener('input', renderResults);
+  input.addEventListener('focus', () => { if (input.value.trim()) renderResults(); });
+  input.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown') { e.preventDefault(); setActive(activeIdx + 1); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(activeIdx - 1); }
+    else if (e.key === 'Enter') { e.preventDefault(); choose(activeIdx); }
+    else if (e.key === 'Escape') { input.value = ''; closeResults(); input.blur(); }
+  });
+  resultsEl.addEventListener('mousedown', e => e.preventDefault());
+  resultsEl.addEventListener('click', e => {
+    const el = e.target.closest('.mnav-result');
+    if (el) choose(+el.dataset.idx);
+  });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('.mnav-search')) closeResults();
+  });
+  // 단축키: '/' 또는 Ctrl/⌘+K 로 메뉴 검색
+  document.addEventListener('keydown', e => {
+    const t = e.target;
+    const typing = t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+    if (((e.key === '/' && !typing) || ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k'))
+        && document.getElementById('portalScreen').style.display !== 'none') {
+      e.preventDefault();
+      input.focus();
+    }
+  });
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+  }
+
+  syncFromPanels();
+  renderRecent();
+})();
 </script>
 <div id="toast"></div>
 <div id="printSheet"></div>
