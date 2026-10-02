@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#f7f5f0">
+<title>상담지 작성 | 송우찬 수학학원</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { margin:0; padding:0; }
+body {
+  background:#f7f5f0; color:#2b2b2b;
+  font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+  padding-bottom:env(safe-area-inset-bottom);
+  --ck-accent:#c9a94a;
+}
+.top {
+  position:sticky; top:0; z-index:5; display:flex; align-items:center; gap:10px;
+  padding:calc(12px + env(safe-area-inset-top)) 18px 12px;
+  background:rgba(247,245,240,0.94); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  border-bottom:1px solid #e6e1d6;
+}
+.top img { height:26px; }
+.top .nm { font-size:16px; font-weight:800; letter-spacing:-0.3px; }
+.top .nm small { display:block; font-size:10.5px; font-weight:500; color:#9a9384; }
+.top .br { margin-left:auto; font-size:12px; font-weight:700; padding:5px 11px; border-radius:100px; background:#fff; border:1px solid #e1dbcd; color:#7a7466; }
+.wrap { max-width:640px; margin:0 auto; padding:20px 14px 40px; }
+.hello { text-align:center; margin:6px 0 20px; }
+.hello h2 { font-size:22px; font-weight:800; margin:0 0 8px; letter-spacing:-0.5px; }
+.hello p { font-size:14px; color:#7a7466; margin:0; line-height:1.6; }
+.card {
+  background:#fff; border:1px solid #ebe6db; border-radius:16px; padding:20px 18px; margin-bottom:12px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.03);
+}
+.card h4 { font-size:16px; font-weight:800; margin:0 0 4px; display:flex; align-items:center; gap:8px; }
+.card h4 .req { font-size:11.5px; color:#e05c5c; font-weight:700; }
+.hint { font-size:13px; color:#9a9384; margin:0 0 12px; line-height:1.5; }
+.grid { display:grid; grid-template-columns:1fr; gap:12px; }
+.field label { display:block; font-size:14px; font-weight:700; margin-bottom:6px; color:#4a4538; }
+.field label .req { color:#e05c5c; }
+.field input, .field select {
+  width:100%; font-size:16px; padding:14px 14px; border-radius:12px;
+  border:1.5px solid #ddd7ca; background:#fdfcf9; color:#2b2b2b; font-family:inherit; outline:none;
+  -webkit-appearance:none; appearance:none;
+}
+.field select {
+  background-image:linear-gradient(45deg,transparent 50%,#9a9384 50%),linear-gradient(135deg,#9a9384 50%,transparent 50%);
+  background-position:calc(100% - 18px) 50%, calc(100% - 13px) 50%; background-size:5px 5px; background-repeat:no-repeat;
+}
+.field input:focus, .field select:focus { border-color:var(--ck-accent); background-color:#fff; }
+.chips { display:flex; flex-wrap:wrap; gap:8px; }
+.chip {
+  font-size:15px; font-weight:600; padding:11px 16px; border-radius:100px; cursor:pointer;
+  border:1.5px solid #ddd7ca; background:#fdfcf9; color:#5a5446; user-select:none; -webkit-user-select:none;
+  font-family:inherit; transition:all .12s;
+}
+.chip.on { background:var(--ck-accent); border-color:var(--ck-accent); color:#fff; }
+.seg { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.seg.two { grid-template-columns:repeat(2,1fr); }
+.seg .chip { text-align:center; font-size:16px; padding:15px 6px; border-radius:12px; }
+.row3 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.row3 .full { grid-column:1 / -1; }
+.scores { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+.score { position:relative; }
+.score input { padding:14px 22px 14px 8px; text-align:center; }
+.score em { position:absolute; right:9px; bottom:16px; font-style:normal; color:#9a9384; font-size:13px; }
+.range-row { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+.range-row:last-child { margin-bottom:0; }
+.range-row .nm { width:82px; font-size:14px; font-weight:700; color:#4a4538; flex-shrink:0; }
+.range-row input[type=range] { flex:1; accent-color:var(--ck-accent); height:32px; min-width:0; }
+.range-row .v { width:52px; text-align:right; font-size:18px; font-weight:800; color:var(--ck-accent); flex-shrink:0; }
+.range-row .v small { font-size:11px; color:#9a9384; font-weight:600; }
+.agree { display:flex; align-items:flex-start; gap:10px; font-size:14px; line-height:1.6; color:#4a4538; cursor:pointer; }
+.agree input { width:22px; height:22px; margin-top:2px; accent-color:var(--ck-accent); flex-shrink:0; }
+.submit {
+  width:100%; font-size:18px; font-weight:800; padding:18px; border:none; border-radius:14px; cursor:pointer;
+  background:var(--ck-accent); color:#fff; font-family:inherit; margin-top:6px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.08);
+}
+.submit:disabled { opacity:0.55; }
+.err { color:#e05c5c; font-size:14px; font-weight:600; text-align:center; margin-top:12px; min-height:20px; line-height:1.5; }
+.done { display:none; text-align:center; padding:90px 22px; }
+.done .ic { font-size:58px; margin-bottom:16px; }
+.done h2 { font-size:24px; font-weight:800; margin:0 0 12px; }
+.done p { font-size:15px; color:#7a7466; line-height:1.7; margin:0; }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <img src="swc-logo.png" alt="" onerror="this.style.display='none'">
+  <div class="nm">송우찬 수학학원<small>선생님의 열정은 학생들을 춤추게 한다</small></div>
+  <span class="br" id="branchBadge">평촌관</span>
+</div>
+
+<div class="wrap" id="formView">
+  <div class="hello">
+    <h2>방문해 주셔서 감사합니다 😊</h2>
+    <p>정확한 상담을 위해 아래 내용을 작성해 주세요.<br>모르는 항목은 비워두셔도 괜찮습니다.</p>
+  </div>
+
+  <div class="card">
+    <h4>과정 구분 <span class="req">필수</span></h4>
+    <p class="hint">현재 학생의 학교급을 선택해 주세요.</p>
+    <div class="seg" id="ckLevel">
+      <button type="button" class="chip" data-v="초등">초등부</button>
+      <button type="button" class="chip" data-v="중등">중등부</button>
+      <button type="button" class="chip" data-v="고등">고등부</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>상담 장소</h4>
+    <div class="seg two" id="ckBranch" style="margin-top:10px;">
+      <button type="button" class="chip" data-v="평촌관">평촌관</button>
+      <button type="button" class="chip" data-v="산본관">산본관</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>기본 정보</h4>
+    <p class="hint">학생 이름, 학교/학년, 학부모 연락처는 꼭 입력해 주세요.</p>
+    <div class="grid">
+      <div class="field"><label>학생 이름 <span class="req">*</span></label><input type="text" id="ckName" placeholder="홍길동" autocomplete="off"></div>
+      <div class="field"><label>학교 / 학년 <span class="req">*</span></label><input type="text" id="ckSchool" placeholder="예: 평촌중 2학년" autocomplete="off"></div>
+      <div class="field"><label>학부모 연락처 <span class="req">*</span></label><input type="tel" inputmode="numeric" id="ckParentPhone" placeholder="010-0000-0000" autocomplete="off"></div>
+      <div class="field"><label>학생 연락처</label><input type="tel" inputmode="numeric" id="ckStudentPhone" placeholder="010-0000-0000" autocomplete="off"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>방문 경로</h4>
+    <p class="hint">해당하는 것을 모두 선택해 주세요.</p>
+    <div class="chips" id="ckVisit">
+      <button type="button" class="chip" data-v="인터넷 검색">인터넷 검색</button>
+      <button type="button" class="chip" data-v="광고">광고</button>
+      <button type="button" class="chip" data-v="지나가다 보고">지나가다 보고</button>
+      <button type="button" class="chip" data-v="주변 권유">주변 권유</button>
+      <button type="button" class="chip" data-v="우연히 찾아옴">우연히 찾아옴</button>
+    </div>
+    <div class="field" style="margin-top:12px;"><input type="text" id="ckVisitEtc" placeholder="기타 (직접 입력)" autocomplete="off"></div>
+  </div>
+
+  <div class="card">
+    <h4>진도 상황</h4>
+    <p class="hint" id="ckProgressHint">과정 구분을 먼저 선택해 주세요.</p>
+    <div id="ckProgressLow" style="display:none;">
+      <div class="row3">
+        <div class="field"><label>학년</label><select id="ckPGrade"></select></div>
+        <div class="field"><label>학기</label><select id="ckPSem"><option value="">선택</option><option>1학기</option><option>2학기</option></select></div>
+        <div class="field full"><label>단원</label><input type="text" id="ckPUnit" placeholder="예: 일차함수" autocomplete="off"></div>
+      </div>
+    </div>
+    <div id="ckProgressHigh" style="display:none;">
+      <div class="field"><label>배운 과목 (모두 선택)</label></div>
+      <div class="chips" id="ckHighSubj">
+        <button type="button" class="chip" data-v="공통수학1">공통수학1</button>
+        <button type="button" class="chip" data-v="공통수학2">공통수학2</button>
+        <button type="button" class="chip" data-v="대수">대수</button>
+        <button type="button" class="chip" data-v="미적분1">미적분1</button>
+        <button type="button" class="chip" data-v="확률과 통계">확률과 통계</button>
+        <button type="button" class="chip" data-v="미적분2">미적분2</button>
+        <button type="button" class="chip" data-v="기하">기하</button>
+      </div>
+      <div class="field" style="margin-top:16px;"><label>학습 난이도</label></div>
+      <div class="seg" id="ckHighLevel">
+        <button type="button" class="chip" data-v="기본">기본</button>
+        <button type="button" class="chip" data-v="응용">응용</button>
+        <button type="button" class="chip" data-v="심화">심화</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>최근 시험 결과</h4>
+    <p class="hint">대략적인 점수대로 적어주셔도 됩니다.</p>
+    <div class="scores">
+      <div class="field score"><label>1회</label><input type="text" inputmode="numeric" id="ckS1"><em>점</em></div>
+      <div class="field score"><label>2회</label><input type="text" inputmode="numeric" id="ckS2"><em>점</em></div>
+      <div class="field score"><label>3회</label><input type="text" inputmode="numeric" id="ckS3"><em>점</em></div>
+      <div class="field score"><label>4회</label><input type="text" inputmode="numeric" id="ckS4"><em>점</em></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>자신 있는 영역</h4>
+    <p class="hint">성취도가 높은 영역을 모두 선택해 주세요.</p>
+    <div class="chips" id="ckStrong">
+      <button type="button" class="chip" data-v="수와 연산">수와 연산</button>
+      <button type="button" class="chip" data-v="문자와 식">문자와 식</button>
+      <button type="button" class="chip" data-v="함수">함수</button>
+      <button type="button" class="chip" data-v="기하">기하</button>
+      <button type="button" class="chip" data-v="확률과 통계">확률과 통계</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>어려워하는 영역</h4>
+    <p class="hint">성취도가 낮은 영역을 모두 선택해 주세요.</p>
+    <div class="chips" id="ckWeak">
+      <button type="button" class="chip" data-v="수와 연산">수와 연산</button>
+      <button type="button" class="chip" data-v="문자와 식">문자와 식</button>
+      <button type="button" class="chip" data-v="함수">함수</button>
+      <button type="button" class="chip" data-v="기하">기하</button>
+      <button type="button" class="chip" data-v="확률과 통계">확률과 통계</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>학습 자가진단</h4>
+    <p class="hint">학생 본인이 생각하는 점수를 골라주세요. (0~10점)</p>
+    <div class="range-row"><span class="nm">연산 능력</span><input type="range" min="0" max="10" step="1" value="5" id="ckCalc"><span class="v"><b id="ckCalcV">5</b><small> /10</small></span></div>
+    <div class="range-row"><span class="nm">풀이 정확도</span><input type="range" min="0" max="10" step="1" value="5" id="ckAcc"><span class="v"><b id="ckAccV">5</b><small> /10</small></span></div>
+    <div class="range-row"><span class="nm">수학 흥미도</span><input type="range" min="0" max="10" step="1" value="5" id="ckInt"><span class="v"><b id="ckIntV">5</b><small> /10</small></span></div>
+  </div>
+
+  <div class="card">
+    <label class="agree">
+      <input type="checkbox" id="ckAgree">
+      <span><b>[필수] 개인정보 수집·이용 동의</b><br>
+      <span style="font-size:12.5px;color:#8a8476;">수집 항목: 학생 이름, 학교/학년, 연락처 · 이용 목적: 수강 상담 및 안내 · 보유 기간: 상담 종료 후 1년</span></span>
+    </label>
+  </div>
+
+  <button type="button" class="submit" id="ckSubmitBtn">전송하기</button>
+  <div class="err" id="ckErr"></div>
+</div>
+
+<div class="done" id="doneView">
+  <div class="ic">🎉</div>
+  <h2>전송이 완료되었습니다!</h2>
+  <p>작성해 주셔서 감사합니다.<br>잠시 후 선생님께서 상담을 도와드리겠습니다.</p>
+  <button type="button" id="againBtn" style="margin-top:34px;font-size:14px;font-weight:700;padding:13px 22px;border-radius:100px;border:1.5px solid #d9d3c5;background:#fff;color:#7a7466;font-family:inherit;">다른 자녀 상담지 추가 작성</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
+  authDomain: "songmath.firebaseapp.com",
+  projectId: "songmath",
+  storageBucket: "songmath.firebasestorage.app",
+  messagingSenderId: "936295436575",
+  appId: "1:936295436575:web:d1e201508719850cfbe02a"
+});
+const db = getFirestore(app);
+
+const ACCENT = { '초등': '#a78bda', '중등': '#e0a22c', '고등': '#5fa3cf' };
+const params = new URLSearchParams(location.search);
+const initBranch = ['평촌관','산본관'].includes(params.get('b')) ? params.get('b') : '평촌관';
+const qrSession = (params.get('s') || '').slice(0, 40);
+const $ = (id) => document.getElementById(id);
+const sel = (id) => [...document.querySelectorAll(`#${id} .chip.on`)].map(b => b.dataset.v);
+const setSingle = (id, v) => document.querySelectorAll(`#${id} .chip`).forEach(b => b.classList.toggle('on', b.dataset.v === v));
+const val = (id) => $(id).value.trim();
+
+function formatPhone(v) {
+  const n = v.replace(/\D/g, '').slice(0, 11);
+  if (n.length < 4) return n;
+  if (n.length < 8) return `${n.slice(0,3)}-${n.slice(3)}`;
+  return `${n.slice(0,3)}-${n.slice(3, n.length - 4)}-${n.slice(-4)}`;
+}
+
+function applyLevel(level) {
+  document.body.style.setProperty('--ck-accent', ACCENT[level] || '#c9a94a');
+  const low = $('ckProgressLow'), high = $('ckProgressHigh'), hint = $('ckProgressHint');
+  if (level === '고등') {
+    low.style.display = 'none'; high.style.display = 'block';
+    hint.textContent = '지금까지 배운(또는 배우고 있는) 과목을 선택해 주세요.';
+  } else {
+    high.style.display = 'none'; low.style.display = 'block';
+    hint.textContent = '현재 어디까지 공부했는지 적어주세요. (선행 포함)';
+    const grades = level === '초등' ? ['1학년','2학년','3학년','4학년','5학년','6학년'] : ['1학년','2학년','3학년'];
+    const prefix = level === '초등' ? '초' : '중';
+    $('ckPGrade').innerHTML = '<option value="">선택</option>' +
+      grades.map(g => `<option value="${g}">${prefix}${g.replace('학년','')}</option>`).join('');
+  }
+}
+
+['ckLevel','ckBranch','ckHighLevel'].forEach(id => {
+  document.querySelectorAll(`#${id} .chip`).forEach(b => b.addEventListener('click', () => {
+    setSingle(id, b.dataset.v);
+    if (id === 'ckLevel') applyLevel(b.dataset.v);
+    if (id === 'ckBranch') $('branchBadge').textContent = b.dataset.v;
+  }));
+});
+['ckVisit','ckHighSubj','ckStrong','ckWeak'].forEach(id => {
+  document.querySelectorAll(`#${id} .chip`).forEach(b => b.addEventListener('click', () => b.classList.toggle('on')));
+});
+['ckParentPhone','ckStudentPhone'].forEach(id => {
+  const el = $(id); el.addEventListener('input', () => { el.value = formatPhone(el.value); });
+});
+['ckS1','ckS2','ckS3','ckS4'].forEach(id => {
+  const el = $(id); el.addEventListener('input', () => { el.value = el.value.replace(/[^0-9~\-]/g, '').slice(0, 7); });
+});
+[['ckCalc','ckCalcV'],['ckAcc','ckAccV'],['ckInt','ckIntV']].forEach(([r, v]) => {
+  $(r).addEventListener('input', () => { $(v).textContent = $(r).value; });
+});
+
+setSingle('ckBranch', initBranch);
+$('branchBadge').textContent = initBranch;
+
+// 같은 기기에서 중복 전송 방지 (전송 직후 새로고침·뒤로가기 대비)
+const SENT_KEY = 'swc_consult_sent_' + (qrSession || 'default');
+try {
+  if (qrSession && localStorage.getItem(SENT_KEY)) {
+    $('formView').style.display = 'none';
+    $('doneView').style.display = 'block';
+  }
+} catch(e) {}
+
+$('againBtn').addEventListener('click', () => {
+  try { localStorage.removeItem(SENT_KEY); } catch(e) {}
+  location.reload();
+});
+
+let submitting = false;
+$('ckSubmitBtn').addEventListener('click', async () => {
+  if (submitting) return;
+  const errEl = $('ckErr');
+  const level = sel('ckLevel')[0] || '';
+  const branch = sel('ckBranch')[0] || initBranch;
+  const studentName = val('ckName');
+  const schoolGrade = val('ckSchool');
+  const parentPhone = val('ckParentPhone');
+
+  let msg = '';
+  if (!level) msg = '과정 구분(초등/중등/고등)을 선택해 주세요.';
+  else if (!studentName) msg = '학생 이름을 입력해 주세요.';
+  else if (!schoolGrade) msg = '학교 / 학년을 입력해 주세요.';
+  else if (parentPhone.replace(/\D/g, '').length < 10) msg = '학부모 연락처를 정확히 입력해 주세요.';
+  else if (!$('ckAgree').checked) msg = '개인정보 수집·이용에 동의해 주세요.';
+  if (msg) { errEl.textContent = msg; return; }
+  errEl.textContent = '';
+
+  const data = {
+    source: 'qr',
+    qrSession,
+    level, branch, studentName, schoolGrade, parentPhone,
+    studentPhone: val('ckStudentPhone'),
+    visitPath: sel('ckVisit'),
+    visitPathEtc: val('ckVisitEtc'),
+    examScores: { round1: val('ckS1'), round2: val('ckS2'), round3: val('ckS3'), round4: val('ckS4') },
+    strongAreas: sel('ckStrong'),
+    weakAreas: sel('ckWeak'),
+    selfCheck: {
+      calcScore: Number($('ckCalc').value),
+      accuracyScore: Number($('ckAcc').value),
+      interestScore: Number($('ckInt').value),
+    },
+    agreePrivacy: true,
+    createdAt: Timestamp.now(),
+  };
+  if (level === '고등') {
+    data.highSubjects = sel('ckHighSubj');
+    data.highLevel = sel('ckHighLevel')[0] || '';
+  } else {
+    data.progressGrade = $('ckPGrade').value;
+    data.progressSemester = $('ckPSem').value;
+    data.progressUnit = val('ckPUnit');
+  }
+
+  const btn = $('ckSubmitBtn');
+  submitting = true; btn.disabled = true; btn.textContent = '전송 중...';
+  try {
+    await addDoc(collection(db, 'consultForms'), data);
+    try { if (qrSession) localStorage.setItem(SENT_KEY, '1'); } catch(e) {}
+    $('formView').style.display = 'none';
+    $('doneView').style.display = 'block';
+    window.scrollTo(0, 0);
+  } catch(e) {
+    errEl.textContent = '전송 중 오류가 발생했습니다. 선생님께 말씀해 주세요.';
+    console.error(e);
+  } finally {
+    submitting = false; btn.disabled = false; btn.textContent = '전송하기';
+  }
+});
+</script>
+</body>
+</html>
