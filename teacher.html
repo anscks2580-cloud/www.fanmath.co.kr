@@ -139,6 +139,75 @@
 .btn-login-full { width:100%; padding:13px; background:var(--gold); color:var(--bg); font-size:15px; font-weight:700; border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
 .login-footer-link { text-align:center; margin-top:20px; font-size:12px; color:var(--muted); }
 .login-footer-link a { color:var(--gold); text-decoration:none; }
+/* ══ 전임강사 매뉴얼 (검색 · 목차 · 단일 스크롤) ══ */
+.teacher-wrap:has(#tab-manual.active) { max-width:1240px; }
+.mn-layout { display:grid; grid-template-columns:220px minmax(0,1fr); gap:40px; align-items:start; }
+.mn-layout.no-toc { grid-template-columns:minmax(0,1fr); }
+.mn-layout.no-toc .mn-toc, .mn-layout.no-toc .mn-toc-toggle { display:none !important; }
+.mn-layout.no-toc .mn-main { max-width:960px; width:100%; margin:0 auto; }
+
+/* 좌측 목차 */
+.mn-toc { position:sticky; top:20px; max-height:calc(100vh - 40px); overflow-y:auto; padding:2px 4px 16px 0; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,0.12) transparent; }
+.mn-toc-head { font-size:12px; font-weight:600; color:var(--muted); padding:0 0 10px 12px; margin-bottom:8px; border-bottom:1px solid var(--border-soft); }
+.mn-toc-link { display:block; padding:7px 10px 7px 12px; font-size:13.5px; line-height:1.45; color:var(--muted); text-decoration:none; border-left:2px solid transparent; border-radius:0 6px 6px 0; word-break:keep-all; cursor:pointer; }
+.mn-toc-link.lv2 { padding-left:24px; font-size:12.5px; }
+.mn-toc-link:hover { color:var(--off-white); background:rgba(255,255,255,0.03); }
+.mn-toc-link.active { color:var(--gold); border-left-color:var(--gold); background:rgba(240,192,64,0.06); }
+.mn-toc-link:focus-visible, .mn-result:focus-visible, .mn-toc-toggle:focus-visible { outline:2px solid rgba(240,192,64,0.6); outline-offset:-2px; }
+
+/* 본문 + 고정 검색바 */
+.mn-main { min-width:0; position:relative; }
+.mn-bar { position:sticky; top:0; z-index:30; display:flex; gap:10px; align-items:center; padding:12px 0; margin-bottom:24px; background:var(--bg); border-bottom:1px solid var(--border-soft); }
+.mn-search { flex:1; min-width:0; position:relative; display:flex; align-items:center; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; transition:border-color 0.2s; }
+.mn-search:focus-within { border-color:rgba(240,192,64,0.5); }
+.mn-search-icon { position:absolute; left:12px; font-size:13px; opacity:0.7; pointer-events:none; }
+.mn-search input { flex:1; min-width:0; padding:10px 38px 10px 36px; background:none; border:none; outline:none; color:var(--off-white); font-size:14px; font-family:inherit; }
+.mn-search input::placeholder { color:var(--muted); }
+.mn-search input:disabled { opacity:0.6; }
+.mn-clear { position:absolute; right:6px; width:28px; height:28px; border:none; border-radius:6px; background:none; color:var(--muted); font-size:13px; cursor:pointer; font-family:inherit; }
+.mn-clear:hover { color:var(--off-white); background:rgba(255,255,255,0.06); }
+.mn-nav { display:flex; gap:6px; align-items:center; flex-shrink:0; }
+.mn-count { font-size:12.5px; color:var(--muted); white-space:nowrap; font-variant-numeric:tabular-nums; padding:0 4px; }
+.mn-count.has { color:var(--gold); }
+.mn-nav .btn { min-height:36px; }
+.mn-nav .btn:disabled { opacity:0.35; cursor:default; border-color:var(--border-soft); color:var(--off-white); }
+.mn-toc-toggle { display:none; align-items:center; gap:6px; max-width:46%; min-height:36px; padding:6px 12px; border:1px solid var(--border-soft); border-radius:8px; background:transparent; color:var(--off-white); font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; }
+.mn-toc-toggle span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted); font-weight:500; }
+
+/* 검색 결과 목록 / 모바일 목차 (드롭다운) */
+.mn-results, .mn-toc-drop { position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:31; max-height:min(56vh,480px); overflow-y:auto; padding:6px; background:var(--bg-card); border:1px solid var(--border-soft); border-radius:12px; box-shadow:0 18px 40px rgba(0,0,0,0.45); }
+.mn-results[hidden], .mn-toc-drop[hidden] { display:none; }
+.mn-result { display:block; width:100%; text-align:left; padding:10px 12px; border:none; border-radius:8px; background:none; color:var(--off-white); font-family:inherit; cursor:pointer; }
+.mn-result:hover, .mn-result.cur { background:rgba(240,192,64,0.08); }
+.mn-result-sec { font-size:11.5px; color:var(--gold); margin-bottom:3px; }
+.mn-result-txt { font-size:13px; line-height:1.6; color:var(--off-white); opacity:0.85; word-break:keep-all; overflow-wrap:anywhere; }
+.mn-result-txt mark { background:rgba(240,192,64,0.28); color:inherit; border-radius:3px; padding:0 1px; }
+.mn-results-empty { padding:18px 12px; font-size:13px; color:var(--muted); text-align:center; }
+.mn-results-more { padding:8px 12px 4px; font-size:12px; color:var(--muted); }
+
+/* 매뉴얼 iframe */
+#manualFrame { width:100%; height:82vh; min-height:560px; border:none; display:block; background:transparent; }
+.mn-layout.enhanced #manualFrame { min-height:0; }
+.mn-note { font-size:12px; color:var(--muted); margin-bottom:12px; }
+.mn-layout.mn-fallback { display:block; }
+.mn-layout.mn-fallback .mn-toc, .mn-layout.mn-fallback .mn-bar { display:none; }
+
+@media(max-width:960px) {
+  .mn-layout { grid-template-columns:minmax(0,1fr); gap:0; }
+  .mn-toc { display:none; }
+  .mn-toc-toggle { display:inline-flex; }
+}
+@media(max-width:600px) {
+  .teacher-wrap:has(#tab-manual.active) { padding-left:14px; padding-right:14px; }
+  .mn-bar { flex-wrap:wrap; gap:8px; padding:10px 0; margin-bottom:18px; }
+  .mn-search { flex-basis:100%; order:1; }
+  .mn-search input { font-size:16px; padding-top:11px; padding-bottom:11px; }
+  .mn-toc-toggle { order:2; min-height:40px; max-width:none; flex:1; }
+  .mn-nav { order:3; margin-left:auto; }
+  .mn-nav .btn { min-height:40px; min-width:52px; }
+  .mn-results, .mn-toc-drop { max-height:60vh; }
+}
+@media(prefers-reduced-motion:reduce) { .mn-search { transition:none; } }
 </style>
 </head>
 <body>
@@ -183,14 +252,14 @@
 
   <!-- 탭 -->
   <div class="teacher-tabs">
-    <button class="teacher-tab active" onclick="switchTab('weekly',this)">📋 주간성취도</button>
-    <button class="teacher-tab" onclick="switchTab('monthly',this)">📝 월말보고서</button>
-    <button class="teacher-tab" onclick="switchTab('tests',this)">📊 누적테스트</button>
-    <button class="teacher-tab" onclick="switchTab('progress',this)">📍 반별 진도</button>
-    <button class="teacher-tab" onclick="switchTab('clinic',this);initClinicTab()">🏥 토요클리닉</button>
-    <button class="teacher-tab" onclick="switchTab('videos',this);loadTeacherVideos()">🎬 강의 목록</button>
-    <button class="teacher-tab" onclick="switchTab('watchstatus',this);initTeacherWatchStatus()">📺 학생 시청현황</button>
-    <button class="teacher-tab" onclick="switchTab('manual',this)">📘 전임강사 매뉴얼</button>
+    <button class="teacher-tab active" onclick="switchTab('weekly',this)">주간성취도</button>
+    <button class="teacher-tab" onclick="switchTab('monthly',this)">월말보고서</button>
+    <button class="teacher-tab" onclick="switchTab('tests',this)">누적테스트</button>
+    <button class="teacher-tab" onclick="switchTab('progress',this)">반별 진도</button>
+    <button class="teacher-tab" onclick="switchTab('clinic',this);initClinicTab()">토요클리닉</button>
+    <button class="teacher-tab" onclick="switchTab('videos',this);loadTeacherVideos()">강의 목록</button>
+    <button class="teacher-tab" onclick="switchTab('watchstatus',this);initTeacherWatchStatus()">학생 시청현황</button>
+    <button class="teacher-tab" onclick="switchTab('manual',this)">전임강사 매뉴얼</button>
   </div>
 
   <!-- ══ 탭 1: 주간성취도 설문 ══ -->
@@ -625,7 +694,21 @@
   <div class="tab-panel" id="tab-watchstatus">
     <div class="card">
       <div class="card-title">📺 내 담당 학생 영상 시청현황</div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px;">
+        확인할 강의를 고르면, 그 강의에 영상 접근 권한이 있는 내 담당 학생들의 수강 현황만 보여줍니다.<br>
+        강의를 고르지 않으면 강의별 요약이 나오고, 행을 누르면 해당 강의로 들어갑니다.
+      </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
+        <select id="tws-course" onchange="twsSelectCourse(this.value)"
+          style="padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(240,192,64,0.6);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;font-weight:600;color-scheme:dark;max-width:260px;">
+          <option value="">전체 강의 (요약)</option>
+        </select>
+        <select id="tws-branch" onchange="renderTeacherWatchStatus()"
+          style="padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:dark;">
+          <option value="">전체 관</option>
+          <option value="평촌관">평촌관</option>
+          <option value="산본관">산본관</option>
+        </select>
         <input type="text" id="tws-student" placeholder="학생 이름 검색" oninput="renderTeacherWatchStatus()"
           style="padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
         <input type="text" id="tws-video" placeholder="영상 제목/태그 검색" oninput="renderTeacherWatchStatus()"
@@ -637,7 +720,7 @@
           <option value="inprogress">시청중</option>
           <option value="completed">완료(90%↑)</option>
         </select>
-        <button class="btn btn-outline" onclick="loadTeacherWatchStatus(true)">🔄 새로고침</button>
+        <button class="btn btn-outline btn-sm" onclick="loadTeacherWatchStatus(true)">🔄 새로고침</button>
         <span id="tws-summary" style="color:var(--muted);font-size:12px;margin-left:auto;"></span>
       </div>
       <div id="tws-list" style="overflow-x:auto;"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
@@ -668,9 +751,31 @@
 
   <!-- ══ 탭: 전임강사 매뉴얼 ══ -->
   <div class="tab-panel" id="tab-manual">
-    <iframe src="manual.html" title="전임강사 매뉴얼"
-      style="width:100%; height:82vh; min-height:560px; border:none; display:block; background:transparent;"
-      loading="lazy"></iframe>
+    <div class="mn-layout" id="mnLayout">
+      <aside class="mn-toc" id="mnToc" aria-label="매뉴얼 목차">
+        <div class="mn-toc-head">목차</div>
+        <nav id="mnTocList"></nav>
+      </aside>
+      <div class="mn-main">
+        <div class="mn-bar" id="mnBar">
+          <div class="mn-search">
+            <span class="mn-search-icon" aria-hidden="true">🔍</span>
+            <input type="text" id="mnSearch" placeholder="매뉴얼 불러오는 중…" autocomplete="off" spellcheck="false" aria-label="매뉴얼에서 검색" disabled>
+            <button type="button" class="mn-clear" id="mnClear" aria-label="검색어 지우기" hidden>✕</button>
+          </div>
+          <button type="button" class="mn-toc-toggle" id="mnTocToggle" aria-expanded="false" aria-controls="mnTocDrop">☰ 목차<span id="mnTocCur"></span></button>
+          <div class="mn-nav">
+            <span class="mn-count" id="mnCount" aria-live="polite"></span>
+            <button type="button" class="btn btn-outline btn-sm" id="mnPrev" disabled title="이전 결과 (Shift+Enter)">이전</button>
+            <button type="button" class="btn btn-outline btn-sm" id="mnNext" disabled title="다음 결과 (Enter)">다음</button>
+          </div>
+          <div class="mn-results" id="mnResults" hidden></div>
+          <nav class="mn-toc-drop" id="mnTocDrop" hidden aria-label="매뉴얼 목차"></nav>
+        </div>
+        <div class="mn-note" id="mnNote" hidden></div>
+        <iframe id="manualFrame" src="manual.html" title="전임강사 매뉴얼" loading="lazy"></iframe>
+      </div>
+    </div>
   </div>
 
 </div><!-- /teacher-wrap -->
@@ -1433,22 +1538,76 @@ window.loadTestHistory = async function() {
 };
 
 // ══════════════════════════════════════
-// ── 내 학생 영상 시청현황 ──
+// ── 내 학생 영상 시청현황 (관리자 페이지와 동일 방식: 강의별 요약 → 강의 선택 시 학생별 상세) ──
 // ══════════════════════════════════════
 let twsAllVideosCache = [];
 let twsProgressCache = [];
-let twsAllRows = [];
+let twsAllRows = [];        // 내 학생 x (접근 권한 강의) x 그 강의 영상
 let twsLoaded = false;
+let twsCourses = [];        // [{tag,label,cat,order,videoCount}]
+let twsCourse = '';         // 선택한 강의(태그). '' = 전체 강의 요약
 
-function twsGetStudentAssignedVideos(student, allVideos) {
-  const assignedTags = Array.isArray(student.assignedTags)
-    ? student.assignedTags.map(t => (t || '').trim()).filter(Boolean)
-    : null;
-  if (!assignedTags || !assignedTags.length) return [];
+// 관리자 페이지와 같은 강의 태그 목록 (표시명/카테고리용)
+const TWS_FIXED_TAG_CATEGORIES = [
+  { label: '고1', tags: [
+      {v:'공통수학1', l:'공통수학1'},
+      {v:'공통수학2', l:'공통수학2'},
+      {v:'송팁_공통수학1', l:"Song's Tip 공통수학1"},
+      {v:'송팁_공통수학2', l:"Song's Tip 공통수학2"},
+      {v:'대수_세쌍둥이라이트', l:'대수 (라이트·예습)'},
+      {v:'기출_고1_', l:'기출해설 (고1 전체)'},
+  ]},
+  { label: '고2', tags: [
+      {v:'대수_세쌍둥이개념', l:'대수 개념'},
+      {v:'대수_세쌍둥이심화', l:'대수 심화'},
+      {v:'대수_세쌍둥이파이널', l:'대수 파이널'},
+      {v:'미적분1', l:'미적분1'},
+      {v:'확통', l:'확통'},
+      {v:'미적분2_세쌍둥이라이트', l:'미적분2 (라이트·예습)'},
+      {v:'기출_고2_', l:'기출해설 (고2 전체)'},
+  ]},
+  { label: '고3 / N수', tags: [
+      {v:'미적분2_세쌍둥이개념', l:'미적분2 개념'},
+      {v:'미적분2_세쌍둥이심화', l:'미적분2 심화'},
+      {v:'미적분2_세쌍둥이파이널', l:'미적분2 파이널'},
+      {v:'기하', l:'기하'},
+      {v:'수리논술', l:'수리논술'},
+      {v:'기출_고3_', l:'기출해설 (고3 전체)'},
+  ]},
+  { label: '중등', tags: [
+      {v:'중1', l:'중1'}, {v:'중2', l:'중2'}, {v:'중3', l:'중3'},
+  ]},
+];
+
+function twsGetTagCategories() {
+  const seen = { 평촌관: new Set(), 산본관: new Set() };
+  twsAllVideosCache.forEach(v => {
+    const tag = (v.tag || '').trim();
+    if (tag.startsWith('보충_평촌_')) seen.평촌관.add(tag);
+    else if (tag.startsWith('보충_산본_')) seen.산본관.add(tag);
+  });
+  const toGroup = (branchLabel, set) => ({
+    label: `보충강의실 — ${branchLabel}`,
+    tags: [...set].sort().map(tag => ({ v: tag, l: tag.replace(/^보충_(평촌|산본)_/, '') }))
+  });
+  const groups = [];
+  if (seen.평촌관.size) groups.push(toGroup('평촌관', seen.평촌관));
+  if (seen.산본관.size) groups.push(toGroup('산본관', seen.산본관));
+  return [...TWS_FIXED_TAG_CATEGORIES, ...groups];
+}
+
+// 강의(접근 권한 태그) 하나에 해당하는 영상 — 관리자 페이지와 동일 매칭 규칙
+function twsVideosForTag(a, allVideos) {
+  a = (a || '').trim();
+  if (!a) return [];
   return allVideos.filter(v => {
     const tag = (v.tag || '').trim();
-    return assignedTags.some(a => a.endsWith('_') ? tag.startsWith(a) : (tag === a || tag.startsWith(a + '_')));
+    return a.endsWith('_') ? tag.startsWith(a) : (tag === a || tag.startsWith(a + '_'));
   });
+}
+
+function twsEsc(s) {
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 }
 
 function twsFormatDate(ts) {
@@ -1457,6 +1616,16 @@ function twsFormatDate(ts) {
     const d = ts.toDate ? ts.toDate() : new Date(ts);
     return `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
   } catch(e) { return '-'; }
+}
+
+function twsBar(percent, color) {
+  return `
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div style="flex:1;height:6px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">
+        <div style="width:${percent}%;height:100%;background:${color};"></div>
+      </div>
+      <span style="font-size:11px;color:var(--muted);min-width:32px;text-align:right;">${percent}%</span>
+    </div>`;
 }
 
 window.initTeacherWatchStatus = function() { loadTeacherWatchStatus(false); };
@@ -1478,87 +1647,250 @@ window.loadTeacherWatchStatus = async function(force) {
     const progressMap = new Map();
     twsProgressCache.forEach(p => progressMap.set(`${p.studentUid}_${p.videoId}`, p));
 
+    // 강의 태그 → 표시명/카테고리
+    const tagInfo = new Map();
+    let order = 0;
+    twsGetTagCategories().forEach(cat => (cat.tags || []).forEach(t => {
+      if (!tagInfo.has(t.v)) tagInfo.set(t.v, { label: t.l, cat: cat.label, order: order++ });
+    }));
+
+    // 내 학생 × (접근 권한 강의) × 그 강의의 영상
+    const videosByTag = new Map();
+    const courseMap = new Map();
     twsAllRows = [];
     myStudents.forEach(s => {
-      const assigned = twsGetStudentAssignedVideos(s, twsAllVideosCache);
-      assigned.forEach(v => {
-        const p = progressMap.get(`${s.id}_${v.id}`);
-        twsAllRows.push({
-          studentName: s.name || '', videoTitle: v.title || '', tag: v.tag || '',
-          percent: p ? (p.percent || 0) : 0,
-          completed: p ? !!p.completed : false,
-          lastWatchedAt: p ? p.lastWatchedAt : null,
+      const tags = [...new Set((Array.isArray(s.assignedTags) ? s.assignedTags : [])
+        .map(t => (t || '').trim()).filter(Boolean))];
+      tags.forEach(a => {
+        if (!videosByTag.has(a)) videosByTag.set(a, twsVideosForTag(a, twsAllVideosCache));
+        const vids = videosByTag.get(a);
+        if (!vids.length) return;
+        if (!courseMap.has(a)) {
+          const info = tagInfo.get(a) || { label: a, cat: '기타', order: 99999 };
+          courseMap.set(a, { tag: a, ...info, videoCount: vids.length });
+        }
+        vids.forEach(v => {
+          const p = progressMap.get(`${s.id}_${v.id}`);
+          twsAllRows.push({
+            courseTag: a,
+            studentUid: s.id, studentName: s.name || '', branch: s.branch || '', grade: s.grade || '',
+            videoId: v.id, videoTitle: v.title || '', tag: v.tag || '',
+            percent: p ? (p.percent || 0) : 0,
+            completed: p ? !!p.completed : false,
+            lastWatchedAt: p ? p.lastWatchedAt : null,
+          });
         });
       });
     });
+    twsCourses = [...courseMap.values()].sort((x, y) => x.order - y.order || x.label.localeCompare(y.label, 'ko'));
+
+    // 강의 선택 옵션 (카테고리별 묶음)
+    const courseSel = document.getElementById('tws-course');
+    const groups = [];
+    twsCourses.forEach(c => {
+      let g = groups.find(x => x.cat === c.cat);
+      if (!g) { g = { cat: c.cat, list: [] }; groups.push(g); }
+      g.list.push(c);
+    });
+    courseSel.innerHTML = '<option value="">전체 강의 (요약)</option>' + groups.map(g =>
+      `<optgroup label="${twsEsc(g.cat)}">${g.list.map(c => `<option value="${twsEsc(c.tag)}">${twsEsc(c.label)}</option>`).join('')}</optgroup>`
+    ).join('');
+    if (!courseMap.has(twsCourse)) twsCourse = '';
+    courseSel.value = twsCourse;
+
     twsLoaded = true;
     renderTeacherWatchStatus();
   } catch(e) {
-    el.innerHTML = `<div style="color:#ff9090;">오류: ${e.message}</div>`;
+    el.innerHTML = `<div style="color:#ff9090;">오류: ${twsEsc(e.message)}</div>`;
   }
 };
 
+window.twsSelectCourse = function(tag) {
+  twsCourse = tag || '';
+  const sel = document.getElementById('tws-course');
+  if (sel && sel.value !== twsCourse) sel.value = twsCourse;
+  renderTeacherWatchStatus();
+};
+
+window.twsToggleDetail = function(i) {
+  const row = document.getElementById('tws-detail-' + i);
+  const arrow = document.getElementById('tws-arrow-' + i);
+  if (!row) return;
+  const open = row.style.display === 'none';
+  row.style.display = open ? '' : 'none';
+  if (arrow) arrow.textContent = open ? '▾' : '▸';
+};
+
 window.renderTeacherWatchStatus = function() {
+  const branch = document.getElementById('tws-branch').value;
   const studentQ = (document.getElementById('tws-student').value || '').trim().toLowerCase();
   const videoQ = (document.getElementById('tws-video').value || '').trim().toLowerCase();
-  const status = document.getElementById('tws-status').value;
+  const statusSel = document.getElementById('tws-status');
+  const status = statusSel.value;
 
   let rows = twsAllRows;
+  if (branch) rows = rows.filter(r => r.branch === branch);
   if (studentQ) rows = rows.filter(r => r.studentName.toLowerCase().includes(studentQ));
-  if (videoQ) rows = rows.filter(r => r.videoTitle.toLowerCase().includes(videoQ) || r.tag.toLowerCase().includes(videoQ));
-  if (status === 'unwatched') rows = rows.filter(r => r.percent === 0);
-  else if (status === 'inprogress') rows = rows.filter(r => r.percent > 0 && !r.completed);
-  else if (status === 'completed') rows = rows.filter(r => r.completed);
 
   const el = document.getElementById('tws-list');
   const summaryEl = document.getElementById('tws-summary');
-  const total = rows.length;
-  const completedCount = rows.filter(r => r.completed).length;
-  const unwatchedCount = rows.filter(r => r.percent === 0).length;
-  summaryEl.textContent = total ? `총 ${total}건 · 완료 ${completedCount} · 미시청 ${unwatchedCount}` : '';
+  const empty = msg => `<div style="color:var(--muted);font-size:13px;padding:20px 0;">${msg}</div>`;
 
-  if (!rows.length) {
-    el.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px 0;">조건에 맞는 데이터가 없습니다.</div>';
+  // 상태 필터는 강의를 골랐을 때만 의미가 있음
+  statusSel.disabled = !twsCourse;
+  statusSel.style.opacity = twsCourse ? '1' : '0.45';
+
+  // ─────────── 강의를 고르지 않았을 때: 강의별 요약 ───────────
+  if (!twsCourse) {
+    const stats = new Map();
+    rows.forEach(r => {
+      let c = stats.get(r.courseTag);
+      if (!c) { c = { students: new Map(), pairs: 0, done: 0, sum: 0 }; stats.set(r.courseTag, c); }
+      c.pairs++; c.sum += r.percent; if (r.completed) c.done++;
+      let st = c.students.get(r.studentUid);
+      if (!st) { st = { n: 0, done: 0, watched: 0 }; c.students.set(r.studentUid, st); }
+      st.n++; if (r.completed) st.done++; if (r.percent > 0) st.watched++;
+    });
+    let list = twsCourses.filter(c => stats.has(c.tag));
+    if (videoQ) list = list.filter(c =>
+      c.label.toLowerCase().includes(videoQ) || c.tag.toLowerCase().includes(videoQ) ||
+      rows.some(r => r.courseTag === c.tag && r.videoTitle.toLowerCase().includes(videoQ)));
+
+    summaryEl.textContent = list.length ? `접근 권한이 걸린 강의 ${list.length}개` : '';
+    if (!list.length) { el.innerHTML = empty(myStudents.length ? '조건에 맞는 강의가 없습니다.' : '담당 학생이 없습니다.'); return; }
+
+    el.innerHTML = `
+      <table style="width:100%;border-collapse:collapse;font-size:13px;">
+        <thead>
+          <tr style="border-bottom:1px solid rgba(240,192,64,0.3);color:var(--gold);text-align:left;">
+            <th style="padding:8px 10px;">강의</th>
+            <th style="padding:8px 10px;">접근 학생</th>
+            <th style="padding:8px 10px;">영상</th>
+            <th style="padding:8px 10px;">평균 시청률</th>
+            <th style="padding:8px 10px;">전부 완료</th>
+            <th style="padding:8px 10px;">미시청</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${list.map(c => {
+            const st = stats.get(c.tag);
+            const avg = st.pairs ? Math.round(st.sum / st.pairs) : 0;
+            const studentArr = [...st.students.values()];
+            const allDone = studentArr.filter(x => x.done === x.n).length;
+            const none = studentArr.filter(x => x.watched === 0).length;
+            return `
+            <tr data-tag="${twsEsc(c.tag)}" onclick="twsSelectCourse(this.dataset.tag)"
+              style="border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;"
+              onmouseover="this.style.background='rgba(240,192,64,0.06)'" onmouseout="this.style.background=''">
+              <td style="padding:10px;">
+                <div style="font-weight:600;">${twsEsc(c.label)}</div>
+                <div style="font-size:11px;color:var(--muted);">${twsEsc(c.cat)}</div>
+              </td>
+              <td style="padding:10px;">${studentArr.length}명</td>
+              <td style="padding:10px;color:var(--muted);">${c.videoCount}개</td>
+              <td style="padding:10px;min-width:130px;">${twsBar(avg, avg >= 90 ? '#5FD98A' : 'var(--gold)')}</td>
+              <td style="padding:10px;color:#5FD98A;font-weight:600;">${allDone}명</td>
+              <td style="padding:10px;color:${none ? '#ff9090' : 'var(--muted)'};font-weight:600;">${none}명</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
     return;
   }
 
-  rows = [...rows].sort((a, b) => {
-    if (a.percent !== b.percent) return a.percent - b.percent;
-    return a.studentName.localeCompare(b.studentName, 'ko');
-  });
+  // ─────────── 강의를 골랐을 때: 그 강의 접근 권한이 있는 내 학생만 ───────────
+  const course = twsCourses.find(c => c.tag === twsCourse);
+  rows = rows.filter(r => r.courseTag === twsCourse);
+  if (videoQ) rows = rows.filter(r => r.videoTitle.toLowerCase().includes(videoQ) || r.tag.toLowerCase().includes(videoQ));
 
-  el.innerHTML = `
+  const byStudent = new Map();
+  rows.forEach(r => {
+    let st = byStudent.get(r.studentUid);
+    if (!st) {
+      st = { name: r.studentName, branch: r.branch, grade: r.grade, videos: [] };
+      byStudent.set(r.studentUid, st);
+    }
+    st.videos.push(r);
+  });
+  let students = [...byStudent.values()].map(st => {
+    const n = st.videos.length;
+    const done = st.videos.filter(v => v.completed).length;
+    const unwatched = st.videos.filter(v => v.percent === 0).length;
+    const avg = n ? Math.round(st.videos.reduce((a, v) => a + v.percent, 0) / n) : 0;
+    const last = st.videos.reduce((m, v) => {
+      if (!v.lastWatchedAt) return m;
+      const t = v.lastWatchedAt.toDate ? v.lastWatchedAt.toDate().getTime() : new Date(v.lastWatchedAt).getTime();
+      return (!m || t > m.t) ? { t, ts: v.lastWatchedAt } : m;
+    }, null);
+    const state = done === n ? 'completed' : (unwatched === n ? 'unwatched' : 'inprogress');
+    return { ...st, n, done, unwatched, avg, last: last ? last.ts : null, state };
+  });
+  if (status) students = students.filter(st => st.state === status);
+  students.sort((a, b) => a.avg - b.avg || a.name.localeCompare(b.name, 'ko'));
+
+  const allDoneCnt = students.filter(st => st.state === 'completed').length;
+  const noneCnt = students.filter(st => st.state === 'unwatched').length;
+  summaryEl.textContent = students.length
+    ? `접근 학생 ${students.length}명 · 영상 ${course ? course.videoCount : 0}개 · 전부 완료 ${allDoneCnt}명 · 미시청 ${noneCnt}명`
+    : '';
+
+  const head = `
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+      <button class="btn btn-outline btn-sm" onclick="twsSelectCourse('')">← 전체 강의</button>
+      <div style="font-size:15px;font-weight:700;color:var(--gold);">${twsEsc(course ? course.label : twsCourse)}</div>
+      <div style="font-size:12px;color:var(--muted);">${twsEsc(course ? course.cat : '')}</div>
+    </div>`;
+
+  if (!students.length) { el.innerHTML = head + empty('조건에 맞는 학생이 없습니다.'); return; }
+
+  el.innerHTML = head + `
     <table style="width:100%;border-collapse:collapse;font-size:13px;">
       <thead>
         <tr style="border-bottom:1px solid rgba(240,192,64,0.3);color:var(--gold);text-align:left;">
           <th style="padding:8px 10px;">학생</th>
-          <th style="padding:8px 10px;">영상 제목</th>
-          <th style="padding:8px 10px;">태그</th>
-          <th style="padding:8px 10px;">시청률</th>
+          <th style="padding:8px 10px;">관</th>
+          <th style="padding:8px 10px;">평균 시청률</th>
+          <th style="padding:8px 10px;">완료</th>
           <th style="padding:8px 10px;">상태</th>
           <th style="padding:8px 10px;">마지막 시청</th>
+          <th style="padding:8px 10px;width:24px;"></th>
         </tr>
       </thead>
       <tbody>
-        ${rows.map(r => {
-          const barColor = r.completed ? '#5FD98A' : (r.percent > 0 ? 'var(--gold)' : 'rgba(255,255,255,0.15)');
-          const statusLabel = r.completed ? '✅ 완료' : (r.percent > 0 ? '⏳ 시청중' : '⚠️ 미시청');
-          const statusColor = r.completed ? '#5FD98A' : (r.percent > 0 ? 'var(--gold)' : '#ff9090');
+        ${students.map((st, i) => {
+          const barColor = st.state === 'completed' ? '#5FD98A' : (st.avg > 0 ? 'var(--gold)' : 'rgba(255,255,255,0.15)');
+          const statusLabel = st.state === 'completed' ? '✅ 완료' : (st.state === 'inprogress' ? '⏳ 시청중' : '⚠️ 미시청');
+          const statusColor = st.state === 'completed' ? '#5FD98A' : (st.state === 'inprogress' ? 'var(--gold)' : '#ff9090');
+          const videos = [...st.videos].sort((a, b) => a.videoTitle.localeCompare(b.videoTitle, 'ko', { numeric: true }));
           return `
-          <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
-            <td style="padding:8px 10px;font-weight:600;">${r.studentName}</td>
-            <td style="padding:8px 10px;max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${r.videoTitle}</td>
-            <td style="padding:8px 10px;color:var(--muted);font-size:11px;">${r.tag}</td>
-            <td style="padding:8px 10px;min-width:120px;">
-              <div style="display:flex;align-items:center;gap:6px;">
-                <div style="flex:1;height:6px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">
-                  <div style="width:${r.percent}%;height:100%;background:${barColor};"></div>
-                </div>
-                <span style="font-size:11px;color:var(--muted);min-width:32px;text-align:right;">${r.percent}%</span>
-              </div>
+          <tr onclick="twsToggleDetail(${i})" style="border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;"
+            onmouseover="this.style.background='rgba(240,192,64,0.06)'" onmouseout="this.style.background=''">
+            <td style="padding:9px 10px;font-weight:600;">${twsEsc(st.name)}${st.grade ? `<span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:6px;">${twsEsc(st.grade)}</span>` : ''}</td>
+            <td style="padding:9px 10px;color:var(--muted);">${twsEsc(st.branch)}</td>
+            <td style="padding:9px 10px;min-width:130px;">${twsBar(st.avg, barColor)}</td>
+            <td style="padding:9px 10px;">${st.done} / ${st.n}</td>
+            <td style="padding:9px 10px;color:${statusColor};font-weight:600;font-size:12px;">${statusLabel}</td>
+            <td style="padding:9px 10px;color:var(--muted);font-size:12px;">${twsFormatDate(st.last)}</td>
+            <td style="padding:9px 10px;color:var(--muted);" id="tws-arrow-${i}">▸</td>
+          </tr>
+          <tr id="tws-detail-${i}" style="display:none;">
+            <td colspan="7" style="padding:4px 10px 14px 24px;background:rgba(255,255,255,0.02);">
+              <table style="width:100%;border-collapse:collapse;font-size:12px;">
+                ${videos.map(v => {
+                  const c = v.completed ? '#5FD98A' : (v.percent > 0 ? 'var(--gold)' : 'rgba(255,255,255,0.15)');
+                  const lbl = v.completed ? '완료' : (v.percent > 0 ? '시청중' : '미시청');
+                  const lc = v.completed ? '#5FD98A' : (v.percent > 0 ? 'var(--gold)' : '#ff9090');
+                  return `
+                  <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+                    <td style="padding:7px 8px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${twsEsc(v.videoTitle)}</td>
+                    <td style="padding:7px 8px;min-width:120px;">${twsBar(v.percent, c)}</td>
+                    <td style="padding:7px 8px;color:${lc};font-weight:600;">${lbl}</td>
+                    <td style="padding:7px 8px;color:var(--muted);">${twsFormatDate(v.lastWatchedAt)}</td>
+                  </tr>`;
+                }).join('')}
+              </table>
             </td>
-            <td style="padding:8px 10px;color:${statusColor};font-weight:600;font-size:12px;">${statusLabel}</td>
-            <td style="padding:8px 10px;color:var(--muted);font-size:12px;">${twsFormatDate(r.lastWatchedAt)}</td>
           </tr>`;
         }).join('')}
       </tbody>
@@ -2022,6 +2354,586 @@ window.selectRating = function(btn, field) {
     _origSelectRating(btn, field);
   }
 };
+</script>
+
+<!-- ══════════ 전임강사 매뉴얼: 화면·검색·목차 (Firebase/로그인과 무관한 독립 스크립트) ══════════ -->
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var panel = $('tab-manual'), layout = $('mnLayout'), frame = $('manualFrame');
+  if (!panel || !layout || !frame) return;
+
+  var input = $('mnSearch'), clearBtn = $('mnClear'), countEl = $('mnCount');
+  var prevBtn = $('mnPrev'), nextBtn = $('mnNext'), resultsEl = $('mnResults');
+  var tocList = $('mnTocList'), tocDrop = $('mnTocDrop'), tocToggle = $('mnTocToggle'), tocCur = $('mnTocCur');
+  var bar = $('mnBar'), note = $('mnNote'), tocAside = $('mnToc');
+  var reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var doc = null, win = null, ready = false;
+  var hits = [], allMarks = [], cur = -1, full = '', debounceT = null, searchedQuery = '';
+  var headings = [], activeHead = -1;
+  var heightState = { last: 0, grow: 0, t: 0, frozen: false, raf: 0 };
+
+  function isActive() { return panel.classList.contains('active'); }
+  function behavior() { return reduceMotion ? 'auto' : 'smooth'; }
+  function escHtml(s) { return s.replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+
+  /* ───────── 1. 포털 디자인 값을 매뉴얼에 그대로 전달 ───────── */
+  function tokens() {
+    var ps = getComputedStyle(document.documentElement), bs = getComputedStyle(document.body);
+    var v = function (n, f) { var x = (ps.getPropertyValue(n) || '').trim(); return x || f; };
+    return {
+      bg: v('--bg', '#120C24'), card: v('--bg-card', '#1A1230'), border: v('--border-soft', 'rgba(255,255,255,0.08)'),
+      muted: v('--muted', '#9B94B3'), gold: v('--gold', '#F0C040'), text: v('--off-white', '#F2EFE8'),
+      font: bs.fontFamily || 'sans-serif'
+    };
+  }
+
+  function copyFonts() {
+    // 포털(style.css)에서 쓰는 웹폰트를 매뉴얼에도 연결
+    var out = [];
+    Array.prototype.forEach.call(document.styleSheets, function (sh) {
+      var rules;
+      try { rules = sh.cssRules; } catch (e) {
+        if (sh.href && /font/i.test(sh.href)) out.push({ href: sh.href });
+        return;
+      }
+      if (!rules) return;
+      Array.prototype.forEach.call(rules, function (r) {
+        if (r.type === 3 && r.href) { // @import
+          try { out.push({ href: new URL(r.href, sh.href || location.href).href }); } catch (e) {}
+        } else if (r.type === 5) { // @font-face
+          out.push({ css: r.cssText });
+        }
+      });
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('link[rel="stylesheet"]'), function (l) {
+      if (/fonts\.googleapis|pretendard|font/i.test(l.href)) out.push({ href: l.href });
+    });
+    var css = '';
+    out.forEach(function (f) {
+      if (f.href) {
+        var l = doc.createElement('link'); l.rel = 'stylesheet'; l.href = f.href; doc.head.appendChild(l);
+      } else css += f.css + '\n';
+    });
+    return css;
+  }
+
+  function injectTheme() {
+    var T = tokens();
+    var css = copyFonts() + [
+      ':root.tp-themed{--tp-bg:' + T.bg + ';--tp-card:' + T.card + ';--tp-border:' + T.border + ';--tp-muted:' + T.muted + ';--tp-gold:' + T.gold + ';--tp-text:' + T.text + ';--tp-font:' + T.font + ';}',
+      'html.tp-themed{background:transparent!important;overflow:hidden!important;height:auto!important;min-height:0!important;scroll-behavior:auto!important;}',
+      'html.tp-themed body{background:transparent!important;color:var(--tp-text)!important;font-family:var(--tp-font)!important;font-size:16px;line-height:1.8;margin:0!important;padding:2px 2px 64px!important;height:auto!important;min-height:0!important;overflow:visible!important;max-width:none;word-break:keep-all;overflow-wrap:break-word;-webkit-text-size-adjust:100%;}',
+      'html.tp-themed body :is(h1,h2,h3,h4,h5,h6){color:var(--tp-text)!important;font-family:inherit!important;line-height:1.45;letter-spacing:-0.01em;word-break:keep-all;}',
+      'html.tp-themed body h1{font-size:26px;font-weight:700;margin:0 0 12px;padding:0;border:0;}',
+      'html.tp-themed body h2{font-size:21px;font-weight:700;margin:56px 0 18px;padding:2px 0 2px 14px;border:0;border-left:3px solid var(--tp-gold)!important;background:none!important;}',
+      'html.tp-themed body h3{font-size:17.5px;font-weight:700;color:var(--tp-gold)!important;margin:36px 0 12px;padding:0;border:0;background:none!important;}',
+      'html.tp-themed body h4{font-size:15.5px;font-weight:700;margin:26px 0 8px;}',
+      'html.tp-themed body :is(h1,h2,h3,h4):first-child{margin-top:0;}',
+      'html.tp-themed body p{margin:0 0 14px;}',
+      'html.tp-themed body :is(p,li,dd,dt,blockquote,summary){font-size:16px;}',
+      'html.tp-themed body :is(ul,ol){margin:0 0 16px;padding-left:1.5em;}',
+      'html.tp-themed body li{margin:0 0 7px;}',
+      'html.tp-themed body li>:is(ul,ol){margin:8px 0 4px;}',
+      'html.tp-themed body ol>li::marker{color:var(--tp-gold);font-weight:700;}',
+      'html.tp-themed body ul>li::marker{color:var(--tp-muted);}',
+      'html.tp-themed body :is(strong,b){color:#fff!important;font-weight:700;}',
+      'html.tp-themed body a{color:var(--tp-gold)!important;text-underline-offset:3px;}',
+      'html.tp-themed body hr{border:0;border-top:1px solid var(--tp-border);margin:40px 0;}',
+      'html.tp-themed body blockquote{margin:0 0 16px;padding:12px 16px;border-left:3px solid var(--tp-muted);background:rgba(255,255,255,0.03)!important;border-radius:0 8px 8px 0;color:var(--tp-text)!important;}',
+      'html.tp-themed body :is(code,kbd){font-size:.92em;background:rgba(255,255,255,0.07)!important;padding:1px 6px;border-radius:5px;}',
+      'html.tp-themed body img{max-width:100%;height:auto;}',
+      'html.tp-themed body details{margin:0 0 14px;}',
+      'html.tp-themed body summary{cursor:pointer;font-weight:600;padding:4px 0;}',
+      '.tp-table-wrap{overflow-x:auto;margin:0 0 20px;border:1px solid var(--tp-border);border-radius:10px;-webkit-overflow-scrolling:touch;}',
+      'html.tp-themed body table{border-collapse:collapse;width:100%;font-size:14.5px;line-height:1.6;margin:0;background:transparent!important;}',
+      'html.tp-themed body :is(th,td){padding:10px 14px;border:0;border-bottom:1px solid var(--tp-border)!important;text-align:left;vertical-align:top;color:var(--tp-text)!important;}',
+      'html.tp-themed body th{font-size:13px;font-weight:600;color:var(--tp-muted)!important;background:rgba(255,255,255,0.04)!important;}',
+      'html.tp-themed body tr:last-child>td{border-bottom:0!important;}',
+      'html.tp-themed body .tp-callout{padding:12px 16px!important;margin:0 0 16px!important;border-radius:0 8px 8px 0;border-left:3px solid;}',
+      'html.tp-themed body .tp-warn{background:rgba(255,140,80,0.08)!important;border-left-color:#ffb080!important;}',
+      'html.tp-themed body .tp-tip{background:rgba(240,192,64,0.07)!important;border-left-color:var(--tp-gold)!important;}',
+      'html.tp-themed body .tp-check{background:rgba(80,200,80,0.07)!important;border-left-color:#90ee90!important;}',
+      'html.tp-themed body .tp-callout>:last-child{margin-bottom:0;}',
+      'mark.tp-hit{background:rgba(240,192,64,0.3)!important;color:inherit!important;border-radius:3px;padding:0;box-shadow:0 0 0 1px rgba(240,192,64,0.25);cursor:pointer;}',
+      'mark.tp-hit.tp-cur{background:var(--tp-gold)!important;color:var(--tp-bg)!important;box-shadow:0 0 0 2px rgba(240,192,64,0.45);}',
+      'html.tp-themed ::selection{background:rgba(240,192,64,0.35);}',
+      '@media(max-width:600px){html.tp-themed body h1{font-size:22px;}html.tp-themed body h2{font-size:19px;margin-top:44px;}html.tp-themed body h3{font-size:17px;margin-top:30px;}html.tp-themed body :is(th,td){padding:8px 10px;}html.tp-themed body table{font-size:14px;}}'
+    ].join('\n');
+    var st = doc.createElement('style'); st.id = 'tp-theme'; st.textContent = css;
+    (doc.head || doc.documentElement).appendChild(st);
+    doc.documentElement.classList.add('tp-themed');
+  }
+
+  /* ───────── 2. 구조 정리 (내용은 건드리지 않음) ───────── */
+  function imp(el, prop, val) { el.style.setProperty(prop, val, 'important'); }
+  var SKIP_TAGS = /^(SCRIPT|STYLE|LINK|META|NOSCRIPT|TEMPLATE)$/;
+
+  function restructure() {
+    // ① 본문을 감싸는 단일 박스(카드 안의 카드) 해제
+    var el = doc.body;
+    for (var depth = 0; depth < 3; depth++) {
+      var kids = Array.prototype.filter.call(el.children, function (c) { return !SKIP_TAGS.test(c.tagName); });
+      if (kids.length !== 1 || !/^(DIV|MAIN|ARTICLE|SECTION)$/.test(kids[0].tagName)) break;
+      el = kids[0];
+      var cs = win.getComputedStyle(el);
+      if (el.children.length > 1 && (/grid/.test(cs.display) || (/flex/.test(cs.display) && !/column/.test(cs.flexDirection)))) break; // 다단 레이아웃은 유지
+      ['max-width', 'width'].forEach(function (p) { imp(el, p, p === 'width' ? 'auto' : 'none'); });
+      imp(el, 'margin', '0'); imp(el, 'padding', '0'); imp(el, 'background', 'transparent');
+      imp(el, 'border', '0'); imp(el, 'box-shadow', 'none'); imp(el, 'border-radius', '0');
+      imp(el, 'font-size', 'inherit'); imp(el, 'line-height', 'inherit');
+    }
+    // ② 표는 가로 스크롤 래퍼로
+    Array.prototype.forEach.call(doc.body.querySelectorAll('table'), function (t) {
+      if (t.parentElement.closest('table')) return;
+      var p = t.parentElement, pcs = win.getComputedStyle(p);
+      if (/auto|scroll/.test(pcs.overflowX)) return;
+      var w = doc.createElement('div'); w.className = 'tp-table-wrap';
+      p.insertBefore(w, t); w.appendChild(t);
+    });
+    // ③ 내부 스크롤 박스 해제 → 포털 페이지 하나로만 스크롤
+    Array.prototype.forEach.call(doc.body.querySelectorAll('*'), function (e) {
+      if (/^(TABLE|PRE|TEXTAREA|SELECT)$/.test(e.tagName) || e.classList.contains('tp-table-wrap')) return;
+      var cs = win.getComputedStyle(e);
+      if (/auto|scroll/.test(cs.overflowY) && e.scrollHeight > e.clientHeight + 4) {
+        imp(e, 'overflow', 'visible'); imp(e, 'height', 'auto'); imp(e, 'max-height', 'none');
+      }
+    });
+  }
+
+  /* ───────── 3. 밝은 배경/어두운 글씨 → 포털 다크 톤으로 맞춤 ───────── */
+  function parseRGB(s) {
+    var m = /rgba?\(([^)]+)\)/.exec(s || ''); if (!m) return null;
+    var p = m[1].split(/[ ,/]+/).filter(Boolean).map(parseFloat);
+    return { r: p[0], g: p[1], b: p[2], a: p.length > 3 ? p[3] : 1 };
+  }
+  function lum(c) {
+    var f = function (x) { x /= 255; return x <= 0.03928 ? x / 12.92 : Math.pow((x + 0.055) / 1.055, 2.4); };
+    return 0.2126 * f(c.r) + 0.7152 * f(c.g) + 0.0722 * f(c.b);
+  }
+  function hsl(c) {
+    var r = c.r / 255, g = c.g / 255, b = c.b / 255, mx = Math.max(r, g, b), mn = Math.min(r, g, b), h = 0, s = 0, l = (mx + mn) / 2;
+    if (mx !== mn) {
+      var d = mx - mn; s = l > 0.5 ? d / (2 - mx - mn) : d / (mx + mn);
+      h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60;
+    }
+    return { h: Math.round(h), s: s, l: l };
+  }
+  function adaptColors() {
+    var T = tokens();
+    Array.prototype.forEach.call(doc.body.querySelectorAll('*'), function (el) {
+      if (el instanceof win.SVGElement || el.closest('svg')) return;
+      var cs = win.getComputedStyle(el);
+      var bg = parseRGB(cs.backgroundColor);
+      if (bg && bg.a > 0.35 && lum(bg) > 0.45) {
+        var hb = hsl(bg);
+        imp(el, 'background-color', hb.s > 0.25 ? 'hsla(' + hb.h + ',70%,60%,0.10)' : 'rgba(255,255,255,0.035)');
+      }
+      if (parseFloat(cs.borderTopWidth) || parseFloat(cs.borderLeftWidth) || parseFloat(cs.borderBottomWidth)) {
+        ['top', 'right', 'bottom', 'left'].forEach(function (side) {
+          var bc = parseRGB(cs['border' + side[0].toUpperCase() + side.slice(1) + 'Color']);
+          if (bc && bc.a > 0.2 && lum(bc) > 0.45) {
+            var hc = hsl(bc);
+            imp(el, 'border-' + side + '-color', hc.s > 0.25 ? 'hsla(' + hc.h + ',70%,60%,0.4)' : T.border);
+          }
+        });
+      }
+      var fg = parseRGB(cs.color);
+      if (fg) {
+        var L = lum(fg), hf = hsl(fg);
+        if (hf.s > 0.35 && L < 0.25) imp(el, 'color', 'hsl(' + hf.h + ',85%,76%)');
+        else if (hf.s <= 0.35 && L < 0.06) imp(el, 'color', T.text);
+        else if (hf.s <= 0.35 && L < 0.2) imp(el, 'color', T.muted);
+      }
+    });
+  }
+
+  /* ───────── 4. 주의/참고/체크 문단을 한눈에 구분 ───────── */
+  var RX_WARN = /^[\s•·\-]*(⚠|❗|❕|‼|🚨|⛔|🚫|※|\[?(주의|경고|금지|중요|필독|유의)(사항)?\]?)/;
+  var RX_TIP = /^[\s•·\-]*(💡|📌|ℹ|\[?(TIP|Tip|팁|참고|예시|비고)\]?)/;
+  var RX_CHECK = /^[\s•·\-]*(✅|✔|☑|☐|□|\[?(체크|확인|점검)(사항|리스트)?\]?)/;
+  function markCallouts() {
+    Array.prototype.forEach.call(doc.body.querySelectorAll('p, blockquote, div'), function (el) {
+      if (el.closest('table, li, .tp-callout, summary')) return;
+      if (el.tagName === 'DIV' && el.querySelector('p,div,ul,ol,table,h1,h2,h3,h4,h5,blockquote,section')) return;
+      var t = (el.textContent || '').trim();
+      if (!t || t.length > 800) return;
+      var bg = parseRGB(win.getComputedStyle(el).backgroundColor);
+      if (el.tagName !== 'BLOCKQUOTE' && bg && bg.a > 0.05) return; // 이미 박스로 꾸며진 요소는 그대로
+      var cls = RX_WARN.test(t) ? 'tp-warn' : RX_CHECK.test(t) ? 'tp-check' : RX_TIP.test(t) ? 'tp-tip' : '';
+      if (cls) el.classList.add('tp-callout', cls);
+    });
+  }
+
+  /* ───────── 5. 목차 ───────── */
+  function buildToc() {
+    headings = []; activeHead = -1;
+    var hs = Array.prototype.filter.call(doc.body.querySelectorAll('h1,h2,h3,h4'), function (h) {
+      return (h.textContent || '').trim() && h.getClientRects().length;
+    }).map(function (h) { return { el: h, lv: +h.tagName[1] }; });
+
+    if (hs.length < 2) { // h태그가 없으면 '굵고 큰 제목줄'로 추정
+      var base = parseFloat(win.getComputedStyle(doc.body).fontSize) || 16;
+      var cand = Array.prototype.filter.call(doc.body.querySelectorAll('div,p,span,strong,b,dt,summary'), function (e) {
+        var t = (e.textContent || '').trim();
+        if (t.length < 2 || t.length > 60 || e.closest('table')) return false;
+        if (e.querySelector('div,p,ul,ol,table')) return false;
+        var cs = win.getComputedStyle(e);
+        return parseFloat(cs.fontSize) >= base * 1.2 && (parseInt(cs.fontWeight, 10) || 400) >= 600 && !/^inline/.test(cs.display);
+      });
+      var sizes = cand.map(function (e) { return parseFloat(win.getComputedStyle(e).fontSize); })
+        .filter(function (v, i, a) { return a.indexOf(v) === i; }).sort(function (a, b) { return b - a; });
+      hs = cand.map(function (e) { return { el: e, lv: sizes.indexOf(parseFloat(win.getComputedStyle(e).fontSize)) + 1 }; });
+    }
+
+    var cnt = {}; hs.forEach(function (h) { cnt[h.lv] = (cnt[h.lv] || 0) + 1; });
+    var levels = Object.keys(cnt).map(Number).sort();
+    if (levels.length > 1 && cnt[levels[0]] === 1) levels.shift(); // 문서 제목 1개는 목차에서 제외
+    var top = levels[0], sub = levels[1];
+    var items = hs.filter(function (h) { return h.lv === top || h.lv === sub; });
+    if (items.length > 45) items = hs.filter(function (h) { return h.lv === top; });
+
+    if (!top || items.length < 2) {
+      layout.classList.add('no-toc'); tocList.innerHTML = ''; tocDrop.innerHTML = ''; return;
+    }
+    layout.classList.remove('no-toc');
+    var parentTop = -1;
+    headings = items.map(function (h, i) {
+      if (h.lv === top) parentTop = i;
+      return { el: h.el, lv: h.lv === top ? 1 : 2, text: (h.el.textContent || '').replace(/\s+/g, ' ').trim(), top: h.lv === top ? i : parentTop };
+    });
+    var html = headings.map(function (h, i) {
+      return '<a class="mn-toc-link' + (h.lv === 2 ? ' lv2' : '') + '" href="#" data-i="' + i + '">' + escHtml(h.text) + '</a>';
+    }).join('');
+    tocList.innerHTML = html; tocDrop.innerHTML = html;
+  }
+
+  function onTocClick(e) {
+    var a = e.target.closest('.mn-toc-link'); if (!a) return;
+    e.preventDefault();
+    var h = headings[+a.dataset.i]; if (!h) return;
+    closeTocDrop();
+    scrollToEl(h.el, 'top');
+  }
+  tocList.addEventListener('click', onTocClick);
+  tocDrop.addEventListener('click', onTocClick);
+  tocToggle.addEventListener('click', function () {
+    if (tocDrop.hidden) { hideResults(); tocDrop.hidden = false; tocToggle.setAttribute('aria-expanded', 'true'); scrollActiveIntoList(tocDrop); }
+    else closeTocDrop();
+  });
+  function closeTocDrop() { tocDrop.hidden = true; tocToggle.setAttribute('aria-expanded', 'false'); }
+
+  function scrollActiveIntoList(box) {
+    var a = box.querySelector('.mn-toc-link.active'); if (!a) return;
+    var bt = box.getBoundingClientRect(), at = a.getBoundingClientRect();
+    if (at.top < bt.top || at.bottom > bt.bottom) box.scrollTop += (at.top - bt.top) - box.clientHeight / 3;
+  }
+
+  function spy() {
+    if (!ready || !isActive() || !headings.length) return;
+    var base = frame.getBoundingClientRect().top, line = bar.offsetHeight + 48, idx = 0;
+    for (var i = 0; i < headings.length; i++) {
+      if (base + headings[i].el.getBoundingClientRect().top <= line) idx = i; else break;
+    }
+    if (idx === activeHead) return;
+    activeHead = idx;
+    [tocList, tocDrop].forEach(function (box) {
+      Array.prototype.forEach.call(box.querySelectorAll('.mn-toc-link'), function (a) { a.classList.toggle('active', +a.dataset.i === idx); });
+    });
+    var t = headings[headings[idx].top] || headings[idx];
+    tocCur.textContent = t ? ' · ' + t.text : '';
+    scrollActiveIntoList(tocAside);
+  }
+  var spyRaf = 0;
+  window.addEventListener('scroll', function () { if (!spyRaf) spyRaf = requestAnimationFrame(function () { spyRaf = 0; spy(); }); }, { passive: true });
+
+  /* ───────── 6. 높이 자동 맞춤 (iframe 내부 스크롤 제거) ───────── */
+  function measure() {
+    heightState.raf = 0;
+    if (!ready || !isActive() || !doc || !doc.body) return;
+    var b = doc.body, h;
+    if (doc.compatMode === 'CSS1Compat') h = Math.max(b.scrollHeight, b.offsetHeight);
+    else {
+      var bottom = 0;
+      Array.prototype.forEach.call(b.children, function (c) { var r = c.getBoundingClientRect(); if (r.bottom > bottom) bottom = r.bottom; });
+      h = bottom + 64;
+    }
+    h = Math.ceil(h);
+    if (h < 50) return;
+    var now = Date.now();
+    if (h > heightState.last + 1) {
+      heightState.grow = (now - heightState.t < 1500) ? heightState.grow + 1 : 1;
+      heightState.t = now;
+      if (heightState.grow > 12) heightState.frozen = true; // vh 기반 요소로 인한 무한 증가 방지
+      if (heightState.frozen) return;
+    }
+    if (Math.abs(h - heightState.last) > 1) { heightState.last = h; frame.style.height = h + 'px'; }
+    spy();
+  }
+  function scheduleMeasure() { if (!heightState.raf) heightState.raf = requestAnimationFrame(measure); }
+  window.addEventListener('resize', function () { heightState.frozen = false; heightState.grow = 0; scheduleMeasure(); });
+  new MutationObserver(function () {
+    if (isActive()) { scheduleMeasure(); setTimeout(scheduleMeasure, 120); }
+    else { hideResults(); closeTocDrop(); }
+  }).observe(panel, { attributes: true, attributeFilter: ['class'] });
+
+  /* ───────── 7. 이동 ───────── */
+  function scrollToEl(el, mode) {
+    var offset = bar.offsetHeight + 16;
+    var abs = frame.getBoundingClientRect().top + window.scrollY + el.getBoundingClientRect().top;
+    var y = mode === 'top' ? abs - offset : abs - offset - (window.innerHeight - offset) * 0.3;
+    window.scrollTo({ top: Math.max(0, y), behavior: behavior() });
+  }
+
+  /* ───────── 8. 검색 ───────── */
+  var nodes = [], starts = [], lens = [];
+  function buildIndex() {
+    nodes = []; starts = []; lens = []; full = '';
+    var cache = new Map(), prevBlock = null;
+    function blockOf(el) {
+      var e = el, path = [];
+      while (e && e !== doc.body) {
+        if (cache.has(e)) { var r = cache.get(e); path.forEach(function (p) { cache.set(p, r); }); return r; }
+        path.push(e);
+        var d = win.getComputedStyle(e).display;
+        if (d.indexOf('inline') !== 0 && d !== 'contents') { path.forEach(function (p) { cache.set(p, e); }); return e; }
+        e = e.parentElement;
+      }
+      path.forEach(function (p) { cache.set(p, doc.body); });
+      return doc.body;
+    }
+    var walker = doc.createTreeWalker(doc.body, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) {
+        var p = n.parentElement;
+        if (!p || p.closest('script,style,noscript,template,textarea')) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var n;
+    while ((n = walker.nextNode())) {
+      var blk = blockOf(n.parentElement);
+      if (blk !== prevBlock) { full += '\u0000'; prevBlock = blk; } // 서로 다른 문단끼리 이어붙어 검색되지 않도록
+      starts.push(full.length); lens.push(n.nodeValue.length); nodes.push(n);
+      full += n.nodeValue;
+    }
+  }
+  function nodeAt(pos) { // starts[i] <= pos 인 최대 i
+    var lo = 0, hi = starts.length - 1, ans = -1;
+    while (lo <= hi) { var mid = (lo + hi) >> 1; if (starts[mid] <= pos) { ans = mid; lo = mid + 1; } else hi = mid - 1; }
+    return ans;
+  }
+  function wrap(node, a, b) {
+    var mid = a > 0 ? node.splitText(a) : node;
+    if (b - a < mid.nodeValue.length) mid.splitText(b - a);
+    var mk = doc.createElement('mark'); mk.className = 'tp-hit';
+    mid.parentNode.insertBefore(mk, mid); mk.appendChild(mid);
+    allMarks.push(mk);
+    return mk;
+  }
+  function clearMarks() {
+    var parents = new Set();
+    allMarks.forEach(function (mk) {
+      var p = mk.parentNode; if (!p) return;
+      while (mk.firstChild) p.insertBefore(mk.firstChild, mk);
+      p.removeChild(mk); parents.add(p);
+    });
+    parents.forEach(function (p) { p.normalize(); });
+    allMarks = [];
+  }
+
+  function runSearch() {
+    clearTimeout(debounceT); debounceT = null;
+    if (!ready) return;
+    var q = input.value.trim();
+    searchedQuery = input.value;
+    clearMarks(); hits = []; cur = -1;
+    clearBtn.hidden = !input.value;
+    if (!q) { updateUI(); hideResults(); return; }
+
+    var re = new RegExp(q.split(/\s+/).map(escRe).join('\\s+'), 'gi');
+    buildIndex();
+    var matches = [], m;
+    while ((m = re.exec(full)) && matches.length < 1000) {
+      if (!m[0].length) { re.lastIndex++; continue; }
+      matches.push([m.index, m.index + m[0].length]);
+    }
+    var marksOf = new Array(matches.length);
+    for (var k = matches.length - 1; k >= 0; k--) { // 뒤에서부터 감싸야 앞쪽 위치가 어긋나지 않음
+      var s = matches[k][0], e = matches[k][1], i1 = nodeAt(s), i2 = nodeAt(e - 1), segs = [];
+      for (var j = i2; j >= i1; j--) {
+        var ns = starts[j], a = Math.max(s, ns) - ns, b = Math.min(e, ns + lens[j]) - ns;
+        if (a < b) segs.unshift(wrap(nodes[j], a, b));
+      }
+      marksOf[k] = segs;
+    }
+    var hIdx = 0;
+    matches.forEach(function (mt, k) {
+      var mk = marksOf[k]; if (!mk || !mk.length) return;
+      var visible = mk[0].getClientRects().length > 0 || mk[0].closest('details:not([open])');
+      if (!visible) return;
+      while (hIdx + 1 < headings.length && (headings[hIdx + 1].el.compareDocumentPosition(mk[0]) & Node.DOCUMENT_POSITION_FOLLOWING)) hIdx++;
+      var sec = headings.length && (headings[hIdx].el.compareDocumentPosition(mk[0]) & Node.DOCUMENT_POSITION_FOLLOWING) ? headings[hIdx].text : '';
+      mk.forEach(function (x) { x.dataset.hit = hits.length; });
+      hits.push({ marks: mk, s: mt[0], e: mt[1], sec: sec });
+    });
+    updateUI();
+    renderResults();
+    if (document.activeElement === input) showResults();
+  }
+
+  function snippet(h) {
+    var clean = function (s) { return escHtml(s.replace(/\u0000/g, ' ').replace(/\s+/g, ' ')); };
+    var a = Math.max(0, h.s - 30), b = Math.min(full.length, h.e + 50);
+    var pre = full.slice(a, h.s), post = full.slice(h.e, b);
+    var z = pre.lastIndexOf('\u0000'); if (z >= 0) { pre = pre.slice(z + 1); a = 0; }
+    z = post.indexOf('\u0000'); if (z >= 0) { post = post.slice(0, z); b = 0; }
+    return (a > 0 ? '…' : '') + clean(pre).replace(/^\s+/, '') + '<mark>' + clean(full.slice(h.s, h.e)) + '</mark>' + clean(post).replace(/\s+$/, '') + (b > 0 && b < full.length ? '…' : '');
+  }
+  function renderResults() {
+    if (!hits.length) { resultsEl.innerHTML = '<div class="mn-results-empty">검색 결과가 없습니다</div>'; return; }
+    var LIMIT = 100;
+    resultsEl.innerHTML = hits.slice(0, LIMIT).map(function (h, i) {
+      return '<button type="button" class="mn-result" data-i="' + i + '">' +
+        (h.sec ? '<div class="mn-result-sec">' + escHtml(h.sec) + '</div>' : '') +
+        '<div class="mn-result-txt">' + snippet(h) + '</div></button>';
+    }).join('') + (hits.length > LIMIT ? '<div class="mn-results-more">외 ' + (hits.length - LIMIT) + '개 — Enter로 계속 이동할 수 있습니다</div>' : '');
+  }
+  function showResults() { if (input.value.trim() && ready) { closeTocDrop(); resultsEl.hidden = false; } }
+  function hideResults() { resultsEl.hidden = true; }
+
+  function updateUI() {
+    var q = input.value.trim(), n = hits.length;
+    countEl.classList.toggle('has', n > 0);
+    if (!q) countEl.textContent = '';
+    else if (!n) countEl.textContent = '검색 결과가 없습니다';
+    else countEl.textContent = cur < 0 ? '검색 결과 ' + n + '개' : (cur + 1) + ' / ' + n;
+    prevBtn.disabled = nextBtn.disabled = n === 0;
+    Array.prototype.forEach.call(resultsEl.querySelectorAll('.mn-result'), function (b) { b.classList.toggle('cur', +b.dataset.i === cur); });
+  }
+
+  function go(i) {
+    if (!hits.length) return;
+    if (cur >= 0 && hits[cur]) hits[cur].marks.forEach(function (m) { m.classList.remove('tp-cur'); });
+    cur = (i + hits.length) % hits.length;
+    var h = hits[cur];
+    var d = h.marks[0].closest('details:not([open])');
+    while (d) { d.open = true; d = d.parentElement && d.parentElement.closest('details:not([open])'); }
+    h.marks.forEach(function (m) { m.classList.add('tp-cur'); });
+    scheduleMeasure();
+    scrollToEl(h.marks[0], 'center');
+    updateUI();
+  }
+  function step(dir) {
+    if (input.value !== searchedQuery) runSearch();
+    if (!hits.length) return;
+    hideResults();
+    go(cur < 0 ? (dir > 0 ? 0 : hits.length - 1) : cur + dir);
+  }
+  function clearSearch() {
+    input.value = ''; runSearch();
+  }
+
+  input.addEventListener('input', function () {
+    clearBtn.hidden = !input.value;
+    clearTimeout(debounceT);
+    if (!input.value.trim()) { runSearch(); return; } // 지우면 즉시 하이라이트 제거
+    debounceT = setTimeout(runSearch, 160);
+  });
+  input.addEventListener('keydown', function (e) {
+    if (e.isComposing || e.keyCode === 229) return; // 한글 조합 중 Enter 무시
+    if (e.key === 'Enter') { e.preventDefault(); step(e.shiftKey ? -1 : 1); }
+    else if (e.key === 'Escape') { e.preventDefault(); clearSearch(); }
+    else if (e.key === 'ArrowDown' && !resultsEl.hidden) { var f = resultsEl.querySelector('.mn-result'); if (f) { e.preventDefault(); f.focus(); } }
+  });
+  input.addEventListener('focus', function () { if (input.value.trim() && hits.length >= 0 && searchedQuery === input.value) showResults(); });
+  input.addEventListener('click', function () { if (resultsEl.hidden) showResults(); });
+  clearBtn.addEventListener('click', function () { clearSearch(); input.focus(); });
+  prevBtn.addEventListener('click', function () { step(-1); });
+  nextBtn.addEventListener('click', function () { step(1); });
+  resultsEl.addEventListener('click', function (e) {
+    var b = e.target.closest('.mn-result'); if (!b) return;
+    hideResults(); go(+b.dataset.i);
+  });
+  resultsEl.addEventListener('keydown', function (e) {
+    var b = e.target.closest('.mn-result'); if (!b) return;
+    if (e.key === 'ArrowDown' && b.nextElementSibling && b.nextElementSibling.classList.contains('mn-result')) { e.preventDefault(); b.nextElementSibling.focus(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); (b.previousElementSibling || input).focus(); }
+    else if (e.key === 'Escape') { e.preventDefault(); hideResults(); input.focus(); }
+  });
+  document.addEventListener('mousedown', function (e) {
+    if (!bar.contains(e.target)) { hideResults(); closeTocDrop(); }
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape' || !isActive()) return;
+    if (e.target === input) return;
+    if (!resultsEl.hidden || !tocDrop.hidden) { hideResults(); closeTocDrop(); return; }
+    if (input.value) clearSearch();
+  });
+
+  /* ───────── 9. 매뉴얼 내부 이벤트 연결 ───────── */
+  function bindInner() {
+    doc.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') { hideResults(); closeTocDrop(); if (input.value) clearSearch(); }
+    });
+    doc.addEventListener('mousedown', function () { hideResults(); closeTocDrop(); });
+    doc.addEventListener('click', function (e) {
+      var mk = e.target.closest && e.target.closest('mark.tp-hit[data-hit]');
+      if (mk) {
+        var i = +mk.dataset.hit;
+        if (cur >= 0 && hits[cur]) hits[cur].marks.forEach(function (m) { m.classList.remove('tp-cur'); });
+        cur = i; hits[i].marks.forEach(function (m) { m.classList.add('tp-cur'); }); updateUI();
+      }
+      var a = e.target.closest && e.target.closest('a[href^="#"]');
+      if (a && a.getAttribute('href').length > 1) { // 매뉴얼 안의 #링크도 포털 스크롤로 이동
+        var id = decodeURIComponent(a.getAttribute('href').slice(1));
+        var t = doc.getElementById(id) || doc.getElementsByName(id)[0];
+        if (t) { e.preventDefault(); scrollToEl(t, 'top'); }
+      }
+    });
+    doc.addEventListener('toggle', scheduleMeasure, true); // <details> 열고 닫을 때 높이 갱신
+    try { new win.ResizeObserver(scheduleMeasure).observe(doc.body); } catch (e) {
+      setInterval(scheduleMeasure, 800);
+    }
+    Array.prototype.forEach.call(doc.images, function (img) { if (!img.complete) img.addEventListener('load', scheduleMeasure); });
+    if (doc.fonts && doc.fonts.ready) doc.fonts.ready.then(scheduleMeasure);
+  }
+
+  /* ───────── 10. 로드 ───────── */
+  function fallback() {
+    ready = false;
+    layout.classList.add('mn-fallback');
+    note.hidden = false;
+    note.textContent = '이 환경에서는 매뉴얼 검색·목차를 사용할 수 없어 기본 화면으로 표시합니다. (서버에 올린 상태에서 정상 동작)';
+  }
+  function enhance() {
+    var d;
+    try { d = frame.contentDocument; } catch (e) { d = null; }
+    if (!d) { fallback(); return; }
+    if (!d.body || d.URL === 'about:blank') return;
+    if (d.documentElement.classList.contains('tp-themed')) return;
+    doc = d; win = frame.contentWindow;
+    hits = []; allMarks = []; cur = -1; heightState.last = 0; heightState.frozen = false; heightState.grow = 0;
+    try {
+      injectTheme();
+      restructure();
+      adaptColors();
+      markCallouts();
+      buildToc();
+      bindInner();
+    } catch (err) { console.error('[manual] 화면 개선 중 오류:', err); }
+    layout.classList.remove('mn-fallback'); note.hidden = true;
+    layout.classList.add('enhanced');
+    ready = true;
+    input.disabled = false; input.placeholder = '매뉴얼에서 검색...';
+    scheduleMeasure(); setTimeout(scheduleMeasure, 300);
+    if (input.value.trim()) runSearch(); else updateUI();
+  }
+  frame.addEventListener('load', enhance);
+  try { if (frame.contentDocument && frame.contentDocument.readyState === 'complete') enhance(); } catch (e) {}
+})();
 </script>
 
 </body>
