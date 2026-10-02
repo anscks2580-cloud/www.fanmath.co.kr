@@ -290,6 +290,49 @@ const EMAILJS_SERVICE_ID = 'service_3t1xwfk';
 const EMAILJS_TEMPLATE_ID = 'template_dl76m0d';
 emailjs.init(EMAILJS_PUBLIC_KEY);
 
+// ── 텔레그램 알림 설정 ──
+const TELEGRAM_BOT_TOKEN = '8802440196:AAHh9EWYtR7ITLkXYlbYe5N4xD_sQ2JSS78';
+const TELEGRAM_CHAT_ID = '8913371664';
+
+function buildTelegramMessage(d) {
+  const join = (arr) => (arr && arr.length ? arr.join(', ') : '-');
+  const v = (x) => (x ? x : '-');
+  const lines = [
+    '📩 새 상담신청 [' + v(d.branch) + ']',
+    '',
+    '👤 학생: ' + v(d.studentName) + ' (' + v(d.schoolGrade) + ')',
+    '🏫 과정: ' + v(d.level),
+    '📞 학부모: ' + v(d.parentPhone),
+    '📱 학생: ' + v(d.studentPhone),
+    '🔎 방문경로: ' + join(d.visitPath) + (d.visitPathEtc ? ' / ' + d.visitPathEtc : ''),
+    ''
+  ];
+  if (d.level === '고등') {
+    lines.push('📚 선행과목: ' + join(d.highSubjects));
+    lines.push('📈 수준: ' + v(d.highLevel));
+  } else {
+    lines.push('📚 진도: ' + ([d.progressGrade, d.progressSemester, d.progressUnit].filter(Boolean).join(' ') || '-'));
+  }
+  const ex = d.examScores;
+  const exams = [ex.round1, ex.round2, ex.round3, ex.round4].map((x, i) => x ? (i + 1) + '회 ' + x : '').filter(Boolean);
+  lines.push('📝 시험점수: ' + (exams.length ? exams.join(' / ') : '-'));
+  lines.push('💪 강점: ' + join(d.strongAreas));
+  lines.push('⚠️ 약점: ' + join(d.weakAreas));
+  lines.push('🧮 자가진단: 연산 ' + d.selfCheck.calcScore + ' · 정확도 ' + d.selfCheck.accuracyScore + ' · 흥미 ' + d.selfCheck.interestScore);
+  lines.push('');
+  lines.push('🕒 ' + new Date().toLocaleString('ko-KR'));
+  return lines.join('\n');
+}
+
+async function sendTelegram(d) {
+  const res = await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: buildTelegramMessage(d) })
+  });
+  if (!res.ok) throw new Error('Telegram ' + res.status);
+}
+
 let currentLevel = '초등';
 const levelTabs = document.getElementById('levelTabs');
 const progressLower = document.getElementById('progressLower');
@@ -361,9 +404,10 @@ form.addEventListener('submit', async (e) => {
   try {
     await addDoc(collection(db, 'consultForms'), data);
 
-    // 이메일 알림 발송 (실패해도 신청 자체는 정상 처리)
-    try {
-      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+    // 알림 발송 (텔레그램 + 이메일, 실패해도 신청 자체는 정상 처리)
+    const results = await Promise.allSettled([
+      sendTelegram(data),
+      Promise.resolve().then(() => emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
         level: data.level,
         branch: data.branch,
         student_name: data.studentName,
@@ -371,10 +415,10 @@ form.addEventListener('submit', async (e) => {
         parent_phone: data.parentPhone,
         student_phone: data.studentPhone,
         submitted_at: new Date().toLocaleString('ko-KR')
-      });
-    } catch (mailErr) {
-      console.error('이메일 알림 발송 실패:', mailErr);
-    }
+      }))
+    ]);
+    if (results[0].status === 'rejected') console.error('텔레그램 알림 발송 실패:', results[0].reason);
+    if (results[1].status === 'rejected') console.error('이메일 알림 발송 실패:', results[1].reason);
 
     form.classList.add('hidden');
     document.getElementById('resultBox').classList.remove('hidden');
