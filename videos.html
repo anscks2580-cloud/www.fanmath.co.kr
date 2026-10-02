@@ -194,6 +194,33 @@
   width: 100%; height: 100%; border: none;
 }
 
+.resume-prompt {
+  position: absolute; inset: 0; z-index: 5;
+  display: none; align-items: center; justify-content: center;
+  background: rgba(13,9,32,0.82);
+  padding: 20px;
+}
+.resume-prompt.open { display: flex; }
+.resume-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px 26px;
+  width: 100%; max-width: 340px;
+  text-align: center;
+}
+.resume-q { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+.resume-time { font-size: 26px; font-weight: 700; color: var(--gold); margin-bottom: 18px; letter-spacing: 0.5px; }
+.resume-btns { display: flex; gap: 8px; }
+.resume-btns button {
+  flex: 1; padding: 11px 0; border-radius: 10px;
+  font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;
+  border: 1px solid var(--border);
+}
+.resume-yes { background: var(--gold); color: var(--bg); border-color: var(--gold) !important; }
+.resume-no  { background: rgba(255,255,255,0.06); color: var(--off-white); }
+.resume-yes:hover, .resume-no:hover { opacity: 0.85; }
+
 .modal-footer {
   padding: 14px 24px;
   border-top: 1px solid var(--border-soft);
@@ -710,6 +737,16 @@
         allowfullscreen
         allow="autoplay; fullscreen; picture-in-picture">
       </iframe>
+      <div class="resume-prompt" id="resumePrompt">
+        <div class="resume-box">
+          <div class="resume-q">지난번에 보던 부분부터 이어서 들을까요?</div>
+          <div class="resume-time" id="resumeTime">00:00 ~</div>
+          <div class="resume-btns">
+            <button class="resume-no" onclick="chooseResume(false)">처음부터</button>
+            <button class="resume-yes" onclick="chooseResume(true)">이어 듣기</button>
+          </div>
+        </div>
+      </div>
     </div>
     <div id="modalProgressNote" style="padding:10px 24px;font-size:12px;color:var(--muted);border-top:1px solid var(--border-soft);"></div>
 
@@ -1600,9 +1637,55 @@ function renderRow(v, idx, highlight) {
   `;
 }
 
+// 초 → 23:22 / 1:05:09 형식
+function fmtTime(t) {
+  t = Math.max(0, Math.floor(t));
+  const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), sec = t % 60;
+  const mm = String(m).padStart(h ? 2 : 2, '0'), ss = String(sec).padStart(2, '0');
+  return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+
+// 이어보기 지점 계산
+function computeResume(videoDocId) {
+  const prev = mergeProgress(myProgressMap.get(videoDocId), readLocalProgress(videoDocId))
+            || { maxWatchedSeconds: 0, lastPositionSeconds: 0, duration: 0, completed: false, percent: 0 };
+  // 끝 부분에서 끝냈으면 다음엔 처음부터, 아니면 마지막 위치부터
+  let resumeAt = prev.lastPositionSeconds || 0;
+  if (prev.duration && resumeAt >= prev.duration - END_TOLERANCE_SEC) resumeAt = 0;
+  // 이어보기 지점은 본 구간을 넘지 않게
+  resumeAt = Math.min(resumeAt, prev.maxWatchedSeconds || 0);
+  return { prev, resumeAt };
+}
+
+// 이어 듣기 / 처음부터 선택
+window.chooseResume = function(resume) {
+  document.getElementById('resumePrompt').classList.remove('open');
+  if (!currentProgress || !vimeoPlayer) return;
+  const t = resume ? Math.max(0, currentProgress.resumeAt - 1) : 0;
+  currentProgress.lastSeconds = t;
+  currentProgress.resumeApplied = true;
+  vimeoPlayer.setCurrentTime(t)
+    .catch(()=>{})
+    .finally(() => {
+      if (!vimeoPlayer) return;
+      vimeoPlayer.play().catch(() => {
+        const noteEl = document.getElementById('modalProgressNote');
+        if (noteEl) noteEl.innerHTML = '▶ 영상의 재생 버튼을 눌러주세요<br>' + noteEl.innerHTML;
+      });
+    });
+};
+
 window.openModal = function(id, title, videoDocId, tag) {
   document.getElementById('modalTitle').textContent = title;
-  document.getElementById('modalIframe').src = `https://player.vimeo.com/video/${id}?autoplay=1&title=0&byline=0&portrait=0`;
+  document.getElementById('resumePrompt').classList.remove('open');
+
+  const trackable = !!(myProfile && videoDocId && window.Vimeo && window.Vimeo.Player);
+  const resumeInfo = trackable ? computeResume(videoDocId) : null;
+  const askResume = !!(resumeInfo && resumeInfo.resumeAt > 3);
+
+  // 이어보기 질문을 띄울 땐 자동재생하지 않음
+  document.getElementById('modalIframe').src =
+    `https://player.vimeo.com/video/${id}?autoplay=${askResume ? 0 : 1}&title=0&byline=0&portrait=0`;
   document.getElementById('modal').classList.add('open');
 
   // 이전 재생 진행률 저장 후 새 재생 상태 초기화
@@ -1614,14 +1697,8 @@ window.openModal = function(id, title, videoDocId, tag) {
   const noteEl = document.getElementById('modalProgressNote');
   if (noteEl) noteEl.innerHTML = '';
 
-  if (myProfile && videoDocId && window.Vimeo && window.Vimeo.Player) {
-    const prev = mergeProgress(myProgressMap.get(videoDocId), readLocalProgress(videoDocId))
-              || { maxWatchedSeconds: 0, lastPositionSeconds: 0, duration: 0, completed: false, percent: 0 };
-    // 끝 부분에서 끝냈으면 다음엔 처음부터, 아니면 마지막 위치부터 이어보기
-    let resumeAt = prev.lastPositionSeconds || 0;
-    if (prev.duration && resumeAt >= prev.duration - END_TOLERANCE_SEC) resumeAt = 0;
-    // 이어보기 지점은 본 구간을 넘지 않게
-    resumeAt = Math.min(resumeAt, prev.maxWatchedSeconds || 0);
+  if (trackable) {
+    const { prev, resumeAt } = resumeInfo;
     const iframeEl = document.getElementById('modalIframe');
     vimeoPlayer = new Vimeo.Player(iframeEl);
     currentProgress = {
@@ -1632,7 +1709,7 @@ window.openModal = function(id, title, videoDocId, tag) {
       isFirstSave: !myProgressMap.has(videoDocId),
       locked: !isFullyWatched(prev.maxWatchedSeconds || 0, prev.duration || 0), // 완주 전에는 앞으로 넘기기 잠금
       resumeAt,
-      resumeApplied: false,
+      resumeApplied: !askResume,
       seekGuardBusy: false,
     };
     updateModalProgressNote();
@@ -1654,20 +1731,10 @@ window.openModal = function(id, title, videoDocId, tag) {
     };
 
     // ── 이어보기: 이전에 본 지점부터 재생 ──
-    vimeoPlayer.ready().then(() => {
-      if (!currentProgress || currentProgress.resumeApplied) return;
-      currentProgress.resumeApplied = true;
-      if (currentProgress.resumeAt > 3) {
-        const t = Math.max(0, currentProgress.resumeAt - 1);
-        currentProgress.lastSeconds = t;
-        vimeoPlayer.setCurrentTime(t).catch(()=>{});
-        const noteEl = document.getElementById('modalProgressNote');
-        if (noteEl) {
-          const m = Math.floor(t / 60), sec = Math.floor(t % 60);
-          noteEl.innerHTML = `▶ 지난번 ${m}분 ${String(sec).padStart(2,'0')}초부터 이어서 재생합니다<br>` + noteEl.innerHTML;
-        }
-      }
-    });
+    if (askResume) {
+      document.getElementById('resumeTime').textContent = `${fmtTime(resumeAt)} ~`;
+      document.getElementById('resumePrompt').classList.add('open');
+    }
 
     vimeoPlayer.on('timeupdate', (data) => {
       if (!currentProgress) return;
@@ -1683,8 +1750,10 @@ window.openModal = function(id, title, videoDocId, tag) {
         if (currentProgress.seekGuardBusy) return;
       }
 
-      // 이어보기 이동 전 0초 지점 신호로 마지막 위치가 덮어써지지 않게
-      if (!currentProgress.resumeApplied && currentProgress.resumeAt > 3) return;
+      // 이어보기 선택 전에는 마지막 위치가 덮어써지지 않게
+      if (!currentProgress.resumeApplied) return;
+      // 화면을 벗어난 상태(최소화·탭 전환)에서는 시청으로 인정하지 않음
+      if (document.hidden) return;
       currentProgress.lastSeconds = sec;
       if (sec > currentProgress.maxSeconds) currentProgress.maxSeconds = sec;
       saveLocalProgress(currentProgress);
@@ -1717,6 +1786,10 @@ window.openModal = function(id, title, videoDocId, tag) {
     });
     // 10초마다 진행률 저장 (너무 잦은 쓰기 방지)
     vimeoPlayer.on('pause', () => { flushProgress(); });
+    // 화면을 벗어난 상태에서 재생되면 바로 멈춤
+    vimeoPlayer.on('play', () => {
+      if (document.hidden) vimeoPlayer.pause().catch(()=>{});
+    });
     // 5초마다 진행률 저장
     progressSaveTimer = setInterval(flushProgress, 5000);
   }
@@ -1728,14 +1801,34 @@ window.closeModal = function() {
   if (vimeoPlayer) { try { vimeoPlayer.unload(); } catch(e){} vimeoPlayer = null; }
   currentProgress = null;
   document.getElementById('modal').classList.remove('open');
+  document.getElementById('resumePrompt').classList.remove('open');
   document.getElementById('modalIframe').src = '';
   renderVideos(); // 목록의 시청률 표시 갱신
 };
 
 window.addEventListener('beforeunload', () => { saveLocalProgress(currentProgress); flushProgress(); });
 window.addEventListener('pagehide', () => { saveLocalProgress(currentProgress); flushProgress(); });
+// ── 최소화·다른 탭/앱으로 전환하면 영상 일시정지 ──
+let pausedByHidden = false;
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') { saveLocalProgress(currentProgress); flushProgress(); }
+  if (document.visibilityState === 'hidden') {
+    saveLocalProgress(currentProgress);
+    flushProgress();
+    if (vimeoPlayer) {
+      vimeoPlayer.getPaused().then(paused => {
+        if (!paused && vimeoPlayer) {
+          pausedByHidden = true;
+          vimeoPlayer.pause().catch(()=>{});
+        }
+      }).catch(()=>{});
+    }
+  } else if (pausedByHidden) {
+    pausedByHidden = false;
+    const noteEl = document.getElementById('modalProgressNote');
+    if (noteEl && currentProgress) {
+      noteEl.innerHTML = '⏸ 화면을 벗어나서 영상이 일시정지되었습니다. 재생 버튼을 눌러 계속 들으세요<br>' + noteEl.innerHTML;
+    }
+  }
 });
 
 window.closeOnBg = function(e) {
