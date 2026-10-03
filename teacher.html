@@ -306,8 +306,8 @@ select option:disabled { color:#9B94B3; }
 
   <!-- 탭 -->
   <div class="teacher-tabs">
-    <button class="teacher-tab" onclick="switchTab('calendar',this);refreshTeacherCalendar()">📅 일정</button>
-    <button class="teacher-tab active" onclick="switchTab('weekly',this)">주간성취도</button>
+    <button class="teacher-tab active" onclick="switchTab('calendar',this);refreshTeacherCalendar()">📅 일정</button>
+    <button class="teacher-tab" onclick="switchTab('weekly',this)">주간성취도</button>
     <button class="teacher-tab" onclick="switchTab('monthly',this)">월말보고서</button>
     <button class="teacher-tab" onclick="switchTab('tests',this)">누적테스트</button>
     <button class="teacher-tab" onclick="switchTab('progress',this)">반별 진도</button>
@@ -318,7 +318,7 @@ select option:disabled { color:#9B94B3; }
   </div>
 
   <!-- ══ 📅 일정 ══ -->
-  <div class="tab-panel" id="tab-calendar">
+  <div class="tab-panel active" id="tab-calendar">
     <div class="cal-layout">
       <div class="card" style="margin-bottom:0;">
         <div class="cal-head">
@@ -358,7 +358,7 @@ select option:disabled { color:#9B94B3; }
   </div>
 
   <!-- ══ 탭 1: 주간성취도 설문 ══ -->
-  <div class="tab-panel active" id="tab-weekly">
+  <div class="tab-panel" id="tab-weekly">
 
     <!-- 설문 작성 -->
     <div class="card">
