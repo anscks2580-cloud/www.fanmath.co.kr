@@ -2635,13 +2635,20 @@ onAuthStateChanged(auth, async (user) => {
   try {
     const adminDoc = await getDoc(doc(db, 'admins', user.uid));
     if (!adminDoc.exists()) {
-      const err = document.getElementById('a-err');
-      err.textContent = '관리자 권한이 없는 계정입니다. (uid: ' + user.uid + ')';
-      err.style.display = 'block';
-      await signOut(auth);
+      // 같은 브라우저에서 선생님/학생 페이지에 로그인돼 있던 세션이 넘어온 경우:
+      // 에러를 띄우거나 로그아웃시키지 않고 조용히 로그인 화면만 보여줌
+      // (여기서 로그아웃하면 다른 탭의 선생님 페이지까지 같이 로그아웃됨)
+      if (window.__adminLoginAttempt) {
+        const err = document.getElementById('a-err');
+        err.textContent = '관리자 권한이 없는 계정입니다.';
+        err.style.display = 'block';
+        window.__adminLoginAttempt = false;
+        await signOut(auth);
+      }
       showLogin();
       return;
     }
+    window.__adminLoginAttempt = false;
     document.getElementById('adminName').textContent = user.email;
     showPortal();
     await loadStudents();
@@ -2676,10 +2683,12 @@ window.loginAdmin = async function() {
   const btn   = document.getElementById('a-loginBtn');
   if (!email || !pw) { err.textContent = '이메일과 비밀번호를 입력해주세요.'; err.style.display='block'; return; }
   btn.textContent = '로그인 중...'; btn.disabled = true;
+  err.style.display = 'none';
+  window.__adminLoginAttempt = true;
   try {
     await signInWithEmailAndPassword(auth, email, pw);
-    err.style.display = 'none';
   } catch(e) {
+    window.__adminLoginAttempt = false;
     err.textContent = '이메일 또는 비밀번호가 올바르지 않습니다.'; err.style.display='block';
     btn.textContent = '로그인'; btn.disabled = false;
   }
