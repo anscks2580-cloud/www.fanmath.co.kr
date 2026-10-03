@@ -388,7 +388,7 @@
         <input
           id="videoSearch"
           type="text"
-          placeholder="강의 제목 검색..."
+          placeholder="강의 제목 또는 영상 코드 검색..."
           oninput="onSearch()"
           style="
             width:100%; box-sizing:border-box;
@@ -1430,7 +1430,9 @@ function renderVideos() {
   // 검색어 필터
   const q = currentSearch.toLowerCase();
   if (q) {
-    list = list.filter(v => (v.title || '').toLowerCase().includes(q));
+    const qCode = q.replace(/[-\s]/g, '');
+    list = list.filter(v => (v.title || '').toLowerCase().includes(q)
+      || (/^\d+$/.test(qCode) && (v.code || '').replace(/-/g, '').includes(qCode)));
     infoEl.style.display = 'block';
     infoEl.textContent = `"${currentSearch}" 검색 결과 ${list.length}개`;
   } else {
@@ -1631,7 +1633,7 @@ function renderRow(v, idx, highlight) {
       </div>
       <div class="video-info">
         <div class="video-title">${highlight(v.title || '')}</div>
-        <div class="video-date">${v.date || ''}</div>
+        <div class="video-date">${v.date || ''}${v.code ? `<span style="margin-left:${v.date ? '8px' : '0'};font-family:'SF Mono',Menlo,Consolas,monospace;opacity:0.75;" title="영상 고유 코드 (문의 시 알려주세요)">${v.code}</span>` : ''}</div>
       </div>
       ${progressHtml}
       <span class="video-tag" style="margin-bottom:0;flex-shrink:0;">${v.tag || ''}</span>

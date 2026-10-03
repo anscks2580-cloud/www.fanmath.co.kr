@@ -1960,6 +1960,7 @@ function renderTeacherVideos() {
         <div style="display:flex;gap:8px;align-items:center;">
           <span style="font-size:11px;background:rgba(240,192,64,0.1);color:var(--gold);
             padding:2px 8px;border-radius:4px;">${v.tag || ''}</span>
+          ${v.code ? `<span style="font-size:11px;color:var(--gold);font-family:'SF Mono',Menlo,Consolas,monospace;" title="영상 고유 코드">${v.code}</span>` : ''}
           ${v.date ? `<span style="font-size:11px;color:var(--muted);">${v.date}</span>` : ''}
         </div>
       </div>
