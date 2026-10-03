@@ -630,6 +630,7 @@ body.ck-lock { overflow:hidden; }
     <button class="admin-tab" onclick="switchTab('exammaterials',this);initExamMaterialsTab()">📝 중간고사 자료</button>
     <button class="admin-tab" onclick="switchTab('consult',this);initConsultTab()">📥 상담 신청</button>
     <button class="admin-tab" onclick="switchTab('notice',this);initNoticeTab()">📢 공지사항</button>
+    <button class="admin-tab" onclick="switchTab('schedule',this);initScheduleTab()">📅 학원 일정</button>
     <button class="admin-tab" onclick="switchTab('homepopup',this);initHomePopupTab()">🪟 홈페이지 팝업</button>
   </div>
 
@@ -2104,6 +2105,65 @@ body.ck-lock { overflow:hidden; }
   </div>
 
   <!-- 강의 목록 -->
+  <!-- ══════════ 📅 학원 일정 ══════════ -->
+  <div class="tab-panel" id="tab-schedule">
+    <div class="card">
+      <h3>📅 학원 일정 등록</h3>
+      <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px;">
+        여기 등록한 일정은 선생님 페이지의 <b style="color:var(--gold);">달력</b>과 로그인 시 뜨는 <b style="color:var(--gold);">오늘 할 일 팝업</b>에 바로 표시됩니다.
+        특정 선생님에게 업무를 맡길 때는 종류를 <b style="color:var(--off-white);">할 일</b>로, 대상을 <b style="color:var(--off-white);">선생님 지정</b>으로 선택하세요.
+        종류를 <b style="color:#ff7a7a;">휴무</b>로 등록한 토요일은 토요클리닉 보고 알림이 뜨지 않아요.
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>제목</label><input type="text" id="sc-title" placeholder="예: 2학기 기말 대비 강사 회의"></div>
+        <div class="form-group"><label>종류</label>
+          <select id="sc-type">
+            <option value="회의">회의</option>
+            <option value="할 일">할 일</option>
+            <option value="설명회">설명회</option>
+            <option value="시험기간">시험기간</option>
+            <option value="행사">행사</option>
+            <option value="휴무">휴무 (휴강·학원 쉬는 날)</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>날짜 (시작)</label><input type="date" id="sc-start" style="color-scheme:dark;"></div>
+        <div class="form-group"><label>종료일 (하루면 비워두기)</label><input type="date" id="sc-end" style="color-scheme:dark;"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>시간 (선택)</label><input type="text" id="sc-time" placeholder="예: 오후 2시"></div>
+        <div class="form-group"><label>대상</label>
+          <select id="sc-target" onchange="onSchedTargetChange()">
+            <option value="all">전체 선생님</option>
+            <option value="평촌관">평촌관 선생님</option>
+            <option value="산본관">산본관 선생님</option>
+            <option value="teachers">선생님 지정</option>
+          </select>
+        </div>
+      </div>
+      <div id="sc-teachers-wrap" style="display:none;margin-bottom:12px;">
+        <div style="font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">대상 선생님 선택</div>
+        <div id="sc-teachers" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:14px;"><label>메모 (선택)</label><input type="text" id="sc-memo" placeholder="장소, 준비물 등"></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary" id="sc-saveBtn" onclick="saveScheduleEvent()">일정 등록</button>
+        <button class="btn btn-secondary" id="sc-cancelBtn" onclick="resetScheduleForm()" style="display:none;">취소</button>
+      </div>
+      <div class="msg" id="sc-msg"></div>
+    </div>
+    <div class="card">
+      <h3 style="display:flex;align-items:center;gap:10px;">📋 등록된 일정
+        <label style="margin-left:auto;font-size:12px;color:var(--muted);font-weight:400;display:flex;align-items:center;gap:5px;cursor:pointer;">
+          <input type="checkbox" id="sc-showPast" onchange="renderScheduleList()" style="accent-color:var(--gold);"> 지난 일정 포함
+        </label>
+      </h3>
+      <div id="sc-list"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
+    </div>
+  </div>
+
   <!-- ══════════ 🔢 영상 고유 코드 조회 ══════════ -->
   <div class="tab-panel" id="tab-videocode">
     <div class="card">
@@ -10108,6 +10168,167 @@ window.reissueVideoCode = async function (id) {
   } catch (e) { alert('저장 실패: ' + e.message); }
 };
 
+
+// ══════════════════════════════════════════════════════════════════════
+// 📅 학원 일정 (선생님 페이지 달력·오늘 할 일 팝업에 표시)
+//   컬렉션: scheduleEvents
+//   { title, type, start, end, time, memo, target:'all'|'branch'|'teachers', branch, teacherUids[], teacherNames[] }
+// ══════════════════════════════════════════════════════════════════════
+let schedEvents = [];
+let schedTeachers = [];
+let schedEditingId = null;
+const SCHED_TYPE_COLOR = { '휴무':'#ff7a7a', '회의':'#7ab8ff', '설명회':'#c58bff', '시험기간':'#ffb35c', '행사':'#5fd98a', '할 일':'#f0c040', '기타':'#b9b2cf' };
+
+function schedYmd(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function schedEsc(t) { return String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function schedFmt(s) {
+  const [y, m, d] = s.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  return `${m}/${d}(${'일월화수목금토'[dt.getDay()]})`;
+}
+
+window.initScheduleTab = async function () {
+  const startEl = document.getElementById('sc-start');
+  if (startEl && !startEl.value) startEl.value = schedYmd(new Date());
+  try {
+    const tSnap = await getDocs(collection(db, 'teachers'));
+    schedTeachers = [];
+    tSnap.forEach(d => schedTeachers.push({ uid: d.id, ...d.data() }));
+    schedTeachers.sort((a, b) => (a.branch || '').localeCompare(b.branch || '') || (a.name || '').localeCompare(b.name || '', 'ko'));
+  } catch (e) { schedTeachers = []; }
+  schedRenderTeacherChecks([]);
+  onSchedTargetChange();
+  await loadScheduleEvents();
+};
+
+function schedRenderTeacherChecks(checked) {
+  const el = document.getElementById('sc-teachers');
+  if (!el) return;
+  const set = new Set(checked || []);
+  if (!schedTeachers.length) { el.innerHTML = '<span style="color:var(--muted);font-size:12px;">등록된 선생님이 없습니다.</span>'; return; }
+  el.innerHTML = schedTeachers.map(t => `
+    <label style="display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:4px 10px;border:1px solid var(--border-soft);border-radius:14px;cursor:pointer;">
+      <input type="checkbox" class="sc-teacher" value="${schedEsc(t.uid)}" data-name="${schedEsc(t.name)}" ${set.has(t.uid) ? 'checked' : ''} style="accent-color:var(--gold);">
+      ${schedEsc(t.name)}${t.role === 'ta' ? ' (조교)' : ''} <span style="color:var(--muted);">${schedEsc(t.branch || '')}</span>
+    </label>`).join('');
+}
+
+window.onSchedTargetChange = function () {
+  const v = document.getElementById('sc-target')?.value || 'all';
+  document.getElementById('sc-teachers-wrap').style.display = v === 'teachers' ? 'block' : 'none';
+};
+
+async function loadScheduleEvents() {
+  try {
+    const snap = await getDocs(collection(db, 'scheduleEvents'));
+    schedEvents = [];
+    snap.forEach(d => schedEvents.push({ id: d.id, ...d.data() }));
+  } catch (e) {
+    document.getElementById('sc-list').innerHTML = `<div style="color:#ff9090;font-size:13px;">불러오기 실패: ${schedEsc(e.message)}<br>Firestore 규칙에 scheduleEvents 컬렉션이 추가됐는지 확인해주세요.</div>`;
+    return;
+  }
+  renderScheduleList();
+}
+
+window.renderScheduleList = function () {
+  const el = document.getElementById('sc-list');
+  if (!el) return;
+  const showPast = document.getElementById('sc-showPast')?.checked;
+  const today = schedYmd(new Date());
+  let list = schedEvents.filter(e => showPast || (e.end || e.start) >= today);
+  list.sort((a, b) => showPast ? b.start.localeCompare(a.start) : a.start.localeCompare(b.start));
+  if (!list.length) { el.innerHTML = `<div style="color:var(--muted);font-size:13px;">${showPast ? '등록된 일정이 없습니다.' : '예정된 일정이 없습니다.'}</div>`; return; }
+  el.innerHTML = list.map(e => {
+    const target = e.target === 'branch' ? `${e.branch}` : e.target === 'teachers' ? (e.teacherNames || []).join(', ') : '전체 선생님';
+    const past = (e.end || e.start) < today;
+    return `
+      <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border:1px solid var(--border-soft);border-radius:8px;margin-bottom:6px;${past ? 'opacity:0.5;' : ''}">
+        <span style="width:4px;align-self:stretch;border-radius:2px;background:${SCHED_TYPE_COLOR[e.type] || '#b9b2cf'};flex-shrink:0;"></span>
+        <div style="min-width:110px;font-size:13px;font-weight:600;white-space:nowrap;">${schedFmt(e.start)}${e.end && e.end !== e.start ? ` ~ ${schedFmt(e.end)}` : ''}${e.time ? `<div style="font-size:11px;color:var(--muted);font-weight:400;">${schedEsc(e.time)}</div>` : ''}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:600;">${schedEsc(e.title)} <span style="font-size:11px;color:${SCHED_TYPE_COLOR[e.type] || '#b9b2cf'};margin-left:4px;">${schedEsc(e.type || '기타')}</span></div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;">대상: ${schedEsc(target)}${e.memo ? ` · ${schedEsc(e.memo)}` : ''}</div>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="editScheduleEvent('${e.id}')">수정</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteScheduleEvent('${e.id}')">삭제</button>
+      </div>`;
+  }).join('');
+};
+
+window.saveScheduleEvent = async function () {
+  const title  = document.getElementById('sc-title').value.trim();
+  const type   = document.getElementById('sc-type').value;
+  const start  = document.getElementById('sc-start').value;
+  let end      = document.getElementById('sc-end').value;
+  const time   = document.getElementById('sc-time').value.trim();
+  const memo   = document.getElementById('sc-memo').value.trim();
+  const tSel   = document.getElementById('sc-target').value;
+  if (!title) { showMsg('sc-msg', '제목을 입력해주세요.', 'error'); return; }
+  if (!start) { showMsg('sc-msg', '날짜를 선택해주세요.', 'error'); return; }
+  if (end && end < start) { showMsg('sc-msg', '종료일이 시작일보다 빠릅니다.', 'error'); return; }
+  if (!end) end = start;
+
+  const data = { title, type, start, end, time, memo, target: 'all', branch: '', teacherUids: [], teacherNames: [] };
+  if (tSel === '평촌관' || tSel === '산본관') { data.target = 'branch'; data.branch = tSel; }
+  if (tSel === 'teachers') {
+    const checks = [...document.querySelectorAll('.sc-teacher:checked')];
+    if (!checks.length) { showMsg('sc-msg', '대상 선생님을 선택해주세요.', 'error'); return; }
+    data.target = 'teachers';
+    data.teacherUids = checks.map(c => c.value);
+    data.teacherNames = checks.map(c => c.dataset.name);
+  }
+  try {
+    if (schedEditingId) {
+      await updateDoc(doc(db, 'scheduleEvents', schedEditingId), { ...data, updatedAt: new Date().toISOString() });
+      showMsg('sc-msg', '✅ 일정이 수정되었습니다.', 'success');
+    } else {
+      await addDoc(collection(db, 'scheduleEvents'), { ...data, createdAt: new Date().toISOString() });
+      showMsg('sc-msg', '✅ 일정이 등록되었습니다. 선생님 페이지에 바로 반영돼요.', 'success');
+    }
+    resetScheduleForm();
+    await loadScheduleEvents();
+  } catch (e) { showMsg('sc-msg', '저장 실패: ' + e.message, 'error'); }
+};
+
+window.editScheduleEvent = function (id) {
+  const e = schedEvents.find(x => x.id === id);
+  if (!e) return;
+  schedEditingId = id;
+  document.getElementById('sc-title').value = e.title || '';
+  document.getElementById('sc-type').value = e.type || '기타';
+  document.getElementById('sc-start').value = e.start || '';
+  document.getElementById('sc-end').value = e.end && e.end !== e.start ? e.end : '';
+  document.getElementById('sc-time').value = e.time || '';
+  document.getElementById('sc-memo').value = e.memo || '';
+  document.getElementById('sc-target').value = e.target === 'branch' ? e.branch : (e.target || 'all');
+  schedRenderTeacherChecks(e.teacherUids || []);
+  onSchedTargetChange();
+  document.getElementById('sc-saveBtn').textContent = '수정 저장';
+  document.getElementById('sc-cancelBtn').style.display = '';
+  document.getElementById('tab-schedule').scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+window.resetScheduleForm = function () {
+  schedEditingId = null;
+  ['sc-title', 'sc-end', 'sc-time', 'sc-memo'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('sc-type').value = '회의';
+  document.getElementById('sc-target').value = 'all';
+  document.getElementById('sc-start').value = schedYmd(new Date());
+  schedRenderTeacherChecks([]);
+  onSchedTargetChange();
+  document.getElementById('sc-saveBtn').textContent = '일정 등록';
+  document.getElementById('sc-cancelBtn').style.display = 'none';
+};
+
+window.deleteScheduleEvent = async function (id) {
+  const e = schedEvents.find(x => x.id === id);
+  if (!confirm(`"${e ? e.title : ''}" 일정을 삭제할까요?`)) return;
+  try {
+    await deleteDoc(doc(db, 'scheduleEvents', id));
+    if (schedEditingId === id) resetScheduleForm();
+    await loadScheduleEvents();
+  } catch (err) { alert('삭제 실패: ' + err.message); }
+};
 </script>
 <script>
 /* ══════════════════════════════════════════════════════════════
@@ -10181,6 +10402,8 @@ window.reissueVideoCode = async function (id) {
       keywords:['기록','조회','기록조회','히스토리','이력','지난기록'] },
     { id:'consult',      label:'상담 신청',      icon:'', category:'ops',     tabId:'consult',      init:'initConsultTab',
       keywords:['상담','상담신청','문의','입학','신규상담','접수','상담지','태블릿','방문상담','상담자료','qr','QR','큐알'] },
+    { id:'schedule',     label:'학원 일정',      icon:'', category:'ops',     tabId:'schedule',     init:'initScheduleTab',
+      keywords:['일정','달력','캘린더','스케줄','회의','휴무','휴강','설명회','시험기간','할일','할 일','선생님 일정','공휴일'] },
     { id:'notice',       label:'공지사항',       icon:'', category:'ops',     tabId:'notice',       init:'initNoticeTab',
       keywords:['공지','공지사항','안내','알림','학부모'] },
     { id:'homepopup',    label:'홈페이지 팝업',  icon:'', category:'content', tabId:'homepopup',    init:'initHomePopupTab',

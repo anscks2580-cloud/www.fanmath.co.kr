@@ -26,6 +26,48 @@
   transform:scaleX(0); transition:transform 0.2s;
 }
 .teacher-tab.active { color:var(--gold); }
+/* ── 📅 일정 / 오늘 할 일 ── */
+.cal-layout { display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:20px; align-items:start; }
+@media (max-width:900px){ .cal-layout { grid-template-columns:1fr; } }
+.cal-head { display:flex; align-items:center; gap:8px; margin-bottom:14px; }
+.cal-head h4 { font-size:18px; font-weight:700; flex:1; color:var(--off-white); margin:0; }
+.cal-nav { padding:6px 12px; border-radius:8px; border:1px solid var(--border-soft); background:transparent; color:var(--off-white); cursor:pointer; font-family:inherit; font-size:13px; }
+.cal-nav:hover { border-color:var(--gold); color:var(--gold); }
+.cal-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px; }
+.cal-dow { text-align:center; font-size:11px; color:var(--muted); padding:4px 0; font-weight:600; }
+.cal-dow.sun { color:#ff7a7a; } .cal-dow.sat { color:#7ab8ff; }
+.cal-cell { min-height:92px; padding:6px; border-radius:8px; background:rgba(255,255,255,0.025); border:1px solid transparent; cursor:pointer; overflow:hidden; transition:border-color 0.15s; }
+.cal-cell:hover { border-color:rgba(240,192,64,0.35); }
+.cal-cell.other { opacity:0.35; }
+.cal-cell.sel { border-color:var(--gold); background:rgba(240,192,64,0.06); }
+.cal-num { font-size:13px; font-weight:700; margin-bottom:3px; }
+.cal-cell.sun .cal-num { color:#ff7a7a; } .cal-cell.sat .cal-num { color:#7ab8ff; }
+.cal-cell.today .cal-num { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; background:var(--gold); color:var(--bg) !important; }
+.cal-hol { font-size:10px; color:#ff7a7a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px; }
+.cal-chip { font-size:10px; padding:1px 4px; border-left:3px solid; background:rgba(255,255,255,0.05); border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px; }
+.cal-more { font-size:10px; color:var(--muted); }
+.cal-deadline { font-size:9.5px; color:var(--muted); white-space:nowrap; }
+.cal-todo-dot { font-size:10px; color:var(--gold); }
+.cal-sec { font-size:11px; color:var(--muted); font-weight:600; letter-spacing:1px; margin:14px 0 6px; }
+.cal-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; background:rgba(255,255,255,0.03); border:1px solid var(--border-soft); margin-bottom:6px; cursor:pointer; }
+.cal-item:hover { border-color:rgba(240,192,64,0.35); }
+.cal-item-title { font-size:13.5px; font-weight:600; color:var(--off-white); }
+.cal-item-sub { font-size:11.5px; color:var(--muted); margin-top:2px; }
+.cal-dot { width:8px; height:8px; border-radius:50%; background:var(--gold); flex-shrink:0; }
+.cal-overdue { border-color:rgba(255,100,100,0.45); background:rgba(255,80,80,0.07); }
+.cal-overdue .cal-dot { background:#ff6b6b; } .cal-overdue .cal-item-title { color:#ff9a9a; }
+.cal-due .cal-dot { background:#ffb35c; }
+.cal-item.cal-due { border-color:rgba(255,179,92,0.45); background:rgba(255,179,92,0.07); }
+.cal-item.cal-due .cal-item-title { color:#ffc883; }
+.cal-soon .cal-dot { background:var(--gold); }
+.cal-go { font-size:11px; color:var(--gold); flex-shrink:0; }
+.cal-type { font-size:10px; font-weight:600; margin-left:4px; }
+.cal-holiday { padding:8px 12px; border-radius:8px; background:rgba(255,100,100,0.08); border:1px solid rgba(255,100,100,0.3); color:#ff9a9a; font-size:13px; font-weight:600; margin-bottom:6px; }
+.cal-empty { font-size:13px; color:var(--muted); padding:8px 2px; }
+.cal-x { background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; padding:2px 6px; }
+.cal-x:hover { color:#ff9090; }
+.cal-badge { display:none; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:#ff6b6b; color:#fff; font-size:11px; font-weight:700; margin-left:4px; }
+@media (max-width:600px){ .cal-cell { min-height:62px; padding:4px; } .cal-chip, .cal-deadline, .cal-hol { display:none; } }
 .teacher-tab.active::after { transform:scaleX(1); }
 .tab-panel { display:none; }
 .tab-panel.active { display:block; }
@@ -255,6 +297,7 @@ select option:disabled { color:#9B94B3; }
       <p>주간성취도 · 월말보고서 · 누적테스트 입력</p>
     </div>
     <div style="display:flex; gap:10px; align-items:center;">
+      <button class="btn btn-outline btn-sm" onclick="openTodayPopup()" style="display:inline-flex;align-items:center;">📋 오늘 할 일<span class="cal-badge" id="calTodayBadge"></span></button>
       <span class="badge-name" id="teacherBadge">선생님</span>
       <a href="index.html" class="btn btn-outline btn-sm" style="text-decoration:none;">🏠 홈</a>
       <button class="btn btn-outline btn-sm" onclick="logoutTeacher()">로그아웃</button>
@@ -263,6 +306,7 @@ select option:disabled { color:#9B94B3; }
 
   <!-- 탭 -->
   <div class="teacher-tabs">
+    <button class="teacher-tab" onclick="switchTab('calendar',this);refreshTeacherCalendar()">📅 일정</button>
     <button class="teacher-tab active" onclick="switchTab('weekly',this)">주간성취도</button>
     <button class="teacher-tab" onclick="switchTab('monthly',this)">월말보고서</button>
     <button class="teacher-tab" onclick="switchTab('tests',this)">누적테스트</button>
@@ -271,6 +315,46 @@ select option:disabled { color:#9B94B3; }
     <button class="teacher-tab" onclick="switchTab('videos',this);loadTeacherVideos()">강의 목록</button>
     <button class="teacher-tab" onclick="switchTab('watchstatus',this);initTeacherWatchStatus()">학생 시청현황</button>
     <button class="teacher-tab" onclick="switchTab('manual',this)">전임강사 매뉴얼</button>
+  </div>
+
+  <!-- ══ 📅 일정 ══ -->
+  <div class="tab-panel" id="tab-calendar">
+    <div class="cal-layout">
+      <div class="card" style="margin-bottom:0;">
+        <div class="cal-head">
+          <h4 id="calMonthTitle"></h4>
+          <button class="cal-nav" onclick="calMoveMonth(-1)">◀</button>
+          <button class="cal-nav" onclick="calMoveMonth(0)">오늘</button>
+          <button class="cal-nav" onclick="calMoveMonth(1)">▶</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:11px;color:var(--muted);">
+          <span><b style="color:#ff7a7a;">●</b> 공휴일·휴무</span>
+          <span><b style="color:#7ab8ff;">●</b> 회의</span>
+          <span><b style="color:#c58bff;">●</b> 설명회</span>
+          <span><b style="color:#ffb35c;">●</b> 시험기간</span>
+          <span><b style="color:#5fd98a;">●</b> 행사</span>
+          <span><b style="color:var(--gold);">●</b> 할 일</span>
+        </div>
+      </div>
+      <div>
+        <div class="card" id="calTodayCard"><div class="cal-empty">불러오는 중...</div></div>
+        <div class="card" id="calDayDetail"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 오늘 할 일 팝업 ══ -->
+  <div id="calTodayModal" onclick="if(event.target===this)closeTodayPopup()"
+    style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9998;align-items:center;justify-content:center;padding:16px;">
+    <div style="width:100%;max-width:460px;max-height:86vh;overflow-y:auto;background:var(--bg-card);border:1px solid rgba(240,192,64,0.35);border-radius:16px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+      <div id="calPopupBody"></div>
+      <div style="display:flex;gap:8px;margin-top:18px;">
+        <button class="btn btn-outline btn-sm" style="flex:1;" onclick="closeTodayPopup(true)">오늘 하루 보지 않기</button>
+        <button class="btn btn-outline btn-sm" style="flex:1;" onclick="calGoTab('calendar','refreshTeacherCalendar')">📅 달력 보기</button>
+        <button class="btn btn-gold btn-sm" style="flex:1;" onclick="closeTodayPopup()">닫기</button>
+      </div>
+    </div>
   </div>
 
   <!-- ══ 탭 1: 주간성취도 설문 ══ -->
@@ -922,6 +1006,8 @@ function showPortal() {
   // 학년 전체 기본 선택
   const gradeAllBtn = document.getElementById('grade-all');
   if (gradeAllBtn) gradeAllBtn.classList.add('selected');
+  // 📅 일정 · 오늘 할 일 팝업
+  initTeacherCalendar();
 }
 
 // ── 로그인 ──
@@ -942,6 +1028,7 @@ window.loginTeacher = async function() {
   }
 };
 window.logoutTeacher = async function() {
+  try { closeTodayPopup(); } catch (e) {}
   await signOut(auth);
   currentTeacher = null; studentsCache = [];
 };
@@ -2366,6 +2453,405 @@ window.selectRating = function(btn, field) {
     _origSelectRating(btn, field);
   }
 };
+
+// ══════════════════════════════════════════════════════════════════════
+// 📅 일정 · 오늘 할 일 · 공휴일 · 로그인 팝업
+//   - 자동 할 일: 주간성취도(금요일 마감) / 반별 진도(금요일 마감) /
+//                 월말보고서(다음 달 3일 마감) / 토요클리닉 보고
+//   - 학원 일정: admin.html [학원 일정] 메뉴에서 등록 (scheduleEvents)
+//   - 내 할 일: 선생님 개인 메모 (teacherTodos, 본인만)
+//   - 공휴일: 아래 KR_HOLIDAYS (매년 말 다음 해 목록 한 번 추가)
+// ══════════════════════════════════════════════════════════════════════
+const KR_HOLIDAYS = {
+  // 2026
+  '2026-01-01':'신정', '2026-02-16':'설날 연휴', '2026-02-17':'설날', '2026-02-18':'설날 연휴',
+  '2026-03-01':'삼일절', '2026-03-02':'대체공휴일(삼일절)', '2026-05-01':'노동절', '2026-05-05':'어린이날',
+  '2026-05-24':'부처님오신날', '2026-05-25':'대체공휴일(부처님오신날)', '2026-06-03':'지방선거일',
+  '2026-06-06':'현충일', '2026-08-15':'광복절', '2026-08-17':'대체공휴일(광복절)',
+  '2026-09-24':'추석 연휴', '2026-09-25':'추석', '2026-09-26':'추석 연휴',
+  '2026-10-03':'개천절', '2026-10-05':'대체공휴일(개천절)', '2026-10-09':'한글날', '2026-12-25':'크리스마스',
+  // 2027
+  '2027-01-01':'신정', '2027-02-06':'설날 연휴', '2027-02-07':'설날', '2027-02-08':'설날 연휴', '2027-02-09':'대체공휴일(설날)',
+  '2027-03-01':'삼일절', '2027-05-01':'노동절', '2027-05-03':'대체공휴일(노동절)', '2027-05-05':'어린이날',
+  '2027-05-13':'부처님오신날', '2027-06-06':'현충일', '2027-07-17':'제헌절', '2027-07-19':'대체공휴일(제헌절)',
+  '2027-08-15':'광복절', '2027-08-16':'대체공휴일(광복절)',
+  '2027-09-14':'추석 연휴', '2027-09-15':'추석', '2027-09-16':'추석 연휴',
+  '2027-10-03':'개천절', '2027-10-04':'대체공휴일(개천절)', '2027-10-09':'한글날', '2027-10-11':'대체공휴일(한글날)',
+  '2027-12-25':'크리스마스', '2027-12-27':'대체공휴일(크리스마스)',
+};
+
+const CAL_TYPE_COLOR = {
+  '휴무':'#ff7a7a', '회의':'#7ab8ff', '설명회':'#c58bff', '시험기간':'#ffb35c', '행사':'#5fd98a', '할 일':'#f0c040', '기타':'#b9b2cf',
+};
+const CAL_DOW = ['일','월','화','수','목','금','토'];
+
+let calEvents = [];      // 나에게 해당하는 학원 일정
+let calTodos = [];       // 내 할 일
+let calAutoTodos = [];   // 자동 할 일 (오늘 기준)
+let calViewMonth = null; // Date (해당 월 1일)
+let calSelected = null;  // 'YYYY-MM-DD'
+let calLoaded = false;
+
+function calYmd(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function calParse(s) { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); }
+function calEsc(t) { return String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function calMD(d) { return `${d.getMonth()+1}/${d.getDate()}(${CAL_DOW[d.getDay()]})`; }
+function calTodayStr() { return calYmd(new Date()); }
+
+function calEventsOn(dateStr) {
+  return calEvents.filter(e => e.start <= dateStr && (e.end || e.start) >= dateStr);
+}
+function calIsOff(dateStr) {
+  return !!KR_HOLIDAYS[dateStr] || calEventsOn(dateStr).some(e => e.type === '휴무');
+}
+
+// ── 데이터 로드 ──
+async function calLoadEvents() {
+  try {
+    const snap = await getDocs(collection(db, 'scheduleEvents'));
+    const t = currentTeacher;
+    calEvents = [];
+    snap.forEach(d => {
+      const e = { id: d.id, ...d.data() };
+      const target = e.target || 'all';
+      const mine = target === 'all'
+        || (target === 'branch' && e.branch && e.branch === t.branch)
+        || (target === 'teachers' && (e.teacherUids || []).includes(t.uid));
+      if (mine && e.start) calEvents.push(e);
+    });
+  } catch (e) { console.warn('[일정] 학원 일정 불러오기 실패:', e.message); calEvents = []; }
+}
+
+async function calLoadTodos() {
+  try {
+    const snap = await getDocs(query(collection(db, 'teacherTodos'), where('uid', '==', currentTeacher.uid)));
+    calTodos = [];
+    snap.forEach(d => calTodos.push({ id: d.id, ...d.data() }));
+  } catch (e) { console.warn('[일정] 내 할 일 불러오기 실패:', e.message); calTodos = []; }
+}
+
+async function calMyDocs(col) {
+  const snap = await getDocs(query(collection(db, col), where('teacherUid', '==', currentTeacher.uid), orderBy('submittedAt', 'desc')));
+  const rows = [];
+  snap.forEach(d => rows.push(d.data()));
+  return rows;
+}
+
+// ── 자동 할 일 계산 ──
+async function calBuildAutoTodos() {
+  const list = [];
+  const now = new Date(); now.setHours(0,0,0,0);
+  const dow = now.getDay();
+  const todayStr = calYmd(now);
+
+  // 이번 주 금요일 (월~일 기준)
+  const monday = new Date(now); monday.setDate(now.getDate() - (dow === 0 ? 6 : dow - 1));
+  const friday = new Date(monday); friday.setDate(monday.getDate() + 4);
+  const afterFri = now > friday;
+  const isFri = calYmd(now) === calYmd(friday);
+  const dueLabel = afterFri ? `마감 지남 (${calMD(friday)})` : isFri ? '오늘 마감' : `${calMD(friday)}까지`;
+  const dueLevel = afterFri ? 'overdue' : isFri ? 'due' : 'soon';
+  const lastWeekKey = getWeekKey(new Date(), 1);
+  const lastWeekLabel = getWeekLabel(new Date(), 1).replace(/^\d+년\s/, '');
+
+  // 담당 학생
+  let my = [];
+  try {
+    const sSnap = await getDocs(query(collection(db, 'students'), where('teacherUid', '==', currentTeacher.uid)));
+    sSnap.forEach(d => my.push({ id: d.id, ...d.data() }));
+  } catch (e) { my = (typeof myStudents !== 'undefined' ? myStudents : []); }
+
+  // ① 주간성취도 (지난주분, 금요일까지)
+  try {
+    if (my.length) {
+      const rows = await calMyDocs('weeklyReports');
+      const done = new Set(rows.filter(r => r.weekKey === lastWeekKey).map(r => r.studentId));
+      const left = my.filter(s => !done.has(s.id));
+      if (left.length) {
+        list.push({
+          level: dueLevel, tab: 'weekly',
+          title: `주간성취도 — ${left.length}명 남음`,
+          detail: `${lastWeekLabel}분 · ${dueLabel} · ${left.slice(0, 6).map(s => s.name).join(', ')}${left.length > 6 ? ` 외 ${left.length - 6}명` : ''}`,
+        });
+      }
+    }
+  } catch (e) { console.warn('[일정] 주간성취도 확인 실패:', e.message); }
+
+  // ② 반별 진도 (지난주분, 금요일까지)
+  try {
+    const rows = await calMyDocs('progressReports');
+    if (!rows.some(r => r.weekKey === lastWeekKey)) {
+      list.push({ level: dueLevel, tab: 'progress', title: '반별 진도 입력', detail: `${lastWeekLabel}분 · ${dueLabel}` });
+    }
+  } catch (e) { console.warn('[일정] 반별 진도 확인 실패:', e.message); }
+
+  // ③ 월말보고서 (다음 달 3일 마감)
+  try {
+    const rows = await calMyDocs('monthlyReports');
+    const has = m => rows.some(r => r.month === m);
+    const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const prevKey = `${prev.getFullYear()}-${String(prev.getMonth()+1).padStart(2,'0')}`;
+    const curKey = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const d = now.getDate();
+    if (!has(prevKey)) {
+      list.push({
+        level: d > 3 ? 'overdue' : d === 3 ? 'due' : 'soon', tab: 'monthly',
+        title: `${prev.getMonth()+1}월 월말보고서 제출`,
+        detail: d > 3 ? `마감 지남 (${now.getMonth()+1}/3)` : d === 3 ? '오늘 마감' : `${now.getMonth()+1}/3까지`,
+      });
+    }
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    if (d >= lastDay - 5 && !has(curKey)) {
+      const nm = new Date(now.getFullYear(), now.getMonth() + 1, 3);
+      list.push({ level: 'soon', tab: 'monthly', title: `${now.getMonth()+1}월 월말보고서 준비`, detail: `${calMD(nm)}까지` });
+    }
+  } catch (e) { console.warn('[일정] 월말보고서 확인 실패:', e.message); }
+
+  // ④ 토요클리닉 보고 (토요일 당일 / 다음 주 수요일까지 미제출 알림)
+  try {
+    const sat = new Date(now); sat.setDate(now.getDate() - ((dow + 1) % 7)); // 오늘 또는 직전 토요일
+    const satStr = calYmd(sat);
+    const daysSince = Math.round((now - sat) / 86400000);
+    if (daysSince <= 4 && !calIsOff(satStr)) {
+      const rows = await calMyDocs('satClinicReports');
+      if (!rows.some(r => r.date === satStr)) {
+        list.push({
+          level: daysSince === 0 ? 'due' : 'overdue', tab: 'clinic', tabInit: 'initClinicTab',
+          title: '토요클리닉 보고',
+          detail: daysSince === 0 ? '오늘 클리닉 내용 제출 (없었으면 "없음" 제출)' : `${calMD(sat)} 클리닉 미제출`,
+        });
+      }
+    }
+  } catch (e) { console.warn('[일정] 토요클리닉 확인 실패:', e.message); }
+
+  const rank = { overdue: 0, due: 1, soon: 2 };
+  list.sort((a, b) => rank[a.level] - rank[b.level]);
+  calAutoTodos = list;
+}
+
+// ── 초기화 (로그인 직후 호출) ──
+window.initTeacherCalendar = async function () {
+  calViewMonth = new Date(); calViewMonth.setDate(1);
+  calSelected = calTodayStr();
+  await refreshTeacherCalendar(true);
+};
+
+window.refreshTeacherCalendar = async function (withPopup = false) {
+  if (!currentTeacher) return;
+  await Promise.all([calLoadEvents(), calLoadTodos()]);
+  await calBuildAutoTodos();
+  calLoaded = true;
+  calRenderAll();
+  if (withPopup) {
+    const key = 'swc_today_popup_' + currentTeacher.uid;
+    let hidden = '';
+    try { hidden = localStorage.getItem(key) || ''; } catch (e) {}
+    if (hidden !== calTodayStr()) openTodayPopup(false);
+  }
+};
+
+function calRenderAll() {
+  calRenderToday();
+  calRenderMonth();
+  calRenderDay();
+  const badge = document.getElementById('calTodayBadge');
+  if (badge) {
+    const n = calAutoTodos.filter(t => t.level !== 'soon').length + calTodos.filter(t => t.date === calTodayStr() && !t.done).length;
+    badge.textContent = n ? n : '';
+    badge.style.display = n ? 'inline-flex' : 'none';
+  }
+}
+
+// ── 공통 렌더 조각 ──
+function calAutoHtml(items) {
+  if (!items.length) return `<div class="cal-empty">✅ 밀린 업무가 없어요.</div>`;
+  return items.map(t => `
+    <div class="cal-item cal-${t.level}" onclick="calGoTab('${t.tab}','${t.tabInit || ''}')">
+      <span class="cal-dot"></span>
+      <div style="flex:1;min-width:0;">
+        <div class="cal-item-title">${calEsc(t.title)}</div>
+        <div class="cal-item-sub">${calEsc(t.detail)}</div>
+      </div>
+      <span class="cal-go">바로가기 ›</span>
+    </div>`).join('');
+}
+function calEventsHtml(dateStr) {
+  const evs = calEventsOn(dateStr);
+  if (!evs.length) return '';
+  return evs.map(e => `
+    <div class="cal-item" style="cursor:default;">
+      <span class="cal-dot" style="background:${CAL_TYPE_COLOR[e.type] || CAL_TYPE_COLOR['기타']};"></span>
+      <div style="flex:1;min-width:0;">
+        <div class="cal-item-title">${calEsc(e.title)} <span class="cal-type" style="color:${CAL_TYPE_COLOR[e.type] || '#b9b2cf'};">${calEsc(e.type || '기타')}</span></div>
+        <div class="cal-item-sub">${e.end && e.end !== e.start ? `${calMD(calParse(e.start))} ~ ${calMD(calParse(e.end))}` : ''}${e.time ? ` ${calEsc(e.time)}` : ''}${e.memo ? ` · ${calEsc(e.memo)}` : ''}</div>
+      </div>
+    </div>`).join('');
+}
+function calTodosHtml(dateStr) {
+  const items = calTodos.filter(t => t.date === dateStr).sort((a, b) => (a.done - b.done) || String(a.createdAt || '').localeCompare(String(b.createdAt || '')));
+  if (!items.length) return '';
+  return items.map(t => `
+    <div class="cal-item" style="cursor:default;${t.done ? 'opacity:0.5;' : ''}">
+      <input type="checkbox" ${t.done ? 'checked' : ''} onchange="calToggleTodo('${t.id}',this.checked)" style="width:16px;height:16px;accent-color:var(--gold);flex-shrink:0;cursor:pointer;">
+      <div style="flex:1;min-width:0;" class="cal-item-title">${t.done ? `<s>${calEsc(t.text)}</s>` : calEsc(t.text)}</div>
+      <button class="cal-x" onclick="calDeleteTodo('${t.id}')" title="삭제">✕</button>
+    </div>`).join('');
+}
+function calHolidayHtml(dateStr) {
+  const h = KR_HOLIDAYS[dateStr];
+  return h ? `<div class="cal-holiday">🎌 ${calEsc(h)}</div>` : '';
+}
+
+// ── 오늘 카드 ──
+function calRenderToday() {
+  const el = document.getElementById('calTodayCard');
+  if (!el) return;
+  const today = calTodayStr();
+  const d = new Date();
+  el.innerHTML = `
+    <div class="card-title">📋 오늘 · ${d.getMonth()+1}월 ${d.getDate()}일 (${CAL_DOW[d.getDay()]})</div>
+    ${calHolidayHtml(today)}
+    <div class="cal-sec">해야 할 업무</div>
+    ${calAutoHtml(calAutoTodos)}
+    ${calEventsOn(today).length ? `<div class="cal-sec">학원 일정</div>${calEventsHtml(today)}` : ''}
+    ${calTodos.some(t => t.date === today) ? `<div class="cal-sec">내 할 일</div>${calTodosHtml(today)}` : ''}`;
+}
+
+// ── 월 달력 ──
+window.calMoveMonth = function (delta) {
+  if (delta === 0) { calViewMonth = new Date(); calViewMonth.setDate(1); calSelected = calTodayStr(); }
+  else calViewMonth = new Date(calViewMonth.getFullYear(), calViewMonth.getMonth() + delta, 1);
+  calRenderMonth(); calRenderDay();
+};
+window.calSelectDay = function (dateStr) { calSelected = dateStr; calRenderMonth(); calRenderDay(); };
+
+function calRenderMonth() {
+  const el = document.getElementById('calGrid');
+  const ttl = document.getElementById('calMonthTitle');
+  if (!el || !calViewMonth) return;
+  const y = calViewMonth.getFullYear(), m = calViewMonth.getMonth();
+  ttl.textContent = `${y}년 ${m+1}월`;
+  const first = new Date(y, m, 1);
+  const start = new Date(first); start.setDate(1 - first.getDay());
+  const today = calTodayStr();
+  let html = CAL_DOW.map((w, i) => `<div class="cal-dow ${i===0?'sun':i===6?'sat':''}">${w}</div>`).join('');
+  for (let i = 0; i < 42; i++) {
+    const d = new Date(start); d.setDate(start.getDate() + i);
+    if (i >= 35 && d.getMonth() !== m) break;
+    const ds = calYmd(d);
+    const hol = KR_HOLIDAYS[ds];
+    const evs = calEventsOn(ds);
+    const tds = calTodos.filter(t => t.date === ds && !t.done);
+    const dueChips = [];
+    if (d.getDay() === 5) dueChips.push('주간 마감');
+    if (d.getDate() === 3) dueChips.push('월말 마감');
+    const cls = ['cal-cell', d.getMonth() !== m ? 'other' : '', ds === today ? 'today' : '', ds === calSelected ? 'sel' : '',
+      (d.getDay() === 0 || hol) ? 'sun' : d.getDay() === 6 ? 'sat' : ''].filter(Boolean).join(' ');
+    html += `
+      <div class="${cls}" onclick="calSelectDay('${ds}')">
+        <div class="cal-num">${d.getDate()}</div>
+        ${hol ? `<div class="cal-hol">${calEsc(hol)}</div>` : ''}
+        ${evs.slice(0, 2).map(e => `<div class="cal-chip" style="border-left-color:${CAL_TYPE_COLOR[e.type] || '#b9b2cf'};">${calEsc(e.title)}</div>`).join('')}
+        ${evs.length > 2 ? `<div class="cal-more">+${evs.length - 2}</div>` : ''}
+        ${dueChips.map(c => `<div class="cal-deadline">${c}</div>`).join('')}
+        ${tds.length ? `<div class="cal-todo-dot">● ${tds.length}</div>` : ''}
+      </div>`;
+  }
+  el.innerHTML = html;
+}
+
+// ── 선택한 날짜 상세 ──
+function calRenderDay() {
+  const el = document.getElementById('calDayDetail');
+  if (!el || !calSelected) return;
+  const d = calParse(calSelected);
+  const isToday = calSelected === calTodayStr();
+  const body = calHolidayHtml(calSelected) + calEventsHtml(calSelected) + calTodosHtml(calSelected);
+  el.innerHTML = `
+    <div class="card-title" style="margin-bottom:12px;">🗓 ${d.getMonth()+1}월 ${d.getDate()}일 (${CAL_DOW[d.getDay()]})${isToday ? ' · 오늘' : ''}</div>
+    ${body || '<div class="cal-empty">등록된 일정이 없어요.</div>'}
+    <div style="display:flex;gap:8px;margin-top:12px;">
+      <input id="calTodoInput" type="text" placeholder="이 날짜에 내 할 일 추가 (Enter)"
+        onkeydown="if(event.key==='Enter'){event.preventDefault();calAddTodo();}"
+        style="flex:1;padding:9px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
+      <button class="btn btn-gold btn-sm" onclick="calAddTodo()">추가</button>
+    </div>`;
+}
+
+// ── 내 할 일 CRUD ──
+window.calAddTodo = async function () {
+  const input = document.getElementById('calTodoInput');
+  const text = (input?.value || '').trim();
+  if (!text) return;
+  try {
+    const data = { uid: currentTeacher.uid, teacherName: currentTeacher.name, date: calSelected, text, done: false, createdAt: new Date().toISOString() };
+    const ref = await addDoc(collection(db, 'teacherTodos'), data);
+    calTodos.push({ id: ref.id, ...data });
+    input.value = '';
+    calRenderAll();
+    if (document.getElementById('calTodayModal').style.display === 'flex') calRenderPopup();
+  } catch (e) { alert('저장 실패: ' + e.message); }
+};
+window.calToggleTodo = async function (id, done) {
+  const t = calTodos.find(x => x.id === id);
+  if (!t) return;
+  try {
+    await updateDoc(doc(db, 'teacherTodos', id), { done });
+    t.done = done;
+    calRenderAll();
+    if (document.getElementById('calTodayModal').style.display === 'flex') calRenderPopup();
+  } catch (e) { alert('저장 실패: ' + e.message); }
+};
+window.calDeleteTodo = async function (id) {
+  if (!confirm('이 할 일을 삭제할까요?')) return;
+  try {
+    await deleteDoc(doc(db, 'teacherTodos', id));
+    calTodos = calTodos.filter(x => x.id !== id);
+    calRenderAll();
+    if (document.getElementById('calTodayModal').style.display === 'flex') calRenderPopup();
+  } catch (e) { alert('삭제 실패: ' + e.message); }
+};
+
+// ── 탭 이동 ──
+window.calGoTab = function (tab, init) {
+  closeTodayPopup();
+  const btn = document.querySelector(`.teacher-tab[onclick*="'${tab}'"]`);
+  if (!btn) return;
+  switchTab(tab, btn);
+  if (init && typeof window[init] === 'function') window[init]();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// ── 오늘 할 일 팝업 ──
+function calRenderPopup() {
+  const today = calTodayStr();
+  const d = new Date();
+  const name = currentTeacher?.name || '';
+  document.getElementById('calPopupBody').innerHTML = `
+    <div style="font-size:13px;color:var(--muted);margin-bottom:4px;">${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${CAL_DOW[d.getDay()]})</div>
+    <div style="font-size:19px;font-weight:700;margin-bottom:14px;">${calEsc(name)} 선생님, 오늘 할 일이에요</div>
+    ${calHolidayHtml(today)}
+    <div class="cal-sec">해야 할 업무</div>
+    ${calAutoHtml(calAutoTodos)}
+    ${calEventsOn(today).length ? `<div class="cal-sec">학원 일정</div>${calEventsHtml(today)}` : ''}
+    ${calTodos.some(t => t.date === today) ? `<div class="cal-sec">내 할 일</div>${calTodosHtml(today)}` : ''}`;
+}
+window.openTodayPopup = async function (refresh = true) {
+  if (refresh && calLoaded) {
+    await Promise.all([calLoadEvents(), calLoadTodos()]);
+    await calBuildAutoTodos();
+    calRenderAll();
+  }
+  calRenderPopup();
+  document.getElementById('calTodayModal').style.display = 'flex';
+};
+window.closeTodayPopup = function (hideToday = false) {
+  document.getElementById('calTodayModal').style.display = 'none';
+  if (hideToday && currentTeacher) {
+    try { localStorage.setItem('swc_today_popup_' + currentTeacher.uid, calTodayStr()); } catch (e) {}
+  }
+};
+
 </script>
 
 <!-- ══════════ 전임강사 매뉴얼: 화면·검색·목차 (Firebase/로그인과 무관한 독립 스크립트) ══════════ -->
