@@ -1,0 +1,658 @@
+{
+  "deckId": "middle",
+  "schema": 1,
+  "meta": {
+    "brand": "송우찬수학학원",
+    "docTitle": "상담자료",
+    "programTitle": "중등부 프로그램",
+    "slogan": "선생님의 열정은 학생들을 춤추게 한다",
+    "tagline": "YOUR MATH PARTNER"
+  },
+  "contact": {
+    "phone": "031-386-8899",
+    "kakaoId": "송우찬수학학원",
+    "hoursWeekday": "14:30~21:00",
+    "hoursSat": "10:00~18:00"
+  },
+  "sections": [
+    {
+      "id": "learning",
+      "label": "완전한 학습",
+      "visible": true
+    },
+    {
+      "id": "books",
+      "label": "교재 안내",
+      "visible": true
+    },
+    {
+      "id": "daily",
+      "label": "데일리테스트",
+      "visible": true
+    },
+    {
+      "id": "clinic",
+      "label": "클리닉프로그램",
+      "visible": true
+    },
+    {
+      "id": "exam",
+      "label": "내신대비",
+      "visible": true
+    },
+    {
+      "id": "mock",
+      "label": "모의테스트",
+      "visible": true
+    },
+    {
+      "id": "report",
+      "label": "학업성취도 / 월말보고서",
+      "visible": true
+    },
+    {
+      "id": "online",
+      "label": "온라인 학습",
+      "visible": true
+    },
+    {
+      "id": "care",
+      "label": "기타 관리프로그램",
+      "visible": true
+    }
+  ],
+  "scenes": [
+    {
+      "id": "intro",
+      "type": "intro",
+      "section": null,
+      "visible": true,
+      "data": {}
+    },
+    {
+      "id": "contents",
+      "type": "contents",
+      "section": null,
+      "visible": true,
+      "data": {
+        "heading": "Contents"
+      }
+    },
+    {
+      "id": "learning-goals",
+      "type": "learning-goals",
+      "section": "learning",
+      "visible": true,
+      "data": {
+        "headline": "송우찬수학학원 중등부는 한 학년의 진도를 4단계로 구성하여\n본학년 내용의 완전한 이해와 1년의 선행학습이라는 두가지 목표를 모두 완성합니다.",
+        "currentLabel": "현행",
+        "currentGoal": "본학년 내용의 완전한 이해",
+        "advanceLabel": "선행",
+        "advanceGoal": "1년의 선행학습",
+        "stages": [
+          {
+            "name": "BASIC",
+            "ko": "기초"
+          },
+          {
+            "name": "STANDARD",
+            "ko": "개념"
+          },
+          {
+            "name": "ADVANCE",
+            "ko": "유형"
+          },
+          {
+            "name": "HYPER",
+            "ko": "심화"
+          }
+        ]
+      }
+    },
+    {
+      "id": "learning-text",
+      "type": "learning-text",
+      "section": "learning",
+      "visible": true,
+      "data": {
+        "subtitle": "송우찬수학학원만의 체계적인 커리큘럼",
+        "paragraphs": [
+          "선행학습과 본학년학습 내용간의 유기적 이해와 개념구조 형성을 위하여 한 학기의 내용을 총 4단계로 구성하고 있습니다.",
+          "방학과 학기초를 이용하여 본학년의 내용은 개념(STANDARD)학습과 유형(ADVANCE)학습을 마무리하게 되며, 다음학년의 내용은 기초(BASIC)학습까지 진행이 됩니다.",
+          "학기별 중간고사 및 기말고사가 가까워지면 심화(HYPER)학습에 접어들어 시험에서 실력을 완벽히 발휘할 수 있도록 강도 높은 현행수업을 진행하게 됩니다.",
+          "이렇게 두학기를 보내면, 본학년에서 학습한 모든 내용에 대한 완벽한 이해와 다음학년에 배울 내용들에 대한 준비 및 선행학습이라는 두 가지 목표를 모두 완성하게 됩니다."
+        ]
+      }
+    },
+    {
+      "id": "learning-table",
+      "type": "learning-table",
+      "section": "learning",
+      "visible": true,
+      "data": {
+        "title": "한 해의 학습 흐름",
+        "rowCurrent": "현행",
+        "rowAdvance": "선행",
+        "periods": [
+          {
+            "label": "겨울방학 ~ 학기초",
+            "sub": "",
+            "exam": false,
+            "current": "STANDARD (2-1)\nADVANCE (2-1)",
+            "advance": "BASIC (3-1)"
+          },
+          {
+            "label": "학기중 ~ 학기말",
+            "sub": "(내신기간)",
+            "exam": true,
+            "current": "HYPER (2-1)",
+            "advance": ""
+          },
+          {
+            "label": "여름방학 ~ 학기초",
+            "sub": "",
+            "exam": false,
+            "current": "STANDARD (2-2)\nADVANCE (2-2)",
+            "advance": "BASIC (3-2)"
+          },
+          {
+            "label": "학기중 ~ 학기말",
+            "sub": "(내신기간)",
+            "exam": true,
+            "current": "HYPER (2-2)",
+            "advance": ""
+          }
+        ],
+        "note": "*위의 예시는 중학교 2학년 기준이며 반별성취도 상황에 따라 학습시기가 달라질 수 있습니다."
+      }
+    },
+    {
+      "id": "books-intro",
+      "type": "books-intro",
+      "section": "books",
+      "visible": true,
+      "data": {
+        "subtitle": "난이도의 점진적 향상을 위한 교재 선정",
+        "paragraphs": [
+          "한 학기의 내용들을 잘 이해하기 위해 송우찬수학학원 선생님들이 고민 끝에 각 학습단계마다 엄선한 대표교재들로 수업이 진행되게 됩니다.",
+          "BASIC단계는 고등수학(상),(하)를 포함해 중등수학 전학년 모두 송우찬수학학원에서 제작된 ==자체교재==로 진행됩니다.",
+          "BASIC단계를 제외하고는 모두 서점에 나와있는 시중교재를 이용하며 단계별로 선정이 되어있는 ==약 10여종의 교재== 중 담당선생님께서 아이들 성취도와 반 성향을 고려하여 교재를 선택하여 수업을 진행합니다.",
+          "또한 지속적으로 아이들의 성취도에 따른 ==개별과제물==을 제공하여 완전한 학습이 이루어지도록 지도하고 있습니다."
+        ]
+      }
+    },
+    {
+      "id": "books-stages",
+      "type": "books-stages",
+      "section": "books",
+      "visible": true,
+      "data": {
+        "title": "단계별 대표교재",
+        "stages": [
+          {
+            "name": "BASIC",
+            "desc": "중등부 선행학습만을 위해 제작된 송우찬수학학원의 자체 교재",
+            "books": "FAN MATHEMATICS 고등수학(상) · 고등수학(하)",
+            "image": "consult-deck/img/book-basic.jpg"
+          },
+          {
+            "name": "STANDARD",
+            "desc": "본격적인 개념학습을 위한 교재",
+            "books": "개념+유형 LITE · 개념원리 중학수학",
+            "image": "consult-deck/img/book-standard.jpg"
+          },
+          {
+            "name": "ADVANCE",
+            "desc": "다양한 유형들에 대한 응용력을 기를 수 있는 교재",
+            "books": "쎈 · 일품",
+            "image": "consult-deck/img/book-advance.jpg"
+          },
+          {
+            "name": "HYPER",
+            "desc": "심화문항들의 출제포인트와 풀이법을 익힐 수 있는 교재",
+            "books": "일등급 수학 · 블랙라벨",
+            "image": "consult-deck/img/book-hyper.jpg"
+          }
+        ]
+      }
+    },
+    {
+      "id": "daily-intro",
+      "type": "daily-intro",
+      "section": "daily",
+      "visible": true,
+      "data": {
+        "titleEn": "Daily Test",
+        "headline": [
+          "본인이 이해한 방식대로 개념을 정리할 수 있는 개방형구조의 문제로 전시간의 수업내용을 스스로 정리함으로써",
+          "수업의 이해도와 참여도를 높이고 그 내용을 적용하여 문제를 풀어봄으로써 수학에 대한 자신감을 높입니다."
+        ],
+        "image": "consult-deck/img/sample-daily.jpg",
+        "imageCaption": "데일리테스트 중3 · 이차방정식 (10문항)"
+      }
+    },
+    {
+      "id": "daily-review",
+      "type": "daily-review",
+      "section": "daily",
+      "visible": true,
+      "data": {
+        "subtitle": "배우고 익히는 것 못지 않게 중요한 것은 복습",
+        "loopCenter": "복습",
+        "loop": [
+          "개념 정리",
+          "문제 풀이",
+          "스스로 설명"
+        ],
+        "paragraphs": [
+          "복습이란 배운 것을 다시 익혀 공부한다는 뜻인데 올바른 복습을 통한 수학적 성장은 학생 스스로 개념을 정리하고 문제를 푸는데서 그치지 않습니다. 올바른 복습의 최종단계는 ==학생 스스로 개념을 설명할 수 있는 수준의 수학적 의사소통 능력==을 가진  상태가 되어야 합니다. 수학적 의사소통 능력을 가진 학생만이 스스로 수학적으로 사고하는 수학적 활동을 할 수 있습니다.",
+          "송우찬 수학의 ==데일리테스트==는 기본진도 진행시 오픈형테스트가 포함됩니다. 오픈형테스트는 정해진 정답 없이 본인 스스로 이해한 방식대로 개념을 서술하게 함으로써 수학적 의사소통 능력을 길러줍니다."
+        ]
+      }
+    },
+    {
+      "id": "clinic-why",
+      "type": "clinic-why",
+      "section": "clinic",
+      "visible": true,
+      "data": {
+        "titleEn": "Clinic Program",
+        "headline": [
+          "수업의 확실한 마무리를 위한 클리닉프로그램",
+          "개개인의 오답유형을 다시 정리함으로써 확실한 약점체크가 이루어집니다."
+        ],
+        "subtitle": "정원이 적다고 맞춤식 수업은 아니다!",
+        "compareLeft": "소수정예",
+        "compareRight": "맞춤식 수업",
+        "paragraphs": [
+          "중학교 수학학습을 위한 정말 많은 학원들이 있습니다. 특히 학생들의 수가 점차 줄어들다보니 소수정예 수업을 표방하는 작은 학원들이 점점 늘어나는 추세입니다.",
+          "하지만 학원의 정원이 제한되어 있고 적은 인원만이 한 반에서 공부할 수 있다는 것이 맞춤식 수업을 의미하는 것일까요? 각 학생들 개개인의 특성과 그들의 요구사항을 맞춰주지 못하는 소수정예 수업은 기존 대형학원들의 한계점을 답습할 뿐입니다.",
+          "송우찬 수학의 ==클리닉프로그램==은 성취도가 각각 다른 학생들을 위한 수업의 마무리와 약점체크를 위한 시간입니다."
+        ]
+      }
+    },
+    {
+      "id": "clinic-flow",
+      "type": "clinic-flow",
+      "section": "clinic",
+      "visible": true,
+      "data": {
+        "title": "개인별 클리닉 진행",
+        "image": "consult-deck/img/sample-clinic.jpg",
+        "imageCaption": "[오답유형] 이차함수의 활용 · 중3 (6문항)",
+        "steps": [
+          {
+            "title": "수업 내용 · 성취도",
+            "desc": "각 학생의 수업 내용과 성취도를 바탕으로"
+          },
+          {
+            "title": "약점 파악",
+            "desc": "학생들의 약점을 파악하여"
+          },
+          {
+            "title": "개인별 클리닉 시험지",
+            "desc": "개개인의 부족한 부분을 보완"
+          },
+          {
+            "title": "피드백 · 오답정리",
+            "desc": "송우찬수학학원 출신의 선생님과 함께"
+          },
+          {
+            "title": "그날의 목표 완성",
+            "desc": "목표를 완성할 때까지"
+          }
+        ],
+        "paragraph": "단순한 문제를 푸는 시간이 아닌 각 학생의 수업 내용과 성취도를 바탕으로 학생들의 약점을 파악하여 개개인의 부족한 부분을 보완할 수 있는 개인별  클리닉 시험지가 제공됩니다. 또한 클리닉에 대한 피드백 및 오답정리는 송우찬수학학원 출신의 선생님과 함께 진행되며 그날의 목표를 완성할 때까지 이루어집니다.",
+        "badge": "중학교 3학년은 클리닉수업도 담당선생님이 진행합니다."
+      }
+    },
+    {
+      "id": "exam-goal",
+      "type": "exam-goal",
+      "section": "exam",
+      "visible": true,
+      "data": {
+        "headline": "내신대비 START와 교과서를 중심으로 각 학교의 특성에 맞는 철저한 내신대비",
+        "keyword": "시험",
+        "paragraphs": [
+          "개개인의 특성에 맞는 교재와 선생님의 열정 있는 강의로 충분한 연습의 시간을 거쳐 완전한 복습을  한 송우찬 수학학원의 학생들의 ==최종 목표는 시험==입니다.",
+          "학생들의 주변에는 다양한 문제집과 다양한 시험 대비집이 존재하지만 여전히 각 학교의 기본 교재인 교과서와 보조 과제물의 중요성은 이루 말 할 수 없습니다."
+        ]
+      }
+    },
+    {
+      "id": "exam-start",
+      "type": "exam-start",
+      "section": "exam",
+      "visible": true,
+      "data": {
+        "title": "내신대비 START",
+        "image": "consult-deck/img/book-start.jpg",
+        "imageCaption": "송우찬 수학 내신대비 START (중1 · 중2)",
+        "paragraphs": [
+          "많은 학생들이 교과서의 중요성을 알고 있지만 여전히 수박 겉핥기 식으로만 공부를 하고 있습니다. 이는 학교 숙제 때문에 어쩔수 없이 답을 보며 풀어가는 학생들이 많기 때문입니다.",
+          "송우찬 수학의 시험 대비는 각 학교의 교과서와 내신대비 START 자체교재를 이용하여 본인 스스로 개념과 문제를 다시 정리할 수 있는 능력을 기르는 것을 목표로 합니다.",
+          "==각 학교의 특성, 그리고 개개인의 특성에 맞는 시험대비 과제물==을 통하여 학생들이 내신대비를 충실히 할 수 있도록 합니다."
+        ]
+      }
+    },
+    {
+      "id": "exam-process",
+      "type": "exam-process",
+      "section": "exam",
+      "visible": true,
+      "data": {
+        "title": "송우찬 수학의 시험 대비",
+        "steps": [
+          {
+            "title": "교과서 + 내신대비 START",
+            "desc": "각 학교의 교과서와 자체교재"
+          },
+          {
+            "title": "스스로 다시 정리",
+            "desc": "본인 스스로 개념과 문제를 다시 정리"
+          },
+          {
+            "title": "맞춤 시험대비 과제물",
+            "desc": "각 학교의 특성, 개개인의 특성에 맞게"
+          },
+          {
+            "title": "Summary · 중,고난도 문제풀이",
+            "desc": "내신대비 기간 중 개념 Summary와 고난도 적응력"
+          }
+        ],
+        "paragraph": "또한 내신대비 기간 중 개념에 대한 Summary와 중,고난도 문제풀이는 첨삭위주의 내신대비가 가질 수 있는 약점을 극복하고 고난도문제에 대한 적응력을 높여줍니다."
+      }
+    },
+    {
+      "id": "mock-why",
+      "type": "mock-why",
+      "section": "mock",
+      "visible": true,
+      "data": {
+        "headline": [
+          "송우찬 수학학원의 시험 전 모의테스트는 실전과 같은 마음으로 문제를 푸는 연습과",
+          "자신에게 맞는 시간 관리법을 스스로 익힐 수 있도록 해 줍니다"
+        ],
+        "subtitle": "시험은 문제만 많이 푼다고 되는 것이 아니다!",
+        "paragraphs": [
+          "학교 시험을 대비하기 위해서 다양한 문제집으로 많은 양의 문제를 풀며 완벽하게 시험 준비를 하고 시험장에 들어갔음에도 불구하고 제 실력을 발휘하지 못하는 학생들이 많이 있습니다. 이런 학생들의 사례는 ==실전과 같은 연습의 중요성==을 일깨워 줍니다.",
+          "시험대비란 단순히 문제 풀이로만 완성되는 것이 아닙니다. 실제 시험을 보는 시간동안 ==적절한 시간 안배와 고득점을 위한 전략적 접근== 역시 중요합니다.",
+          "하지만 시험을 보는 전략은 문제 풀이와 다르게 모든 학생들에게 통용할 수 있는 방법이 존재하지 않습니다. 결국 이러한 전략의 구성은 본인 스스로의 실전과 같은 연습을 통해 습득해야 합니다."
+        ]
+      }
+    },
+    {
+      "id": "mock-timeline",
+      "type": "mock-timeline",
+      "section": "mock",
+      "visible": true,
+      "data": {
+        "title": "모의테스트 일정",
+        "rounds": [
+          {
+            "label": "1차 테스트",
+            "when": "시험 4주전",
+            "weeks": 4,
+            "desc": "성적분석표로 시험대비의 시작 전 자신의 부족한 부분을 판단하고 시험대비의 방향을 결정"
+          },
+          {
+            "label": "2차 테스트",
+            "when": "시험 1주전",
+            "weeks": 1,
+            "desc": "시험 전 자신의 실력을 마지막으로 확인하고 최고의 성과를 만들어 내기 위한 전략을 수립"
+          }
+        ],
+        "examLabel": "학교 시험",
+        "paragraph": "모의테스트는 ==시험 4주전과 시험 1주전 총 2회==에 걸쳐서 진행됩니다. 1차 테스트 결과에 의한 성적분석표는 시험대비의 시작 전 자신의 부족한 부분을 판단하고 시험대비의 방향을 결정하게 해주고 2차 테스트는 시험 전 자신의 실력을 마지막으로 확인 하고 시험에서 최고의 성과를 만들어 내기 위한 전략을 수립하게 해 줍니다."
+      }
+    },
+    {
+      "id": "mock-notice",
+      "type": "mock-notice",
+      "section": "mock",
+      "visible": true,
+      "data": {
+        "title": "모의 테스트 실시 공고",
+        "noticeTitle": "2019학년도  2학기 기말고사 대비  모의 테스트 실시 공고",
+        "rounds": [
+          {
+            "label": "1차",
+            "date": "11월 11일 ~ 11월 17일"
+          },
+          {
+            "label": "2차",
+            "date": "11월 30일 ~ 12월 3일"
+          }
+        ],
+        "rangeLabel": "시험범위",
+        "rangeText": "기말고사 시험범위이며 문제은행에서 70%, 기타문제 30%",
+        "bankPercent": 70,
+        "bankLabel": "문제은행",
+        "otherLabel": "기타문제",
+        "cutLabel": "커트라인",
+        "cutScore": 80,
+        "cutPass": "80점 이상인 경우 틀린문제에 대한 오답정리 후 귀가",
+        "cutFail": "80점을 넘지 못하는 경우 틀린 문제에 대한 추가문제와 오답정리 후 귀가",
+        "rules": [
+          "풀이가 없는 경우는 정답으로 인정하지 않습니다.",
+          "학교 시험 일정에 따라 모의테스트 일정은 반별로 조정될 수도 있습니다."
+        ]
+      }
+    },
+    {
+      "id": "report-why",
+      "type": "report-why",
+      "section": "report",
+      "visible": true,
+      "data": {
+        "subtitle": "우리 아이의 학습 진행 상황을 확실하게 파악!",
+        "problem": "아이들이 중학교에 입학하고 난 후 초등학교 때와 다르게 학습상황을 정확히 파악하기가 어려운 부분들이 있습니다. 특히 담당 선생님과 전화상담을 하더라도 피상적 정보만을 얻게되는 경우가 많습니다.",
+        "answer": "송우찬 수학학원에서는 학생들의 학습상황을 정확히 전달하기 위해 매주 ==학업성취도==를 문자로, 매월 말 ==월말 보고서==를 작성하여 학부모님들께 발송하여 드리고 있습니다.",
+        "weeklyLabel": "학업성취도",
+        "weeklyCadence": "매주 · 문자",
+        "weeklyItems": [
+          "과제충실도",
+          "수업태도",
+          "클리닉 충실도",
+          "담임선생님 의견"
+        ],
+        "monthlyLabel": "월말 보고서",
+        "monthlyCadence": "매월 말",
+        "monthlyItems": [
+          "종합등급",
+          "담당선생님 의견",
+          "학습내역",
+          "학습성과",
+          "진단결과",
+          "학습평가"
+        ],
+        "closing": "이를 통해 아이들의 학원에서의 학습과 성취도를 정확히 판단 할 수 있습니다. 또한 구체적 결과를 통해 담당선생님과 더욱 정확한 상담을 나누실 수 있습니다."
+      }
+    },
+    {
+      "id": "report-weekly",
+      "type": "report-weekly",
+      "section": "report",
+      "visible": true,
+      "data": {
+        "title": "학업 성취도 안내문자",
+        "bannerTitle1": "송우찬수학학원",
+        "bannerTitle2": "학업 성취도 안내문자",
+        "bannerTag": "점수가 쑥쑥~ 올라간다~!!",
+        "bannerContact": "문의사항은 학원으로 전화 또는 카카오톡 플러스친구로 연락주세요.",
+        "question": "우리아이 학원에서 어떤가요?",
+        "points": [
+          "매번 담임선생님과 통화하기 부담스러우셨죠?",
+          "매주 학생들의 학업성취도를 문자로 받아보실 수 있습니다.\n(문자는 매주 **월요일** 발송됩니다. 사정에 따라 변동될 수 있습니다.)",
+          "믿고 맡길 수 있는 송우찬수학학원이 되겠습니다."
+        ],
+        "smsHeader": "[송우찬수학학원]",
+        "smsIntro": "ooo 학생의 5월 2주 성취도 안내드립니다.",
+        "smsItems": [
+          {
+            "k": "과제 충실도",
+            "v": "중"
+          },
+          {
+            "k": "수업태도",
+            "v": "상"
+          },
+          {
+            "k": "클리닉 충실도",
+            "v": "중상"
+          },
+          {
+            "k": "담임선생님 말씀",
+            "v": "학교행사 관련하여 과제물이 미흡하고 결석이 많습니다."
+          }
+        ],
+        "smsOutro": "최선을 다해 지도하겠습니다."
+      }
+    },
+    {
+      "id": "report-monthly",
+      "type": "report-monthly",
+      "section": "report",
+      "visible": true,
+      "data": {
+        "title": "월말 보고서",
+        "reportLabel": "monthly report",
+        "overviewLabel": "OVERVIEW 종합",
+        "gradeLabel": "종합등급",
+        "gradeValue": "1",
+        "rateLabel": "정답률",
+        "rateValue": 97,
+        "commentLabel": "Comment 담당선생님의견",
+        "comment": [
+          "OO이는 현재 내신 위주의 수업을 진행하고 있습니다. OO이는 중간고사 범위에 해당하는 개념과 응용문제에 대해 큰 어려움은 없습니다. 다만, 현재 나가고 있는 교재가 난이도가 높은 문제들로 구성되어 있어 이 부분에서 힘들어 하는 모습을 보입니다. 따라서 OO이는 난이도가 높은 문제들을 보다 잘 해결할 수 있도록 지도하겠습니다.",
+          "앞으로의 내신 대비와 관련된 수업계획은 1차 모의평가에 대한 결과에 의해 부족한 영역을 파악하고 이를 데일리 테스트와 과제를 통해 보완하고 학교 내신과 비슷한 수준의 2차 모의평가를 실시하여 내신대비에 힘쓰도록 하겠습니다.",
+          "1차 모의평가: 100"
+        ]
+      }
+    },
+    {
+      "id": "online-site",
+      "type": "online-site",
+      "section": "online",
+      "visible": true,
+      "data": {
+        "title": "온라인 학습관",
+        "url": "www.fanmath.co.kr",
+        "headline": "오프라인의 부족함을 채우기 위한 송우찬 수학학원의 온라인 학습 공간",
+        "screenshot": "",
+        "screenshot2": ""
+      }
+    },
+    {
+      "id": "online-programs",
+      "type": "online-programs",
+      "section": "online",
+      "visible": true,
+      "data": {
+        "title": "온라인 학습관 강의",
+        "items": [
+          {
+            "title": "시험대비 필수 유형 특강",
+            "desc": "==시험기간에 꼭 정리해야 하는 필수 유형들에 대한 해설 강의 수강이 가능==합니다.",
+            "thumbTop": "2021년도 1학기 기말고사 대비",
+            "thumbMain": "필수유형 특강",
+            "thumbSub": "[중3]",
+            "image": ""
+          },
+          {
+            "title": "내신대비 START 모의테스트 해설 강의",
+            "desc": "송우찬 수학학원의 ==시험대비 교재인 내신대비 스타트에 수록된 모의테스트의 해설 강의 수강이 가능==합니다.",
+            "thumbTop": "내신대비 FINAL",
+            "thumbMain": "모의테스트 해설강의",
+            "thumbSub": "<중학교 2학년>",
+            "image": ""
+          },
+          {
+            "title": "부득이한 결석에 대한 보충 강의",
+            "desc": "부득이한 사정에 의한 ==결석이 발생하는 경우 각 선생님별 보충 강의실을 이용하여 결석한 수업을 온라인으로 학습==할 수 있습니다.",
+            "thumbTop": "송우찬 수학학원",
+            "thumbMain": "김용진 선생님",
+            "thumbSub": "보충 강의실",
+            "image": ""
+          }
+        ],
+        "notes": [
+          "※추후 양질의 컨텐츠를 송우찬 수학학원 온라인 학습관에 꾸준히 업데이트 할 예정입니다.",
+          "※결석에 대한 보충은 담당 선생님의 재량에 따라 현장에서 오프라인으로 진행될 수도 있습니다."
+        ]
+      }
+    },
+    {
+      "id": "care-attendance",
+      "type": "care-attendance",
+      "section": "care",
+      "visible": true,
+      "data": {
+        "subtitle": "출결관리 시스템",
+        "items": [
+          "등,하원시 로비에서 비밀번호를 입력하면 자동으로 출석체크가 됩니다.",
+          "패드에 출석체크가 됨과 동시에 부모님께 등, 하원 문자가 발송됩니다."
+        ],
+        "stamp": "출석",
+        "smsText": "송우찬 학생 등원 안내\n18:00 학원에 도착하였습니다."
+      }
+    },
+    {
+      "id": "care-kakao",
+      "type": "care-kakao",
+      "section": "care",
+      "visible": true,
+      "data": {
+        "subtitle": "카카오톡 플러스친구 맺기",
+        "items": [
+          "송우찬수학학원을 카톡친구추가하면 등, 하원문자를 카톡으로 받아보실 수 있습니다.",
+          "전화가 어려울 땐 카톡으로 상담하실 수 있습니다. (평일 {{hoursWeekday}}, 토요일 {{hoursSat}})"
+        ],
+        "chatTitle": "카톡왔숑!",
+        "chatSub": "등원 문자가 카톡으로!",
+        "chatFrom": "송우찬수학학원",
+        "chatMsg": "송우찬 학생 등원 안내\n18:00 학원에 도착하였습니다.\n{{phone}}",
+        "replyName": "학부모님",
+        "reply": "네 감사합니다.^^"
+      }
+    },
+    {
+      "id": "care-friend",
+      "type": "care-friend",
+      "section": "care",
+      "visible": true,
+      "data": {
+        "title": "카톡친구맺기",
+        "addLead": "송우찬수학학원 친구추가 하세요.",
+        "addTitle": "카톡친구맺기",
+        "steps": [
+          {
+            "label": "STEP 1",
+            "text": "우측 상단\n친구찾기 아이콘을\n눌러주세요."
+          },
+          {
+            "label": "STEP 2",
+            "text": "검색창에\n송우찬수학학원을\n입력하세요."
+          },
+          {
+            "label": "STEP 3",
+            "text": "송우찬수학학원\n친구추가 버튼을\n클릭하세요."
+          }
+        ],
+        "cardTitle": "등원 실시간\n출결 카톡",
+        "cardText": "카톡으로 출결 알림 받고!\n전화가 어려울땐 카톡으로 상담하기!",
+        "cardHours": "평일 {{hoursWeekday}}   토 {{hoursSat}}"
+      }
+    },
+    {
+      "id": "thanks",
+      "type": "thanks",
+      "section": null,
+      "visible": true,
+      "data": {
+        "text": "감사합니다."
+      }
+    }
+  ]
+}
