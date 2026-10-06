@@ -10040,7 +10040,8 @@ function vcFilteredList() {
   const type = document.getElementById('vcFilterType')?.value || '';
   const book = document.getElementById('vcFilterBook')?.value || '';
   const teacher = document.getElementById('vcFilterTeacher')?.value || '';
-  const qCode = q.replace(/[-\s]/g, '');
+  // 영상 코드: 하이픈(-, ‐, –, —, －)·공백·점 등 구분기호를 모두 무시하고 숫자만 비교
+  const qCode = q.toLowerCase().replace(/[^0-9a-z가-힣ㄱ-ㅎ]/g, '');
   const qText = q.toLowerCase();
 
   let list = videosCache.map(v => ({ v, ...vcInfo(v) }));
@@ -10053,7 +10054,7 @@ function vcFilteredList() {
 
   if (q) {
     list = list.filter(x => {
-      const code = (x.v.code || '').replace(/-/g, '');
+      const code = String(x.v.code || '').replace(/\D/g, '');
       if (qCode && /^\d+$/.test(qCode) && code.includes(qCode)) return true;
       const hay = [x.v.code, x.v.title, x.v.tag, x.p && x.p.subject, x.p && x.p.book, x.p && x.p.teacher, x.p && x.p.when, x.v.vimeoId]
         .filter(Boolean).join(' ').toLowerCase();
@@ -10077,7 +10078,7 @@ function vcFilteredList() {
 function renderVcDecode(q) {
   const el = document.getElementById('vcDecode');
   if (!el) return;
-  const digits = q.replace(/[-\s]/g, '');
+  const digits = q.replace(/[^0-9a-z가-힣ㄱ-ㅎ]/gi, '');
   if (!/^\d{6,9}$/.test(digits)) { el.style.display = 'none'; return; }
   const yy = digits.slice(0, 2), prefix = digits.slice(2, 6), seq = digits.slice(6);
   const p = vcPrefixMap()[prefix];
@@ -10190,6 +10191,7 @@ window.editVideoCode = async function (id) {
   const input = prompt(`"${v.title}"\n\n새 코드를 입력하세요. (형식: 26-1111-003)\n비워두면 코드가 삭제됩니다.`, v.code || '');
   if (input === null) return;
   let code = input.trim();
+  if (/^\d{9}$/.test(code.replace(/\D/g, ''))) { code = code.replace(/\D/g, ''); }
   if (/^\d{9}$/.test(code)) code = `${code.slice(0,2)}-${code.slice(2,6)}-${code.slice(6)}`;
   if (code && !VC_CODE_RE.test(code)) { alert('형식이 맞지 않아요. 예) 26-1111-003'); return; }
   if (code && vcUsedCodes(id).has(code)) {
@@ -10396,6 +10398,7 @@ window.deleteScheduleEvent = async function (id) {
     { id: 'content', label: '콘텐츠·자료' },
     { id: 'ops',     label: '운영·소통' },
     { id: 'admin',   label: '관리자·설정' },
+    { id: 'office',  label: '관리부' },
   ];
 
   // id: 메뉴 ID / label: 메뉴명 / icon: 아이콘 / category: 카테고리 ID
@@ -10413,8 +10416,6 @@ window.deleteScheduleEvent = async function (id) {
       keywords:['진급','학년','학년변경','새학기','승급'] },
     { id:'assign',       label:'강의 배정',      icon:'',   category:'student', tabId:'assign',       init:null,
       keywords:['강의배정','배정','수강','권한','강의권한','태그'] },
-    { id:'attendance',   label:'학생 출결',      icon:'', category:'student', tabId:'attendance',   init:'initAttendanceTab',
-      keywords:['출결','출석','결석','지각','조퇴','출석부'] },
     { id:'watchstatus',  label:'시청현황',       icon:'', category:'student', tabId:'watchstatus',  init:'initWatchStatusTab',
       keywords:['시청','시청현황','수강현황','시청기록','학습현황','영상시청'] },
 
@@ -10431,8 +10432,6 @@ window.deleteScheduleEvent = async function (id) {
       keywords:['월말','월말보고서','보고서','리포트','학부모보고서','월간'] },
     { id:'clinicroom',   label:'클리닉실',       icon:'', category:'lesson',  tabId:'clinicroom',   init:'initClinicRoomTab',
       keywords:['클리닉','클리닉실','보충','질문'] },
-    { id:'satclinic',    label:'토요클리닉',     icon:'', category:'lesson',  tabId:'satclinic',    init:'initSatClinicTab',
-      keywords:['토요','토요클리닉','클리닉','주말','보충'] },
     { id:'tamaterials',  label:'조교 자료',      icon:'', category:'lesson',  tabId:'tamaterials',  init:'initTaMaterialsTab',
       keywords:['조교','조교자료','자료','ta','첨부'] },
 
@@ -10445,10 +10444,6 @@ window.deleteScheduleEvent = async function (id) {
       keywords:['중간고사','시험','내신','시험자료','기출','pdf','자료','기말'] },
 
     // ④ 운영·소통
-    { id:'dailyreport',  label:'관리부 마감',    icon:'', category:'ops',     tabId:'dailyreport',  init:'initDailyReportTab',
-      keywords:['마감','관리부','일일','일일업무','업무보고','일일보고'] },
-    { id:'weeklylog',    label:'주간업무일지',   icon:'', category:'ops',     tabId:'weeklylog',    init:'initWeeklyLogTab',
-      keywords:['업무일지','주간','일지','업무','주간업무'] },
     { id:'records',      label:'기록 조회',      icon:'', category:'ops',     tabId:'records',      init:'initRecordsTab',
       keywords:['기록','조회','기록조회','히스토리','이력','지난기록'] },
     { id:'consult',      label:'상담 신청',      icon:'', category:'ops',     tabId:'consult',      init:'initConsultTab',
@@ -10467,6 +10462,16 @@ window.deleteScheduleEvent = async function (id) {
       keywords:['선생님','강사','조교','교사','선생님계정','강사계정','teacher'] },
     { id:'adminmgmt',    label:'관리자 계정',    icon:'', category:'admin',   tabId:'adminmgmt',    init:'initAdminMgmtTab',
       keywords:['관리자','관리자계정','비밀번호','비번','암호','계정','권한','설정','admin'] },
+
+    // ⑥ 관리부
+    { id:'attendance',   label:'학생 출결',      icon:'', category:'office', tabId:'attendance',   init:'initAttendanceTab',
+      keywords:['출결','출석','결석','지각','조퇴','출석부'] },
+    { id:'weeklylog',    label:'주간업무일지',   icon:'', category:'office',     tabId:'weeklylog',    init:'initWeeklyLogTab',
+      keywords:['업무일지','주간','일지','업무','주간업무'] },
+    { id:'dailyreport',  label:'관리부 마감',    icon:'', category:'office',     tabId:'dailyreport',  init:'initDailyReportTab',
+      keywords:['마감','관리부','일일','일일업무','업무보고','일일보고'] },
+    { id:'satclinic',    label:'토요클리닉',     icon:'', category:'office',  tabId:'satclinic',    init:'initSatClinicTab',
+      keywords:['토요','토요클리닉','클리닉','주말','보충'] },
   ];
 
   const RECENT_KEY = 'swc_admin_recent_menus';
