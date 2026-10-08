@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>중간고사 학습 유형 자가진단 | 송우찬수학학원 평촌관</title>
+<meta name="description" content="3개의 질문으로 알아보는 나의 중간고사 학습 유형 — 송우찬수학학원 평촌관">
+<meta name="theme-color" content="#F4F0E8">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap">
+<style>
+/* =========================================================
+   TOKENS
+   ========================================================= */
+:root{
+  --bg:#F4F0E8;
+  --bg-2:#EEE8DC;
+  --paper:#FBF9F4;
+  --ink:#1E1733;
+  --ink-2:#5A5370;
+  --ink-3:#8E879E;
+  --line:rgba(37,28,64,.12);
+  --purple:#2D2350;
+  --purple-deep:#251C40;
+  --purple-night:#1A1230;
+  --purple-soft:#6B5A9E;
+  --gold:#C9A24A;          /* 은은한 골드 (주 사용) */
+  --gold-bright:#F0C040;   /* 브랜드 옐로 (아주 작은 포인트에만) */
+  --ease:cubic-bezier(.2,.7,.2,1);
+  --serif:'Cormorant Garamond', 'Times New Roman', serif;
+  --sans:'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
+  --orb:clamp(150px, 26vh, 248px);
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--ink);
+  min-height:100vh;min-height:100svh;
+  overflow-x:hidden;
+  -webkit-font-smoothing:antialiased;
+  word-break:keep-all;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:2px solid var(--purple-soft);outline-offset:3px}
+
+/* =========================================================
+   BACKGROUND
+   ========================================================= */
+.bg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.bg::before{ /* 은은한 퍼플 빛 */
+  content:"";position:absolute;width:900px;height:900px;right:-320px;top:-380px;
+  background:radial-gradient(closest-side,rgba(107,90,158,.13),transparent);
+}
+.bg::after{ /* 은은한 골드 빛 */
+  content:"";position:absolute;width:820px;height:820px;left:-340px;bottom:-420px;
+  background:radial-gradient(closest-side,rgba(201,162,74,.16),transparent);
+}
+.bg-rings{position:absolute;left:50%;top:var(--ring-y,34%);transform:translate(-50%,-50%);transition:top .9s var(--ease)}
+.bg-rings span{position:absolute;left:50%;top:50%;border-radius:50%;border:1px solid rgba(37,28,64,.06);transform:translate(-50%,-50%)}
+.bg-rings span:nth-child(1){width:calc(var(--orb) * 1.9);height:calc(var(--orb) * 1.9)}
+.bg-rings span:nth-child(2){width:calc(var(--orb) * 2.9);height:calc(var(--orb) * 2.9);border-color:rgba(37,28,64,.045)}
+.bg-rings span:nth-child(3){width:calc(var(--orb) * 4.1);height:calc(var(--orb) * 4.1);border-color:rgba(201,162,74,.10);border-style:dashed}
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+.top{
+  position:relative;z-index:3;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px clamp(18px,4vw,48px) 0;
+}
+.brand{display:flex;align-items:baseline;gap:8px;font-size:15px;letter-spacing:-.02em;color:var(--ink)}
+.brand b{font-weight:800}
+.brand span{font-weight:500;color:var(--ink-2)}
+.top-tag{font-family:var(--serif);font-style:italic;font-size:15px;color:var(--ink-3);letter-spacing:.02em}
+
+/* =========================================================
+   LAYOUT
+   ========================================================= */
+.app{
+  position:relative;z-index:2;
+  min-height:calc(100svh - 60px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:clamp(12px,3vh,36px) clamp(18px,4vw,48px) clamp(24px,5vh,56px);
+  gap:clamp(18px,4vh,44px);
+}
+
+/* =========================================================
+   ORB (CSS 3D)
+   ========================================================= */
+.visual{position:relative;width:var(--orb);height:var(--orb);flex:none;transition:width .9s var(--ease),height .9s var(--ease)}
+.orb-scene{position:absolute;inset:0;perspective:900px}
+.orb-tilt{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .6s ease-out}
+.orb-body{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .9s var(--ease)}
+.orb-body.pulse{animation:pulse .62s var(--ease)}
+@keyframes pulse{0%{transform:scale(1)}28%{transform:scale(.92)}62%{transform:scale(1.05)}100%{transform:scale(1)}}
+
+.core{
+  position:absolute;inset:20%;border-radius:50%;
+  background:
+    radial-gradient(circle at 34% 28%, rgba(255,255,255,.22) 0, rgba(255,255,255,0) 22%),
+    radial-gradient(circle at 38% 34%, #6B5A9E 0%, #3A2E5C 30%, #251C40 62%, #140E26 100%);
+  box-shadow:
+    inset -12px -16px 34px rgba(0,0,0,.38),
+    inset 6px 8px 18px rgba(255,255,255,.07);
+}
+.halo{position:absolute;inset:20%;border-radius:50%;box-shadow:0 34px 60px -24px rgba(37,28,64,.55);transition:box-shadow .9s var(--ease)}
+.core::after{ /* 골드 림라이트 */
+  content:"";position:absolute;inset:-1px;border-radius:50%;
+  background:radial-gradient(circle at 70% 82%, rgba(201,162,74,.38), transparent 46%);
+  opacity:.55;
+}
+.core-mark-wrap{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:2}
+.core-mark{
+  position:relative;
+  font-family:var(--serif);font-style:italic;color:#E9D49A;
+  font-size:calc(var(--orb) * .2);line-height:1;letter-spacing:.01em;
+  transition:opacity .35s ease,transform .5s var(--ease),filter .35s ease;
+}
+.core-mark.swap{opacity:0;transform:translateY(8px) scale(.9);filter:blur(3px)}
+.core-mark svg{width:calc(var(--orb) * .3);height:calc(var(--orb) * .3);display:block;stroke:#E9D49A;fill:none;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+
+.ring{
+  position:absolute;inset:0;border-radius:50%;transform-style:preserve-3d;
+  transform:rotateX(var(--rx,72deg)) rotateY(var(--ry,0deg)) scale(var(--s,1));
+  transition:transform 1.05s var(--ease);
+}
+.ring i{position:absolute;inset:0;border-radius:50%;border:1.2px solid rgba(37,28,64,.32);animation:spin 22s linear infinite}
+.ring.r2 i{animation-duration:30s;animation-direction:reverse;border-color:rgba(37,28,64,.2)}
+.ring.r3 i{animation-duration:38s;border-color:rgba(201,162,74,.75);border-width:1.4px}
+.ring i::after{ /* 위성 */
+  content:"";position:absolute;left:50%;top:-4px;width:8px;height:8px;margin-left:-4px;border-radius:50%;
+  background:var(--purple);box-shadow:0 0 0 3px rgba(244,240,232,.9);
+}
+.ring.r3 i::after{background:var(--gold-bright);box-shadow:0 0 12px rgba(240,192,64,.7)}
+.ring.r2 i::after{width:5px;height:5px;top:-2.5px;margin-left:-2.5px;background:var(--ink-3)}
+@keyframes spin{to{transform:rotateZ(360deg)}}
+
+.orb-shadow{
+  position:absolute;left:14%;right:14%;bottom:-16%;height:14%;border-radius:50%;
+  background:radial-gradient(closest-side,rgba(37,28,64,.28),transparent);
+  filter:blur(6px);transition:transform .9s var(--ease),opacity .9s var(--ease);
+}
+
+/* 결과 상태 */
+.visual.is-result .halo{box-shadow:0 34px 70px -18px rgba(37,28,64,.6),0 0 0 10px rgba(201,162,74,.08),0 0 60px rgba(201,162,74,.24)}
+.visual.is-result .orb-shadow{transform:scale(1.15);opacity:.8}
+
+/* =========================================================
+   PANEL / SCREEN TRANSITIONS
+   ========================================================= */
+.panel{width:100%;max-width:720px;text-align:center;position:relative}
+.screen{transition:opacity .34s ease,transform .5s var(--ease),filter .34s ease}
+.screen.out-yes{opacity:0;transform:translateX(-36px) scale(.985);filter:blur(4px)}
+.screen.out-no{opacity:0;transform:translateX(36px) scale(.985);filter:blur(4px)}
+.screen.out-up{opacity:0;transform:translateY(-18px) scale(.985);filter:blur(4px)}
+.screen.in-yes{opacity:0;transform:translateX(36px);filter:blur(4px);transition:none}
+.screen.in-no{opacity:0;transform:translateX(-36px);filter:blur(4px);transition:none}
+.screen.in-up{opacity:0;transform:translateY(22px);filter:blur(4px);transition:none}
+
+/* 순차 등장 */
+.rise{opacity:0;transform:translateY(14px);animation:rise .7s var(--ease) forwards;animation-delay:var(--d,0ms)}
+@keyframes rise{to{opacity:1;transform:none}}
+
+/* =========================================================
+   TYPOGRAPHY / COMMON
+   ========================================================= */
+.eyebrow{
+  display:inline-flex;align-items:center;gap:10px;
+  font-size:12px;font-weight:700;letter-spacing:.28em;color:var(--purple-soft);
+}
+.eyebrow::before,.eyebrow::after{content:"";width:18px;height:1px;background:currentColor;opacity:.45}
+.eyebrow.gold{color:var(--gold)}
+
+.cta{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;gap:14px;
+  height:62px;padding:0 14px 0 32px;border-radius:999px;
+  background:var(--purple-deep);color:#F4F0E8;font-size:17px;font-weight:700;letter-spacing:-.02em;
+  box-shadow:0 14px 30px -14px rgba(37,28,64,.7), inset 0 1px 0 rgba(255,255,255,.08);
+  transition:transform .3s var(--ease),box-shadow .3s var(--ease),background .3s;
+}
+.cta .arw{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:rgba(240,192,64,.14);color:var(--gold-bright);transition:transform .35s var(--ease),background .3s}
+.cta .arw svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+@media (hover:hover){
+  .cta:hover{transform:translateY(-2px);box-shadow:0 22px 40px -16px rgba(37,28,64,.75), inset 0 1px 0 rgba(255,255,255,.1);background:var(--purple)}
+  .cta:hover .arw{transform:translateX(3px);background:rgba(240,192,64,.22)}
+}
+.cta:active{transform:scale(.97)}
+
+.ghost{
+  display:inline-flex;align-items:center;gap:8px;height:46px;padding:0 20px;border-radius:999px;
+  font-size:14.5px;font-weight:600;color:var(--ink-2);border:1px solid var(--line);background:rgba(251,249,244,.6);
+  transition:border-color .3s,color .3s,transform .3s var(--ease);
+}
+.ghost svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8}
+@media (hover:hover){.ghost:hover{border-color:rgba(37,28,64,.35);color:var(--ink)}}
+.ghost:active{transform:scale(.97)}
+
+/* =========================================================
+   INTRO
+   ========================================================= */
+.intro h1{
+  margin-top:18px;
+  font-size:clamp(25px,4.4vw,40px);font-weight:750;line-height:1.38;letter-spacing:-.045em;color:var(--ink);
+}
+.intro h1 em{font-style:normal;color:var(--purple);background:linear-gradient(transparent 64%,rgba(201,162,74,.3) 64%,rgba(201,162,74,.3) 92%,transparent 92%)}
+.intro .lead{margin-top:16px;font-size:clamp(15px,2vw,17px);line-height:1.7;color:var(--ink-2)}
+.intro .cta{margin-top:34px}
+.intro .meta{margin-top:16px;font-size:13px;color:var(--ink-3);letter-spacing:.02em}
+
+/* =========================================================
+   QUESTION
+   ========================================================= */
+.q-head{display:flex;flex-direction:column;align-items:center;gap:14px}
+.steps{display:flex;align-items:center;gap:0}
+.steps .dot{width:9px;height:9px;border-radius:50%;border:1.3px solid rgba(37,28,64,.35);background:transparent;transition:all .5s var(--ease)}
+.steps .dot.done{background:var(--gold);border-color:var(--gold)}
+.steps .dot.now{background:var(--purple);border-color:var(--purple);box-shadow:0 0 0 5px rgba(45,35,80,.1)}
+.steps .bar{width:42px;height:1.3px;background:rgba(37,28,64,.15);position:relative;overflow:hidden}
+.steps .bar::after{content:"";position:absolute;inset:0;background:var(--gold);transform:scaleX(var(--f,0));transform-origin:left;transition:transform .7s var(--ease)}
+.q-count{font-family:var(--serif);font-size:15px;color:var(--ink-3);letter-spacing:.06em}
+.q-count b{font-weight:500;color:var(--purple)}
+
+.q-text{
+  margin-top:clamp(20px,3.6vh,34px);
+  font-size:clamp(25px,4.6vw,40px);font-weight:750;line-height:1.36;letter-spacing:-.045em;color:var(--ink);
+}
+.q-desc{margin-top:12px;font-size:clamp(14px,1.8vw,15.5px);color:var(--ink-3);line-height:1.6}
+
+.answers{margin:clamp(26px,4.6vh,42px) auto 0;display:grid;grid-template-columns:1fr 1fr;gap:14px;max-width:520px}
+.ans{
+  position:relative;height:84px;border-radius:20px;
+  background:var(--paper);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;padding:0 18px 0 24px;
+  box-shadow:0 1px 0 rgba(255,255,255,.8) inset,0 10px 24px -18px rgba(37,28,64,.35);
+  transition:transform .32s var(--ease),box-shadow .32s var(--ease),border-color .32s,background .32s,color .32s;
+  text-align:left;
+}
+.ans .en{font-family:var(--serif);font-size:30px;font-weight:500;letter-spacing:.04em;color:var(--purple);line-height:1;transition:color .3s}
+.ans .ko{display:block;margin-top:6px;font-size:13px;font-weight:600;color:var(--ink-3);transition:color .3s}
+.ans .mk{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;transition:all .32s var(--ease);flex:none}
+.ans .mk::after{content:"";width:7px;height:7px;border-radius:50%;background:rgba(37,28,64,.25);transition:all .32s var(--ease)}
+@media (hover:hover){
+  .ans:hover{transform:translateY(-3px) scale(1.012);border-color:rgba(45,35,80,.42);box-shadow:0 1px 0 rgba(255,255,255,.8) inset,0 22px 36px -20px rgba(37,28,64,.45)}
+  .ans:hover .mk{border-color:var(--purple);background:var(--purple)}
+  .ans:hover .mk::after{background:var(--gold-bright)}
+}
+.ans:active{transform:scale(.97)}
+.ans.picked{background:var(--purple-deep);border-color:var(--purple-deep);transform:scale(.975);box-shadow:0 18px 34px -18px rgba(37,28,64,.8)}
+.ans.picked .en{color:#F4F0E8}
+.ans.picked .ko{color:rgba(244,240,232,.6)}
+.ans.picked .mk{background:var(--gold-bright);border-color:var(--gold-bright);transform:scale(1.08)}
+.ans.picked .mk::after{background:var(--purple-deep)}
+.ans.dim{opacity:.45;transform:scale(.98)}
+
+.back{
+  position:absolute;left:0;top:-4px;height:34px;padding:0 12px 0 8px;border-radius:999px;
+  display:inline-flex;align-items:center;gap:4px;font-size:13px;font-weight:600;color:var(--ink-3);
+  transition:color .3s,background .3s;
+}
+.back svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+@media (hover:hover){.back:hover{color:var(--ink);background:rgba(37,28,64,.05)}}
+
+/* =========================================================
+   RESULT
+   ========================================================= */
+.result .type-no{
+  margin-top:10px;
+  font-family:var(--serif);font-weight:500;font-size:clamp(54px,8vw,76px);line-height:1;color:var(--purple);letter-spacing:.02em;
+}
+.result .type-no small{font-size:.32em;letter-spacing:.2em;color:var(--gold);vertical-align:.95em;margin-left:6px;font-style:italic}
+.result .type-name{
+  margin-top:10px;font-size:clamp(28px,5vw,42px);font-weight:800;letter-spacing:-.05em;line-height:1.25;color:var(--ink);
+}
+.result .type-line{margin-top:12px;font-size:clamp(14.5px,1.9vw,16.5px);line-height:1.6;color:var(--ink-2)}
+.result .divider{width:40px;height:1px;background:var(--gold);margin:22px auto 0;opacity:.8}
+.sol{margin-top:18px;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap}
+.sol .lbl{font-size:11px;font-weight:700;letter-spacing:.24em;color:var(--gold);margin-right:6px}
+.sol .chip{font-size:13.5px;font-weight:650;color:var(--purple);padding:7px 14px;border-radius:999px;background:rgba(45,35,80,.06);border:1px solid rgba(45,35,80,.1)}
+.result .actions{margin-top:28px;display:flex;flex-direction:column;align-items:center;gap:12px}
+
+/* =========================================================
+   DETAIL SHEET
+   ========================================================= */
+.sheet-wrap{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:24px;pointer-events:none}
+.sheet-dim{position:absolute;inset:0;background:rgba(26,18,48,.34);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);opacity:0;transition:opacity .4s ease}
+.sheet{
+  position:relative;width:100%;max-width:560px;max-height:calc(100svh - 48px);overflow:auto;
+  background:var(--paper);border-radius:26px;border:1px solid rgba(255,255,255,.6);
+  box-shadow:0 40px 90px -30px rgba(26,18,48,.55);
+  padding:30px 28px 28px;
+  opacity:0;transform:translateY(24px) scale(.98);transition:opacity .4s ease,transform .55s var(--ease);
+}
+.sheet-wrap.open{pointer-events:auto}
+.sheet-wrap.open .sheet-dim{opacity:1}
+.sheet-wrap.open .sheet{opacity:1;transform:none}
+.sheet .close{position:absolute;right:16px;top:16px;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:var(--ink-3);transition:background .3s,color .3s}
+.sheet .close svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.8}
+@media (hover:hover){.sheet .close:hover{background:rgba(37,28,64,.06);color:var(--ink)}}
+.sheet-kicker{font-size:12px;font-weight:700;letter-spacing:.2em;color:var(--gold)}
+.sheet h3{margin-top:8px;font-size:23px;font-weight:800;letter-spacing:-.04em;line-height:1.35}
+.sheet h3 span{color:var(--purple)}
+.opts{margin-top:22px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.opt{
+  text-align:left;padding:18px 18px 16px;border-radius:18px;border:1px solid var(--line);background:#fff;
+  display:flex;flex-direction:column;gap:14px;transition:border-color .3s,transform .3s var(--ease),box-shadow .3s;
+}
+.opt .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgba(45,35,80,.07);color:var(--purple);transition:all .3s}
+.opt .ic svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.opt b{font-size:16px;font-weight:750;letter-spacing:-.03em}
+.opt small{display:block;margin-top:3px;font-size:12.5px;color:var(--ink-3)}
+@media (hover:hover){.opt:hover{border-color:rgba(45,35,80,.4);transform:translateY(-2px);box-shadow:0 16px 30px -20px rgba(37,28,64,.4)}}
+.opt.on{border-color:var(--purple);box-shadow:0 0 0 3px rgba(45,35,80,.08)}
+.opt.on .ic{background:var(--purple);color:var(--gold-bright)}
+.sheet-body{margin-top:18px}
+.sheet-body:empty{display:none}
+.sheet-body .txt{font-size:15px;line-height:1.75;color:var(--ink-2);white-space:pre-line;padding:18px 20px;border-radius:16px;background:var(--bg)}
+.sheet-body .video{position:relative;padding-top:56.25%;border-radius:16px;overflow:hidden;background:var(--purple-night)}
+.sheet-body .video iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.sheet-body .soon{display:flex;align-items:center;gap:14px;padding:18px 20px;border-radius:16px;background:var(--bg);font-size:14px;line-height:1.6;color:var(--ink-2)}
+.sheet-body .soon i{flex:none;width:8px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 5px rgba(201,162,74,.15)}
+.fade-in{animation:rise .5s var(--ease) forwards;opacity:0;transform:translateY(8px)}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width:820px){
+  :root{--orb:clamp(130px, 22vh, 200px)}
+}
+@media (max-width:560px){
+  :root{--orb:clamp(112px, 19vh, 160px)}
+  .top{padding-top:16px}
+  .brand{font-size:14px}
+  .top-tag{font-size:13px}
+  .app{min-height:calc(100svh - 50px);gap:clamp(14px,3vh,26px);padding-bottom:28px}
+  .eyebrow{font-size:11px;letter-spacing:.22em}
+  .answers{gap:10px}
+  .ans{height:78px;padding:0 14px 0 18px;border-radius:18px}
+  .ans .en{font-size:27px}
+  .ans .mk{width:30px;height:30px}
+  .cta{height:58px;font-size:16px;padding:0 12px 0 26px;width:100%;max-width:340px;justify-content:space-between}
+  .result .actions .cta{max-width:100%}
+  .back{top:-6px}
+  .sheet-wrap{align-items:flex-end;padding:0}
+  .sheet{max-width:none;border-radius:24px 24px 0 0;padding:26px 20px calc(24px + env(safe-area-inset-bottom));max-height:88svh;transform:translateY(40px)}
+  .opts{gap:10px}
+  .opt{padding:16px 14px 14px}
+}
+@media (max-height:640px) and (max-width:560px){
+  :root{--orb:104px}
+  .q-text{margin-top:16px}
+  .result .divider{margin-top:16px}
+  .result .actions{margin-top:20px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important}
+}
+</style>
+</head>
+<body>
+
+<div class="bg" aria-hidden="true"><div class="bg-rings"><span></span><span></span><span></span></div></div>
+
+<header class="top">
+  <div class="brand"><b>송우찬수학학원</b><span>평촌관</span></div>
+  <div class="top-tag">Midterm Self-Check</div>
+</header>
+
+<main class="app">
+  <!-- 3D 오브젝트 -->
+  <div class="visual" id="visual" aria-hidden="true">
+    <div class="orb-shadow"></div>
+    <div class="halo"></div>
+    <div class="orb-scene">
+      <div class="orb-tilt" id="orbTilt">
+        <div class="orb-body" id="orbBody">
+          <div class="ring r1" id="r1"><i></i></div>
+          <div class="ring r2" id="r2"><i></i></div>
+          <div class="core"></div>
+          <div class="ring r3" id="r3"><i></i></div>
+        </div>
+      </div>
+    </div>
+    <div class="core-mark-wrap"><div class="core-mark" id="coreMark">?</div></div>
+  </div>
+
+  <!-- 화면 영역 -->
+  <section class="panel" aria-live="polite">
+    <div class="screen" id="screen"></div>
+  </section>
+</main>
+
+<!-- 상세 콘텐츠 시트 -->
+<div class="sheet-wrap" id="sheet" aria-hidden="true">
+  <div class="sheet-dim" data-close></div>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <button class="close" data-close aria-label="닫기"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    <p class="sheet-kicker" id="sheetKicker">TYPE 01</p>
+    <h3 id="sheetTitle">나의 학습 유형<br><span>자세히 알아보기</span></h3>
+    <div class="opts">
+      <button class="opt" data-mode="text">
+        <span class="ic"><svg viewBox="0 0 24 24"><path d="M5 4h10l4 4v12H5z"/><path d="M15 4v4h4M8 12h8M8 16h6"/></svg></span>
+        <span><b>유형 설명 보기</b><small>텍스트로 읽기</small></span>
+      </button>
+      <button class="opt" data-mode="video">
+        <span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M10 9.5v5l4.5-2.5z"/></svg></span>
+        <span><b>영상으로 보기</b><small>원장 해설 영상</small></span>
+      </button>
+    </div>
+    <div class="sheet-body" id="sheetBody"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   1) 질문 분기 구조 (test.html 기준 — 문구·분기 변경 금지)
+   ========================================================= */
+const QUESTIONS = {
+  q1:  { step: 1, text: '이번 중간고사 성적,<br>마음에 드시나요?',
+         desc: '이번 시험 결과에 대한 지금의 만족도를 떠올려 보세요.',
+         yes: 'q2a', no: 'q2b' },
+
+  q2a: { step: 2, text: '유사유형 문제를<br>직접 찾아서 공부했나요?',
+         desc: '수업 교재 밖의 문제까지 스스로 찾아 풀었는지 생각해 보세요.',
+         yes: 'q3a', no: 'q3b' },
+  q2b: { step: 2, text: '시험 대비 평소 공부량이<br>충분했나요?',
+         desc: '시험 직전이 아닌, 평소의 공부량을 기준으로 답해 보세요.',
+         yes: 'q3c', no: 'q3d' },
+
+  q3a: { step: 3, text: '시험 볼 때<br>시간이 남았나요?',
+         desc: '검토까지 마칠 여유가 있었는지 떠올려 보세요.',
+         yes: 'type1', no: 'type2' },
+  q3b: { step: 3, text: '학원/인강 수업에만<br>전적으로 의존했나요?',
+         desc: '수업 외에 혼자 공부한 시간이 있었는지 생각해 보세요.',
+         yes: 'type3', no: 'type4' },
+  q3c: { step: 3, text: '시험 문제만 보면<br>당황하거나 실수가 많나요?',
+         desc: '아는 문제를 틀린 경험이 있었는지 떠올려 보세요.',
+         yes: 'type5', no: 'type6' },
+  q3d: { step: 3, text: '시험 3일 전<br>벼락치기를 했나요?',
+         desc: '시험 직전에 공부가 몰렸는지 솔직하게 답해 보세요.',
+         yes: 'type7', no: 'type8' }
+};
+const TOTAL_STEPS = 3;
+
+/* =========================================================
+   2) 8가지 유형 (test.html 기준 — 유형명·솔루션 변경 금지)
+   ========================================================= */
+const TYPES = {
+  type1: { no: 1, name: '완벽주의 갓생러',     solution: ['킬러 문항', '서술형 대비'],
+           line: '공부의 방향도, 시험 운영도 이미 탄탄한 유형입니다.' },
+  type2: { no: 2, name: '타임어택형',          solution: ['실전 모의고사', '타임어택'],
+           line: '실력은 충분하지만, 제한 시간 안에 다 풀어내는 힘이 아쉬운 유형입니다.' },
+  type3: { no: 3, name: '수동적 성적 턱걸이형', solution: ['메타인지', '복습 시스템'],
+           line: '수업은 성실히 따라가지만, 스스로 소화하는 시간이 부족한 유형입니다.' },
+  type4: { no: 4, name: '요령파 라이징스타',    solution: ['개념 공백', '고난도 응용'],
+           line: '효율적으로 점수를 만들었지만, 개념의 빈틈이 숨어 있는 유형입니다.' },
+  type5: { no: 5, name: '억울한 유리멘탈형',    solution: ['오답 분석', '실전 멘탈 케어'],
+           line: '준비는 충분했는데, 실전에서 실력을 다 보여주지 못한 유형입니다.' },
+  type6: { no: 6, name: '전략 미스 모범생형',   solution: ['기출 패턴', '출제 포인트'],
+           line: '열심히 했지만, 시험이 원하는 방향과 공부가 어긋난 유형입니다.' },
+  type7: { no: 7, name: '벼락치기 연금술사형',  solution: ['1:1 밀착', '순공 시간 확보'],
+           line: '짧은 시간에 끌어올리는 힘은 있지만, 쌓이는 공부가 부족한 유형입니다.' },
+  type8: { no: 8, name: '미루기 대마왕형',      solution: ['기초 체력', '주차별 목표'],
+           line: '시작이 늦어 실력을 보여줄 기회를 놓친 유형입니다.' }
+};
+
+/* =========================================================
+   3) 유형별 상세 콘텐츠 (향후 연결용 — 여기만 채우면 됩니다)
+   - description : '유형 설명 보기'에 표시될 텍스트 (줄바꿈 그대로 표시)
+   - detailUrl   : 값이 있으면 '유형 설명 보기' 클릭 시 해당 페이지로 이동 (description보다 우선)
+   - videoUrl    : Vimeo / YouTube 주소 (예: https://vimeo.com/123456789)
+   ========================================================= */
+const typeContents = {
+  type1: { title: '[1형] 완벽주의 갓생러',     description: '', videoUrl: '', detailUrl: '' },
+  type2: { title: '[2형] 타임어택형',          description: '', videoUrl: '', detailUrl: '' },
+  type3: { title: '[3형] 수동적 성적 턱걸이형', description: '', videoUrl: '', detailUrl: '' },
+  type4: { title: '[4형] 요령파 라이징스타',    description: '', videoUrl: '', detailUrl: '' },
+  type5: { title: '[5형] 억울한 유리멘탈형',    description: '', videoUrl: '', detailUrl: '' },
+  type6: { title: '[6형] 전략 미스 모범생형',   description: '', videoUrl: '', detailUrl: '' },
+  type7: { title: '[7형] 벼락치기 연금술사형',  description: '', videoUrl: '', detailUrl: '' },
+  type8: { title: '[8형] 미루기 대마왕형',      description: '', videoUrl: '', detailUrl: '' }
+};
+
+/* 유형별 상징 그래픽 (오브젝트 중앙에 표시되는 라인 아이콘) */
+const GLYPHS = {
+  type1: '<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="17"/><circle cx="24" cy="24" r="10"/><path d="M19.5 24.2l3.2 3.2 6-6.4"/></svg>',
+  type2: '<svg viewBox="0 0 48 48"><circle cx="24" cy="26" r="15"/><path d="M24 26V17M24 26l6 4M20 6h8M24 6v5"/></svg>',
+  type3: '<svg viewBox="0 0 48 48"><path d="M8 34h32"/><path d="M14 34V24M24 34V20M34 34v-8"/><path d="M10 15h12M10 15l4-4M10 15l4 4" opacity=".7"/></svg>',
+  type4: '<svg viewBox="0 0 48 48"><path d="M8 38l12-12 7 6 13-16"/><path d="M33 16h7v7"/><path d="M14 12l1.4 3 3.1.4-2.3 2.1.6 3.1-2.8-1.6-2.8 1.6.6-3.1-2.3-2.1 3.1-.4z"/></svg>',
+  type5: '<svg viewBox="0 0 48 48"><path d="M24 7l14 12-14 22L10 19z"/><path d="M10 19h28"/><path d="M25 19l-3 7 4 4-2 6" /></svg>',
+  type6: '<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="16"/><path d="M29.5 18.5l-3.8 7.2-7.2 3.8 3.8-7.2z"/><path d="M24 6v3M24 39v3M6 24h3M39 24h3"/></svg>',
+  type7: '<svg viewBox="0 0 48 48"><path d="M27 6L13 27h10l-3 15 15-22H25z"/></svg>',
+  type8: '<svg viewBox="0 0 48 48"><path d="M31 8a16 16 0 1 0 9 22A13 13 0 0 1 31 8z"/><path d="M36 10h5l-5 6h5" opacity=".75"/></svg>'
+};
+
+/* =========================================================
+   STATE
+   ========================================================= */
+const state = { screen: 'intro', current: null, history: [], result: null, busy: false };
+const $ = (s, el = document) => el.querySelector(s);
+const screenEl = $('#screen');
+const visual   = $('#visual');
+const orbBody  = $('#orbBody');
+const orbTilt  = $('#orbTilt');
+const coreMark = $('#coreMark');
+const rings = [$('#r1'), $('#r2'), $('#r3')];
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const T = reduceMotion ? 0 : 1;
+
+const RING_INTRO = [ {rx:72, ry:0, s:1}, {rx:72, ry:60, s:1.08}, {rx:72, ry:-60, s:1.16} ];
+let ringAngles = RING_INTRO.map(r => ({...r}));
+
+const pad = n => String(n).padStart(2, '0');
+const wait = ms => new Promise(r => setTimeout(r, ms * T));
+const arrowSvg = '<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+
+/* =========================================================
+   ORB
+   ========================================================= */
+function applyRings(){
+  rings.forEach((el, i) => {
+    const a = ringAngles[i];
+    el.style.setProperty('--rx', a.rx + 'deg');
+    el.style.setProperty('--ry', a.ry + 'deg');
+    el.style.setProperty('--s', a.s);
+  });
+}
+function turnRings(dir){ // dir: 1(YES) / -1(NO)
+  ringAngles[0].ry += 52 * dir;
+  ringAngles[1].rx += 34; ringAngles[1].ry -= 38 * dir;
+  ringAngles[2].ry += 74 * dir; ringAngles[2].rx -= 18;
+  applyRings();
+}
+function pulse(){
+  orbBody.classList.remove('pulse'); void orbBody.offsetWidth; orbBody.classList.add('pulse');
+}
+async function setMark(html){
+  coreMark.classList.add('swap');
+  await wait(260);
+  coreMark.innerHTML = html;
+  coreMark.classList.remove('swap');
+}
+
+/* 마우스 패럴랙스 (상담자료 3D 평면과 같은 방식) */
+if (window.matchMedia('(hover:hover) and (pointer:fine)').matches && !reduceMotion){
+  window.addEventListener('mousemove', e => {
+    const x = e.clientX / innerWidth - .5, y = e.clientY / innerHeight - .5;
+    orbTilt.style.transform = `rotateY(${x * 16}deg) rotateX(${-y * 12}deg)`;
+  }, { passive: true });
+}
+
+/* =========================================================
+   SCREEN TRANSITION
+   ========================================================= */
+async function transition(dirClass, render){
+  screenEl.classList.add('out-' + dirClass);
+  await wait(340);
+  render();
+  screenEl.classList.remove('out-' + dirClass);
+  screenEl.classList.add('in-' + dirClass);
+  void screenEl.offsetWidth;
+  screenEl.classList.remove('in-' + dirClass);
+}
+
+/* =========================================================
+   RENDER — INTRO
+   ========================================================= */
+function renderIntro(){
+  state.screen = 'intro';
+  screenEl.innerHTML = `
+    <div class="intro">
+      <p class="eyebrow rise" style="--d:150ms">LEARNING TYPE CHECK</p>
+      <h1 class="rise" style="--d:300ms">중간고사가 끝났다면,<br>이제 중요한 건 <em>점수만 보는 것</em>이 아닙니다.</h1>
+      <p class="lead rise" style="--d:500ms">이번 시험에서 나는 어떤 방식으로 공부했고,<br>어떤 부분에서 부족했는지 확인해보세요.</p>
+      <button class="cta rise" style="--d:700ms" id="startBtn">나의 학습 유형 알아보기<span class="arw">${arrowSvg}</span></button>
+      <p class="meta rise" style="--d:850ms">3개의 질문 · 약 30초</p>
+    </div>`;
+  $('#startBtn').addEventListener('click', start);
+}
+
+/* =========================================================
+   RENDER — QUESTION
+   ========================================================= */
+function stepsHtml(step){
+  let h = '';
+  for (let i = 1; i <= TOTAL_STEPS; i++){
+    const cls = i < step ? 'done' : i === step ? 'now' : '';
+    h += `<span class="dot ${cls}"></span>`;
+    if (i < TOTAL_STEPS) h += `<span class="bar" style="--f:${i < step ? 1 : 0}"></span>`;
+  }
+  return h;
+}
+function renderQuestion(id){
+  const q = QUESTIONS[id];
+  state.screen = 'question';
+  state.current = id;
+  screenEl.innerHTML = `
+    <div class="question">
+      <button class="back" id="backBtn" aria-label="${state.history.length ? '이전 질문' : '처음으로'}"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>${state.history.length ? '이전' : '처음'}</button>
+      <div class="q-head">
+        <span class="eyebrow">QUESTION ${pad(q.step)}</span>
+        <div class="steps">${stepsHtml(q.step)}</div>
+        <span class="q-count"><b>${pad(q.step)}</b> / ${pad(TOTAL_STEPS)}</span>
+      </div>
+      <h2 class="q-text">${q.text}</h2>
+      ${q.desc ? `<p class="q-desc">${q.desc}</p>` : ''}
+      <div class="answers">
+        <button class="ans" data-a="yes"><span><span class="en">YES</span><span class="ko">그렇다</span></span><span class="mk"></span></button>
+        <button class="ans" data-a="no"><span><span class="en">NO</span><span class="ko">아니다</span></span><span class="mk"></span></button>
+      </div>
+    </div>`;
+  screenEl.querySelectorAll('.ans').forEach(b => b.addEventListener('click', () => answer(b.dataset.a, b)));
+  $('#backBtn').addEventListener('click', goBack);
+}
+
+/* =========================================================
+   RENDER — RESULT
+   ========================================================= */
+function renderResult(typeId){
+  const t = TYPES[typeId];
+  state.screen = 'result';
+  state.result = typeId;
+  screenEl.innerHTML = `
+    <div class="result">
+      <p class="eyebrow gold rise" style="--d:250ms">YOUR TYPE</p>
+      <div class="type-no rise" style="--d:420ms">${pad(t.no)}<small>TYPE</small></div>
+      <h2 class="type-name rise" style="--d:620ms">${t.name}</h2>
+      <p class="type-line rise" style="--d:820ms">${t.line}</p>
+      <div class="divider rise" style="--d:960ms"></div>
+      <div class="sol rise" style="--d:1040ms"><span class="lbl">SOLUTION</span>${t.solution.map(s => `<span class="chip">${s}</span>`).join('')}</div>
+      <div class="actions rise" style="--d:1200ms">
+        <button class="cta" id="detailBtn">나의 학습 유형 자세히 알아보기<span class="arw">${arrowSvg}</span></button>
+        <button class="ghost" id="retryBtn"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4"/></svg>다시 진단하기</button>
+      </div>
+    </div>`;
+  $('#detailBtn').addEventListener('click', () => openSheet(typeId));
+  $('#retryBtn').addEventListener('click', restart);
+}
+
+/* =========================================================
+   FLOW
+   ========================================================= */
+async function start(){
+  if (state.busy) return; state.busy = true;
+  pulse(); turnRings(1);
+  setMark(`<span style="font-style:normal">Q</span>1`);
+  await transition('up', () => renderQuestion('q1'));
+  state.busy = false;
+}
+
+async function answer(a, btn){
+  if (state.busy) return; state.busy = true;
+  const dir = a === 'yes' ? 1 : -1;
+  const q = QUESTIONS[state.current];
+  const next = q[a];
+
+  btn.classList.add('picked');
+  screenEl.querySelectorAll('.ans').forEach(b => { if (b !== btn) b.classList.add('dim'); });
+  // 진행 바 채우기
+  const bars = screenEl.querySelectorAll('.steps .bar');
+  if (bars[q.step - 1]) bars[q.step - 1].style.setProperty('--f', 1);
+
+  pulse(); turnRings(dir);
+  await wait(200);
+  state.history.push(state.current);
+
+  if (next.startsWith('type')){
+    await showResult(next, dir);
+  } else {
+    setMark(`<span style="font-style:normal">Q</span>${QUESTIONS[next].step}`);
+    await transition(a, () => renderQuestion(next));
+  }
+  state.busy = false;
+}
+
+async function showResult(typeId, dir){
+  screenEl.classList.add('out-up');
+  // 결과 연출: 오브젝트 확대 → 궤도 펼침 → 상징 그래픽
+  visual.classList.add('is-result');
+  ringAngles = [
+    { rx: 74, ry: ringAngles[0].ry + 40 * dir, s: 1.12 },
+    { rx: 66, ry: ringAngles[1].ry - 70 * dir, s: 1.26 },
+    { rx: 80, ry: ringAngles[2].ry + 90 * dir, s: 1.42 }
+  ];
+  applyRings();
+  orbBody.style.transform = 'scale(1.08)';
+  setMark(GLYPHS[typeId]);
+  await wait(380);
+  renderResult(typeId);
+  screenEl.classList.remove('out-up');
+  setTimeout(() => { orbBody.style.transform = ''; }, 500 * T);
+}
+
+async function goBack(){
+  if (state.busy) return; state.busy = true;
+  const prev = state.history.pop();
+  turnRings(-1); pulse();
+  if (prev){
+    setMark(`<span style="font-style:normal">Q</span>${QUESTIONS[prev].step}`);
+    await transition('no', () => renderQuestion(prev));
+  } else {
+    resetOrb();
+    await transition('no', renderIntro);
+  }
+  state.busy = false;
+}
+
+function resetOrb(){
+  visual.classList.remove('is-result');
+  ringAngles = RING_INTRO.map(r => ({...r}));
+  applyRings();
+  setMark('?');
+}
+
+async function restart(){
+  if (state.busy) return; state.busy = true;
+  closeSheet();
+  state.history = []; state.current = null; state.result = null;
+  pulse(); resetOrb();
+  await transition('up', renderIntro);
+  state.busy = false;
+}
+
+/* =========================================================
+   DETAIL SHEET (유형 설명 / 영상)
+   ========================================================= */
+const sheet = $('#sheet');
+const sheetBody = $('#sheetBody');
+let sheetType = null;
+
+function openSheet(typeId){
+  sheetType = typeId;
+  const t = TYPES[typeId];
+  $('#sheetKicker').textContent = `TYPE ${pad(t.no)} · ${t.name}`;
+  sheetBody.innerHTML = '';
+  sheet.querySelectorAll('.opt').forEach(o => o.classList.remove('on'));
+  sheet.classList.add('open');
+  sheet.setAttribute('aria-hidden', 'false');
+  document.body.style.overflow = 'hidden';
+}
+function closeSheet(){
+  sheet.classList.remove('open');
+  sheet.setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = '';
+  setTimeout(() => { if (!sheet.classList.contains('open')) sheetBody.innerHTML = ''; }, 400);
+}
+function toEmbed(url){
+  let m = url.match(/vimeo\.com\/(?:video\/)?(\d+)(?:\/(\w+))?/);
+  if (m) return `https://player.vimeo.com/video/${m[1]}${m[2] ? '?h=' + m[2] : ''}`;
+  m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
+  if (m) return `https://www.youtube.com/embed/${m[1]}`;
+  return url;
+}
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function soon(msg){ return `<div class="soon fade-in"><i></i><span>${msg}</span></div>`; }
+
+function showContent(mode){
+  const c = typeContents[sheetType] || {};
+  sheet.querySelectorAll('.opt').forEach(o => o.classList.toggle('on', o.dataset.mode === mode));
+
+  if (mode === 'text'){
+    if (c.detailUrl){ window.location.href = c.detailUrl; return; }
+    sheetBody.innerHTML = c.description
+      ? `<div class="txt fade-in">${escapeHtml(c.description)}</div>`
+      : soon('유형별 상세 설명을 준비하고 있습니다.<br>곧 이곳에서 확인하실 수 있어요.');
+  } else {
+    sheetBody.innerHTML = c.videoUrl
+      ? `<div class="video fade-in"><iframe src="${toEmbed(c.videoUrl)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="${escapeHtml(c.title || '유형 해설 영상')}"></iframe></div>`
+      : soon('유형별 해설 영상을 준비하고 있습니다.<br>곧 이곳에서 시청하실 수 있어요.');
+  }
+}
+sheet.querySelectorAll('.opt').forEach(o => o.addEventListener('click', () => showContent(o.dataset.mode)));
+sheet.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', closeSheet));
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheet.classList.contains('open')) closeSheet(); });
+
+/* =========================================================
+   INIT
+   ========================================================= */
+/* 배경 원형 라인을 오브젝트 중심에 맞춤 */
+const bgRings = $('.bg-rings');
+function alignBg(){
+  const r = visual.getBoundingClientRect();
+  bgRings.style.setProperty('--ring-y', (r.top + r.height / 2) + 'px');
+}
+window.addEventListener('resize', alignBg, { passive: true });
+window.addEventListener('scroll', alignBg, { passive: true });
+new MutationObserver(() => requestAnimationFrame(alignBg)).observe(screenEl, { childList: true });
+
+applyRings();
+renderIntro();
+alignBg();
+</script>
+</body>
+</html>
