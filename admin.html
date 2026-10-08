@@ -3577,6 +3577,11 @@ function renderVideos() {
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;
       padding:10px 14px;background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);
       border-radius:8px;margin-bottom:12px;">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;white-space:nowrap;color:var(--off-white);">
+        <input type="checkbox" id="checkAll" onchange="toggleAllVideoChecks(this)"
+          style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer;">
+        전체선택
+      </label>
       <span id="checkedCount" style="font-size:12px;color:var(--gold);min-width:60px;"></span>
       <div style="position:relative;flex:1;min-width:200px;">
         <input id="bulkTagSearch" type="text" placeholder="카테고리 검색..."
@@ -3593,6 +3598,7 @@ function renderVideos() {
       </div>
       <button class="btn btn-secondary btn-sm" onclick="bulkChangeTag()">일괄 카테고리 변경</button>
       <button class="btn btn-secondary btn-sm" onclick="bulkSaveOrder()" style="background:rgba(240,192,64,0.15);border-color:var(--gold);color:var(--gold);">📋 순서·제목 일괄 저장</button>
+      <button class="btn btn-secondary btn-sm" onclick="autoOrderByTitle()" title="선택한 강의만 제목의 번호(1. / 2. / 01·02 …) 기준으로 순서를 자동 배정합니다" style="background:rgba(124,184,221,0.15);border-color:#7cb8dd;color:#7cb8dd;">🔢 제목기준 자동배정</button>
       <button class="btn btn-danger btn-sm" onclick="bulkDelete()">일괄 삭제</button>
     </div>`;
 
@@ -3896,6 +3902,92 @@ window.updateCheckedCount = () => {
 function getCheckedIds() {
   return [...document.querySelectorAll('.video-check:checked')].map(cb => cb.dataset.id);
 }
+
+// 툴바 "전체선택" — 현재 필터에 보이는 모든 강의(접힌 그룹 포함) 선택/해제
+window.toggleAllVideoChecks = (master) => {
+  document.querySelectorAll('.video-check, .group-check').forEach(cb => { cb.checked = master.checked; });
+  updateCheckedCount();
+};
+
+// ══ 제목기준 자동배정 ══
+// 선택한 강의만, 같은 카테고리(태그) 안에서 제목의 숫자 순서(1. → 2. → 3., 연속01 → 연속02)로 정렬해 순서를 다시 매깁니다.
+// 선택 안 한 강의는 원래 자리를 그대로 유지하고, 선택한 강의들끼리 그 자리들을 제목 순서대로 나눠 갖습니다.
+const titleCollator = new Intl.Collator('ko', { numeric: true, sensitivity: 'base' });
+function titleSortKey(t) { return String(t || '').trim(); }
+
+window.autoOrderByTitle = async () => {
+  const ids = new Set(getCheckedIds());
+  if (!ids.size) { showToast('❌ 먼저 순서를 맞출 강의를 선택해주세요.'); return; }
+
+  // 저장 안 한 제목 수정값이 있으면 그 값으로 정렬
+  const titleOf = v => (document.getElementById('title-' + v.id)?.value ?? v.title ?? '');
+
+  const byTag = new Map();
+  videosCache.filter(v => ids.has(v.id)).forEach(v => {
+    const tag = v.tag || '__no_tag__';
+    if (!byTag.has(tag)) byTag.set(tag, []);
+    byTag.get(tag).push(v);
+  });
+
+  const noNumber = [...ids].map(id => videosCache.find(v => v.id === id))
+    .filter(v => v && !/\d/.test(titleOf(v)));
+
+  // 미리보기 (그룹별 앞 5개)
+  const preview = [...byTag.entries()].map(([tag, list]) => {
+    const sorted = [...list].sort((a, b) => titleCollator.compare(titleSortKey(titleOf(a)), titleSortKey(titleOf(b))));
+    const head = sorted.slice(0, 5).map(v => '  · ' + titleOf(v)).join('\n');
+    return `[${tag === '__no_tag__' ? '카테고리 없음' : tag}] ${list.length}개\n${head}${sorted.length > 5 ? '\n  …' : ''}`;
+  }).join('\n\n');
+
+  if (!confirm(`선택한 ${ids.size}개 강의를 제목 기준으로 순서를 다시 매깁니다.\n(선택 안 한 강의 순서는 그대로 유지)\n\n${preview}` +
+    (noNumber.length ? `\n\n⚠️ 제목에 숫자가 없는 강의 ${noNumber.length}개는 가나다순으로 배치됩니다.` : '') +
+    `\n\n진행할까요?`)) return;
+
+  const writes = [];
+  try {
+    for (const [tag, selected] of byTag) {
+      // 그룹 전체를 현재 순서대로 나열 (순서 없는 강의는 뒤로)
+      const group = (tag === '__no_tag__' ? videosCache.filter(v => !v.tag) : videosCache.filter(v => v.tag === tag))
+        .map((v, idx) => ({ v, idx }))
+        .sort((a, b) => {
+          const oa = a.v.order != null ? Number(a.v.order) : Infinity;
+          const ob = b.v.order != null ? Number(b.v.order) : Infinity;
+          return oa - ob || a.idx - b.idx;
+        })
+        .map(x => x.v);
+
+      // 선택한 강의가 차지하던 자리들
+      const slots = [];
+      group.forEach((v, i) => { if (ids.has(v.id)) slots.push(i); });
+      const sortedSel = [...selected].sort((a, b) =>
+        titleCollator.compare(titleSortKey(titleOf(a)), titleSortKey(titleOf(b))));
+      slots.forEach((slot, k) => { group[slot] = sortedSel[k]; });
+
+      // 1번부터 빈틈없이 재부여 (바뀐 것만 저장)
+      group.forEach((v, i) => {
+        const newOrder = i + 1;
+        if (v.order !== newOrder) {
+          writes.push(updateDoc(doc(db, 'videos', v.id), { order: newOrder }).then(() => { v.order = newOrder; }));
+        }
+      });
+    }
+    await Promise.all(writes);
+
+    // 열려 있던 그룹 유지하며 다시 그리기
+    const openGroups = [...document.querySelectorAll('[id^="vgrp-"]')].filter(el => el.style.display !== 'none').map(el => el.id);
+    renderVideos();
+    openGroups.forEach(id => {
+      const el = document.getElementById(id);
+      const arrow = document.getElementById('arrow-' + id);
+      if (el) el.style.display = 'block';
+      if (arrow) arrow.style.transform = 'rotate(180deg)';
+    });
+    showToast(`✅ 제목기준 자동배정 완료 (${writes.length}개 순서 변경)`);
+  } catch (e) {
+    showToast('❌ 자동배정 실패: ' + e.message);
+    await loadVideos();
+  }
+};
 
 window.bulkDelete = async () => {
   const ids = getCheckedIds();
