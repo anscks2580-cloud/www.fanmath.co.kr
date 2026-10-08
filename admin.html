@@ -3598,7 +3598,7 @@ function renderVideos() {
       </div>
       <button class="btn btn-secondary btn-sm" onclick="bulkChangeTag()">일괄 카테고리 변경</button>
       <button class="btn btn-secondary btn-sm" onclick="bulkSaveOrder()" style="background:rgba(240,192,64,0.15);border-color:var(--gold);color:var(--gold);">📋 순서·제목 일괄 저장</button>
-      <button class="btn btn-secondary btn-sm" onclick="autoOrderByTitle()" title="선택한 강의만 제목의 번호(1. / 2. / 01·02 …) 기준으로 순서를 자동 배정합니다" style="background:rgba(124,184,221,0.15);border-color:#7cb8dd;color:#7cb8dd;">🔢 제목기준 자동배정</button>
+      <button class="btn btn-secondary btn-sm" onclick="autoOrderByTitle()" title="선택한 강의만 교육과정 단원 순서 → 제목 번호 순으로 순서를 자동 배정합니다" style="background:rgba(124,184,221,0.15);border-color:#7cb8dd;color:#7cb8dd;">📚 단원순 자동배정</button>
       <button class="btn btn-danger btn-sm" onclick="bulkDelete()">일괄 삭제</button>
     </div>`;
 
@@ -3909,18 +3909,90 @@ window.toggleAllVideoChecks = (master) => {
   updateCheckedCount();
 };
 
-// ══ 제목기준 자동배정 ══
-// 선택한 강의만, 같은 카테고리(태그) 안에서 제목의 숫자 순서(1. → 2. → 3., 연속01 → 연속02)로 정렬해 순서를 다시 매깁니다.
-// 선택 안 한 강의는 원래 자리를 그대로 유지하고, 선택한 강의들끼리 그 자리들을 제목 순서대로 나눠 갖습니다.
+// ══ 단원순 자동배정 ══
+// 선택한 강의만, 같은 카테고리(태그) 안에서
+//   ① 교육과정 단원 순서 (2022 개정, 과목은 태그에서 판별)
+//   ② 같은 단원 안에서는 제목의 숫자 순서 (1. → 2. → 10., 연속01 → 연속02)
+// 로 정렬해 순서를 다시 매깁니다.
+// 선택 안 한 강의는 원래 자리를 그대로 유지하고, 선택한 강의들끼리 그 자리들을 정렬 순서대로 나눠 갖습니다.
+// 단원 키워드가 제목에 없으면 '단원 미확인'으로 해당 그룹 맨 뒤에 제목 순으로 배치됩니다.
+// ※ 교재 목차가 바뀌거나 키워드를 추가하려면 아래 CURRICULUM_UNITS만 수정하면 됩니다.
+const CURRICULUM_UNITS = {
+  '공통수학1': [
+    { name:'다항식', kw:['다항식의 연산','다항식의 덧셈','다항식의 곱셈','다항식의 나눗셈','곱셈공식','항등식','나머지정리','인수정리','조립제법','인수분해','다항식'] },
+    { name:'방정식과 부등식', kw:['복소수','허수','켤레','판별식','근과 계수','이차방정식','이차함수','최대최소','최댓값','최솟값','삼차방정식','사차방정식','고차방정식','연립방정식','연립이차','부정방정식','일차부등식','연립부등식','절댓값','이차부등식','부등식','방정식'] },
+    { name:'경우의 수', kw:['합의 법칙','곱의 법칙','경우의 수','순열','조합'] },
+    { name:'행렬', kw:['행렬'] },
+  ],
+  '공통수학2': [
+    { name:'도형의 방정식', kw:['두 점 사이의 거리','내분점','외분점','평면좌표','직선의 방정식','두 직선','점과 직선','원의 방정식','원과 직선','접선','평행이동','대칭이동','도형의 이동','좌표'] },
+    { name:'집합과 명제', kw:['집합','부분집합','합집합','교집합','여집합','차집합','명제','진리집합','대우','필요조건','충분조건','절대부등식','산술','귀류법'] },
+    { name:'함수와 그래프', kw:['함수','일대일','합성함수','역함수','유리함수','유리식','무리함수','무리식'] },
+  ],
+  '대수': [
+    { name:'지수함수와 로그함수', kw:['거듭제곱근','지수법칙','지수','로그','상용로그','지수함수','로그함수','지수방정식','로그방정식','지수부등식','로그부등식'] },
+    { name:'삼각함수', kw:['일반각','호도법','라디안','부채꼴','삼각함수','사인','코사인','탄젠트','삼각방정식','삼각부등식','사인법칙','코사인법칙','삼각형의 넓이'] },
+    { name:'수열', kw:['수열','등차','등비','시그마','수열의 합','계차','군수열','귀납적','점화식','수학적 귀납법','귀납법'] },
+  ],
+  '미적분1': [
+    { name:'함수의 극한과 연속', kw:['함수의 극한','극한','좌극한','우극한','연속','최대최소 정리','사잇값'] },
+    { name:'미분', kw:['미분계수','평균변화율','순간변화율','미분가능','도함수','미분','접선','롤의 정리','평균값 정리','증가','감소','극대','극소','극값','그래프의 개형','최댓값','최솟값','방정식의 실근','부등식','속도','가속도'] },
+    { name:'적분', kw:['부정적분','정적분','적분','넓이','정적분으로 정의된','속도와 거리','거리'] },
+  ],
+  '확통': [
+    { name:'경우의 수', kw:['원순열','같은 것이 있는 순열','중복순열','중복조합','순열','조합','이항정리','이항계수','파스칼','분할','경우의 수'] },
+    { name:'확률', kw:['확률의 뜻','확률의 덧셈','덧셈정리','여사건','조건부확률','독립','종속','독립시행','곱셈정리','확률'] },
+    { name:'통계', kw:['확률변수','확률분포','이산','기댓값','평균','분산','표준편차','이항분포','연속확률','정규분포','표준정규','모집단','표본','추정','신뢰구간','통계'] },
+  ],
+  '미적분2': [
+    { name:'수열의 극한', kw:['수열의 극한','수렴','발산','급수','등비급수','등비수열의 극한'] },
+    { name:'미분법', kw:['지수함수의 극한','로그함수의 극한','삼각함수의 극한','지수함수의 미분','로그함수의 미분','삼각함수의 미분','덧셈정리','배각','몫의 미분','합성함수의 미분','매개변수','음함수','역함수의 미분','이계도함수','변곡점','오목','볼록','미분법','미분','접선','속도'] },
+    { name:'적분법', kw:['치환적분','부분적분','여러 가지 함수의 적분','구분구적법','정적분과 급수','넓이','부피','입체','곡선의 길이','적분법','적분'] },
+  ],
+  '기하': [
+    { name:'이차곡선', kw:['포물선','타원','쌍곡선','이차곡선','접선'] },
+    { name:'공간도형과 공간좌표', kw:['직선과 평면','삼수선','정사영','공간좌표','공간도형','구의 방정식','이면각'] },
+    { name:'벡터', kw:['벡터','내적','위치벡터','성분','직선의 방정식','원의 방정식'] },
+  ],
+};
+const CURRICULUM_ALIAS = { '확률과통계':'확통', '미적분':'미적분1' };
+
 const titleCollator = new Intl.Collator('ko', { numeric: true, sensitivity: 'base' });
-function titleSortKey(t) { return String(t || '').trim(); }
+const curNorm = s => String(s || '').toLowerCase().replace(/[\s·・.\-_()[\]]/g, '');
+
+// 태그에서 과목 판별 (예: 미적분1_세쌍둥이개념_송우찬 원장T → 미적분1 / 송팁_공통수학1 → 공통수학1)
+function curriculumSubjectOfTag(tag) {
+  const parts = String(tag || '').split('_');
+  let s = parts[0] === '송팁' ? parts[1] : parts[0];
+  s = CURRICULUM_ALIAS[s] || s;
+  return CURRICULUM_UNITS[s] ? s : null;
+}
+
+// 제목에서 단원 찾기: 가장 긴 키워드 우선, 길이가 같으면 제목 앞쪽에 나온 키워드 우선
+function curriculumUnitOf(subject, title) {
+  if (!subject) return null;
+  // 제목에 들어간 과목명(미적분1, 공통수학2 등)이 단원 키워드로 오인되지 않게 제거
+  const t = curNorm(title).replace(/공통수학[12]|미적분[12]?|확률과통계|확통|대수|기하|세쌍둥이/g, ' ');
+  let best = null;
+  CURRICULUM_UNITS[subject].forEach((u, idx) => {
+    u.kw.forEach(k => {
+      const nk = curNorm(k);
+      const pos = t.indexOf(nk);
+      if (pos < 0) return;
+      if (!best || nk.length > best.len || (nk.length === best.len && pos < best.pos)) {
+        best = { idx, name: u.name, len: nk.length, pos };
+      }
+    });
+  });
+  return best;
+}
 
 window.autoOrderByTitle = async () => {
   const ids = new Set(getCheckedIds());
   if (!ids.size) { showToast('❌ 먼저 순서를 맞출 강의를 선택해주세요.'); return; }
 
-  // 저장 안 한 제목 수정값이 있으면 그 값으로 정렬
-  const titleOf = v => (document.getElementById('title-' + v.id)?.value ?? v.title ?? '');
+  // 저장 안 한 제목 수정값이 있으면 그 값으로 판별
+  const titleOf = v => (document.getElementById('title-' + v.id)?.value ?? v.title ?? '').trim();
 
   const byTag = new Map();
   videosCache.filter(v => ids.has(v.id)).forEach(v => {
@@ -3929,23 +4001,48 @@ window.autoOrderByTitle = async () => {
     byTag.get(tag).push(v);
   });
 
-  const noNumber = [...ids].map(id => videosCache.find(v => v.id === id))
-    .filter(v => v && !/\d/.test(titleOf(v)));
+  // 정렬 정보 계산
+  const info = new Map(); // id → { unitIdx, unitName }
+  const sortedByTag = new Map();
+  const previewParts = [];
+  let unmatchedTotal = 0;
 
-  // 미리보기 (그룹별 앞 5개)
-  const preview = [...byTag.entries()].map(([tag, list]) => {
-    const sorted = [...list].sort((a, b) => titleCollator.compare(titleSortKey(titleOf(a)), titleSortKey(titleOf(b))));
-    const head = sorted.slice(0, 5).map(v => '  · ' + titleOf(v)).join('\n');
-    return `[${tag === '__no_tag__' ? '카테고리 없음' : tag}] ${list.length}개\n${head}${sorted.length > 5 ? '\n  …' : ''}`;
-  }).join('\n\n');
+  for (const [tag, list] of byTag) {
+    const subject = curriculumSubjectOfTag(tag);
+    list.forEach(v => {
+      const u = curriculumUnitOf(subject, titleOf(v));
+      info.set(v.id, { unitIdx: u ? u.idx : Infinity, unitName: u ? u.name : null });
+    });
+    const sorted = [...list].sort((a, b) =>
+      info.get(a.id).unitIdx - info.get(b.id).unitIdx ||
+      titleCollator.compare(titleOf(a), titleOf(b)));
+    sortedByTag.set(tag, sorted);
 
-  if (!confirm(`선택한 ${ids.size}개 강의를 제목 기준으로 순서를 다시 매깁니다.\n(선택 안 한 강의 순서는 그대로 유지)\n\n${preview}` +
-    (noNumber.length ? `\n\n⚠️ 제목에 숫자가 없는 강의 ${noNumber.length}개는 가나다순으로 배치됩니다.` : '') +
+    const label = tag === '__no_tag__' ? '카테고리 없음' : tag;
+    if (!subject) {
+      previewParts.push(`[${label}] ${list.length}개\n  · 단원표가 없는 카테고리 → 제목 번호 순으로 정렬`);
+      continue;
+    }
+    const counts = [];
+    CURRICULUM_UNITS[subject].forEach((u, i) => {
+      const n = list.filter(v => info.get(v.id).unitIdx === i).length;
+      if (n) counts.push(`${i + 1}) ${u.name} ${n}개`);
+    });
+    const unmatched = sorted.filter(v => info.get(v.id).unitIdx === Infinity);
+    unmatchedTotal += unmatched.length;
+    previewParts.push(`[${label}] ${list.length}개\n  · ${counts.join(' → ') || '단원 일치 없음'}` +
+      (unmatched.length
+        ? `\n  ⚠️ 단원 미확인 ${unmatched.length}개 (맨 뒤 배치): ${unmatched.slice(0, 3).map(titleOf).join(' / ')}${unmatched.length > 3 ? ' …' : ''}`
+        : ''));
+  }
+
+  if (!confirm(`선택한 ${ids.size}개 강의를 [교육과정 단원 순서 → 제목 번호 순서]로 다시 매깁니다.\n(선택 안 한 강의 순서는 그대로 유지)\n\n${previewParts.join('\n\n')}` +
+    (unmatchedTotal ? `\n\n※ 단원 미확인 강의는 제목에 단원 키워드가 없는 경우예요. 저장 후 순서 칸에서 직접 조정할 수 있어요.` : '') +
     `\n\n진행할까요?`)) return;
 
   const writes = [];
   try {
-    for (const [tag, selected] of byTag) {
+    for (const [tag, sortedSel] of sortedByTag) {
       // 그룹 전체를 현재 순서대로 나열 (순서 없는 강의는 뒤로)
       const group = (tag === '__no_tag__' ? videosCache.filter(v => !v.tag) : videosCache.filter(v => v.tag === tag))
         .map((v, idx) => ({ v, idx }))
@@ -3956,11 +4053,9 @@ window.autoOrderByTitle = async () => {
         })
         .map(x => x.v);
 
-      // 선택한 강의가 차지하던 자리들
+      // 선택한 강의가 차지하던 자리들을 정렬 순서대로 채움
       const slots = [];
       group.forEach((v, i) => { if (ids.has(v.id)) slots.push(i); });
-      const sortedSel = [...selected].sort((a, b) =>
-        titleCollator.compare(titleSortKey(titleOf(a)), titleSortKey(titleOf(b))));
       slots.forEach((slot, k) => { group[slot] = sortedSel[k]; });
 
       // 1번부터 빈틈없이 재부여 (바뀐 것만 저장)
@@ -3982,7 +4077,7 @@ window.autoOrderByTitle = async () => {
       if (el) el.style.display = 'block';
       if (arrow) arrow.style.transform = 'rotate(180deg)';
     });
-    showToast(`✅ 제목기준 자동배정 완료 (${writes.length}개 순서 변경)`);
+    showToast(`✅ 단원순 자동배정 완료 (${writes.length}개 순서 변경)`);
   } catch (e) {
     showToast('❌ 자동배정 실패: ' + e.message);
     await loadVideos();
