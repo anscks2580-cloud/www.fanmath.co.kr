@@ -337,6 +337,83 @@
       중등수학 · 고등수학 · 수리논술 전문
     </p>
 
+    <!-- 중간고사 후 셀프체크 메인 배너 -->
+    <a href="self-check.html" style="
+      display:flex; align-items:center; justify-content:space-between;
+      width:100%; max-width:720px;
+      margin: 0 0 20px;
+      padding: 0;
+      border-radius: 18px;
+      text-decoration: none;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 0 0 1px rgba(240,192,64,0.55), 0 8px 40px rgba(124,111,160,0.35);
+      animation: checkPulse 3s ease-in-out infinite;
+    ">
+      <style>
+        @keyframes checkPulse {
+          0%,100% { box-shadow: 0 0 0 1px rgba(240,192,64,0.55), 0 8px 40px rgba(124,111,160,0.35); }
+          50%      { box-shadow: 0 0 0 2px rgba(240,192,64,0.95), 0 8px 48px rgba(124,111,160,0.55); }
+        }
+        .check-banner-inner {
+          display: flex; align-items: center; justify-content: space-between;
+          width: 100%; gap: 20px;
+          padding: 22px 28px;
+          background: linear-gradient(120deg, rgba(37,28,64,0.97) 0%, rgba(45,35,80,0.98) 50%, rgba(37,28,64,0.97) 100%);
+          position: relative; overflow: hidden;
+        }
+        .check-banner-inner::before {
+          content: '';
+          position: absolute; inset: 0;
+          background: linear-gradient(100deg, rgba(240,192,64,0.09) 0%, rgba(107,90,158,0.12) 100%);
+          pointer-events: none;
+        }
+        .check-banner-inner::after {
+          content: '';
+          position: absolute; top: 0; left: 0; right: 0; height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(240,192,64,0.7), transparent);
+        }
+        .check-badge-new {
+          position: absolute; top: -1px; right: 24px; z-index: 2;
+          background: #F0C040; color: #251C40;
+          font-size: 10px; font-weight: 800; letter-spacing: 1px;
+          padding: 3px 10px; border-radius: 0 0 8px 8px;
+        }
+        .check-enter-btn {
+          display: flex; align-items: center; gap: 6px;
+          background: #F0C040; color: #251C40;
+          font-size: 13px; font-weight: 800;
+          padding: 10px 20px; border-radius: 10px;
+          white-space: nowrap; flex-shrink: 0;
+          letter-spacing: -0.3px;
+          transition: opacity 0.2s;
+        }
+        a:hover .check-enter-btn { opacity: 0.85; }
+        @media (max-width: 480px) {
+          .check-banner-inner { padding: 20px 18px; gap: 12px; }
+          .check-enter-btn { padding: 9px 14px; font-size: 12px; }
+        }
+      </style>
+      <div class="check-badge-new">NEW</div>
+      <div class="check-banner-inner">
+        <div style="display:flex;align-items:center;gap:16px;position:relative;">
+          <span style="font-size:34px;line-height:1;flex-shrink:0;">🧭</span>
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+              <span style="font-size:15px;font-weight:800;color:#F0EDF8;letter-spacing:-0.3px;">2학기 중간고사 셀프체크</span>
+              <span style="font-size:11px;color:rgba(240,192,64,0.85);letter-spacing:1px;">After-Exam Check</span>
+            </div>
+            <div style="font-size:12px;color:rgba(240,237,248,0.55);line-height:1.6;">
+              질문 3개 · 30초 &nbsp;·&nbsp; 8가지 중 <b style="color:#F0C040;">나의 학습 유형</b> 진단
+            </div>
+          </div>
+        </div>
+        <div class="check-enter-btn" style="position:relative;">
+          진단하기 →
+        </div>
+      </div>
+    </a>
+
     <!-- 중간고사 대비 메인 배너 -->
     <a href="exam/index.html" style="
       display:flex; align-items:center; justify-content:space-between;
