@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>상담 전 학습 성향 체크 | 송우찬수학학원 평촌관</title>
+<meta name="description" content="상담 전 학생·학부모가 각각 작성하는 사실 기반 학습 성향 체크 — 송우찬수학학원 평촌관">
+<meta name="theme-color" content="#F4F0E8">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap">
+
+<script>
+/* =====================================================================
+   ★ 콘텐츠 설정 — 문항·유형·문구는 이 영역만 수정하면 됩니다
+   ---------------------------------------------------------------------
+   설계 원칙 (사실 기반)
+   1) 성격이 아닌 '행동'을 묻는다      — "나는 성실하다" ✕ / "숙제를 기한 내 낸 비율" ○
+   2) 기간을 정한다                    — 최근 2주, 지난 시험
+   3) 횟수·시점으로 답하게 한다         — 좋은 답이 티 나지 않도록
+   4) 학부모는 '관찰한 것'만 답한다     — 모르면 '잘 모르겠다' (점수 계산에서 제외)
+   5) 학생·학부모 문항은 같은 축을 거울처럼 측정 → 상담 때 응답 차이를 비교
+   ===================================================================== */
+
+const BRAND = {
+  logo: 'assets/logo-watermark.png',
+  consultUrl: 'consult.html',
+  phone: '031-386-8899',
+  kakao: 'https://pf.kakao.com/_KxaxdlX',
+  saveCollection: 'learningProfiles'   // Firestore 저장 컬렉션 (null 이면 저장 안 함)
+};
+
+/* 4개 측정 축 — 각 축은 연구로 검증된 학습 요인에 근거 */
+const AXES = {
+  M: { name: '학습 동기', hi: 'I', lo: 'O', hiName: '자기주도', loName: '외부동기',
+       basis: '자기결정성 이론 · Ryan & Deci (2000), American Psychologist — 스스로 선택한 학습이 지속성과 성취를 높인다',
+       hiText: '누가 시키지 않아도 스스로 공부를 시작하는 편입니다. 목표와 도전 과제를 주면 더 크게 성장합니다.',
+       loText: '공부 시작이 외부(학원·부모님·시험)에 의해 움직이는 편입니다. 작은 성공 경험과 명확한 단기 목표가 필요합니다.' },
+  S: { name: '학습 전략', hi: 'A', lo: 'R', hiName: '능동인출', loName: '반복읽기',
+       basis: 'Dunlosky 외 (2013), Psychological Science in the Public Interest — 10가지 학습법 비교에서 스스로 떠올려 풀기·간격 복습은 효과 "높음", 다시 읽기·밑줄은 "낮음"',
+       hiText: '답을 가리고 다시 풀기, 며칠 뒤 다시 풀기처럼 효과가 검증된 방법을 쓰고 있습니다.',
+       loText: '공부 시간에 비해 효과가 낮은 방법(다시 읽기·해설 보기) 비중이 큽니다. 공부량보다 공부 방식을 바꾸는 것이 먼저입니다.' },
+  E: { name: '실행 관리', hi: 'P', lo: 'L', hiName: '계획실행', loName: '막판집중',
+       basis: '자기조절학습 · Zimmerman (2002), Theory Into Practice / 미루기 메타분석 · Steel (2007), Psychological Bulletin',
+       hiText: '숙제와 시험 준비를 미리 시작하고 끝까지 마무리하는 편입니다.',
+       loText: '공부가 마감 직전에 몰리는 편입니다. 주 단위 계획과 중간 점검이 있으면 실력이 안정적으로 쌓입니다.' },
+  T: { name: '실전 안정', hi: 'S', lo: 'N', hiName: '실전안정', loName: '실전긴장',
+       basis: '수학 불안 · Ashcraft (2002), Current Directions in Psychological Science / AMAS 척도 · Hopko 외 (2003), Assessment',
+       hiText: '시험장에서도 평소 실력을 비교적 그대로 발휘합니다.',
+       loText: '알고 있는 문제를 시험에서 놓치는 경우가 있습니다. 실전 연습과 풀이 순서 전략으로 줄일 수 있습니다.' }
+};
+
+/* 공통 응답 옵션의 점수: 0~3 (높을수록 hi 성향), null = 모름(계산 제외) */
+const STUDENT_Q = [
+  { axis:'M', text:'최근 2주 동안, 누가 시키지 않았는데<br>스스로 수학 공부를 시작한 날은?',
+    hint:'학원 수업·숙제 시간은 빼고 세어 보세요.',
+    opts:[['없었다',0],['1~2일',1],['3~5일',2],['6일 이상',3]] },
+  { axis:'M', text:'지난 한 달 동안, 시험 범위가 아닌<br>수학 문제를 스스로 풀어본 적이 있나요?',
+    hint:'궁금해서, 더 어려운 걸 풀어보고 싶어서 등 이유는 상관없어요.',
+    opts:[['없다',0],['1~2번',1],['한 달에 몇 번',2],['거의 매주',3]] },
+  { axis:'S', text:'지난 시험을 준비할 때<br>가장 많은 시간을 쓴 방법은?',
+    hint:'하나만 고르기 어렵다면 시간이 제일 많이 든 것을 고르세요.',
+    opts:[['교재·필기를 다시 읽기',0],['풀었던 문제의 해설 다시 보기',1],['새로운 문제를 많이 풀기',2],['풀었던 문제를 답 가리고 다시 풀기',3]] },
+  { axis:'S', text:'틀린 문제는<br>보통 언제 다시 풀어보나요?',
+    hint:'해설을 읽는 것이 아니라 직접 다시 푸는 것을 기준으로 답하세요.',
+    opts:[['다시 풀지 않는다',0],['해설 보고 바로 끝낸다',1],['시험 직전에 몰아서',2],['며칠 뒤에 다시 푼다',3]] },
+  { axis:'E', text:'최근 2주 동안, 학원 숙제를<br>기한 안에 다 해간 비율은?',
+    opts:[['거의 못 해갔다',0],['절반 정도',1],['대부분',2],['전부',3]] },
+  { axis:'E', text:'지난 시험,<br>시험 공부를 처음 시작한 시점은?',
+    hint:'학원 정규 수업이 아니라, 시험을 위한 공부를 시작한 때예요.',
+    opts:[['시험 3일 전 이내',0],['약 1주 전',1],['약 2주 전',2],['3주 이상 전',3]] },
+  { axis:'T', text:'지난 시험에서 풀이법을 알았는데<br>실수로 틀린 문항은 몇 개인가요?',
+    hint:'계산 실수, 문제 잘못 읽기, 옮겨 적기 실수 모두 포함해요.',
+    opts:[['3개 이상',0],['2개',1],['1개',2],['없었다',3]] },
+  { axis:'T', text:'시험 중 막히는 문제가 나왔을 때<br>실제로 어떻게 했나요?',
+    hint:'지난 시험에서 실제로 했던 행동을 떠올려 보세요.',
+    opts:[['머리가 하얘지고 뒷문제까지 흔들렸다',0],['한참 붙잡고 있었다',1],['조금 고민하다 넘겼다',2],['바로 표시하고 넘겼다',3]] },
+  /* 참고 문항 (점수 계산 X, 상담 자료로만 표시) */
+  { axis:null, key:'studyTime', text:'학원을 제외하고, 평일 하루<br>혼자 수학 공부하는 시간은?',
+    opts:[['거의 없음',null],['30분 이내',null],['30분~1시간',null],['1시간 이상',null]] }
+];
+
+const PARENT_Q = [
+  { axis:'M', text:'최근 2주 동안, 자녀가 시키지 않았는데<br>스스로 공부를 시작하는 모습을 본 날은?',
+    opts:[['없었다',0],['1~2일',1],['3~5일',2],['6일 이상',3],['잘 모르겠다',null]] },
+  { axis:'M', text:'평소 자녀에게<br>"공부하라"는 말을 하는 횟수는?',
+    opts:[['하루 3번 이상',0],['하루 1~2번',1],['일주일에 몇 번',2],['거의 하지 않는다',3]] },
+  { axis:'S', text:'시험 기간, 자녀가 공부하는 모습은<br>주로 어떤가요?',
+    hint:'직접 본 모습을 기준으로 골라 주세요.',
+    opts:[['책·필기를 읽고 있다',0],['해설이나 강의를 보고 있다',1],['문제를 풀고 있다',2],['잘 모르겠다',null]] },
+  { axis:'S', text:'자녀가 틀린 문제를<br>다시 풀어보는 모습을 본 적이 있나요?',
+    opts:[['본 적 없다',0],['드물게 본다',1],['시험 전에 몰아서 한다',2],['평소에 자주 한다',3],['잘 모르겠다',null]] },
+  { axis:'E', text:'자녀가 학원 숙제를<br>부모님 확인 없이 끝내는 정도는?',
+    opts:[['확인해도 잘 안 한다',0],['확인해야 한다',1],['가끔 확인하면 된다',2],['확인하지 않아도 한다',3],['잘 모르겠다',null]] },
+  { axis:'E', text:'지난 시험, 자녀가 시험 공부를<br>시작한 시점은?',
+    opts:[['시험 3일 전 이내',0],['약 1주 전',1],['약 2주 전',2],['3주 이상 전',3],['잘 모르겠다',null]] },
+  { axis:'T', text:'시험이 끝난 뒤 자녀가<br>"아는 건데 실수했다"고 말한 적이 있나요?',
+    hint:'최근 두 번의 시험을 기준으로 답해 주세요.',
+    opts:[['매번 그렇다',0],['자주 그렇다',1],['가끔 있다',2],['거의 없다',3],['잘 모르겠다',null]] },
+  { axis:'T', text:'시험 전날·당일<br>자녀의 모습은 어땠나요?',
+    opts:[['잠을 못 자거나 많이 불안해했다',0],['평소보다 예민했다',1],['약간 긴장한 정도',2],['평소와 같았다',3],['잘 모르겠다',null]] },
+  /* 참고 문항 */
+  { axis:null, key:'manager', text:'현재 가정에서 자녀의 공부 관리는<br>주로 누가 하나요?',
+    opts:[['자녀 스스로',null],['부모님이 체크',null],['학원에 맡기고 있음',null],['따로 관리하지 않음',null]] },
+  { axis:null, key:'phone', text:'자녀의 휴대폰 사용에 대한<br>규칙이 있나요?',
+    opts:[['정해진 규칙이 있고 잘 지킨다',null],['규칙은 있지만 잘 안 지켜진다',null],['규칙이 없다',null]] }
+];
+
+
+/* 처음 화면에 표시되는 연구 근거 (실제 학술지 게재 연구) */
+const RESEARCH = [
+  { axis:'M', no:'01', title:'학습 동기', theory:'자기결정성 이론',
+    finding:'스스로 선택해서 시작한 공부가, 시켜서 하는 공부보다 오래 지속되고 성취도 높다.',
+    cite:'Ryan & Deci (2000) · American Psychologist' },
+  { axis:'S', no:'02', title:'학습 전략', theory:'학습법 효과 비교 연구',
+    finding:'10가지 공부법을 비교한 결과, 답을 가리고 떠올려 풀기·간격 두고 복습하기는 효과가 높고 다시 읽기·밑줄 긋기는 낮다.',
+    cite:'Dunlosky 외 (2013) · Psychological Science in the Public Interest' },
+  { axis:'E', no:'03', title:'실행 관리', theory:'자기조절학습 · 미루기 연구',
+    finding:'계획 → 실행 → 점검을 스스로 하는 학생이 성취가 높고, 미루는 습관은 성적과 부(-)의 관계를 보인다.',
+    cite:'Zimmerman (2002) · Theory Into Practice / Steel (2007) · Psychological Bulletin' },
+  { axis:'T', no:'04', title:'실전 안정', theory:'수학 불안 연구',
+    finding:'시험 상황의 긴장은 실력과 별개로 작업 기억을 방해해, 아는 문제에서도 실수를 늘린다.',
+    cite:'Ashcraft (2002) · Current Directions in Psychological Science / Hopko 외 (2003) · Assessment' }
+];
+
+/* 16유형 이름 (동기 I/O · 전략 A/R · 실행 P/L · 실전 S/N) */
+const TYPE_NAMES = {
+  IAPS:'올라운더형',          IAPN:'실전 리허설 필요형',   IALS:'막판 스퍼트형',        IALN:'열정 과속형',
+  IRPS:'성실한 복습러형',     IRPN:'꼼꼼한 걱정러형',      IRLS:'감 좋은 즉흥형',       IRLN:'의욕 앞선 출발형',
+  OAPS:'가이드 최적화형',     OAPN:'신중한 모범생형',      OALS:'잠재력 대기형',        OALN:'시동 필요형',
+  ORPS:'성실 루틴형',         ORPN:'노력 대비 아쉬움형',   ORLS:'여유만만형',           ORLN:'처음부터 설계형'
+};
+</script>
+
+<style>
+:root{
+  --bg:#F4F0E8; --paper:#FBF9F4; --ink:#1E1733; --ink-2:#5A5370; --ink-3:#8E879E;
+  --line:rgba(37,28,64,.12); --hair:rgba(37,28,64,.08);
+  --purple:#2D2350; --purple-deep:#251C40; --purple-soft:#6B5A9E;
+  --gold:#C9A24A; --gold-bright:#F0C040;
+  --ease:cubic-bezier(.2,.7,.2,1);
+  --serif:'Cormorant Garamond','Times New Roman',serif;
+  --sans:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:100vh;min-height:100svh;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(800px 800px at 100% -10%,rgba(107,90,158,.12),transparent 60%),radial-gradient(700px 700px at -10% 110%,rgba(201,162,74,.14),transparent 60%)}
+button,input,select{font:inherit;color:inherit}
+button{background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+a{color:inherit;text-decoration:none}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--purple-soft);outline-offset:3px}
+
+.top{position:relative;z-index:2;display:flex;align-items:center;justify-content:space-between;padding:20px clamp(20px,4vw,48px)}
+.brand{display:flex;align-items:center;gap:9px;font-size:15px;letter-spacing:-.02em}
+.brand img{width:30px;height:30px;object-fit:contain}
+.brand b{font-weight:800}.brand span{color:var(--ink-2);font-weight:500}
+.top-tag{font-family:var(--serif);font-style:italic;color:var(--ink-3);font-size:15px}
+
+.wrap{position:relative;z-index:1;max-width:680px;margin:0 auto;padding:12px 20px 60px}
+.screen{animation:in .5s var(--ease)}
+@keyframes in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:700;letter-spacing:.26em;color:var(--purple-soft)}
+.eyebrow::before{content:"";width:18px;height:1px;background:currentColor;opacity:.5}
+.eyebrow.gold{color:var(--gold)}
+h1{margin-top:16px;font-size:clamp(28px,6vw,42px);font-weight:800;letter-spacing:-.045em;line-height:1.3}
+h1 em{font-style:normal;color:var(--purple);background:linear-gradient(transparent 64%,rgba(201,162,74,.3) 64%,rgba(201,162,74,.3) 92%,transparent 92%)}
+.lead{margin-top:14px;font-size:16px;line-height:1.75;color:var(--ink-2)}
+
+.card{background:var(--paper);border:1px solid var(--line);border-radius:22px;padding:22px;box-shadow:0 12px 30px -24px rgba(37,28,64,.4)}
+.principles{margin-top:28px;display:grid;gap:10px}
+.principle{display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-radius:16px;background:rgba(251,249,244,.7);border:1px solid var(--hair)}
+.principle b{font-family:var(--serif);font-size:22px;color:var(--gold);line-height:1;flex:none;width:26px}
+.principle p{font-size:14.5px;line-height:1.6;color:var(--ink-2)}
+.principle p strong{color:var(--ink)}
+
+.roles{margin-top:28px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.role{text-align:left;padding:22px 20px;border-radius:22px;background:var(--paper);border:1px solid var(--line);transition:transform .3s var(--ease),border-color .3s,box-shadow .3s}
+.role .k{font-size:11px;font-weight:700;letter-spacing:.24em;color:var(--gold)}
+.role .t{display:block;margin-top:10px;font-size:22px;font-weight:800;letter-spacing:-.04em}
+.role .d{display:block;margin-top:6px;font-size:13px;color:var(--ink-3);line-height:1.5}
+@media (hover:hover){.role:hover{transform:translateY(-3px);border-color:rgba(45,35,80,.4);box-shadow:0 20px 34px -22px rgba(37,28,64,.5)}}
+.role:active{transform:scale(.98)}
+.note{margin-top:16px;font-size:13px;color:var(--ink-3);line-height:1.6}
+
+.cta{display:inline-flex;align-items:center;justify-content:space-between;gap:14px;height:58px;padding:0 12px 0 26px;border-radius:999px;background:var(--purple-deep);color:#F4F0E8;font-size:16px;font-weight:700;box-shadow:0 14px 30px -14px rgba(37,28,64,.7);transition:transform .3s var(--ease),opacity .3s}
+.cta .arw{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:rgba(240,192,64,.16);color:var(--gold-bright)}
+.cta svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+.cta:disabled{opacity:.35;cursor:not-allowed}
+.cta.full{width:100%;margin-top:22px}
+.ghost{display:inline-flex;align-items:center;gap:8px;height:44px;padding:0 18px;border-radius:999px;font-size:14px;font-weight:600;color:var(--ink-2);border:1px solid var(--line);background:rgba(251,249,244,.6)}
+.ghost svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8}
+
+/* form */
+.field{margin-top:16px}
+.field label{display:block;font-size:13px;font-weight:700;color:var(--ink-2);margin-bottom:7px}
+.field label span{font-weight:500;color:var(--ink-3)}
+.field input,.field select{width:100%;height:52px;border-radius:14px;border:1px solid var(--line);background:#fff;padding:0 16px;font-size:16px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.agree{margin-top:18px;display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.6;color:var(--ink-2);cursor:pointer}
+.agree input{width:18px;height:18px;margin-top:2px;accent-color:var(--purple);flex:none}
+
+/* question */
+.qtop{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.back{display:inline-flex;align-items:center;gap:4px;height:36px;padding:0 12px 0 8px;border-radius:999px;font-size:13px;font-weight:600;color:var(--ink-3);margin-left:-8px}
+.back svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.8}
+.count{font-family:var(--serif);font-size:18px;color:var(--ink-3)}
+.count b{font-weight:500;color:var(--purple);font-size:24px}
+.progress{margin-top:14px;height:3px;border-radius:2px;background:rgba(37,28,64,.1);overflow:hidden}
+.progress i{display:block;height:100%;background:var(--gold);transition:width .5s var(--ease)}
+.q-axis{margin-top:30px;font-size:12px;font-weight:700;letter-spacing:.2em;color:var(--purple-soft)}
+.q-text{margin-top:12px;font-size:clamp(23px,5.4vw,32px);font-weight:800;letter-spacing:-.045em;line-height:1.38}
+.q-hint{margin-top:10px;font-size:14px;color:var(--ink-3);line-height:1.6}
+.opts{margin-top:26px;display:grid;gap:10px}
+.opt{display:flex;align-items:center;justify-content:space-between;gap:12px;text-align:left;min-height:62px;padding:14px 18px 14px 20px;border-radius:18px;background:var(--paper);border:1px solid var(--line);font-size:16px;font-weight:600;transition:transform .25s var(--ease),border-color .25s,background .25s,color .25s}
+.opt .mk{width:26px;height:26px;border-radius:50%;border:1.4px solid var(--line);flex:none;display:grid;place-items:center;transition:all .25s}
+.opt .mk::after{content:"";width:8px;height:8px;border-radius:50%;background:transparent}
+.opt.unknown{color:var(--ink-3);font-weight:500;background:transparent;border-style:dashed}
+@media (hover:hover){.opt:hover{border-color:rgba(45,35,80,.4);transform:translateX(3px)}}
+.opt.on{background:var(--purple-deep);border-color:var(--purple-deep);color:#F4F0E8}
+.opt.on .mk{border-color:var(--gold-bright);background:var(--gold-bright)}
+.opt.on .mk::after{background:var(--purple-deep)}
+
+
+/* research block */
+.trust{margin-top:22px;display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:18px;overflow:hidden;background:rgba(251,249,244,.7)}
+.trust div{padding:14px 10px;text-align:center}
+.trust div + div{border-left:1px solid var(--hair)}
+.trust b{display:block;font-family:var(--serif);font-weight:500;font-size:30px;line-height:1;color:var(--purple)}
+.trust span{display:block;margin-top:6px;font-size:12px;color:var(--ink-3);font-weight:600}
+.research{margin-top:34px}
+.research-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.research-head h2{margin-top:10px;font-size:clamp(21px,4.6vw,27px);font-weight:800;letter-spacing:-.04em;line-height:1.35}
+.research-list{margin-top:16px;display:grid;gap:10px}
+.rcard{position:relative;padding:20px 20px 18px;border-radius:20px;background:var(--paper);border:1px solid var(--line);overflow:hidden}
+.rcard::before{content:"";position:absolute;left:0;top:18px;bottom:18px;width:3px;border-radius:0 3px 3px 0;background:var(--gold)}
+.rcard-top{display:flex;align-items:center;gap:10px}
+.rcard-top em{font-style:normal;font-family:var(--serif);font-size:20px;color:var(--gold);line-height:1}
+.rcard-top b{font-size:16px;font-weight:800;letter-spacing:-.03em}
+.rcard-top span{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--purple-soft);padding:4px 10px;border-radius:999px;background:rgba(107,90,158,.08);white-space:nowrap}
+.rcard p{margin-top:10px;font-size:14.5px;line-height:1.65;color:var(--ink-2)}
+.rcard cite{display:flex;align-items:center;gap:6px;margin-top:12px;font-style:normal;font-size:12px;color:var(--ink-3);line-height:1.5}
+.rcard cite::before{content:"";flex:none;width:14px;height:14px;background:no-repeat center/contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23C9A24A' stroke-width='2'%3E%3Cpath d='M4 5h11a3 3 0 0 1 3 3v11H7a3 3 0 0 1-3-3z'/%3E%3Cpath d='M18 19h2V7'/%3E%3C/svg%3E")}
+.method{margin-top:12px;padding:18px 20px;border-radius:20px;background:var(--purple-deep);color:#F4F0E8}
+.method b{display:block;font-size:12px;letter-spacing:.2em;color:var(--gold-bright)}
+.method p{margin-top:8px;font-size:14px;line-height:1.7;color:rgba(244,240,232,.85)}
+.method p strong{color:#fff}
+.start-title{margin-top:36px;font-size:12px;font-weight:700;letter-spacing:.24em;color:var(--gold)}
+.roles.tight{margin-top:12px}
+.principles.small{margin-top:14px}
+.principles.small .principle{padding:12px 14px}
+.principles.small .principle p{font-size:13.5px}
+@media (max-width:480px){.trust b{font-size:26px}.rcard-top span{display:none}}
+
+/* result */
+.res-head{text-align:center;padding-top:8px}
+.res-who{margin-top:10px;font-size:14px;color:var(--ink-3)}
+.code{margin-top:18px;display:flex;justify-content:center;gap:8px}
+.code span{width:58px;height:70px;border-radius:16px;display:grid;place-items:center;font-family:var(--serif);font-size:40px;color:var(--purple);background:var(--paper);border:1px solid var(--line);box-shadow:0 10px 24px -18px rgba(37,28,64,.5)}
+.type-name{margin-top:18px;font-size:clamp(28px,6.4vw,40px);font-weight:800;letter-spacing:-.05em}
+.res-sub{margin-top:8px;font-size:14.5px;color:var(--ink-2)}
+.disclaimer{margin-top:18px;font-size:12.5px;color:var(--ink-3);line-height:1.6;padding:12px 16px;border-radius:14px;background:rgba(201,162,74,.08);border:1px solid rgba(201,162,74,.2)}
+.sec-title{margin-top:34px;font-size:12px;font-weight:700;letter-spacing:.24em;color:var(--gold)}
+.axis{margin-top:12px;padding:20px;border-radius:20px;background:var(--paper);border:1px solid var(--line)}
+.axis-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.axis-top b{font-size:17px;font-weight:800;letter-spacing:-.03em}
+.axis-top span{font-size:13px;font-weight:700;color:var(--purple)}
+.bar{margin-top:14px;position:relative;height:10px;border-radius:999px;background:linear-gradient(90deg,rgba(107,90,158,.14),rgba(201,162,74,.22))}
+.bar i{position:absolute;top:50%;width:20px;height:20px;border-radius:50%;background:var(--purple-deep);border:3px solid var(--gold-bright);transform:translate(-50%,-50%);transition:left 1s var(--ease)}
+.bar-lbl{display:flex;justify-content:space-between;margin-top:8px;font-size:12px;color:var(--ink-3);font-weight:600}
+.axis p{margin-top:12px;font-size:14.5px;line-height:1.65;color:var(--ink-2)}
+.axis .basis{margin-top:10px;font-size:12px;color:var(--ink-3);line-height:1.5;padding-top:10px;border-top:1px dashed var(--hair)}
+.axis .nodata{color:var(--ink-3);font-style:italic}
+.facts{margin-top:12px;display:grid;gap:8px}
+.fact{display:flex;justify-content:space-between;gap:14px;padding:13px 16px;border-radius:14px;background:rgba(251,249,244,.7);border:1px solid var(--hair);font-size:14px}
+.fact span{color:var(--ink-3)}.fact b{text-align:right;font-weight:700}
+.focus{margin-top:12px;padding:20px;border-radius:20px;background:var(--purple-deep);color:#F4F0E8}
+.focus b{display:block;font-size:12px;letter-spacing:.2em;color:var(--gold-bright)}
+.focus p{margin-top:10px;font-size:15px;line-height:1.7;color:rgba(244,240,232,.85)}
+.save-state{margin-top:20px;text-align:center;font-size:13px;color:var(--ink-3)}
+.save-state.ok{color:var(--purple)}
+.res-actions{margin-top:20px;display:grid;gap:10px}
+.res-actions .row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.foot{text-align:center;margin-top:40px;font-size:11px;letter-spacing:.2em;color:var(--ink-3)}
+
+@media (max-width:480px){
+  .roles{grid-template-columns:1fr}
+  .row2{grid-template-columns:1fr}
+  .code span{width:52px;height:62px;font-size:34px}
+  .cta{width:100%}
+}
+@media print{
+  body::before,.top-tag,.res-actions,.save-state{display:none}
+  body{background:#fff}
+  .axis,.card,.fact{break-inside:avoid}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand"><img id="brandLogo" alt=""><b>송우찬수학학원</b><span>평촌관</span></div>
+  <div class="top-tag">Learning Profile</div>
+</header>
+
+<main class="wrap"><div class="screen" id="screen"></div></main>
+
+<script>
+const ARROW = '<svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+const BACK = '<svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>';
+const RETRY = '<svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4h4"/></svg>';
+const PRINT = '<svg viewBox="0 0 24 24"><path d="M7 9V4h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v6H7z"/></svg>';
+
+const $ = (s, el = document) => el.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const screen = $('#screen');
+const state = { role:null, idx:0, answers:[] };
+
+if (BRAND.logo) $('#brandLogo').src = BRAND.logo; else $('#brandLogo').remove();
+$('#brandLogo') && $('#brandLogo').addEventListener('error', e => e.target.remove());
+
+const Q = () => state.role === 'student' ? STUDENT_Q : PARENT_Q;
+function show(html){ screen.innerHTML = html; screen.style.animation = 'none'; void screen.offsetWidth; screen.style.animation = ''; window.scrollTo(0,0); }
+
+/* ---------- 1. 인트로 ---------- */
+function renderIntro(){
+  show(`
+    <p class="eyebrow">RESEARCH-BASED LEARNING PROFILE</p>
+    <h1>감이 아니라 <em>연구</em>로,<br>우리 아이 공부 습관을 봅니다</h1>
+    <p class="lead">교육심리학에서 성적과의 관계가 검증된 4가지 학습 요인을, 실제 행동을 묻는 문항으로 확인합니다.<br>학생과 학부모님이 각각 작성하시면 상담 때 두 결과를 함께 봅니다.</p>
+    <div class="trust">
+      <div><b>04</b><span>검증된 학습 요인</span></div>
+      <div><b>06</b><span>학술지 게재 연구</span></div>
+      <div><b>100%</b><span>행동 기반 문항</span></div>
+    </div>
+
+    <section class="research">
+      <p class="eyebrow gold">EVIDENCE</p>
+      <div class="research-head"><h2>각 문항은 이 연구들에서 나왔습니다</h2></div>
+      <div class="research-list">
+        ${RESEARCH.map(r => `
+          <article class="rcard">
+            <div class="rcard-top"><em>${r.no}</em><b>${esc(r.title)}</b><span>${esc(r.theory)}</span></div>
+            <p>${esc(r.finding)}</p>
+            <cite>${esc(r.cite)}</cite>
+          </article>`).join('')}
+      </div>
+      <div class="method">
+        <b>HOW WE MEASURE</b>
+        <p>"나는 성실하다" 같은 자기 평가는 실제와 차이가 큽니다. 그래서 모든 문항을 <strong>"최근 2주 동안 몇 번", "지난 시험 며칠 전"</strong>처럼 <strong>기간과 횟수로 답하는 행동 문항</strong>으로 만들었습니다. 학부모님 문항은 <strong>직접 보신 것만</strong> 답하도록 '잘 모르겠다'를 두어, 추측이 결과에 섞이지 않게 했습니다.</p>
+      </div>
+    </section>
+
+    <p class="start-title">START</p>
+    <div class="roles tight">
+      <button class="role" data-role="student"><span class="k">STUDENT</span><span class="t">학생용</span><span class="d">9문항 · 약 2분</span></button>
+      <button class="role" data-role="parent"><span class="k">PARENT</span><span class="t">학부모용</span><span class="d">10문항 · 약 3분</span></button>
+    </div>
+    <div class="principles small">
+      <div class="principle"><b>01</b><p><strong>정답은 없습니다.</strong> 좋아 보이는 답보다 있는 그대로의 답이 정확한 상담으로 이어집니다.</p></div>
+      <div class="principle"><b>02</b><p>잘 기억나지 않으면 <strong>가장 가까운 것</strong>을 고르시면 됩니다.</p></div>
+    </div>
+    <p class="note">※ 위 연구에서 검증된 요인을 바탕으로 학원에서 구성한 상담용 체크이며, 표준화된 심리검사는 아닙니다.</p>
+    <p class="foot">SONG WOOCHAN MATH ACADEMY · PYEONGCHON</p>`);
+  screen.querySelectorAll('[data-role]').forEach(b => b.addEventListener('click', () => startSurvey(b.dataset.role)));
+}
+
+/* ---------- 2. 연결 정보 (URL 파라미터) ----------
+   상담지(consultForms) 작성 완료 후 아래처럼 이동시키면 결과가 해당 상담지에 연결됩니다.
+     learning-profile.html?cid=상담지문서ID            → 학생/학부모 선택 화면
+     learning-profile.html?cid=상담지문서ID&role=parent → 바로 학부모용 시작
+     (&name=학생이름 을 붙이면 결과 화면에 이름 표시 — 저장은 하지 않음)
+   cid 없이 열면 저장 없이 결과만 보여주는 체험/시연 모드로 동작합니다. */
+const PARAMS = new URLSearchParams(location.search);
+const LINK = { cid: PARAMS.get('cid') || null, name: PARAMS.get('name') || '', role: PARAMS.get('role') };
+function startSurvey(role){
+  state.role = role; state.idx = 0;
+  state.answers = new Array(Q().length).fill(undefined);
+  renderQuestion();
+}
+
+/* ---------- 3. 문항 ---------- */
+function renderQuestion(){
+  const list = Q(), q = list[state.idx], n = list.length;
+  const axisLabel = q.axis ? AXES[q.axis].name : '참고 정보';
+  const picked = state.answers[state.idx];
+  show(`
+    <div class="qtop"><button class="back" id="bk">${BACK}이전</button><span class="count"><b>${String(state.idx+1).padStart(2,'0')}</b> / ${String(n).padStart(2,'0')}</span></div>
+    <div class="progress"><i style="width:${(state.idx / n) * 100}%"></i></div>
+    <p class="q-axis">${axisLabel}</p>
+    <h2 class="q-text">${q.text}</h2>
+    ${q.hint ? `<p class="q-hint">${q.hint}</p>` : ''}
+    <div class="opts">
+      ${q.opts.map((o, i) => `<button class="opt ${o[0]==='잘 모르겠다'?'unknown':''} ${picked===i?'on':''}" data-i="${i}"><span>${esc(o[0])}</span><span class="mk"></span></button>`).join('')}
+    </div>`);
+  requestAnimationFrame(() => { const p = $('.progress i'); if (p) p.style.width = ((state.idx + (picked!==undefined?1:0)) / n * 100) + '%'; });
+  $('#bk').addEventListener('click', () => { if (state.idx === 0) renderIntro(); else { state.idx--; renderQuestion(); } });
+  screen.querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => {
+    screen.querySelectorAll('.opt').forEach(x => x.classList.remove('on'));
+    b.classList.add('on');
+    state.answers[state.idx] = +b.dataset.i;
+    $('.progress i').style.width = ((state.idx + 1) / n * 100) + '%';
+    setTimeout(() => { if (state.idx < n - 1){ state.idx++; renderQuestion(); } else renderResult(); }, 260);
+  }));
+}
+
+/* ---------- 4. 채점 ---------- */
+function score(){
+  const list = Q(), by = { M:[], S:[], E:[], T:[] }, extra = {};
+  list.forEach((q, i) => {
+    const o = q.opts[state.answers[i]];
+    if (!o) return;
+    if (q.axis){ if (o[1] !== null) by[q.axis].push(o[1]); }
+    else extra[q.key] = o[0];
+  });
+  const axes = {};
+  Object.keys(by).forEach(k => {
+    const a = by[k];
+    axes[k] = a.length ? Math.round(a.reduce((s, v) => s + v, 0) / (a.length * 3) * 100) : null;
+  });
+  const code = Object.keys(AXES).map(k => axes[k] === null ? '?' : (axes[k] >= 50 ? AXES[k].hi : AXES[k].lo)).join('');
+  return { axes, code, extra };
+}
+
+/* ---------- 5. 결과 ---------- */
+function renderResult(){
+  const { axes, code, extra } = score();
+  const isS = state.role === 'student', name = esc(LINK.name);
+  const typeName = TYPE_NAMES[code] || '관찰 정보 보완 필요';
+  const valid = Object.entries(axes).filter(([,v]) => v !== null);
+  const weakest = valid.length ? valid.sort((a, b) => a[1] - b[1])[0] : null;
+
+  const axisHtml = Object.keys(AXES).map(k => {
+    const a = AXES[k], v = axes[k];
+    if (v === null) return `<div class="axis"><div class="axis-top"><b>${a.name}</b><span>-</span></div>
+      <p class="nodata">'잘 모르겠다' 응답이 많아 판단하지 않았습니다. 상담 때 함께 확인하겠습니다.</p></div>`;
+    const hi = v >= 50, mid = v >= 40 && v <= 60;
+    return `<div class="axis">
+      <div class="axis-top"><b>${a.name}</b><span>${mid ? '균형에 가까움 · ' : ''}${hi ? a.hiName : a.loName}</span></div>
+      <div class="bar"><i style="left:0%" data-v="${v}"></i></div>
+      <div class="bar-lbl"><span>${a.loName}</span><span>${a.hiName}</span></div>
+      <p>${hi ? a.hiText : a.loText}</p>
+      <p class="basis">근거 · ${a.basis}</p>
+    </div>`;
+  }).join('');
+
+  const extraLabels = { studyTime:'평일 혼자 공부 시간', manager:'가정 내 공부 관리', phone:'휴대폰 사용 규칙' };
+  const factsHtml = Object.keys(extra).length ? `
+    <p class="sec-title">참고 정보</p>
+    <div class="facts">${Object.entries(extra).map(([k, v]) => `<div class="fact"><span>${extraLabels[k] || k}</span><b>${esc(v)}</b></div>`).join('')}</div>` : '';
+
+  const focusHtml = weakest && weakest[1] < 50 ? `
+    <p class="sec-title">상담 때 집중할 부분</p>
+    <div class="focus"><b>${AXES[weakest[0]].name.toUpperCase()}</b><p>${AXES[weakest[0]].loText}</p></div>` : '';
+
+  show(`
+    <div class="res-head">
+      <p class="eyebrow gold">${isS ? 'MY LEARNING PROFILE' : 'OBSERVED PROFILE'}</p>
+      <p class="res-who">${name ? name + ' · ' : ''}${isS ? '학생 응답' : '학부모 응답'}</p>
+      <div class="code">${code.split('').map(c => `<span>${c}</span>`).join('')}</div>
+      <h1 class="type-name">${esc(typeName)}</h1>
+      <p class="res-sub">${isS ? '내가 답한 실제 학습 행동' : `학부모님이 관찰하신 ${name ? name + ' 학생' : '자녀'}의 학습 모습`}을 4개 축으로 정리했어요.</p>
+    </div>
+    <p class="disclaimer">이 결과는 응답한 행동을 바탕으로 한 <b>상담 참고 자료</b>이며 심리검사가 아닙니다. 학생용과 학부모용 결과가 다르게 나오는 부분이 상담에서 가장 중요한 이야깃거리가 됩니다.</p>
+    <p class="sec-title">4가지 학습 축</p>
+    ${axisHtml}
+    ${focusHtml}
+    ${factsHtml}
+    <p class="save-state" id="saveState">${BRAND.saveCollection && LINK.cid ? '결과를 상담지에 연결하는 중…' : ''}</p>
+    <div class="res-actions">
+      ${LINK.cid ? '' : `<a class="cta full" href="${esc(BRAND.consultUrl)}" style="margin-top:0">상담 신청하기<span class="arw">${ARROW}</span></a>`}
+      <div class="row">
+        <button class="ghost" id="other">${isS ? '학부모용도 작성하기' : '학생용도 작성하기'}</button>
+        <button class="ghost" id="print">${PRINT}저장·인쇄</button>
+        <button class="ghost" id="retry">${RETRY}처음으로</button>
+      </div>
+    </div>
+    <p class="foot">송우찬수학학원 평촌관 · <a href="tel:${BRAND.phone}">${BRAND.phone}</a></p>`);
+
+  requestAnimationFrame(() => setTimeout(() => screen.querySelectorAll('.bar i').forEach(el => el.style.left = el.dataset.v + '%'), 60));
+  $('#print').addEventListener('click', () => window.print());
+  $('#retry').addEventListener('click', () => { state.role = null; renderIntro(); });
+  $('#other').addEventListener('click', () => { startSurvey(isS ? 'parent' : 'student'); });
+
+  saveResult({ axes, code, typeName, extra });
+}
+
+/* ---------- 6. 저장 (Firestore) ---------- */
+async function saveResult(r){
+  const el = $('#saveState');
+  if (!BRAND.saveCollection || !LINK.cid || !window.__saveProfile){ if (el) el.textContent = ''; return; }
+  const list = Q();
+  const answers = list.map((q, i) => ({ q: q.text.replace(/<br>/g, ' '), axis: q.axis, a: q.opts[state.answers[i]]?.[0] ?? null, score: q.opts[state.answers[i]]?.[1] ?? null }));
+  try {
+    await window.__saveProfile(BRAND.saveCollection, {
+      consultId: LINK.cid, role: state.role,
+      code: r.code, typeName: r.typeName, axes: r.axes, extra: r.extra, answers
+    });
+    if (el){ el.textContent = '✓ 결과가 상담지에 연결되었습니다. 상담 때 함께 확인해요.'; el.classList.add('ok'); }
+  } catch(e){
+    console.error(e);
+    if (el) el.textContent = '결과 전달이 되지 않았어요. [저장·인쇄]로 화면을 저장해 상담 때 보여주세요.';
+  }
+}
+
+if (LINK.role === 'student' || LINK.role === 'parent') startSurvey(LINK.role); else renderIntro();
+</script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+const app = initializeApp({
+  apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
+  authDomain: "songmath.firebaseapp.com",
+  projectId: "songmath",
+  storageBucket: "songmath.firebasestorage.app",
+  messagingSenderId: "936295436575",
+  appId: "1:936295436575:web:d1e201508719850cfbe02a"
+});
+const db = getFirestore(app);
+window.__saveProfile = (col, data) => addDoc(collection(db, col), { ...data, branch: '평촌관', createdAt: serverTimestamp() });
+</script>
+</body>
+</html>
