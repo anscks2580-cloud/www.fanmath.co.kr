@@ -1263,38 +1263,13 @@ body.ck-lock { overflow:hidden; }
     <div class="card">
       <h3>📥 상담 신청 · 상담 기록</h3>
       <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
-        홈페이지 상담 신청 폼(consult.html)과 학원 태블릿·QR 상담지로 접수된 내역입니다. 태블릿·QR 상담지는 작성 후 <b style="color:var(--off-white);">학부모 설문 → 결과 → 안내 영상</b>으로 이어지고, 결과는 이 목록의 상담 기록에 함께 저장됩니다. 학생 설문은 각 기록의 <b style="color:var(--off-white);">학생 설문 시작</b>으로 진행합니다.
+        홈페이지 상담 신청 폼(consult.html)과 학원 태블릿·QR 상담지로 접수된 내역입니다. 태블릿·QR 상담지는 작성 후 <b style="color:var(--off-white);">학부모 설문 → 결과 → 상담자료</b>으로 이어지고, 결과는 이 목록의 상담 기록에 함께 저장됩니다. 학생 설문은 각 기록의 <b style="color:var(--off-white);">학생 설문 시작</b>으로 진행합니다.
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;padding:14px 16px;background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);border-radius:10px;">
         <button class="btn btn-primary" onclick="openConsultKiosk()">🖊 태블릿 상담지 열기</button>
         <button class="btn btn-secondary" onclick="openConsultQr()">📱 QR 상담지 생성</button>
         <span style="font-size:12px;color:var(--muted);line-height:1.5;">태블릿: 학생·학부모님께 태블릿을 드려 직접 입력 (종료는 우측 상단 <b style="color:var(--gold);">길게 누르기</b>)<br>QR: 상담 오신 분 휴대폰으로 스캔 → 상담지·학부모 설문을 작성하면 이 목록에 바로 저장</span>
       </div>
-
-      <details class="cv-box" id="cvBox">
-        <summary>🎬 상담 안내 영상 <span class="cv-sum" id="cvSummary">확인 중...</span></summary>
-        <div class="cv-body">
-          <p class="cv-desc">학부모 설문 결과를 확인한 뒤 <b>다음 단계</b>에서 재생되는 짧은 안내 영상입니다. 상담자료(프레젠테이션)와는 별개이며, 등록하지 않으면 영상 단계 없이 바로 완료됩니다.</p>
-          <div class="cv-grid">
-            <div class="form-group"><label>영상 종류</label>
-              <select id="cvKind" onchange="cvKindChanged()">
-                <option value="none">사용 안 함</option>
-                <option value="promo">홍보영상(Vimeo)에서 선택</option>
-                <option value="url">주소 직접 입력</option>
-              </select></div>
-            <div class="form-group" id="cvPromoWrap"><label>홍보영상</label><select id="cvPromo"><option value="">불러오는 중...</option></select></div>
-            <div class="form-group" id="cvUrlWrap"><label>영상 주소</label><input type="text" id="cvUrl" placeholder="assets/파일.mp4 · Vimeo · YouTube 주소"></div>
-            <div class="form-group"><label>시작 (초, 선택)</label><input type="number" id="cvStart" min="0" step="0.1" placeholder="0"></div>
-            <div class="form-group"><label>끝 (초, 선택)</label><input type="number" id="cvEnd" min="0" step="0.1" placeholder="끝까지"></div>
-          </div>
-          <div class="cv-acts">
-            <button class="btn btn-primary btn-sm" onclick="saveConsultVideoSetting()">저장</button>
-            <button class="btn btn-secondary btn-sm" onclick="previewConsultVideo()">새 창에서 미리보기</button>
-            <span class="cv-msg" id="cvMsg"></span>
-          </div>
-          <p class="cv-note">재생 방식: 학부모님이 버튼을 누른 직후 소리와 함께 재생을 시도하고, 브라우저가 막으면 음소거로 재생하며 '소리 켜기' 버튼을 보여 줍니다. 그것도 막히면 재생 버튼이 나타납니다. 영상을 불러오지 못하거나 건너뛰어도 상담 기록은 이미 저장되어 있어 진행이 막히지 않습니다.</p>
-        </div>
-      </details>
 
       <div class="cf-toolbar">
         <input type="search" id="consultSearch" placeholder="학생 이름 · 연락처 검색" oninput="setConsultFilter()">
@@ -9609,7 +9584,7 @@ function renderConsultList() {
     const d = r.data, s = consultDesc(r);
     const dateStr = d.createdAt?.toDate ? formatConsultDate(d.createdAt.toDate()) : '-';
     const upd = s?.updatedAt?.toDate ? formatConsultDate(s.updatedAt.toDate()) : dateStr;
-    const stageTxt = s ? s.stageLabel + (s.isFlow && s.video && s.video.status !== 'pending' ? ` · 영상 ${s.video.label}` : '') : '신청서 접수';
+    const stageTxt = s ? s.stageLabel + (s.isFlow && s.video && s.video.status !== 'pending' ? ` · 상담자료 ${s.video.label}` : '') : '신청서 접수';
     return `
       <div class="consult-item cf-item">
         <div class="consult-main">
@@ -9746,7 +9721,7 @@ function consultRecordHtml(cid, d, prof, profErr, CF) {
     ${step('ok', '상담신청서', `저장 ${e(crFmt(d.formSavedAt || d.createdAt) || '완료')}`)}
     ${step(pDone ? 'ok' : '', '학부모 설문', pDone ? `완료 ${e(crFmt(s?.parent.at) || '')}` : '미실시')}
     ${step(sDone ? 'ok' : (d.visitWith === 'parent' ? 'warn' : ''), '학생 설문', sDone ? `완료 ${e(crFmt(s?.student.at) || '')}` : e(s?.student.label || '미실시'))}
-    ${step(video && ['completed'].includes(video.status) ? 'ok' : '', '안내 영상', video ? e(video.label) + (video.at ? ' ' + e(crFmt(video.at)) : '') : '해당 없음')}
+    ${step(video && ['completed'].includes(video.status) ? 'ok' : '', '상담자료', video ? e(video.label) + (video.at ? ' ' + e(crFmt(video.at)) : '') : '해당 없음')}
     ${step(s?.stage === 'consultation_completed' ? 'ok' : '', '진행 상태', e(s?.stageLabel || '신청서 접수'))}`;
 
   // 축별 비교: 두 결과의 축 방향(같음/다름)만 나란히 보여줌 — 새 해석·유형을 만들지 않음

@@ -50,7 +50,7 @@ export const STAGE_LABEL = {
 };
 export const SURVEY = Object.freeze({ NOT_STARTED: 'not_started', COMPLETED: 'completed' });
 export const VIDEO = Object.freeze({ PENDING: 'pending', COMPLETED: 'completed', SKIPPED: 'skipped', FAILED: 'failed', NONE: 'none' });
-export const VIDEO_LABEL = { pending: '시청 전', completed: '시청 완료', skipped: '건너뜀', failed: '재생 실패', none: '등록된 영상 없음' };
+export const VIDEO_LABEL = { pending: '보기 전', completed: '끝까지 시청', skipped: '중간에 마침', failed: '불러오기 실패', none: '없음' };
 
 /* 화면 상단 진행 표시 (consult-visit · learning-profile 공통) */
 export const FLOW_STEPS = ['상담신청서', '학부모 설문', '결과 확인', '안내 영상'];

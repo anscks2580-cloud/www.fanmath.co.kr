@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>상담자료 소개 | 송우찬수학학원</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<!-- 상담자료 소개 애니메이션 (Claude Design 번들에서 분리: 이미지 WebP 변환, 폰트는 CDN 사용)
+     - 단독으로 열면 표지 → [시작하기]
+     - 상담 플로우(learning-profile.html)에서는 ?autostart=1 로 표지 없이 바로 재생
+       (시작 시 'started', 끝까지 재생되면 'menu' 신호를 부모 화면에 보내고 목차에서 멈춤) -->
+<script>window.__resources = {
+  "https://unpkg.com/react@18.3.1/umd/react.production.min.js": "consult-intro/react.production.min.js",
+  "https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js": "consult-intro/react-dom.production.min.js"
+};</script>
+<script src="consult-intro/dc-runtime.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>html,body{margin:0;height:100%;background:#0E0A1C;color:#F0EDF8;overflow:hidden;-webkit-font-smoothing:antialiased}*{box-sizing:border-box}button{font-family:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}a{color:#F0C040}a:hover{color:#F0EDF8}::-webkit-scrollbar{display:none}</style>
+
+</helmet>
+<div style="position:fixed;inset:0;background:#0E0A1C;overflow:hidden;font-family:'Pretendard Variable',Pretendard,-apple-system,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;word-break:keep-all">
+<div data-screen-label="상담자료" style="position:absolute;left:50%;top:50%;width:1920px;height:1080px;margin:-540px 0 0 -960px;transform:scale({{ scale }});background:#1A1230;overflow:hidden;color:#F0EDF8">
+
+<div style="position:absolute;left:-200px;top:-420px;width:1500px;height:900px;background:radial-gradient(closest-side,rgba(240,192,64,.075),transparent);pointer-events:none"></div>
+<div style="position:absolute;right:-300px;bottom:-460px;width:1400px;height:1000px;background:radial-gradient(closest-side,rgba(150,128,230,.10),transparent);pointer-events:none"></div>
+
+<!-- ═════ MAIN ═════ -->
+<div style="position:absolute;inset:0;opacity:{{ mainO }};transform:scale({{ mainS }});pointer-events:{{ mainPe }};transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform 1.1s cubic-bezier(.2,.7,.2,1)">
+
+  <div style="position:absolute;left:120px;right:120px;top:64px;display:flex;align-items:flex-start;justify-content:space-between;gap:40px;z-index:5">
+    <div style="display:flex;align-items:baseline;gap:14px">
+      <span style="font-size:28px;font-weight:800;letter-spacing:-.02em">송우찬수학학원</span>
+      <span style="font-size:24px;font-weight:600;color:rgba(240,237,248,.66)">평촌관</span>
+    </div>
+    <div style="display:flex;gap:28px;opacity:{{ hdrO }};transition:opacity .6s">
+      <sc-for list="{{ parts }}" as="p" hint-placeholder-count="5">
+        <button sc-camel-on-click="{{ p.go }}" style="display:flex;flex-direction:column;align-items:flex-start;gap:12px;width:150px">
+          <span style="display:flex;gap:8px;font-size:21px;font-weight:700;color:{{ p.color }};transition:color .4s"><span style="color:{{ p.numColor }}">{{ p.no }}</span>{{ p.label }}</span>
+          <span style="display:block;width:100%;height:3px;border-radius:2px;background:rgba(240,237,248,.14);overflow:hidden"><span style="display:block;height:100%;width:{{ p.w }}%;background:#F0C040;transition:{{ p.tr }}"></span></span>
+        </button>
+      </sc-for>
+    </div>
+  </div>
+
+  <!-- INTRO -->
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;opacity:{{ S.intro.o }};transition:opacity .7s">
+    <span style="font-size:30px;font-weight:700;color:#F0C040;letter-spacing:.16em;opacity:{{ S.intro.o }};transform:translateY({{ S.intro.y }}px);transition:opacity .9s cubic-bezier(.2,.7,.2,1) .2s,transform .9s cubic-bezier(.2,.7,.2,1) .2s">송우찬수학학원 평촌관 · 중등부</span>
+    <h1 style="margin:56px 0 0;font-size:124px;font-weight:850;letter-spacing:-.045em;line-height:1.16;opacity:{{ S.intro.o }};transform:translateY({{ S.intro.y }}px);transition:opacity 1s cubic-bezier(.2,.7,.2,1) .5s,transform 1s cubic-bezier(.2,.7,.2,1) .5s">중위권을 상위권으로,</h1>
+    <h1 style="margin:0;font-size:124px;font-weight:850;letter-spacing:-.045em;line-height:1.16;opacity:{{ S.intro.o }};transform:translateY({{ S.intro.y }}px);transition:opacity 1s cubic-bezier(.2,.7,.2,1) 1.1s,transform 1s cubic-bezier(.2,.7,.2,1) 1.1s">상위권을 <span style="color:#F0C040">최상위권</span>으로</h1>
+    <div style="margin-top:64px;height:4px;border-radius:2px;background:#F0C040;width:{{ S.intro.line }}px;transition:width 1.4s cubic-bezier(.65,0,.35,1) 1.9s"></div>
+    <span style="margin-top:40px;font-size:26px;font-weight:600;letter-spacing:.32em;color:rgba(240,237,248,.66);opacity:{{ S.intro.o }};transition:opacity 1s ease 2.6s">YOUR MATH PARTNER</span>
+  </div>
+
+  <!-- PART 1 -->
+  <div style="position:absolute;inset:0;padding:230px 120px 170px;display:grid;grid-template-columns:720px minmax(0,1fr);gap:100px;align-items:center;opacity:{{ S.p1.o }};pointer-events:{{ S.p1.pe }};transition:opacity .7s">
+    <div style="display:flex;flex-direction:column;gap:28px">
+      <span style="font-size:26px;font-weight:700;color:#F0C040;letter-spacing:.12em;opacity:{{ S.p1.o }};transform:translateY({{ S.p1.y }}px);transition:opacity .9s cubic-bezier(.2,.7,.2,1) .15s,transform .9s cubic-bezier(.2,.7,.2,1) .15s">PART 01 · 교육 방향</span>
+      <h2 style="margin:0;font-size:128px;font-weight:850;letter-spacing:-.045em;line-height:1.08;opacity:{{ S.p1.o }};transform:translateY({{ S.p1.y }}px);transition:opacity .9s cubic-bezier(.2,.7,.2,1) .3s,transform .9s cubic-bezier(.2,.7,.2,1) .3s">완전한 학습</h2>
+      <p style="margin:0;font-size:40px;font-weight:500;line-height:1.5;color:rgba(240,237,248,.66);opacity:{{ S.p1.o }};transform:translateY({{ S.p1.y }}px);transition:opacity .9s cubic-bezier(.2,.7,.2,1) .5s,transform .9s cubic-bezier(.2,.7,.2,1) .5s">한 학년의 진도를 4단계로</p>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:48px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <div style="padding:36px 40px;border-radius:28px;background:#251C40;border:1px solid rgba(240,237,248,.12);display:flex;flex-direction:column;gap:12px;opacity:{{ S.p1.o }};transform:translateY({{ S.p1.y }}px);transition:opacity .9s cubic-bezier(.2,.7,.2,1) .8s,transform .9s cubic-bezier(.2,.7,.2,1) .8s">
+          <span style="font-size:24px;font-weight:700;color:rgba(240,237,248,.66)">목표 1</span>
+          <span style="font-size:44px;font-weight:800;letter-spacing:-.03em">본학년 완전한 이해</span>
+        </div>
+        <div style="padding:36px 40px;border-radius:28px;background:#251C40;border:1px solid rgba(240,237,248,.12);display:flex;flex-direction:column;gap:12px;opacity:{{ S.p1.o }};transform:translateY({{ S.p1.y }}px);transition:opacity .9s cubic-bezier(.2,.7,.2,1) 1.1s,transform .9s cubic-bezier(.2,.7,.2,1) 1.1s">
+          <span style="font-size:24px;font-weight:700;color:rgba(240,237,248,.66)">목표 2</span>
+          <span style="font-size:44px;font-weight:800;letter-spacing:-.03em">1년의 <span style="color:#F0C040">선행학습</span></span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px;align-items:end;height:330px">
+        <div style="height:150px;border-radius:22px 22px 8px 8px;background:#2D2350;border-top:4px solid rgba(240,192,64,.45);padding:24px 28px;display:flex;flex-direction:column;justify-content:flex-end;gap:6px;opacity:{{ S.p1.o }};transform:translateY({{ S.p1.y }}px);transition:opacity .8s cubic-bezier(.2,.7,.2,1) 1.6s,transform .8s cubic-bezier(.2,.7,.2,1) 1.6s"><span style="font-size:22px;font-weight:700;letter-spacing:.08em;color:#F0C040">BASIC</span><span style="font-size:36px;font-weight:800">기초</span></div>
+        <div style="height:210px;border-radius:22px 22px 8px 8px;background:#2D2350;border-top:4px solid rgba(240,192,64,.6);padding:24px 28px;display:flex;flex-direction:column;justify-content:flex-end;gap:6px;opacity:{{ S.p1.o }};transform:translateY({{ S.p1.y }}px);transition:opacity .8s cubic-bezier(.2,.7,.2,1) 1.85s,transform .8s cubic-bezier(.2,.7,.2,1) 1.85s"><span style="font-size:22px;font-weight:700;letter-spacing:.08em;color:#F0C040">STANDARD</span><span style="font-size:36px;font-weight:800">개념</span></div>
+        <div style="height:270px;border-radius:22px 22px 8px 8px;background:#2D2350;border-top:4px solid rgba(240,192,64,.8);padding:24px 28px;display:flex;flex-direction:column;justify-content:flex-end;gap:6px;opacity:{{ S.p1.o }};transform:translateY({{ S.p1.y }}px);transition:opacity .8s cubic-bezier(.2,.7,.2,1) 2.1s,transform .8s cubic-bezier(.2,.7,.2,1) 2.1s"><span style="font-size:22px;font-weight:700;letter-spacing:.08em;color:#F0C040">ADVANCE</span><span style="font-size:36px;font-weight:800">유형</span></div>
+        <div style="height:330px;border-radius:22px 22px 8px 8px;background:#F0C040;color:#1A1230;padding:24px 28px;display:flex;flex-direction:column;justify-content:flex-end;gap:6px;opacity:{{ S.p1.o }};transform:translateY({{ S.p1.y }}px);transition:opacity .8s cubic-bezier(.2,.7,.2,1) 2.35s,transform .8s cubic-bezier(.2,.7,.2,1) 2.35s"><span style="font-size:22px;font-weight:800;letter-spacing:.08em">HYPER</span><span style="font-size:36px;font-weight:850">심화</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PART 2 -->
+  <div style="position:absolute;inset:0;padding:230px 120px 170px;display:flex;flex-direction:column;justify-content:space-between;opacity:{{ S.p2.o }};pointer-events:{{ S.p2.pe }};transition:opacity .7s">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:60px">
+      <div style="display:flex;flex-direction:column;gap:24px">
+        <span style="font-size:26px;font-weight:700;color:#F0C040;letter-spacing:.12em;opacity:{{ S.p2.o }};transform:translateY({{ S.p2.y }}px);transition:opacity .9s cubic-bezier(.2,.7,.2,1) .15s,transform .9s cubic-bezier(.2,.7,.2,1) .15s">PART 02 · 수업 시스템</span>
+        <h2 style="margin:0;font-size:112px;font-weight:850;letter-spacing:-.045em;line-height:1.08;opacity:{{ S.p2.o }};transform:translateY({{ S.p2.y }}px);transition:opacity .9s cubic-bezier(.2,.7,.2,1) .3s,transform .9s cubic-bezier(.2,.7,.2,1) .3s">수업 시스템</h2>
+      </div>
+      <p style="margin:0 0 14px;font-size:34px;font-weight:500;color:rgba(240,237,248,.66);opacity:{{ S.p2.o }};transition:opacity .9s ease .6s">교재 · 데일리테스트 · 클리닉</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:32px">
+      <div style="height:440px;padding:52px;border-radius:32px;background:#251C40;border:1px solid rgba(240,237,248,.12);display:flex;flex-direction:column;opacity:{{ S.p2.o }};transform:translateY({{ S.p2.y }}px);transition:opacity .9s cubic-bezier(.2,.7,.2,1) .8s,transform .9s cubic-bezier(.2,.7,.2,1) .8s">
+        <span style="font-size:28px;font-weight:800;color:#F0C040">01</span>
+        <div style="flex:1;display:flex;align-items:flex-end;gap:14px;padding-bottom:36px">
+          <span style="width:44px;height:36px;border-radius:8px;background:rgba(240,192,64,.3)"></span><span style="width:44px;height:62px;border-radius:8px;background:rgba(240,192,64,.5)"></span><span style="width:44px;height:88px;border-radius:8px;background:rgba(240,192,64,.75)"></span><span style="width:44px;height:114px;border-radius:8px;background:#F0C040"></span>
+        </div>
+        <span style="font-size:52px;font-weight:800;letter-spacing:-.035em">단계별 교재</span>
+        <span style="margin-top:14px;font-size:30px;color:rgba(240,237,248,.66)">난이도의 점진적 향상</span>
+      </div>
+      <div style="height:440px;padding:52px;border-radius:32px;background:#251C40;border:1px solid rgba(240,237,248,.12);display:flex;flex-direction:column;opacity:{{ S.p2.o }};transform:translateY({{ S.p2.y }}px);transition:opacity .9s cubic-bezier(.2,.7,.2,1) 1.1s,transform .9s cubic-bezier(.2,.7,.2,1) 1.1s">
+        <span style="font-size:28px;font-weight:800;color:#F0C040">02</span>
+        <div style="flex:1;display:flex;align-items:center;gap:14px;padding-bottom:12px">
+          <span style="width:58px;height:58px;border-radius:29px;background:#F0C040;color:#1A1230;display:grid;place-items:center;font-size:28px;font-weight:900">✓</span><span style="width:58px;height:58px;border-radius:29px;background:#F0C040;color:#1A1230;display:grid;place-items:center;font-size:28px;font-weight:900">✓</span><span style="width:58px;height:58px;border-radius:29px;background:#F0C040;color:#1A1230;display:grid;place-items:center;font-size:28px;font-weight:900">✓</span><span style="width:58px;height:58px;border-radius:29px;border:2px dashed rgba(240,237,248,.3)"></span>
+        </div>
+        <span style="font-size:52px;font-weight:800;letter-spacing:-.035em">데일리테스트</span>
+        <span style="margin-top:14px;font-size:30px;color:rgba(240,237,248,.66)">전시간 수업내용을 스스로 정리</span>
+      </div>
+      <div style="height:440px;padding:52px;border-radius:32px;background:#251C40;border:1px solid rgba(240,237,248,.12);display:flex;flex-direction:column;opacity:{{ S.p2.o }};transform:translateY({{ S.p2.y }}px);transition:opacity .9s cubic-bezier(.2,.7,.2,1) 1.4s,transform .9s cubic-bezier(.2,.7,.2,1) 1.4s">
+        <span style="font-size:28px;font-weight:800;color:#F0C040">03</span>
+        <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:14px;padding-bottom:12px">
+          <span style="width:78%;height:16px;border-radius:8px;background:rgba(240,237,248,.14)"></span><span style="width:56%;height:16px;border-radius:8px;background:#F0C040"></span><span style="width:68%;height:16px;border-radius:8px;background:rgba(240,237,248,.14)"></span>
+        </div>
+        <span style="font-size:52px;font-weight:800;letter-spacing:-.035em">클리닉프로그램</span>
+        <span style="margin-top:14px;font-size:30px;color:rgba(240,237,248,.66)">개개인의 오답유형으로 약점체크</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PART 3 -->
+  <div style="position:absolute;inset:0;padding:230px 120px 170px;display:flex;flex-direction:column;justify-content:space-between;opacity:{{ S.p3.o }};pointer-events:{{ S.p3.pe }};transition:opacity .7s">
+    <div style="display:flex;flex-direction:column;gap:24px">
+      <span style="font-size:26px;font-weight:700;color:#F0C040;letter-spacing:.12em;opacity:{{ S.p3.o }};transform:translateY({{ S.p3.y }}px);transition:opacity .9s cubic-bezier(.2,.7,.2,1) .15s,transform .9s cubic-bezier(.2,.7,.2,1) .15s">PART 03 · 학생 관리</span>
+      <h2 style="margin:0;font-size:112px;font-weight:850;letter-spacing:-.045em;line-height:1.08;opacity:{{ S.p3.o }};transform:translateY({{ S.p3.y }}px);transition:opacity .9s cubic-bezier(.2,.7,.2,1) .3s,transform .9s cubic-bezier(.2,.7,.2,1) .3s">학생 관리</h2>
+      <p style="margin:0;font-size:36px;color:rgba(240,237,248,.66);opacity:{{ S.p3.o }};transition:opacity .9s ease .5s">등원부터 월말보고서까지</p>
+    </div>
+    <div style="position:relative;height:330px">
+      <div style="position:absolute;left:10%;right:10%;top:56px;height:4px;border-radius:2px;background:rgba(240,237,248,.14)">
+        <div style="height:100%;border-radius:2px;background:#F0C040;width:{{ S.p3.w }}%;transition:width 6s linear .8s"></div>
+        <div style="position:absolute;top:-10px;width:24px;height:24px;margin-left:-12px;border-radius:12px;background:#F0C040;box-shadow:0 0 0 10px rgba(240,192,64,.18);left:{{ S.p3.w }}%;opacity:{{ S.p3.o }};transition:left 6s linear .8s,opacity .4s"></div>
+      </div>
+      <div style="position:absolute;inset:0;display:grid;grid-template-columns:repeat(5,1fr)">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;opacity:{{ S.p3.o }};transform:translateY({{ S.p3.y }}px);transition:opacity .7s cubic-bezier(.2,.7,.2,1) .8s,transform .7s cubic-bezier(.2,.7,.2,1) .8s">
+          <span style="width:112px;height:112px;border-radius:56px;background:#2D2350;border:3px solid #F0C040;display:grid;place-items:center;font-size:30px;font-weight:800;color:#F0C040">01</span>
+          <span style="font-size:44px;font-weight:800;margin-top:8px">등원</span><span style="font-size:28px;color:rgba(240,237,248,.66)">출결 문자</span>
+          <span style="padding:8px 18px;border-radius:999px;background:rgba(240,192,64,.14);color:#F0C040;font-size:21px;font-weight:700">학부모님께 발송</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;opacity:{{ S.p3.o }};transform:translateY({{ S.p3.y }}px);transition:opacity .7s cubic-bezier(.2,.7,.2,1) 2.3s,transform .7s cubic-bezier(.2,.7,.2,1) 2.3s">
+          <span style="width:112px;height:112px;border-radius:56px;background:#2D2350;border:3px solid #F0C040;display:grid;place-items:center;font-size:30px;font-weight:800;color:#F0C040">02</span>
+          <span style="font-size:44px;font-weight:800;margin-top:8px">수업</span><span style="font-size:28px;color:rgba(240,237,248,.66)">데일리테스트</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;opacity:{{ S.p3.o }};transform:translateY({{ S.p3.y }}px);transition:opacity .7s cubic-bezier(.2,.7,.2,1) 3.8s,transform .7s cubic-bezier(.2,.7,.2,1) 3.8s">
+          <span style="width:112px;height:112px;border-radius:56px;background:#2D2350;border:3px solid #F0C040;display:grid;place-items:center;font-size:30px;font-weight:800;color:#F0C040">03</span>
+          <span style="font-size:44px;font-weight:800;margin-top:8px">클리닉</span><span style="font-size:28px;color:rgba(240,237,248,.66)">개인별 약점체크</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;opacity:{{ S.p3.o }};transform:translateY({{ S.p3.y }}px);transition:opacity .7s cubic-bezier(.2,.7,.2,1) 5.3s,transform .7s cubic-bezier(.2,.7,.2,1) 5.3s">
+          <span style="width:112px;height:112px;border-radius:56px;background:#2D2350;border:3px solid #F0C040;display:grid;place-items:center;font-size:30px;font-weight:800;color:#F0C040">04</span>
+          <span style="font-size:44px;font-weight:800;margin-top:8px">매주</span><span style="font-size:28px;color:rgba(240,237,248,.66)">학업성취도 문자</span>
+          <span style="padding:8px 18px;border-radius:999px;background:rgba(240,192,64,.14);color:#F0C040;font-size:21px;font-weight:700">학부모님께 발송</span>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:18px;text-align:center;opacity:{{ S.p3.o }};transform:translateY({{ S.p3.y }}px);transition:opacity .7s cubic-bezier(.2,.7,.2,1) 6.8s,transform .7s cubic-bezier(.2,.7,.2,1) 6.8s">
+          <span style="width:112px;height:112px;border-radius:56px;background:#F0C040;display:grid;place-items:center;font-size:30px;font-weight:850;color:#1A1230">05</span>
+          <span style="font-size:44px;font-weight:800;margin-top:8px">매월</span><span style="font-size:28px;color:rgba(240,237,248,.66)">월말보고서</span>
+          <span style="padding:8px 18px;border-radius:999px;background:rgba(240,192,64,.14);color:#F0C040;font-size:21px;font-weight:700">학부모님께 발송</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PART 4 -->
+  <div style="position:absolute;inset:0;padding:230px 120px 170px;display:flex;flex-direction:column;justify-content:space-between;opacity:{{ S.p4.o }};pointer-events:{{ S.p4.pe }};transition:opacity .7s">
+    <div style="display:flex;flex-direction:column;gap:24px">
+      <span style="font-size:26px;font-weight:700;color:#F0C040;letter-spacing:.12em;opacity:{{ S.p4.o }};transform:translateY({{ S.p4.y }}px);transition:opacity .9s cubic-bezier(.2,.7,.2,1) .15s,transform .9s cubic-bezier(.2,.7,.2,1) .15s">PART 04 · 시험 관리</span>
+      <h2 style="margin:0;font-size:112px;font-weight:850;letter-spacing:-.045em;line-height:1.08;opacity:{{ S.p4.o }};transform:translateY({{ S.p4.y }}px);transition:opacity .9s cubic-bezier(.2,.7,.2,1) .3s,transform .9s cubic-bezier(.2,.7,.2,1) .3s">최종 목표는 <span style="color:#F0C040">시험</span></h2>
+      <p style="margin:0;font-size:36px;color:rgba(240,237,248,.66);opacity:{{ S.p4.o }};transition:opacity .9s ease .5s">각 학교의 특성에 맞는 철저한 내신대비</p>
+    </div>
+    <div style="position:relative">
+      <div style="position:absolute;left:12.5%;right:12.5%;top:50%;height:4px;margin-top:-2px;background:rgba(240,237,248,.14);border-radius:2px"><div style="height:100%;background:#F0C040;border-radius:2px;width:{{ S.p4.w }}%;transition:width 3.4s cubic-bezier(.65,0,.35,1) 1s"></div></div>
+      <div style="position:relative;display:grid;grid-template-columns:repeat(4,1fr);gap:40px">
+        <div style="height:250px;padding:40px;border-radius:28px;background:#251C40;border:1px solid rgba(240,237,248,.12);display:flex;flex-direction:column;justify-content:space-between;opacity:{{ S.p4.o }};transform:translateY({{ S.p4.y }}px);transition:opacity .8s cubic-bezier(.2,.7,.2,1) .9s,transform .8s cubic-bezier(.2,.7,.2,1) .9s"><span style="font-size:26px;font-weight:700;color:rgba(240,237,248,.66)">기본</span><span style="font-size:40px;font-weight:800;line-height:1.3;letter-spacing:-.03em">내신대비 START<br>교과서</span></div>
+        <div style="height:250px;padding:40px;border-radius:28px;background:#251C40;border:1px solid rgba(240,237,248,.12);display:flex;flex-direction:column;justify-content:space-between;opacity:{{ S.p4.o }};transform:translateY({{ S.p4.y }}px);transition:opacity .8s cubic-bezier(.2,.7,.2,1) 2s,transform .8s cubic-bezier(.2,.7,.2,1) 2s"><span style="font-size:26px;font-weight:700;color:#F0C040">시험 4주 전</span><span style="font-size:40px;font-weight:800;line-height:1.3;letter-spacing:-.03em">1차<br>모의테스트</span></div>
+        <div style="height:250px;padding:40px;border-radius:28px;background:#251C40;border:1px solid rgba(240,237,248,.12);display:flex;flex-direction:column;justify-content:space-between;opacity:{{ S.p4.o }};transform:translateY({{ S.p4.y }}px);transition:opacity .8s cubic-bezier(.2,.7,.2,1) 3s,transform .8s cubic-bezier(.2,.7,.2,1) 3s"><span style="font-size:26px;font-weight:700;color:#F0C040">시험 1주 전</span><span style="font-size:40px;font-weight:800;line-height:1.3;letter-spacing:-.03em">2차<br>모의테스트</span></div>
+        <div style="height:250px;padding:40px;border-radius:28px;background:#F0C040;color:#1A1230;display:flex;flex-direction:column;justify-content:space-between;opacity:{{ S.p4.o }};transform:translateY({{ S.p4.y }}px);transition:opacity .8s cubic-bezier(.2,.7,.2,1) 4.1s,transform .8s cubic-bezier(.2,.7,.2,1) 4.1s"><span style="font-size:26px;font-weight:800">최종 목표</span><span style="font-size:52px;font-weight:850;letter-spacing:-.03em">내신 시험</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PART 5 -->
+  <div style="position:absolute;inset:0;padding:230px 120px 170px;display:flex;flex-direction:column;justify-content:space-between;opacity:{{ S.p5.o }};pointer-events:{{ S.p5.pe }};transition:opacity .7s">
+    <div style="display:flex;flex-direction:column;gap:24px">
+      <span style="font-size:26px;font-weight:700;color:#F0C040;letter-spacing:.12em;opacity:{{ S.p5.o }};transform:translateY({{ S.p5.y }}px);transition:opacity .9s cubic-bezier(.2,.7,.2,1) .15s,transform .9s cubic-bezier(.2,.7,.2,1) .15s">PART 05 · 차별점</span>
+      <h2 style="margin:0;font-size:104px;font-weight:850;letter-spacing:-.045em;line-height:1.12;opacity:{{ S.p5.o }};transform:translateY({{ S.p5.y }}px);transition:opacity .9s cubic-bezier(.2,.7,.2,1) .3s,transform .9s cubic-bezier(.2,.7,.2,1) .3s">송우찬수학학원만의<br>체계적인 시스템</h2>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:48px">
+      <div style="display:flex;flex-direction:column;gap:18px;padding-top:32px;border-top:3px solid #F0C040;opacity:{{ S.p5.o }};transform:translateY({{ S.p5.y }}px);transition:opacity .8s cubic-bezier(.2,.7,.2,1) .9s,transform .8s cubic-bezier(.2,.7,.2,1) .9s"><span style="font-size:46px;font-weight:800;letter-spacing:-.03em">자체 제작 교재</span><span style="font-size:28px;line-height:1.5;color:rgba(240,237,248,.66)">BASIC 단계 교재<br>내신대비 START</span></div>
+      <div style="display:flex;flex-direction:column;gap:18px;padding-top:32px;border-top:3px solid #F0C040;opacity:{{ S.p5.o }};transform:translateY({{ S.p5.y }}px);transition:opacity .8s cubic-bezier(.2,.7,.2,1) 1.3s,transform .8s cubic-bezier(.2,.7,.2,1) 1.3s"><span style="font-size:46px;font-weight:800;letter-spacing:-.03em">개인별 클리닉 시험지</span><span style="font-size:28px;line-height:1.5;color:rgba(240,237,248,.66)">송우찬수학학원 출신<br>선생님과 피드백·오답정리</span></div>
+      <div style="display:flex;flex-direction:column;gap:18px;padding-top:32px;border-top:3px solid #F0C040;opacity:{{ S.p5.o }};transform:translateY({{ S.p5.y }}px);transition:opacity .8s cubic-bezier(.2,.7,.2,1) 1.7s,transform .8s cubic-bezier(.2,.7,.2,1) 1.7s"><span style="font-size:46px;font-weight:800;letter-spacing:-.03em">매주 · 매월 보고</span><span style="font-size:28px;line-height:1.5;color:rgba(240,237,248,.66)">학업성취도 문자<br>월말보고서</span></div>
+      <div style="display:flex;flex-direction:column;gap:18px;padding-top:32px;border-top:3px solid #F0C040;opacity:{{ S.p5.o }};transform:translateY({{ S.p5.y }}px);transition:opacity .8s cubic-bezier(.2,.7,.2,1) 2.1s,transform .8s cubic-bezier(.2,.7,.2,1) 2.1s"><span style="font-size:46px;font-weight:800;letter-spacing:-.03em">온라인 학습관</span><span style="font-size:28px;line-height:1.5;color:rgba(240,237,248,.66)">필수 유형 특강 · 해설 강의<br>결석 보충 강의</span></div>
+    </div>
+  </div>
+
+  <!-- FINAL -->
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;opacity:{{ S.fin.o }};transition:opacity .7s">
+    <span style="font-size:28px;font-weight:700;color:#F0C040;letter-spacing:.3em;opacity:{{ S.fin.o }};transition:opacity .9s ease .2s">CONTENTS</span>
+    <h2 style="margin:36px 0 0;font-size:132px;font-weight:850;letter-spacing:-.045em;opacity:{{ S.fin.o }};transform:scale({{ S.fin.s }});transition:opacity 1s cubic-bezier(.2,.7,.2,1) .4s,transform 1.4s cubic-bezier(.2,.7,.2,1) .4s">상세 내용 보기</h2>
+    <p style="margin:32px 0 0;font-size:36px;color:rgba(240,237,248,.66);opacity:{{ S.fin.o }};transition:opacity 1s ease 1s">궁금하신 항목을 직접 선택해 확인하세요</p>
+  </div>
+
+  <div style="position:absolute;right:120px;bottom:60px;display:flex;gap:14px;align-items:center;z-index:5">
+    <button sc-camel-on-click="{{ toggleSound }}" style="height:56px;padding:0 26px;border-radius:28px;border:1px solid rgba(240,237,248,.18);font-size:22px;font-weight:650;color:rgba(240,237,248,.66);display:flex;align-items:center;gap:10px;white-space:nowrap"><span style="width:10px;height:10px;border-radius:5px;background:{{ soundDot }}"></span>{{ soundLabel }}</button>
+    <button sc-camel-on-click="{{ toMenu }}" style="height:56px;padding:0 30px;border-radius:28px;border:1px solid rgba(240,237,248,.18);font-size:22px;font-weight:700;white-space:nowrap" style-hover="border-color:rgba(240,192,64,.6)">목차로 건너뛰기 →</button>
+  </div>
+</div>
+
+<!-- ═════ MENU (컨트롤 센터) ═════ -->
+<div sc-camel-on-mouse-move="{{ onMove }}" style="position:absolute;inset:0;opacity:{{ menuO }};transform:scale({{ menuS }});pointer-events:{{ menuPe }};transition:opacity .8s cubic-bezier(.2,.7,.2,1),transform 1s cubic-bezier(.2,.7,.2,1)">
+  <div ref="{{ glowRef }}" style="position:absolute;left:900px;top:120px;width:1000px;height:820px;background:radial-gradient(closest-side,rgba(240,192,64,.09),transparent);pointer-events:none;transition:transform .6s ease-out"></div>
+  <div style="position:absolute;left:120px;top:64px;display:flex;align-items:baseline;gap:14px">
+    <span style="font-size:28px;font-weight:800;letter-spacing:-.02em">송우찬수학학원</span><span style="font-size:24px;font-weight:600;color:rgba(240,237,248,.66)">평촌관</span>
+  </div>
+  <div style="position:absolute;left:120px;top:0;bottom:0;width:560px;display:flex;flex-direction:column;justify-content:center;gap:28px">
+    <span style="font-size:26px;font-weight:700;color:#F0C040;letter-spacing:.3em">CONTENTS</span>
+    <h2 style="margin:0;font-size:92px;font-weight:850;letter-spacing:-.045em;line-height:1.1">상세 내용<br>보기</h2>
+    <p style="margin:0;font-size:32px;line-height:1.5;color:rgba(240,237,248,.66)">궁금하신 항목을 선택하세요</p>
+    <div style="display:flex;gap:14px;margin-top:40px">
+      <button sc-camel-on-click="{{ replay }}" style="height:60px;padding:0 30px;border-radius:30px;border:1px solid rgba(240,237,248,.18);font-size:23px;font-weight:700;white-space:nowrap" style-hover="border-color:rgba(240,192,64,.6)">처음부터 다시 보기</button>
+    </div>
+  </div>
+  <div style="position:absolute;left:740px;top:130px;width:1080px;height:840px;perspective:1900px;perspective-origin:30% 50%">
+    <div ref="{{ planeRef }}" style="position:absolute;inset:0;transform-style:preserve-3d;transform:rotateY(-13deg) rotateX(6deg);transition:transform .5s ease-out">
+      <div style="position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:26px;transform-style:preserve-3d">
+        <sc-for list="{{ cards }}" as="c" hint-placeholder-count="9">
+          <button sc-camel-on-click="{{ c.open }}" sc-camel-on-mouse-enter="{{ c.enter }}" sc-camel-on-mouse-leave="{{ c.leave }}" style="position:relative;text-align:left;padding:34px 36px;border-radius:26px;background:linear-gradient(155deg,#2D2350,#211839);border:1px solid {{ c.bd }};box-shadow:{{ c.sh }};display:flex;flex-direction:column;opacity:{{ c.o }};transform:{{ c.tf }};transition:transform .9s cubic-bezier(.2,.7,.2,1) {{ c.d }},opacity .7s ease {{ c.d }},border-color .3s,box-shadow .4s">
+            <span style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:26px;font-weight:800;color:#F0C040;font-variant-numeric:tabular-nums">{{ c.no }}</span><span style="font-size:19px;font-weight:650;color:rgba(240,237,248,.6);padding:6px 14px;border-radius:999px;border:1px solid rgba(240,237,248,.14);white-space:nowrap">{{ c.part }}</span></span>
+            <span style="margin-top:auto;font-size:34px;font-weight:800;letter-spacing:-.03em;line-height:1.25">{{ c.title }}</span>
+            <span style="margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:12px"><span style="font-size:21px;color:rgba(240,237,248,.62)">{{ c.sub }}</span><span style="font-size:26px;color:{{ c.arrow }};transition:color .3s">→</span></span>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═════ DETAIL ═════ -->
+<div style="position:absolute;inset:0;opacity:{{ detO }};transform:scale({{ detS }});pointer-events:{{ detPe }};transition:opacity .7s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)">
+  <div style="position:absolute;left:64px;right:120px;top:48px;display:flex;align-items:center;gap:28px">
+    <button sc-camel-on-click="{{ toMenu }}" style="height:60px;padding:0 30px;border-radius:30px;border:1px solid rgba(240,237,248,.18);font-size:23px;font-weight:700;display:flex;align-items:center;gap:12px" style-hover="border-color:rgba(240,192,64,.6)">← 목차</button>
+    <span style="font-size:22px;color:rgba(240,237,248,.55)">상세 내용</span>
+    <span style="flex:1"></span>
+    <span style="font-size:24px;font-weight:800">송우찬수학학원 <span style="font-weight:600;color:rgba(240,237,248,.66)">평촌관</span></span>
+  </div>
+  <div style="position:absolute;left:64px;top:170px;width:300px;display:flex;flex-direction:column;gap:6px">
+    <sc-for list="{{ rail }}" as="r" hint-placeholder-count="9">
+      <button sc-camel-on-click="{{ r.pick }}" style="height:68px;padding:0 22px;border-radius:16px;background:{{ r.bg }};display:flex;align-items:center;gap:16px;text-align:left;transition:background .3s">
+        <span style="font-size:20px;font-weight:800;color:{{ r.numColor }};font-variant-numeric:tabular-nums">{{ r.no }}</span>
+        <span style="font-size:23px;font-weight:{{ r.weight }};color:{{ r.color }};line-height:1.25">{{ r.title }}</span>
+      </button>
+    </sc-for>
+  </div>
+  <div ref="{{ bodyRef }}" style="position:absolute;left:430px;right:100px;top:160px;bottom:50px;overflow:auto;scrollbar-width:none;opacity:{{ dOp }};transform:translateY({{ dY }}px);transition:opacity .35s ease,transform .5s cubic-bezier(.2,.7,.2,1)">
+
+    <sc-if value="{{ D.t1 }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:30px">
+        <div style="display:flex;flex-direction:column;gap:16px"><span style="font-size:24px;font-weight:700;color:#F0C040;letter-spacing:.1em">01 · 교육 방향</span><h3 style="margin:0;font-size:68px;font-weight:850;letter-spacing:-.04em">완전한 학습</h3>
+          <p style="margin:0;font-size:29px;line-height:1.55;color:rgba(240,237,248,.7);max-width:1200px;text-wrap:pretty">한 학년의 진도를 4단계로 구성하여 <b style="color:#F0EDF8">본학년 내용의 완전한 이해</b>와 <b style="color:#F0EDF8">1년의 선행학습</b>이라는 두 가지 목표를 모두 완성합니다.</p></div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:18px">
+          <div style="padding:22px 28px;border-radius:18px;background:#251C40;display:flex;align-items:baseline;gap:14px"><span style="font-size:22px;font-weight:700;letter-spacing:.06em;color:#F0C040">BASIC</span><span style="font-size:32px;font-weight:800">기초</span></div>
+          <div style="padding:22px 28px;border-radius:18px;background:#251C40;display:flex;align-items:baseline;gap:14px"><span style="font-size:22px;font-weight:700;letter-spacing:.06em;color:#F0C040">STANDARD</span><span style="font-size:32px;font-weight:800">개념</span></div>
+          <div style="padding:22px 28px;border-radius:18px;background:#251C40;display:flex;align-items:baseline;gap:14px"><span style="font-size:22px;font-weight:700;letter-spacing:.06em;color:#F0C040">ADVANCE</span><span style="font-size:32px;font-weight:800">유형</span></div>
+          <div style="padding:22px 28px;border-radius:18px;background:#251C40;display:flex;align-items:baseline;gap:14px"><span style="font-size:22px;font-weight:700;letter-spacing:.06em;color:#F0C040">HYPER</span><span style="font-size:32px;font-weight:800">심화</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:150px repeat(4,minmax(0,1fr));border-radius:22px;overflow:hidden;border:1px solid rgba(240,237,248,.12)">
+          <div style="background:#2D2350"></div>
+          <div style="background:#2D2350;padding:22px;text-align:center;font-size:24px;font-weight:700">겨울방학 ~ 학기초</div>
+          <div style="background:#3A2E5C;padding:22px;text-align:center;font-size:24px;font-weight:700">학기중 ~ 학기말<br><span style="color:#F0C040;font-size:21px">내신기간</span></div>
+          <div style="background:#2D2350;padding:22px;text-align:center;font-size:24px;font-weight:700">여름방학 ~ 학기초</div>
+          <div style="background:#3A2E5C;padding:22px;text-align:center;font-size:24px;font-weight:700">학기중 ~ 학기말<br><span style="color:#F0C040;font-size:21px">내신기간</span></div>
+          <div style="padding:26px 22px;display:grid;place-items:center;font-size:26px;font-weight:800;border-top:1px solid rgba(240,237,248,.12)">현행</div>
+          <div style="padding:26px 22px;text-align:center;font-size:25px;line-height:1.6;border-top:1px solid rgba(240,237,248,.12)">STANDARD (2-1)<br>ADVANCE (2-1)</div>
+          <div style="padding:26px 22px;display:grid;place-items:center;font-size:25px;font-weight:700;color:#F0C040;background:rgba(240,192,64,.06);border-top:1px solid rgba(240,237,248,.12)">HYPER (2-1)</div>
+          <div style="padding:26px 22px;text-align:center;font-size:25px;line-height:1.6;border-top:1px solid rgba(240,237,248,.12)">STANDARD (2-2)<br>ADVANCE (2-2)</div>
+          <div style="padding:26px 22px;display:grid;place-items:center;font-size:25px;font-weight:700;color:#F0C040;background:rgba(240,192,64,.06);border-top:1px solid rgba(240,237,248,.12)">HYPER (2-2)</div>
+          <div style="padding:26px 22px;display:grid;place-items:center;font-size:26px;font-weight:800;border-top:1px solid rgba(240,237,248,.12)">선행</div>
+          <div style="padding:26px 22px;display:grid;place-items:center;font-size:25px;border-top:1px solid rgba(240,237,248,.12)">BASIC (3-1)</div>
+          <div style="background:rgba(240,192,64,.06);border-top:1px solid rgba(240,237,248,.12)"></div>
+          <div style="padding:26px 22px;display:grid;place-items:center;font-size:25px;border-top:1px solid rgba(240,237,248,.12)">BASIC (3-2)</div>
+          <div style="background:rgba(240,192,64,.06);border-top:1px solid rgba(240,237,248,.12)"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:18px">
+          <div style="font-size:24px;line-height:1.55;color:rgba(240,237,248,.75)"><b style="color:#F0EDF8">방학 · 학기초</b> — 본학년은 개념(STANDARD)과 유형(ADVANCE)을 마무리, 다음 학년은 기초(BASIC)까지</div>
+          <div style="font-size:24px;line-height:1.55;color:rgba(240,237,248,.75)"><b style="color:#F0EDF8">중간 · 기말고사 무렵</b> — 심화(HYPER) 학습으로 강도 높은 현행수업</div>
+        </div>
+        <p style="margin:0;font-size:21px;color:rgba(240,237,248,.55)">* 위의 예시는 중학교 2학년 기준이며 반별 성취도 상황에 따라 학습시기가 달라질 수 있습니다.</p>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ D.t2 }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:30px">
+        <div style="display:flex;flex-direction:column;gap:16px"><span style="font-size:24px;font-weight:700;color:#F0C040;letter-spacing:.1em">02 · 수업 시스템</span><h3 style="margin:0;font-size:68px;font-weight:850;letter-spacing:-.04em">교재 안내</h3>
+          <p style="margin:0;font-size:29px;line-height:1.55;color:rgba(240,237,248,.7)">난이도의 점진적 향상을 위한 교재 선정 — 각 학습단계마다 엄선한 대표교재로 수업이 진행됩니다.</p></div>
+        <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px">
+          <div style="display:flex;flex-direction:column;gap:18px"><div style="height:250px;background:#fff;border-radius:20px;padding:14px"><img src="consult-intro/book-basic.webp" alt="BASIC 교재" style="display:block;width:100%;height:100%;object-fit:contain"></div><span style="font-size:22px;font-weight:800;letter-spacing:.08em;color:#F0C040">BASIC</span><span style="font-size:25px;font-weight:650;line-height:1.5">중등부 선행학습만을 위해 제작된 송우찬수학학원의 자체 교재</span></div>
+          <div style="display:flex;flex-direction:column;gap:18px"><div style="height:250px;background:#fff;border-radius:20px;padding:14px"><img src="consult-intro/book-standard.webp" alt="STANDARD 교재" style="display:block;width:100%;height:100%;object-fit:contain"></div><span style="font-size:22px;font-weight:800;letter-spacing:.08em;color:#F0C040">STANDARD</span><span style="font-size:25px;font-weight:650;line-height:1.5">본격적인 개념학습을 위한 교재</span></div>
+          <div style="display:flex;flex-direction:column;gap:18px"><div style="height:250px;background:#fff;border-radius:20px;padding:14px"><img src="consult-intro/book-advance.webp" alt="ADVANCE 교재" style="display:block;width:100%;height:100%;object-fit:contain"></div><span style="font-size:22px;font-weight:800;letter-spacing:.08em;color:#F0C040">ADVANCE</span><span style="font-size:25px;font-weight:650;line-height:1.5">다양한 유형들에 대한 응용력을 기를 수 있는 교재</span></div>
+          <div style="display:flex;flex-direction:column;gap:18px"><div style="height:250px;background:#fff;border-radius:20px;padding:14px"><img src="consult-intro/book-hyper.webp" alt="HYPER 교재" style="display:block;width:100%;height:100%;object-fit:contain"></div><span style="font-size:22px;font-weight:800;letter-spacing:.08em;color:#F0C040">HYPER</span><span style="font-size:25px;font-weight:650;line-height:1.5">심화문항들의 출제포인트와 풀이법을 익힐 수 있는 교재</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px">
+          <div style="padding:24px 28px;border-radius:18px;background:#251C40;font-size:23px;line-height:1.55;color:rgba(240,237,248,.8)"><b style="color:#F0EDF8">BASIC 단계</b><br>고등수학(상)·(하)를 포함해 중등수학 전학년 자체교재로 진행</div>
+          <div style="padding:24px 28px;border-radius:18px;background:#251C40;font-size:23px;line-height:1.55;color:rgba(240,237,248,.8)"><b style="color:#F0EDF8">그 외 단계</b><br>단계별로 선정된 약 10여 종의 시중교재 중 성취도와 반 성향을 고려해 선택</div>
+          <div style="padding:24px 28px;border-radius:18px;background:#251C40;font-size:23px;line-height:1.55;color:rgba(240,237,248,.8)"><b style="color:#F0EDF8">개별과제물</b><br>아이들의 성취도에 따른 개별과제물을 지속적으로 제공</div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ D.t3 }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:36px">
+        <div style="display:flex;flex-direction:column;gap:16px"><span style="font-size:24px;font-weight:700;color:#F0C040;letter-spacing:.1em">03 · 수업 시스템</span><h3 style="margin:0;font-size:68px;font-weight:850;letter-spacing:-.04em">데일리테스트 <span style="font-size:36px;font-weight:600;color:rgba(240,237,248,.5);letter-spacing:0">Daily Test</span></h3>
+          <p style="margin:0;font-size:29px;line-height:1.55;color:rgba(240,237,248,.7);max-width:1200px">본인이 이해한 방식대로 개념을 정리할 수 있는 개방형구조의 문제로 전시간의 수업내용을 스스로 정리합니다.</p></div>
+        <div style="display:grid;grid-template-columns:680px minmax(0,1fr);gap:56px;align-items:start">
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <div style="background:#fff;border-radius:20px;padding:16px;box-shadow:0 30px 60px rgba(5,3,14,.45)"><img src="consult-intro/sample-daily.webp" alt="데일리테스트 시험지" style="display:block;width:100%"></div>
+            <span style="font-size:21px;color:rgba(240,237,248,.55)">데일리테스트 시험지 예시</span>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px">
+              <div style="padding:22px 26px;border-radius:18px;background:#251C40;font-size:24px;font-weight:700">수업 이해도 · 참여도 <span style="color:#F0C040">↑</span></div>
+              <div style="padding:22px 26px;border-radius:18px;background:#251C40;font-size:24px;font-weight:700">수학에 대한 자신감 <span style="color:#F0C040">↑</span></div>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:28px">
+            <span style="font-size:32px;font-weight:800;letter-spacing:-.02em">배우고 익히는 것 못지않게 중요한 것은 복습</span>
+            <div style="padding:34px 38px;border-radius:24px;background:#251C40;border:1px solid rgba(240,192,64,.35);display:flex;flex-direction:column;gap:14px">
+              <span style="font-size:23px;font-weight:700;color:rgba(240,237,248,.66)">올바른 복습의 최종단계</span>
+              <span style="font-size:34px;font-weight:800;line-height:1.4;letter-spacing:-.02em">학생 스스로 개념을 설명할 수 있는 수준의 <span style="color:#F0C040">수학적 의사소통 능력</span></span>
+            </div>
+            <div style="padding:30px 38px;border-radius:24px;background:#251C40;display:flex;flex-direction:column;gap:12px">
+              <span style="font-size:26px;font-weight:800;color:#F0C040">오픈형테스트</span>
+              <span style="font-size:25px;line-height:1.6;color:rgba(240,237,248,.8)">기본진도 진행 시 데일리테스트에 포함됩니다. 정해진 정답 없이 본인 스스로 이해한 방식대로 개념을 서술하며 수학적 의사소통 능력을 길러줍니다.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ D.t4 }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:36px">
+        <div style="display:flex;flex-direction:column;gap:16px"><span style="font-size:24px;font-weight:700;color:#F0C040;letter-spacing:.1em">04 · 학생 관리</span><h3 style="margin:0;font-size:68px;font-weight:850;letter-spacing:-.04em">클리닉프로그램 <span style="font-size:36px;font-weight:600;color:rgba(240,237,248,.5);letter-spacing:0">Clinic Program</span></h3>
+          <p style="margin:0;font-size:29px;line-height:1.55;color:rgba(240,237,248,.7)">수업의 확실한 마무리 — 개개인의 오답유형을 다시 정리함으로써 확실한 약점체크가 이루어집니다.</p></div>
+        <div style="display:grid;grid-template-columns:600px minmax(0,1fr);gap:56px;align-items:start">
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <div style="background:#fff;border-radius:20px;padding:16px;box-shadow:0 30px 60px rgba(5,3,14,.45)"><img src="consult-intro/sample-clinic.webp" alt="개인별 클리닉 시험지" style="display:block;width:100%"></div>
+            <span style="font-size:21px;color:rgba(240,237,248,.55)">개인별 클리닉 시험지 예시</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:26px">
+            <span style="font-size:36px;font-weight:800;letter-spacing:-.02em">정원이 적다고 맞춤식 수업은 아닙니다</span>
+            <p style="margin:0;font-size:25px;line-height:1.6;color:rgba(240,237,248,.75)">클리닉프로그램은 성취도가 각각 다른 학생들을 위한 수업의 마무리와 약점체크를 위한 시간입니다.</p>
+            <div style="display:flex;flex-direction:column;gap:14px;margin-top:6px">
+              <div style="display:grid;grid-template-columns:64px 1fr;gap:20px;align-items:center;padding:22px 28px;border-radius:20px;background:#251C40"><span style="font-size:28px;font-weight:850;color:#F0C040">01</span><span style="font-size:25px;line-height:1.5"><b>약점 파악</b> — 각 학생의 수업 내용과 성취도를 바탕으로</span></div>
+              <div style="display:grid;grid-template-columns:64px 1fr;gap:20px;align-items:center;padding:22px 28px;border-radius:20px;background:#251C40"><span style="font-size:28px;font-weight:850;color:#F0C040">02</span><span style="font-size:25px;line-height:1.5"><b>개인별 클리닉 시험지</b> — 개인의 부족한 부분을 보완</span></div>
+              <div style="display:grid;grid-template-columns:64px 1fr;gap:20px;align-items:center;padding:22px 28px;border-radius:20px;background:#251C40"><span style="font-size:28px;font-weight:850;color:#F0C040">03</span><span style="font-size:25px;line-height:1.5"><b>피드백 · 오답정리</b> — 송우찬수학학원 출신 선생님과 함께, 그날의 목표를 완성할 때까지</span></div>
+            </div>
+            <div style="align-self:flex-start;padding:16px 26px;border-radius:999px;background:#F0C040;color:#1A1230;font-size:24px;font-weight:800">중학교 3학년은 클리닉수업도 담당선생님이 진행합니다</div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ D.t5 }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:36px">
+        <div style="display:flex;flex-direction:column;gap:16px"><span style="font-size:24px;font-weight:700;color:#F0C040;letter-spacing:.1em">05 · 시험 관리</span><h3 style="margin:0;font-size:68px;font-weight:850;letter-spacing:-.04em">내신대비</h3>
+          <p style="margin:0;font-size:29px;line-height:1.55;color:rgba(240,237,248,.7)">내신대비 START와 교과서를 중심으로 각 학교의 특성에 맞는 철저한 내신대비</p></div>
+        <div style="display:grid;grid-template-columns:580px minmax(0,1fr);gap:64px;align-items:start">
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <div style="background:#fff;border-radius:20px;padding:16px;box-shadow:0 30px 60px rgba(5,3,14,.45)"><img src="consult-intro/book-start.webp" alt="내신대비 START 교재" style="display:block;width:100%"></div>
+            <span style="font-size:21px;color:rgba(240,237,248,.55)">자체교재 내신대비 START</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:30px">
+            <span style="font-size:44px;font-weight:850;letter-spacing:-.03em">학생들의 최종 목표는 <span style="color:#F0C040">시험</span></span>
+            <div style="display:flex;flex-direction:column;gap:12px;padding-top:26px;border-top:1px solid rgba(240,237,248,.14)"><span style="font-size:24px;font-weight:800;color:#F0C040">교과서 · 내신대비 START</span><span style="font-size:26px;line-height:1.55">각 학교의 교과서와 자체교재로 본인 스스로 개념과 문제를 다시 정리할 수 있는 능력을 기릅니다.</span></div>
+            <div style="display:flex;flex-direction:column;gap:12px;padding-top:26px;border-top:1px solid rgba(240,237,248,.14)"><span style="font-size:24px;font-weight:800;color:#F0C040">맞춤 시험대비 과제물</span><span style="font-size:26px;line-height:1.55">각 학교의 특성, 그리고 개개인의 특성에 맞는 과제물로 내신대비를 충실히 합니다.</span></div>
+            <div style="display:flex;flex-direction:column;gap:12px;padding-top:26px;border-top:1px solid rgba(240,237,248,.14)"><span style="font-size:24px;font-weight:800;color:#F0C040">내신대비 기간</span><span style="font-size:26px;line-height:1.55">개념 Summary와 중·고난도 문제풀이로 첨삭위주 내신대비의 약점을 극복하고 고난도문제에 대한 적응력을 높입니다.</span></div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ D.t6 }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:34px">
+        <div style="display:flex;flex-direction:column;gap:16px"><span style="font-size:24px;font-weight:700;color:#F0C040;letter-spacing:.1em">06 · 시험 관리</span><h3 style="margin:0;font-size:68px;font-weight:850;letter-spacing:-.04em">모의테스트</h3>
+          <p style="margin:0;font-size:29px;line-height:1.55;color:rgba(240,237,248,.7)">실전과 같은 마음으로 문제를 푸는 연습과 자신에게 맞는 시간 관리법을 스스로 익힙니다.</p></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 220px;gap:20px">
+          <div style="padding:28px 32px;border-radius:22px;background:#251C40;display:flex;flex-direction:column;gap:10px"><span style="font-size:22px;font-weight:700;color:#F0C040">1차 · 시험 4주 전</span><span style="font-size:25px;line-height:1.5">성적분석표로 부족한 부분을 판단하고 시험대비의 방향을 결정</span></div>
+          <div style="padding:28px 32px;border-radius:22px;background:#251C40;display:flex;flex-direction:column;gap:10px"><span style="font-size:22px;font-weight:700;color:#F0C040">2차 · 시험 1주 전</span><span style="font-size:25px;line-height:1.5">마지막 실력 확인 · 최고의 성과를 위한 전략 수립</span></div>
+          <div style="padding:28px 32px;border-radius:22px;background:#F0C040;color:#1A1230;display:flex;flex-direction:column;justify-content:center;gap:6px"><span style="font-size:22px;font-weight:800">최종</span><span style="font-size:34px;font-weight:850">내신 시험</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:540px minmax(0,1fr);gap:56px;align-items:start">
+          <div style="display:flex;flex-direction:column;gap:16px"><img src="consult-intro/mock-notice.webp" alt="모의테스트 실시 공고" style="display:block;width:100%;border-radius:18px;box-shadow:0 30px 60px rgba(5,3,14,.45)"><span style="font-size:21px;color:rgba(240,237,248,.55)">모의테스트 실시 공고 예시</span></div>
+          <div style="display:flex;flex-direction:column;gap:22px">
+            <div style="display:flex;flex-direction:column;gap:12px"><span style="font-size:24px;font-weight:800">시험범위 <span style="font-weight:500;color:rgba(240,237,248,.66)">학교 시험범위</span></span>
+              <div style="display:flex;height:48px;border-radius:12px;overflow:hidden;font-size:21px;font-weight:800"><span style="width:70%;background:#F0C040;color:#1A1230;display:flex;align-items:center;padding:0 18px">문제은행 70%</span><span style="flex:1;background:#2D2350;display:flex;align-items:center;padding:0 18px">기타 30%</span></div></div>
+            <div style="display:flex;flex-direction:column;gap:10px;padding-top:20px;border-top:1px solid rgba(240,237,248,.14)"><span style="font-size:24px;font-weight:800">커트라인 <span style="color:#F0C040">80점</span></span>
+              <span style="font-size:23px;line-height:1.55;color:rgba(240,237,248,.8)">80점 이상 — 틀린 문제 오답정리 후 귀가<br>80점 미만 — 틀린 문제에 대한 추가문제와 오답정리 후 귀가</span></div>
+            <div style="display:flex;flex-direction:column;gap:8px;padding-top:20px;border-top:1px solid rgba(240,237,248,.14);font-size:22px;line-height:1.55;color:rgba(240,237,248,.66)"><span>풀이가 없는 경우는 정답으로 인정하지 않습니다.</span><span>학교 시험 일정에 따라 모의테스트 일정은 반별로 조정될 수 있습니다.</span></div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ D.t7 }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:34px">
+        <div style="display:flex;flex-direction:column;gap:16px"><span style="font-size:24px;font-weight:700;color:#F0C040;letter-spacing:.1em">07 · 학생 관리</span><h3 style="margin:0;font-size:68px;font-weight:850;letter-spacing:-.04em">학업성취도 · 월말보고서</h3>
+          <p style="margin:0;font-size:29px;line-height:1.55;color:rgba(240,237,248,.7)">우리 아이의 학습 진행 상황을 확실하게 파악할 수 있도록 학부모님께 발송합니다.</p></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:40px">
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:20px"><span style="font-size:36px;font-weight:800">학업성취도 문자</span><span style="font-size:23px;font-weight:700;color:#F0C040">매주 · 월요일 발송</span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px"><span style="padding:10px 20px;border-radius:999px;background:#2D2350;font-size:22px;font-weight:650">과제충실도</span><span style="padding:10px 20px;border-radius:999px;background:#2D2350;font-size:22px;font-weight:650">수업태도</span><span style="padding:10px 20px;border-radius:999px;background:#2D2350;font-size:22px;font-weight:650">클리닉 충실도</span><span style="padding:10px 20px;border-radius:999px;background:#2D2350;font-size:22px;font-weight:650">담임선생님 의견</span></div>
+            <div style="height:330px;background:#fff;border-radius:20px;padding:14px;margin-top:6px"><img src="consult-intro/report-weekly.webp" alt="학업성취도 안내문자" style="display:block;width:100%;height:100%;object-fit:contain"></div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:20px">
+            <div style="display:flex;align-items:baseline;justify-content:space-between;gap:20px"><span style="font-size:36px;font-weight:800">월말보고서</span><span style="font-size:23px;font-weight:700;color:#F0C040">매월 말</span></div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px"><span style="padding:10px 20px;border-radius:999px;background:#2D2350;font-size:22px;font-weight:650">종합등급</span><span style="padding:10px 20px;border-radius:999px;background:#2D2350;font-size:22px;font-weight:650">담당선생님 의견</span><span style="padding:10px 20px;border-radius:999px;background:#2D2350;font-size:22px;font-weight:650">학습내역</span><span style="padding:10px 20px;border-radius:999px;background:#2D2350;font-size:22px;font-weight:650">학습성과</span><span style="padding:10px 20px;border-radius:999px;background:#2D2350;font-size:22px;font-weight:650">진단결과</span><span style="padding:10px 20px;border-radius:999px;background:#2D2350;font-size:22px;font-weight:650">학습평가</span></div>
+            <div style="height:330px;background:#fff;border-radius:20px;padding:14px;margin-top:6px"><img src="consult-intro/report-monthly.webp" alt="월말보고서" style="display:block;width:100%;height:100%;object-fit:contain"></div>
+          </div>
+        </div>
+        <p style="margin:0;font-size:23px;line-height:1.55;color:rgba(240,237,248,.66)">구체적인 결과를 통해 담당선생님과 더욱 정확한 상담을 나누실 수 있습니다. <span style="color:rgba(240,237,248,.5)">(문자 발송일은 사정에 따라 변동될 수 있습니다.)</span></p>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ D.t8 }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:34px">
+        <div style="display:flex;flex-direction:column;gap:16px"><span style="font-size:24px;font-weight:700;color:#F0C040;letter-spacing:.1em">08 · 수업 시스템</span><h3 style="margin:0;font-size:68px;font-weight:850;letter-spacing:-.04em">온라인 학습관 <span style="font-size:36px;font-weight:600;color:#F0C040;letter-spacing:0">www.fanmath.co.kr</span></h3>
+          <p style="margin:0;font-size:29px;line-height:1.55;color:rgba(240,237,248,.7)">오프라인의 부족함을 채우기 위한 송우찬 수학학원의 온라인 학습 공간</p></div>
+        <div style="display:grid;grid-template-columns:560px minmax(0,1fr);gap:56px;align-items:start">
+          <img src="consult-intro/online-site.webp" alt="온라인 학습관 화면" style="display:block;width:100%;border-radius:20px;box-shadow:0 30px 60px rgba(5,3,14,.45)">
+          <div style="display:flex;flex-direction:column;gap:18px">
+            <div style="display:grid;grid-template-columns:120px 1fr;gap:26px;align-items:center;padding:16px 20px;border-radius:22px;background:#251C40"><img src="consult-intro/thumb-1.webp" alt="" style="width:120px;height:118px;object-fit:cover;border-radius:12px"><span style="display:flex;flex-direction:column;gap:8px"><b style="font-size:28px">시험대비 필수 유형 특강</b><span style="font-size:23px;line-height:1.5;color:rgba(240,237,248,.75)">시험기간에 꼭 정리해야 하는 필수 유형들의 해설 강의</span></span></div>
+            <div style="display:grid;grid-template-columns:120px 1fr;gap:26px;align-items:center;padding:16px 20px;border-radius:22px;background:#251C40"><img src="consult-intro/thumb-2.webp" alt="" style="width:120px;height:118px;object-fit:cover;border-radius:12px"><span style="display:flex;flex-direction:column;gap:8px"><b style="font-size:28px">내신대비 START 모의테스트 해설 강의</b><span style="font-size:23px;line-height:1.5;color:rgba(240,237,248,.75)">시험대비 교재인 내신대비 START에 수록된 모의테스트 해설</span></span></div>
+            <div style="display:grid;grid-template-columns:120px 1fr;gap:26px;align-items:center;padding:16px 20px;border-radius:22px;background:#251C40"><img src="consult-intro/thumb-3.webp" alt="" style="width:120px;height:118px;object-fit:cover;border-radius:12px"><span style="display:flex;flex-direction:column;gap:8px"><b style="font-size:28px">부득이한 결석에 대한 보충 강의</b><span style="font-size:23px;line-height:1.5;color:rgba(240,237,248,.75)">선생님별 보충 강의실에서 결석한 수업을 온라인으로 학습</span></span></div>
+            <div style="display:flex;flex-direction:column;gap:6px;font-size:20px;line-height:1.55;color:rgba(240,237,248,.55);margin-top:6px"><span>※ 추후 양질의 컨텐츠를 온라인 학습관에 꾸준히 업데이트할 예정입니다.</span><span>※ 결석에 대한 보충은 담당 선생님의 재량에 따라 현장에서 오프라인으로 진행될 수도 있습니다.</span></div>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ D.t9 }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:34px">
+        <div style="display:flex;flex-direction:column;gap:16px"><span style="font-size:24px;font-weight:700;color:#F0C040;letter-spacing:.1em">09 · 운영</span><h3 style="margin:0;font-size:68px;font-weight:850;letter-spacing:-.04em">기타 관리프로그램</h3></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px">
+          <div style="padding:36px 40px;border-radius:26px;background:#251C40;display:flex;flex-direction:column;gap:20px">
+            <span style="font-size:34px;font-weight:800">출결관리 시스템</span>
+            <div style="display:grid;grid-template-columns:48px 1fr;gap:14px;font-size:25px;line-height:1.5"><span style="font-weight:850;color:#F0C040">01</span><span>등·하원 시 로비에서 비밀번호를 입력하면 자동으로 출석체크</span><span style="font-weight:850;color:#F0C040">02</span><span>출석체크와 동시에 부모님께 등·하원 문자 발송</span></div>
+          </div>
+          <div style="padding:36px 40px;border-radius:26px;background:#251C40;display:flex;flex-direction:column;gap:20px">
+            <span style="font-size:34px;font-weight:800">카카오톡 플러스친구</span>
+            <div style="display:grid;grid-template-columns:48px 1fr;gap:14px;font-size:25px;line-height:1.5"><span style="font-weight:850;color:#F0C040">01</span><span>송우찬수학학원을 카톡친구로 추가하면 등·하원 문자를 카톡으로</span><span style="font-weight:850;color:#F0C040">02</span><span>전화가 어려울 땐 카톡으로 상담 <span style="color:rgba(240,237,248,.66)">평일 14:30~21:00 · 토요일 10:00~18:00</span></span></div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,300px);gap:40px">
+          <div style="display:flex;flex-direction:column;gap:12px"><img src="consult-intro/kakao-add.webp" alt="카톡친구맺기 방법" style="display:block;width:100%;aspect-ratio:1/1;height:auto;object-fit:contain;border-radius:20px;background:#251C40"><span style="font-size:21px;color:rgba(240,237,248,.6)">친구추가: 친구찾기 → ‘송우찬수학학원’ 검색 → 친구추가</span></div>
+          <div style="display:flex;flex-direction:column;gap:12px"><img src="consult-intro/kakao-attendance.webp" alt="등원 문자 카톡 예시" style="display:block;width:100%;aspect-ratio:1/1;height:auto;object-fit:contain;border-radius:20px;background:#251C40"><span style="font-size:21px;color:rgba(240,237,248,.6)">등원 문자가 카톡으로</span></div>
+          <div style="display:flex;flex-direction:column;gap:12px"><img src="consult-intro/kakao-id.webp" alt="카카오톡 ID 송우찬수학학원" style="display:block;width:100%;aspect-ratio:1/1;height:auto;object-fit:contain;border-radius:20px;background:#251C40"><span style="font-size:21px;color:rgba(240,237,248,.6)">카카오톡 ID: 송우찬수학학원</span></div>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+</div>
+
+<!-- ═════ READY (표지) ═════ -->
+<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:#1A1230;opacity:{{ readyO }};pointer-events:{{ readyPe }};transition:opacity .9s ease">
+  <span style="font-size:26px;font-weight:600;letter-spacing:.32em;color:rgba(240,237,248,.6)">YOUR MATH PARTNER</span>
+  <h1 style="margin:36px 0 0;font-size:132px;font-weight:900;letter-spacing:-.05em">송우찬수학학원</h1>
+  <span style="margin-top:18px;font-size:40px;font-weight:600;color:rgba(240,237,248,.7)">평촌관 · 중등부 상담자료</span>
+  <button sc-camel-on-click="{{ start }}" style="margin-top:80px;height:84px;padding:0 64px;border-radius:42px;background:#F0C040;color:#1A1230;font-size:32px;font-weight:800;box-shadow:0 20px 50px rgba(240,192,64,.22)">시작하기</button>
+  <button sc-camel-on-click="{{ toMenu }}" style="margin-top:28px;font-size:23px;font-weight:600;color:rgba(240,237,248,.6)" style-hover="color:#F0EDF8">목차 바로 보기 →</button>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script="" data-props="{&quot;pace&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;느리게&quot;,&quot;보통&quot;,&quot;빠르게&quot;],&quot;default&quot;:&quot;보통&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;재생&quot;},&quot;bgm&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;재생&quot;},&quot;startAt&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;표지&quot;,&quot;목차&quot;],&quot;default&quot;:&quot;표지&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;재생&quot;}}">
+const SC = [['intro', 7], ['p1', 8], ['p2', 8], ['p3', 9.5], ['p4', 8], ['p5', 8], ['fin', 4.5]];
+const PARTS = [['p1', '01', '교육 방향'], ['p2', '02', '수업 시스템'], ['p3', '03', '학생 관리'], ['p4', '04', '시험 관리'], ['p5', '05', '차별점']];
+const TOPICS = [
+  ['01', '완전한 학습', '교육 방향', '두 가지 목표 · 4단계'],
+  ['02', '교재 안내', '수업 시스템', '단계별 대표교재'],
+  ['03', '데일리테스트', '수업 시스템', '복습의 완성'],
+  ['04', '클리닉프로그램', '학생 관리', '개인별 약점체크'],
+  ['05', '내신대비', '시험 관리', '학교별 맞춤 대비'],
+  ['06', '모의테스트', '시험 관리', '시험 전 2회 실전 연습'],
+  ['07', '학업성취도 · 월말보고서', '학생 관리', '매주 문자 · 매월 보고서'],
+  ['08', '온라인 학습관', '수업 시스템', '특강 · 해설 · 보충 강의'],
+  ['09', '기타 관리프로그램', '운영', '출결 · 카카오톡'],
+];
+
+function makePad() {
+  const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
+  const ctx = new AC(), master = ctx.createGain(), lp = ctx.createBiquadFilter();
+  master.gain.value = 0.04; lp.type = 'lowpass'; lp.frequency.value = 1000; master.connect(lp); lp.connect(ctx.destination);
+  const f = m => 440 * Math.pow(2, (m - 69) / 12);
+  const chords = [[53, 57, 60, 64], [52, 55, 59, 62], [50, 53, 57, 60], [48, 55, 59, 64]];
+  let k = 0, timer = null;
+  const play = () => {
+    const t0 = ctx.currentTime;
+    chords[k++ % chords.length].forEach(m => ['sine', 'triangle'].forEach((type, j) => {
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type; o.frequency.value = f(m); o.detune.value = j ? 6 : -4;
+      g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(j ? 0.12 : 0.22, t0 + 1.8); g.gain.linearRampToValueAtTime(0, t0 + 5.6);
+      o.connect(g); g.connect(master); o.start(t0); o.stop(t0 + 5.7);
+    }));
+  };
+  return {
+    start() { ctx.resume(); if (!timer) { play(); timer = setInterval(play, 4200); } },
+    stop() { clearInterval(timer); timer = null; ctx.suspend(); },
+    running() { return ctx.state === 'running'; },
+  };
+}
+
+class Component extends DCLogic {
+  state = { phase: 'ready', i: 0, sel: 0, hov: -1, zoom: false, menuIn: false, settled: false, dOp: 1, scale: 1, sound: null };
+  planeRef = React.createRef(); glowRef = React.createRef(); bodyRef = React.createRef();
+
+  componentDidMount() {
+    this.fit = () => this.setState({ scale: Math.min(window.innerWidth / 1920, window.innerHeight / 1080) });
+    this.fit(); window.addEventListener('resize', this.fit);
+    this.onKey = e => {
+      const { phase, i } = this.state;
+      if (phase === 'ready' && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); this.start(); }
+      else if (phase === 'main') {
+        if (e.key === 'ArrowRight') i < SC.length - 1 ? this.go(i + 1) : this.toMenu();
+        else if (e.key === 'ArrowLeft') this.go(i - 1);
+        else if (e.key === 'Escape') this.toMenu();
+      } else if (phase === 'detail') {
+        if (e.key === 'Escape' || e.key === 'Backspace') this.toMenu();
+        else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') this.pick(Math.min(8, this.state.sel + 1));
+        else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') this.pick(Math.max(0, this.state.sel - 1));
+      }
+    };
+    window.addEventListener('keydown', this.onKey);
+    if ((this.props.startAt ?? '표지') === '목차') this.toMenu();
+    // 상담 플로우 안에서 열린 경우: 표지 없이 바로 재생하고 부모 화면에 진행 상황 알림
+    const qs = new URLSearchParams(location.search);
+    if (qs.get('autostart') === '1') this.t0 = setTimeout(() => this.start(), 300);
+  }
+  notify(event) { try { if (window.parent !== window) window.parent.postMessage({ type: 'swc-intro', event }, location.origin); } catch (e) {} }
+  componentWillUnmount() {
+    window.removeEventListener('resize', this.fit); window.removeEventListener('keydown', this.onKey);
+    [this.t0, this.t, this.t2, this.t3, this.t4].forEach(clearTimeout); this.pad && this.pad.stop();
+  }
+  soundOn() { return this.state.sound ?? (this.props.bgm ?? true); }
+  paceK() { return ({ '느리게': 1.3, '보통': 1, '빠르게': 0.8 })[this.props.pace ?? '보통'] || 1; }
+  dur(i) { return SC[i][1] * this.paceK(); }
+  audio(on) {
+    if (on) { if (!this.pad) this.pad = makePad(); this.pad && this.pad.start(); }
+    else if (this.pad) this.pad.stop();
+  }
+  start = () => {
+    this.audio(this.soundOn()); this.go(0); this.notify('started');
+    // 브라우저가 배경음 자동 재생을 막으면 화면을 처음 누를 때 켬
+    setTimeout(() => {
+      if (!this.soundOn() || !this.pad || this.pad.running()) return;
+      const on = () => { if (this.soundOn()) this.audio(true); };
+      window.addEventListener('pointerdown', on, { once: true });
+    }, 600);
+  };
+  finish = () => { this.notify('menu'); this.toMenu(); };   // 끝까지 재생 → 목차에서 멈춤
+  go = (i) => {
+    clearTimeout(this.t); i = Math.max(0, Math.min(SC.length - 1, i));
+    this.setState({ phase: 'main', i, zoom: false });
+    this.t = setTimeout(() => (i < SC.length - 1 ? this.go(i + 1) : this.finish()), this.dur(i) * 1000);
+  };
+  toMenu = () => {
+    clearTimeout(this.t); clearTimeout(this.t2); clearTimeout(this.t3);
+    this.setState({ phase: 'menu', menuIn: false, settled: false, zoom: false, hov: -1 });
+    this.t2 = setTimeout(() => this.setState({ menuIn: true }), 80);
+    this.t3 = setTimeout(() => this.setState({ settled: true }), 1700);
+  };
+  open = (k) => {
+    if (this.state.zoom) return;
+    this.setState({ sel: k, zoom: true, dOp: 1 });
+    clearTimeout(this.t4);
+    this.t4 = setTimeout(() => { this.setState({ phase: 'detail', zoom: false }); if (this.bodyRef.current) this.bodyRef.current.scrollTop = 0; }, 620);
+  };
+  pick = (k) => {
+    if (k === this.state.sel) return;
+    this.setState({ dOp: 0 });
+    clearTimeout(this.t4);
+    this.t4 = setTimeout(() => { this.setState({ sel: k, dOp: 1 }); if (this.bodyRef.current) this.bodyRef.current.scrollTop = 0; }, 230);
+  };
+  onMove = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width - 0.5, y = (e.clientY - r.top) / r.height - 0.5;
+    if (this.planeRef.current) this.planeRef.current.style.transform = `rotateY(${-13 + x * 7}deg) rotateX(${6 - y * 6}deg)`;
+    if (this.glowRef.current) this.glowRef.current.style.transform = `translate(${x * 260}px, ${y * 180}px)`;
+  };
+  toggleSound = () => { const on = !this.soundOn(); this.setState({ sound: on }); if (this.state.phase !== 'ready') this.audio(on); };
+
+  renderVals() {
+    const st = this.state, ph = st.phase;
+    const S = {};
+    SC.forEach(([k], j) => {
+      const on = ph === 'main' && st.i === j;
+      S[k] = { o: on ? 1 : 0, y: on ? 0 : 36, s: on ? 1 : 0.92, w: on ? 100 : 0, line: on ? 320 : 0, pe: on ? 'auto' : 'none' };
+    });
+    const parts = PARTS.map(([k, no, label]) => {
+      const idx = SC.findIndex(s => s[0] === k), active = ph === 'main' && st.i === idx, done = st.i > idx;
+      return {
+        no, label, w: active || done ? 100 : 0,
+        tr: active ? `width ${this.dur(idx)}s linear` : 'width .3s',
+        color: active ? '#F0EDF8' : done ? 'rgba(240,237,248,.66)' : 'rgba(240,237,248,.42)',
+        numColor: active ? '#F0C040' : 'inherit', go: () => this.go(idx),
+      };
+    });
+    const cards = TOPICS.map(([no, title, part, sub], k) => {
+      const inn = st.menuIn;
+      let z = inn ? 0 : -520, y = inn ? 0 : 70, o = inn ? 1 : 0, d = inn && !st.settled ? 0.1 + k * 0.07 : 0;
+      const h = st.hov === k && inn && !st.zoom;
+      if (h) z = 46;
+      if (st.zoom) { d = 0; if (k === st.sel) { z = 380; o = 1; } else { z = -260; o = 0; } }
+      const lit = h || (st.zoom && k === st.sel);
+      return {
+        no, title, part, sub, o, d: d + 's', tf: `translate3d(0px, ${y}px, ${z}px)`,
+        bd: lit ? 'rgba(240,192,64,.7)' : 'rgba(240,237,248,.12)',
+        sh: lit ? '0 44px 90px rgba(5,3,14,.65)' : '0 24px 50px rgba(5,3,14,.45)',
+        arrow: lit ? '#F0C040' : 'rgba(240,237,248,.4)',
+        open: () => this.open(k), enter: () => this.setState({ hov: k }), leave: () => this.setState(s => (s.hov === k ? { hov: -1 } : null)),
+      };
+    });
+    const rail = TOPICS.map(([no, title], k) => {
+      const on = st.sel === k;
+      return { no, title, bg: on ? '#2D2350' : 'transparent', numColor: on ? '#F0C040' : 'rgba(240,237,248,.4)', color: on ? '#F0EDF8' : 'rgba(240,237,248,.62)', weight: on ? 800 : 600, pick: () => this.pick(k) };
+    });
+    const D = {}; TOPICS.forEach((_, k) => { D['t' + (k + 1)] = st.sel === k; });
+    const snd = this.soundOn();
+    return {
+      scale: st.scale, S, parts, cards, rail, D,
+      hdrO: ph === 'main' && st.i >= 1 && st.i <= 5 ? 1 : 0,
+      mainO: ph === 'main' ? 1 : 0, mainS: ph === 'main' || ph === 'ready' ? 1 : 1.08, mainPe: ph === 'main' ? 'auto' : 'none',
+      menuO: ph === 'menu' ? 1 : 0, menuS: ph === 'menu' ? 1 : ph === 'detail' ? 1.06 : 0.94, menuPe: ph === 'menu' ? 'auto' : 'none',
+      detO: ph === 'detail' ? 1 : 0, detS: ph === 'detail' ? 1 : 0.97, detPe: ph === 'detail' ? 'auto' : 'none',
+      readyO: ph === 'ready' ? 1 : 0, readyPe: ph === 'ready' ? 'auto' : 'none',
+      dOp: st.dOp, dY: st.dOp ? 0 : 16,
+      soundLabel: snd ? '배경음 켜짐' : '배경음 꺼짐', soundDot: snd ? '#F0C040' : 'rgba(240,237,248,.3)',
+      start: this.start, toMenu: this.toMenu, replay: () => this.go(0), toggleSound: this.toggleSound, onMove: this.onMove,
+      planeRef: this.planeRef, glowRef: this.glowRef, bodyRef: this.bodyRef,
+    };
+  }
+}
+</script>
+
+
+</body></html>
