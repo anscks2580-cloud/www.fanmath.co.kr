@@ -36,6 +36,7 @@ body {
 }
 .card h4 { font-size:16px; font-weight:800; margin:0 0 4px; display:flex; align-items:center; gap:8px; }
 .card h4 .req { font-size:11.5px; color:#e05c5c; font-weight:700; }
+.card h4 .opt { font-size:11.5px; color:#9a9384; font-weight:600; }
 .hint { font-size:13px; color:#9a9384; margin:0 0 12px; line-height:1.5; }
 .grid { display:grid; grid-template-columns:1fr; gap:12px; }
 .field label { display:block; font-size:14px; font-weight:700; margin-bottom:6px; color:#4a4538; }
@@ -78,13 +79,50 @@ body {
   width:100%; font-size:18px; font-weight:800; padding:18px; border:none; border-radius:14px; cursor:pointer;
   background:var(--ck-accent); color:#fff; font-family:inherit; margin-top:6px;
   box-shadow:0 6px 18px rgba(0,0,0,0.08);
+  display:flex; align-items:center; justify-content:center; gap:10px;
 }
+.submit .arw { font-size:20px; line-height:1; }
 .submit:disabled { opacity:0.55; }
+.next-note { text-align:center; font-size:13px; color:#9a9384; margin-top:10px; }
 .err { color:#e05c5c; font-size:14px; font-weight:600; text-align:center; margin-top:12px; min-height:20px; line-height:1.5; }
 .done { display:none; text-align:center; padding:90px 22px; }
 .done .ic { font-size:58px; margin-bottom:16px; }
 .done h2 { font-size:24px; font-weight:800; margin:0 0 12px; }
 .done p { font-size:15px; color:#7a7466; line-height:1.7; margin:0; }
+.done .again { margin-top:34px; font-size:14px; font-weight:700; padding:13px 22px; border-radius:100px; border:1.5px solid #d9d3c5; background:#fff; color:#7a7466; font-family:inherit; }
+
+/* 진행 단계 표시 */
+.flowbar { max-width:640px; margin:0 auto; padding:14px 14px 0; }
+.flowbar ol { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.flowbar li {
+  display:flex; align-items:center; justify-content:center; gap:5px; min-width:0;
+  padding:8px 4px; border-radius:100px; background:#fff; border:1px solid #e6e1d6;
+  font-size:12.5px; font-weight:700; color:#a49d8e; white-space:nowrap;
+}
+.flowbar li b { flex:none; width:19px; height:19px; border-radius:50%; display:grid; place-items:center; font-size:11px; background:#ece7db; color:#8a8476; }
+.flowbar li span { overflow:hidden; text-overflow:ellipsis; }
+.flowbar li.on { color:#2b2b2b; border-color:var(--ck-accent); box-shadow:0 0 0 3px rgba(201,169,74,0.12); }
+.flowbar li.on b { background:var(--ck-accent); color:#fff; }
+.flowbar .ls { display:none; }
+@media (max-width:480px) { .flowbar .lf { display:none; } .flowbar .ls { display:inline; } .flowbar li { font-size:12px; gap:4px; } }
+
+/* 안내 · 복구 · 대체 전송 */
+.notice { background:#fffaf0; border:1px solid #efdfb6; border-radius:14px; padding:14px 16px; font-size:14px; line-height:1.6; color:#5a5446; margin-bottom:12px; }
+.notice b { color:#2b2b2b; }
+.notice .act { margin-top:10px; display:flex; gap:8px; flex-wrap:wrap; }
+.notice button { font-family:inherit; font-size:14px; font-weight:700; padding:10px 16px; border-radius:100px; cursor:pointer; border:1.5px solid var(--ck-accent); background:var(--ck-accent); color:#fff; }
+.notice button.line { background:#fff; color:#7a7466; border-color:#d9d3c5; }
+.notice.warn { background:#fff5f4; border-color:#f3cfcb; }
+[hidden] { display:none !important; }
+
+/* 학원 태블릿(관리자 페이지 안) 화면: 상단 로고는 관리자 페이지 쪽에 있으므로 숨기고 글씨를 키움 */
+body.kiosk .top { display:none; }
+body.kiosk .wrap, body.kiosk .flowbar { max-width:820px; }
+body.kiosk .field input, body.kiosk .field select { font-size:18px; padding:15px 16px; }
+body.kiosk .chip { font-size:16px; padding:13px 20px; }
+body.kiosk .seg .chip { font-size:18px; padding:18px 10px; }
+body.kiosk .hello h2 { font-size:26px; }
+@media (min-width:700px) { body.kiosk .grid { grid-template-columns:1fr 1fr; } }
 </style>
 </head>
 <body>
@@ -95,11 +133,22 @@ body {
   <span class="br" id="branchBadge">평촌관</span>
 </div>
 
+<nav class="flowbar" id="flowbar" aria-label="상담 진행 단계">
+  <ol>
+    <li class="on" aria-current="step"><b>1</b><span class="lf">상담신청서</span><span class="ls">신청서</span></li>
+    <li><b>2</b><span class="lf">학부모 설문</span><span class="ls">설문</span></li>
+    <li><b>3</b><span class="lf">결과 확인</span><span class="ls">결과</span></li>
+    <li><b>4</b><span class="lf">안내 영상</span><span class="ls">영상</span></li>
+  </ol>
+</nav>
+
 <div class="wrap" id="formView">
   <div class="hello">
     <h2>방문해 주셔서 감사합니다 😊</h2>
     <p>정확한 상담을 위해 아래 내용을 작성해 주세요.<br>모르는 항목은 비워두셔도 괜찮습니다.</p>
   </div>
+
+  <div class="notice" id="resumeBox" hidden></div>
 
   <div class="card">
     <h4>과정 구분 <span class="req">필수</span></h4>
@@ -116,6 +165,15 @@ body {
     <div class="seg two" id="ckBranch" style="margin-top:10px;">
       <button type="button" class="chip" data-v="평촌관">평촌관</button>
       <button type="button" class="chip" data-v="산본관">산본관</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h4>오늘 상담에 오신 분 <span class="opt">선택</span></h4>
+    <p class="hint">학생이 함께 오셨는지 알려 주시면 설문 진행에 참고합니다.</p>
+    <div class="seg two" id="ckWith">
+      <button type="button" class="chip" data-v="both">학생과 함께</button>
+      <button type="button" class="chip" data-v="parent">학부모님만</button>
     </div>
   </div>
 
@@ -224,22 +282,28 @@ body {
     </label>
   </div>
 
-  <button type="button" class="submit" id="ckSubmitBtn">전송하기</button>
-  <div class="err" id="ckErr"></div>
+  <button type="button" class="submit" id="ckSubmitBtn"><span id="ckSubmitTxt">다음 단계로</span><span class="arw" aria-hidden="true">→</span></button>
+  <p class="next-note">다음 단계: 학부모님 학습 습관 설문 (10문항 · 약 3분)</p>
+  <div class="err" id="ckErr" role="alert"></div>
+  <div class="notice warn" id="fallbackBox" hidden>
+    지금은 설문과 연결해 저장할 수 없는 상태입니다.<br>
+    <b>상담지만 먼저 전송</b>하고, 설문은 선생님과 함께 진행할 수 있어요.
+    <div class="act"><button type="button" id="fallbackBtn">설문 없이 상담지만 전송하기</button></div>
+  </div>
 </div>
 
 <div class="done" id="doneView">
   <div class="ic">🎉</div>
-  <h2>전송이 완료되었습니다!</h2>
-  <p>작성해 주셔서 감사합니다.<br>잠시 후 선생님께서 상담을 도와드리겠습니다.</p>
-  <button type="button" id="againBtn" style="margin-top:34px;font-size:14px;font-weight:700;padding:13px 22px;border-radius:100px;border:1.5px solid #d9d3c5;background:#fff;color:#7a7466;font-family:inherit;">다른 자녀 상담지 추가 작성</button>
+  <h2 id="doneTitle">전송이 완료되었습니다!</h2>
+  <p id="doneText">작성해 주셔서 감사합니다.<br>잠시 후 선생님께서 상담을 도와드리겠습니다.</p>
+  <button type="button" class="again" id="againBtn">다른 자녀 상담지 추가 작성</button>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { initializeApp, getApps } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const app = initializeApp({
+const app = getApps().find(a => a.name === '[DEFAULT]') || initializeApp({
   apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
   authDomain: "songmath.firebaseapp.com",
   projectId: "songmath",
@@ -252,10 +316,15 @@ const db = getFirestore(app);
 const ACCENT = { '초등': '#a78bda', '중등': '#e0a22c', '고등': '#5fa3cf' };
 const params = new URLSearchParams(location.search);
 const initBranch = ['평촌관','산본관'].includes(params.get('b')) ? params.get('b') : '평촌관';
-const qrSession = (params.get('s') || '').slice(0, 40);
+const qrSession = (params.get('s') || '').slice(0, 40).replace(/[^\w-]/g, '');
+const KIOSK = params.get('kiosk') === '1';                     // 관리자 페이지 '태블릿 상담지' 안에서 열린 경우
+const SRC = params.get('src') === 'tablet' ? 'tablet' : 'qr';
+if (KIOSK) document.body.classList.add('kiosk');
+
 const $ = (id) => document.getElementById(id);
 const sel = (id) => [...document.querySelectorAll(`#${id} .chip.on`)].map(b => b.dataset.v);
 const setSingle = (id, v) => document.querySelectorAll(`#${id} .chip`).forEach(b => b.classList.toggle('on', b.dataset.v === v));
+const setMulti = (id, arr) => { const s = new Set(arr || []); document.querySelectorAll(`#${id} .chip`).forEach(b => b.classList.toggle('on', s.has(b.dataset.v))); };
 const val = (id) => $(id).value.trim();
 
 function formatPhone(v) {
@@ -276,13 +345,17 @@ function applyLevel(level) {
     hint.textContent = '현재 어디까지 공부했는지 적어주세요. (선행 포함)';
     const grades = level === '초등' ? ['1학년','2학년','3학년','4학년','5학년','6학년'] : ['1학년','2학년','3학년'];
     const prefix = level === '초등' ? '초' : '중';
+    const keep = $('ckPGrade').value;
     $('ckPGrade').innerHTML = '<option value="">선택</option>' +
       grades.map(g => `<option value="${g}">${prefix}${g.replace('학년','')}</option>`).join('');
+    if (grades.includes(keep)) $('ckPGrade').value = keep;
   }
 }
 
-['ckLevel','ckBranch','ckHighLevel'].forEach(id => {
+['ckLevel','ckBranch','ckHighLevel','ckWith'].forEach(id => {
   document.querySelectorAll(`#${id} .chip`).forEach(b => b.addEventListener('click', () => {
+    // '오늘 오신 분'은 선택 항목이라 다시 누르면 해제
+    if (id === 'ckWith' && b.classList.contains('on')) { b.classList.remove('on'); return; }
     setSingle(id, b.dataset.v);
     if (id === 'ckLevel') applyLevel(b.dataset.v);
     if (id === 'ckBranch') $('branchBadge').textContent = b.dataset.v;
@@ -304,43 +377,15 @@ function applyLevel(level) {
 setSingle('ckBranch', initBranch);
 $('branchBadge').textContent = initBranch;
 
-// 같은 기기에서 중복 전송 방지 (전송 직후 새로고침·뒤로가기 대비)
-const SENT_KEY = 'swc_consult_sent_' + (qrSession || 'default');
-try {
-  if (qrSession && localStorage.getItem(SENT_KEY)) {
-    $('formView').style.display = 'none';
-    $('doneView').style.display = 'block';
-  }
-} catch(e) {}
-
-$('againBtn').addEventListener('click', () => {
-  try { localStorage.removeItem(SENT_KEY); } catch(e) {}
-  location.reload();
-});
-
-let submitting = false;
-$('ckSubmitBtn').addEventListener('click', async () => {
-  if (submitting) return;
-  const errEl = $('ckErr');
+/* ── 입력값 모으기 · 채우기 ── */
+function collectForm() {
   const level = sel('ckLevel')[0] || '';
-  const branch = sel('ckBranch')[0] || initBranch;
-  const studentName = val('ckName');
-  const schoolGrade = val('ckSchool');
-  const parentPhone = val('ckParentPhone');
-
-  let msg = '';
-  if (!level) msg = '과정 구분(초등/중등/고등)을 선택해 주세요.';
-  else if (!studentName) msg = '학생 이름을 입력해 주세요.';
-  else if (!schoolGrade) msg = '학교 / 학년을 입력해 주세요.';
-  else if (parentPhone.replace(/\D/g, '').length < 10) msg = '학부모 연락처를 정확히 입력해 주세요.';
-  else if (!$('ckAgree').checked) msg = '개인정보 수집·이용에 동의해 주세요.';
-  if (msg) { errEl.textContent = msg; return; }
-  errEl.textContent = '';
-
   const data = {
-    source: 'qr',
-    qrSession,
-    level, branch, studentName, schoolGrade, parentPhone,
+    level,
+    branch: sel('ckBranch')[0] || initBranch,
+    studentName: val('ckName'),
+    schoolGrade: val('ckSchool'),
+    parentPhone: val('ckParentPhone'),
     studentPhone: val('ckStudentPhone'),
     visitPath: sel('ckVisit'),
     visitPathEtc: val('ckVisitEtc'),
@@ -352,8 +397,6 @@ $('ckSubmitBtn').addEventListener('click', async () => {
       accuracyScore: Number($('ckAcc').value),
       interestScore: Number($('ckInt').value),
     },
-    agreePrivacy: true,
-    createdAt: Timestamp.now(),
   };
   if (level === '고등') {
     data.highSubjects = sel('ckHighSubj');
@@ -363,22 +406,207 @@ $('ckSubmitBtn').addEventListener('click', async () => {
     data.progressSemester = $('ckPSem').value;
     data.progressUnit = val('ckPUnit');
   }
+  return data;
+}
+let restoring = false;
+function applyForm(d) {
+  restoring = true;
+  if (d.level) { setSingle('ckLevel', d.level); applyLevel(d.level); }
+  if (d.branch) { setSingle('ckBranch', d.branch); $('branchBadge').textContent = d.branch; }
+  setSingle('ckWith', d.visitWith || '');
+  const setv = (id, v) => { if (v !== undefined && v !== null) $(id).value = v; };
+  setv('ckName', d.studentName); setv('ckSchool', d.schoolGrade);
+  setv('ckParentPhone', d.parentPhone); setv('ckStudentPhone', d.studentPhone); setv('ckVisitEtc', d.visitPathEtc);
+  const ex = d.examScores || {};
+  setv('ckS1', ex.round1); setv('ckS2', ex.round2); setv('ckS3', ex.round3); setv('ckS4', ex.round4);
+  setMulti('ckVisit', d.visitPath); setMulti('ckHighSubj', d.highSubjects);
+  setMulti('ckStrong', d.strongAreas); setMulti('ckWeak', d.weakAreas);
+  if (d.highLevel) setSingle('ckHighLevel', d.highLevel);
+  setv('ckPGrade', d.progressGrade); setv('ckPSem', d.progressSemester); setv('ckPUnit', d.progressUnit);
+  const sc = d.selfCheck || {};
+  [['ckCalc','ckCalcV',sc.calcScore],['ckAcc','ckAccV',sc.accuracyScore],['ckInt','ckIntV',sc.interestScore]].forEach(([r, v, x]) => {
+    if (x !== undefined && x !== null) { $(r).value = x; $(v).textContent = x; }
+  });
+  if (d.agreePrivacy || d.agree) $('ckAgree').checked = true;
+  restoring = false;
+}
 
-  const btn = $('ckSubmitBtn');
-  submitting = true; btn.disabled = true; btn.textContent = '전송 중...';
+/* ── 아직 저장 전 입력값 임시 보관 ──
+   이 탭(sessionStorage)에만 2시간 보관 → 새로고침해도 유지, 탭을 닫거나 저장·완료되면 삭제 (공용 태블릿 고려) */
+const DRAFT_KEY = 'swc_consult_draft:' + (qrSession || 'kiosk');
+const DRAFT_TTL = 2 * 3600 * 1000;
+let draftTimer = null;
+function saveDraft() {
+  if (restoring) return;
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(() => {
+    try { sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ at: Date.now(), d: { ...collectForm(), visitWith: sel('ckWith')[0] || '', agree: $('ckAgree').checked } })); } catch(e) {}
+  }, 300);
+}
+function readDraft() {
+  try { const v = JSON.parse(sessionStorage.getItem(DRAFT_KEY) || 'null'); if (v && Date.now() - v.at < DRAFT_TTL) return v; } catch(e) {}
+  return null;
+}
+function clearDraft() { clearTimeout(draftTimer); try { sessionStorage.removeItem(DRAFT_KEY); } catch(e) {} }
+$('formView').addEventListener('input', saveDraft);
+$('formView').addEventListener('click', e => { if (e.target.closest('.chip')) saveDraft(); });
+$('ckAgree').addEventListener('change', saveDraft);
+
+/* ── 기존 방식 전송 (설문 연동을 쓸 수 없을 때의 대체 경로 — 예전 '전송하기'와 동일) ── */
+const SENT_KEY = 'swc_consult_sent_' + (qrSession || 'default');
+function validate() {
+  if (!(sel('ckLevel')[0])) return '과정 구분(초등/중등/고등)을 선택해 주세요.';
+  if (!val('ckName')) return '학생 이름을 입력해 주세요.';
+  if (!val('ckSchool')) return '학교 / 학년을 입력해 주세요.';
+  if (val('ckParentPhone').replace(/\D/g, '').length < 10) return '학부모 연락처를 정확히 입력해 주세요.';
+  if (!$('ckAgree').checked) return '개인정보 수집·이용에 동의해 주세요.';
+  return '';
+}
+async function legacySubmit() {
+  const errEl = $('ckErr');
+  const msg = validate();
+  if (msg) { errEl.textContent = msg; return; }
+  const data = { source: SRC, qrSession, ...collectForm(), agreePrivacy: true, createdAt: Timestamp.now() };
+  const btn = $('fallbackBtn');
+  btn.disabled = true; btn.textContent = '전송 중...';
   try {
     await addDoc(collection(db, 'consultForms'), data);
     try { if (qrSession) localStorage.setItem(SENT_KEY, '1'); } catch(e) {}
-    $('formView').style.display = 'none';
-    $('doneView').style.display = 'block';
-    window.scrollTo(0, 0);
+    clearDraft();
+    showDone('legacy');
   } catch(e) {
     errEl.textContent = '전송 중 오류가 발생했습니다. 선생님께 말씀해 주세요.';
     console.error(e);
   } finally {
-    submitting = false; btn.disabled = false; btn.textContent = '전송하기';
+    btn.disabled = false; btn.textContent = '설문 없이 상담지만 전송하기';
   }
+}
+$('fallbackBtn').addEventListener('click', legacySubmit);
+
+function showDone(kind) {
+  $('formView').style.display = 'none';
+  $('flowbar').hidden = true;
+  if (kind === 'flow') {
+    $('doneTitle').textContent = '상담지와 설문이 모두 전달되었습니다';
+    $('doneText').innerHTML = '작성해 주셔서 감사합니다.<br>잠시 후 선생님께서 상담을 도와드리겠습니다.';
+  }
+  if (KIOSK) $('againBtn').textContent = '새 상담지 작성';
+  $('doneView').style.display = 'block';
+  window.scrollTo(0, 0);
+}
+
+/* ── 상담 진행 (consult-flow.js) ── */
+let F = null, session = null, currentCid = null, busy = false;
+async function flow() { if (!F) F = await import('./consult-flow.js'); return F; }
+async function sess() { const f = await flow(); if (!session) session = await f.openSession({ allowVisitor: true }); return session; }
+const notifyParent = (event, extra = {}) => { try { if (window.parent !== window) window.parent.postMessage({ type: 'swc-consult', event, ...extra }, location.origin); } catch(e) {} };
+
+function passParams() {
+  const q = new URLSearchParams();
+  if (qrSession) q.set('s', qrSession);
+  if (KIOSK) q.set('kiosk', '1');
+  if (SRC === 'tablet') q.set('src', 'tablet');
+  return q;
+}
+function surveyUrl(cid) {
+  const q = passParams();
+  q.set('cid', cid); q.set('role', 'parent'); q.set('flow', 'visit');
+  return 'learning-profile.html?' + q.toString();
+}
+
+function setBtn(disabled, text) {
+  $('ckSubmitBtn').disabled = disabled;
+  $('ckSubmitTxt').textContent = text || '다음 단계로';
+}
+function showResume(rec) {
+  const box = $('resumeBox');
+  const doneParent = rec.parentSurvey && rec.parentSurvey.status === 'completed';
+  box.className = 'notice';
+  box.innerHTML = doneParent
+    ? `<b>학부모 설문까지 저장된 상담지입니다.</b><br>내용을 고칠 수 있고, 바로 결과·안내 영상으로 이어갈 수도 있어요.
+       <div class="act"><button type="button" id="resumeGo">결과 · 안내 영상으로 이동</button></div>`
+    : `<b>작성하신 상담지를 불러왔습니다.</b><br>확인 후 아래 <b>다음 단계로</b>를 눌러 주세요.`;
+  box.hidden = false;
+  const go = $('resumeGo');
+  if (go) go.addEventListener('click', () => { location.href = surveyUrl(currentCid); });
+}
+function showNotice(html, cls = 'notice') { const box = $('resumeBox'); box.className = cls; box.innerHTML = html; box.hidden = false; }
+
+async function onNext() {
+  if (busy) return;                             // 저장 중 중복 클릭 방지
+  const errEl = $('ckErr');
+  const msg = validate();
+  if (msg) { errEl.textContent = msg; return; }
+  errEl.textContent = '';
+  $('fallbackBox').hidden = true;
+  busy = true; setBtn(true, '저장 중…');
+  let f = null;
+  try {
+    f = await flow();
+    const s = await sess();
+    // 같은 상담ID를 먼저 기억해 두고 저장 → 재시도·새로고침해도 기록이 새로 생기지 않음
+    const cid = currentCid || (f.pointer.get(qrSession) || {}).cid || f.newConsultId(s);
+    f.pointer.set({ cid }, qrSession);
+    await f.saveConsultForm(s, cid, collectForm(), { source: SRC, qrSession, visitWith: sel('ckWith')[0] || '' });
+    currentCid = cid;
+    clearDraft();
+    notifyParent('form_saved', { cid });
+    setBtn(true, '설문으로 이동 중…');
+    location.href = surveyUrl(cid);
+  } catch (e) {
+    busy = false; setBtn(false);
+    console.error('[상담신청서 저장 실패]', e);
+    if (!f) {
+      errEl.textContent = '페이지 구성 요소를 불러오지 못했습니다. 인터넷 연결을 확인한 뒤 다시 시도해 주세요.';
+      $('fallbackBox').hidden = false;
+      return;
+    }
+    const err = f.toFlowError(e);
+    errEl.textContent = f.errorMessage(err, '저장');
+    if (err.kind === 'permission') { currentCid = null; f.pointer.clear(qrSession); }
+    if (err.kind === 'setup' || err.kind === 'permission') $('fallbackBox').hidden = false;
+  }
+}
+$('ckSubmitBtn').addEventListener('click', onNext);
+
+$('againBtn').addEventListener('click', async () => {
+  try { localStorage.removeItem(SENT_KEY); } catch(e) {}
+  clearDraft();
+  try { const f = await flow(); f.pointer.clear(qrSession); await f.endVisitorSession(); } catch(e) {}
+  location.reload();
 });
+
+/* ── 처음 열 때: 진행 중이던 상담 복구 ── */
+(async function boot() {
+  try { if (qrSession && localStorage.getItem(SENT_KEY)) { showDone('legacy'); return; } } catch(e) {}
+  const draft = readDraft();
+  if (draft) applyForm(draft.d);               // 저장 전 입력값은 바로 복구
+  let f;
+  try { f = await flow(); } catch(e) { return; }
+  const p = f.pointer.get(qrSession);
+  if (p && p.done) { showDone('flow'); return; }
+  if (p && p.cid) {
+    showNotice('저장된 상담지를 불러오는 중…');
+    try {
+      const rec = await f.loadConsult(await sess(), p.cid);
+      if (rec) {
+        currentCid = p.cid;
+        applyForm(rec);
+        // 저장 뒤에 고치던 내용이 있으면 그 내용을 우선 표시
+        if (draft && draft.at > (p.at || 0)) applyForm(draft.d);
+        showResume(rec);
+        return;
+      }
+      f.pointer.clear(qrSession);          // 저장되지 않은 상담ID → 새로 작성
+      $('resumeBox').hidden = true;
+    } catch (e) {
+      const err = f.toFlowError(e);
+      console.error('[저장된 상담지 불러오기 실패]', e);
+      if (err.kind === 'network') showNotice('저장된 상담지를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.<br>그대로 작성 후 <b>다음 단계로</b>를 누르면 같은 상담지에 저장됩니다.', 'notice warn');
+      else { f.pointer.clear(qrSession); $('resumeBox').hidden = true; }
+    }
+  }
+})();
 </script>
 </body>
 </html>

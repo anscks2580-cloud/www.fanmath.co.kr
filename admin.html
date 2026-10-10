@@ -319,6 +319,102 @@
   background: rgba(124,184,221,0.14); color:#7cb8dd;
 }
 .consult-src.web { background: rgba(255,255,255,0.06); color: var(--muted); }
+/* 상담 기록 목록 (설문·진행 상태) */
+.consult-item.cf-item { display:grid; grid-template-columns:1fr; gap:10px; }
+.cf-status { display:flex; flex-wrap:wrap; gap:6px; }
+.cf-chip {
+  font-size:11.5px; font-weight:600; padding:4px 10px; border-radius:100px;
+  background:rgba(255,255,255,0.05); color:var(--muted); border:1px solid var(--border-soft);
+}
+.cf-chip b { color:var(--off-white); margin-right:2px; }
+.cf-chip.ok { background:rgba(111,207,115,0.10); color:#8fd9a8; border-color:rgba(111,207,115,0.25); }
+.cf-chip.warn { background:rgba(255,179,107,0.10); color:#ffb36b; border-color:rgba(255,179,107,0.25); }
+.cf-meta { display:flex; flex-wrap:wrap; gap:4px 14px; font-size:12px; color:var(--muted); }
+.cf-stage { color:var(--off-white); font-weight:600; }
+.cf-stage.consultation_completed { color:#8fd9a8; }
+.cf-stage.form_completed { color:#ffb36b; }
+.cf-actions { display:flex; flex-wrap:wrap; gap:6px; }
+.cf-toolbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
+.cf-toolbar input, .cf-toolbar select {
+  padding:9px 12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+  border-radius:8px; color:var(--off-white); font-size:13px; font-family:inherit; outline:none;
+}
+.cf-toolbar input { flex:1; min-width:180px; }
+.cf-toolbar input:focus, .cf-toolbar select:focus { border-color:rgba(240,192,64,0.5); }
+.cf-toolbar select option { background:#1A1230; }
+.cf-count { font-size:12px; color:var(--muted); }
+
+/* 상담 안내 영상 설정 */
+.cv-box { margin-bottom:16px; border:1px solid var(--border-soft); border-radius:10px; background:rgba(255,255,255,0.02); }
+.cv-box summary { cursor:pointer; padding:12px 16px; font-size:13.5px; font-weight:700; list-style:none; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.cv-box summary::-webkit-details-marker { display:none; }
+.cv-box summary::after { content:'▾'; margin-left:auto; color:var(--muted); }
+.cv-box[open] summary::after { content:'▴'; }
+.cv-sum { font-weight:500; font-size:12px; color:var(--muted); }
+.cv-body { padding:0 16px 16px; }
+.cv-desc, .cv-note { font-size:12.5px; color:var(--muted); line-height:1.65; margin:0; }
+.cv-note { margin-top:12px; }
+.cv-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(170px,1fr)); gap:10px; margin:12px 0; }
+.cv-acts { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.cv-msg { font-size:12.5px; color:var(--muted); }
+
+/* 통합 상담 기록 모달 */
+#consultRecordModal {
+  position:fixed; inset:0; z-index:99997; display:none; align-items:flex-start; justify-content:center;
+  background:rgba(0,0,0,0.72); padding:24px 14px; overflow-y:auto; -webkit-overflow-scrolling:touch;
+}
+#consultRecordModal.open { display:flex; }
+.cr-box { width:100%; max-width:1080px; background:#15171c; border:1px solid var(--border-soft); border-radius:16px; padding:24px 24px 30px; position:relative; }
+.cr-head { display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; align-items:flex-start; padding-right:30px; }
+.cr-title { font-size:22px; font-weight:800; }
+.cr-title span { font-size:12px; font-weight:700; padding:3px 10px; border-radius:100px; background:rgba(240,192,64,0.12); color:var(--gold); vertical-align:middle; margin-left:6px; }
+.cr-sub { font-size:12.5px; color:var(--muted); margin-top:4px; }
+.cr-acts { display:flex; gap:6px; flex-wrap:wrap; }
+.cr-sec { margin-top:24px; }
+.cr-sec h4 { font-size:13px; color:var(--gold); font-weight:700; margin:0 0 10px; }
+.cr-steps { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; }
+.cr-step { background:rgba(255,255,255,0.03); border:1px solid var(--border-soft); border-radius:10px; padding:10px 12px; font-size:12px; color:var(--muted); }
+.cr-step b { display:block; font-size:13.5px; color:var(--off-white); margin-top:3px; }
+.cr-step.ok { border-color:rgba(111,207,115,0.35); }
+.cr-step.ok b { color:#8fd9a8; }
+.cr-step.warn b { color:#ffb36b; }
+.cr-info { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:0 22px; font-size:13px; }
+.cr-info div { display:flex; gap:10px; padding:8px 0; border-bottom:1px dashed rgba(255,255,255,0.07); }
+.cr-info span { color:var(--muted); flex:0 0 96px; }
+.cr-info b { font-weight:600; }
+.cr-cmp { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+@media (max-width:760px) { .cr-cmp { grid-template-columns:1fr; } .cr-box { padding:20px 16px 24px; } }
+.cr-col { background:rgba(255,255,255,0.03); border:1px solid var(--border-soft); border-radius:12px; padding:16px; scroll-margin-top:20px; }
+.cr-col h5 { font-size:15px; font-weight:800; margin:0; display:flex; justify-content:space-between; gap:8px; flex-wrap:wrap; align-items:baseline; }
+.cr-when { font-size:11.5px; font-weight:500; color:var(--muted); }
+.cr-code { display:flex; gap:6px; margin:12px 0 8px; }
+.cr-code span { width:36px; height:42px; border-radius:8px; display:grid; place-items:center; font-size:21px; font-weight:800; color:var(--gold); background:rgba(240,192,64,0.08); border:1px solid rgba(240,192,64,0.25); }
+.cr-type { font-size:18px; font-weight:800; }
+.cr-axis { margin-top:14px; }
+.cr-axis-top { display:flex; justify-content:space-between; gap:8px; font-size:12.5px; }
+.cr-axis-top span { color:var(--gold); font-weight:600; }
+.cr-bar { height:6px; border-radius:6px; background:rgba(255,255,255,0.08); margin-top:8px; position:relative; }
+.cr-bar i { position:absolute; top:50%; width:12px; height:12px; border-radius:50%; background:var(--gold); transform:translate(-50%,-50%); }
+.cr-bar-lbl { display:flex; justify-content:space-between; font-size:11px; color:var(--muted); margin-top:5px; }
+.cr-axis p { font-size:12px; color:var(--muted); margin:6px 0 0; line-height:1.55; }
+.cr-focus { margin-top:14px; padding:10px 12px; border-radius:10px; background:rgba(240,192,64,0.06); border:1px solid rgba(240,192,64,0.2); font-size:12.5px; line-height:1.6; color:var(--off-white); }
+.cr-focus b { display:block; color:var(--gold); font-size:12px; margin-bottom:3px; }
+.cr-extra { margin-top:12px; display:grid; gap:4px; font-size:12.5px; }
+.cr-extra div { display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px dashed rgba(255,255,255,0.07); }
+.cr-extra span { color:var(--muted); }
+.cr-note { font-size:12px; color:var(--muted); margin-top:10px; }
+.cr-empty { text-align:center; padding:26px 10px; color:var(--muted); font-size:13px; line-height:1.6; }
+.cr-empty b { display:block; font-size:16px; color:var(--off-white); margin-bottom:4px; }
+.cr-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+.cr-table th, .cr-table td { padding:9px 10px; border-bottom:1px solid var(--border-soft); text-align:left; vertical-align:top; }
+.cr-table th { color:var(--muted); font-weight:600; }
+.cr-qa { display:flex; flex-direction:column; gap:2px; padding:4px 0; }
+.cr-qa + .cr-qa { border-top:1px dashed rgba(255,255,255,0.06); }
+.cr-qa span { color:var(--muted); font-size:11.5px; }
+.cr-same { color:#8fd9a8; font-weight:700; }
+.cr-diff { color:#ffb36b; font-weight:700; }
+.cr-muted { color:var(--muted); font-size:11.5px; }
+@media (max-width:640px) { .cr-table { font-size:12px; } .cr-table th, .cr-table td { padding:7px 6px; } }
 
 /* ── 홈페이지 팝업 관리 ── */
 .hp-item {
@@ -376,8 +472,11 @@
   background:#f7f5f0; color:#2b2b2b; overflow-y:auto; -webkit-overflow-scrolling:touch;
   font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif;
 }
-#consultKiosk.open { display:block; }
+#consultKiosk.open { display:flex; flex-direction:column; overflow:hidden; }
 body.ck-lock { overflow:hidden; }
+/* 상담지·설문·안내 영상 화면(iframe) — QR 상담지와 같은 페이지를 관리자 로그인 상태로 사용 */
+.ck-frame-wrap { flex:1; min-height:0; position:relative; overflow:auto; -webkit-overflow-scrolling:touch; }
+.ck-frame { position:absolute; inset:0; width:100%; height:100%; border:0; display:block; background:#f7f5f0; }
 .ck-top {
   position:sticky; top:0; z-index:2; display:flex; align-items:center; justify-content:space-between;
   padding:16px 28px; background:rgba(247,245,240,0.94); backdrop-filter:blur(6px);
@@ -1159,17 +1258,58 @@ body.ck-lock { overflow:hidden; }
     </div>
   </div>
 
-  <!-- 상담 신청 관리 -->
+  <!-- 상담 신청 관리 (상담 기록: 상담신청서 + 학부모·학생 학습 성향 설문 + 진행 상태) -->
   <div class="tab-panel" id="tab-consult">
     <div class="card">
-      <h3>📥 상담 신청 · 방문 상담지</h3>
+      <h3>📥 상담 신청 · 상담 기록</h3>
       <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
-        홈페이지 상담 신청 폼(consult.html)과 학원 태블릿 상담지로 접수된 내역입니다. 항목을 클릭하면 원래 종이 양식과 같은 형태로 인쇄/다운로드할 수 있습니다.
+        홈페이지 상담 신청 폼(consult.html)과 학원 태블릿·QR 상담지로 접수된 내역입니다. 태블릿·QR 상담지는 작성 후 <b style="color:var(--off-white);">학부모 설문 → 결과 → 안내 영상</b>으로 이어지고, 결과는 이 목록의 상담 기록에 함께 저장됩니다. 학생 설문은 각 기록의 <b style="color:var(--off-white);">학생 설문 시작</b>으로 진행합니다.
       </div>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:18px;padding:14px 16px;background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);border-radius:10px;">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;padding:14px 16px;background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);border-radius:10px;">
         <button class="btn btn-primary" onclick="openConsultKiosk()">🖊 태블릿 상담지 열기</button>
         <button class="btn btn-secondary" onclick="openConsultQr()">📱 QR 상담지 생성</button>
-        <span style="font-size:12px;color:var(--muted);line-height:1.5;">태블릿: 학생·학부모님께 태블릿을 드려 직접 입력 (종료는 우측 상단 <b style="color:var(--gold);">길게 누르기</b>)<br>QR: 상담 오신 분 휴대폰으로 스캔 → 입력 후 전송하면 이 목록에 바로 저장</span>
+        <span style="font-size:12px;color:var(--muted);line-height:1.5;">태블릿: 학생·학부모님께 태블릿을 드려 직접 입력 (종료는 우측 상단 <b style="color:var(--gold);">길게 누르기</b>)<br>QR: 상담 오신 분 휴대폰으로 스캔 → 상담지·학부모 설문을 작성하면 이 목록에 바로 저장</span>
+      </div>
+
+      <details class="cv-box" id="cvBox">
+        <summary>🎬 상담 안내 영상 <span class="cv-sum" id="cvSummary">확인 중...</span></summary>
+        <div class="cv-body">
+          <p class="cv-desc">학부모 설문 결과를 확인한 뒤 <b>다음 단계</b>에서 재생되는 짧은 안내 영상입니다. 상담자료(프레젠테이션)와는 별개이며, 등록하지 않으면 영상 단계 없이 바로 완료됩니다.</p>
+          <div class="cv-grid">
+            <div class="form-group"><label>영상 종류</label>
+              <select id="cvKind" onchange="cvKindChanged()">
+                <option value="none">사용 안 함</option>
+                <option value="promo">홍보영상(Vimeo)에서 선택</option>
+                <option value="url">주소 직접 입력</option>
+              </select></div>
+            <div class="form-group" id="cvPromoWrap"><label>홍보영상</label><select id="cvPromo"><option value="">불러오는 중...</option></select></div>
+            <div class="form-group" id="cvUrlWrap"><label>영상 주소</label><input type="text" id="cvUrl" placeholder="assets/파일.mp4 · Vimeo · YouTube 주소"></div>
+            <div class="form-group"><label>시작 (초, 선택)</label><input type="number" id="cvStart" min="0" step="0.1" placeholder="0"></div>
+            <div class="form-group"><label>끝 (초, 선택)</label><input type="number" id="cvEnd" min="0" step="0.1" placeholder="끝까지"></div>
+          </div>
+          <div class="cv-acts">
+            <button class="btn btn-primary btn-sm" onclick="saveConsultVideoSetting()">저장</button>
+            <button class="btn btn-secondary btn-sm" onclick="previewConsultVideo()">새 창에서 미리보기</button>
+            <span class="cv-msg" id="cvMsg"></span>
+          </div>
+          <p class="cv-note">재생 방식: 학부모님이 버튼을 누른 직후 소리와 함께 재생을 시도하고, 브라우저가 막으면 음소거로 재생하며 '소리 켜기' 버튼을 보여 줍니다. 그것도 막히면 재생 버튼이 나타납니다. 영상을 불러오지 못하거나 건너뛰어도 상담 기록은 이미 저장되어 있어 진행이 막히지 않습니다.</p>
+        </div>
+      </details>
+
+      <div class="cf-toolbar">
+        <input type="search" id="consultSearch" placeholder="학생 이름 · 연락처 검색" oninput="setConsultFilter()">
+        <select id="consultStatusFilter" onchange="setConsultFilter()">
+          <option value="all">전체</option>
+          <option value="parent_done">학부모 설문 완료</option>
+          <option value="parent_none">학부모 설문 미실시</option>
+          <option value="student_done">학생 설문 완료</option>
+          <option value="student_none">학생 설문 미실시</option>
+          <option value="ready">상담 준비 완료</option>
+          <option value="flow">태블릿·QR 상담 플로우 기록</option>
+          <option value="legacy">기존 방식 접수 (설문 연동 전)</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="initConsultTab()">새로고침</button>
+        <span class="cf-count" id="consultCount"></span>
       </div>
       <div id="consultList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
     </div>
@@ -9373,111 +9513,409 @@ window.deleteNotice = async function(id) {
   loadNotices();
 };
 
-// ── 상담 신청 관리 ──
+// ── 상담 신청 · 상담 기록 관리 ──
+// 상담 진행 단계·상태 정의는 consult-flow.js 공통 모듈을 사용합니다.
+// (모듈을 불러오지 못해도 목록·서식 보기는 기존처럼 동작)
+let CFM = null;
+async function consultFlowModule() {
+  if (CFM) return CFM;
+  try { CFM = await import('./consult-flow.js'); } catch (e) { console.error('consult-flow.js 로드 실패', e); CFM = null; }
+  return CFM;
+}
+let consultRows = [];             // [{ id, data }] — consultForms (최신순)
+let consultLegacyProfiles = {};   // { 상담ID: { parent, student } } — 문서 ID 규칙 이전(자동 ID)으로 저장된 설문 결과
+const consultFilter = { q: '', status: 'all' };
+let consultRefreshTimer = null;
+let crCurrent = null;
+
+function consultDesc(row) {
+  return CFM ? CFM.describeRecord(row.data, consultLegacyProfiles[row.id] || {}) : null;
+}
+
 window.initConsultTab = async function() {
   const el = document.getElementById('consultList');
-  el.innerHTML = '<div style="color:var(--muted);font-size:13px;">불러오는 중...</div>';
+  if (!consultRows.length) el.innerHTML = '<div style="color:var(--muted);font-size:13px;">불러오는 중...</div>';
+  await consultFlowModule();
   try {
     const snap = await getDocs(query(collection(db, 'consultForms'), orderBy('createdAt', 'desc')));
-    if (snap.empty) {
-      el.innerHTML = '<div style="color:var(--muted);font-size:13px;">아직 접수된 상담 신청이 없습니다.</div>';
-      return;
-    }
     window._consultData = {};
-    let html = '';
-    snap.forEach((d) => {
-      const data = d.data();
-      window._consultData[d.id] = data;
-      const dateStr = data.createdAt?.toDate ? formatConsultDate(data.createdAt.toDate()) : '-';
-      html += `
-        <div class="consult-item">
-          <div class="consult-main">
-            <span class="consult-level">${data.level || '-'}</span>
-            <span class="consult-name">${escapeConsultHtml(data.studentName || '이름없음')}</span>
-            ${data.source === 'tablet' ? '<span class="consult-src">🖊 태블릿</span>'
-              : data.source === 'qr' ? '<span class="consult-src">📱 QR</span>'
-              : '<span class="consult-src web">홈페이지</span>'}
-            <span class="consult-sub">${escapeConsultHtml(data.schoolGrade || '')} · ${escapeConsultHtml(data.branch || '')} · ${dateStr}</span>
-          </div>
-          <button class="btn btn-secondary btn-sm" onclick="printConsultSheet('${d.id}')">서식으로 보기 / 다운로드</button>
-        </div>`;
-    });
-    el.innerHTML = html;
+    consultRows = [];
+    snap.forEach((d) => { const data = d.data(); window._consultData[d.id] = data; consultRows.push({ id: d.id, data }); });
   } catch(e) {
-    el.innerHTML = `<div style="color:#ff9090;font-size:13px;">오류: ${e.message}</div>`;
+    el.innerHTML = `<div style="color:#ff9090;font-size:13px;">오류: ${escapeConsultHtml(e.message)}</div>`;
+    return;
   }
+  consultLegacyProfiles = {};
+  try {
+    const ps = await getDocs(collection(db, 'learningProfiles'));
+    const t = (x) => (x?.completedAt?.toMillis?.() || x?.createdAt?.toMillis?.() || 0);
+    ps.forEach((p) => {
+      const v = p.data();
+      if (!v.consultId || (v.role !== 'parent' && v.role !== 'student')) return;
+      if (p.id === `${v.consultId}_${v.role}`) return;     // 새 규칙 문서는 상담 기록 요약을 기준으로 표시
+      const slot = consultLegacyProfiles[v.consultId] || (consultLegacyProfiles[v.consultId] = {});
+      if (!slot[v.role] || t(v) > t(slot[v.role])) slot[v.role] = { id: p.id, ...v };
+    });
+  } catch(e) { console.warn('learningProfiles 조회 실패 (목록은 그대로 표시)', e); }
+  renderConsultList();
+  loadConsultVideoSetting();
+};
+
+window.setConsultFilter = function() {
+  consultFilter.q = document.getElementById('consultSearch').value;
+  consultFilter.status = document.getElementById('consultStatusFilter').value;
+  renderConsultList();
+};
+
+function renderConsultList() {
+  const el = document.getElementById('consultList');
+  const countEl = document.getElementById('consultCount');
+  if (!consultRows.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-size:13px;">아직 접수된 상담 신청이 없습니다.</div>';
+    if (countEl) countEl.textContent = '';
+    return;
+  }
+  const q = consultFilter.q.trim(), qn = q.replace(/\s/g, ''), qd = q.replace(/\D/g, '');
+  const rows = consultRows.filter((r) => {
+    const d = r.data;
+    if (q) {
+      const nameHit = qn && String(d.studentName || '').replace(/\s/g, '').includes(qn);
+      const phoneHit = qd.length >= 3 && (String(d.parentPhone || '').replace(/\D/g, '').includes(qd) || String(d.studentPhone || '').replace(/\D/g, '').includes(qd));
+      if (!nameHit && !phoneHit) return false;
+    }
+    const f = consultFilter.status;
+    if (f === 'all') return true;
+    const s = consultDesc(r);
+    if (!s) return f === 'legacy' ? d.flowVersion !== 2 : true;
+    switch (f) {
+      case 'flow': return s.isFlow;
+      case 'legacy': return !s.isFlow;
+      case 'parent_done': return s.parent.done;
+      case 'parent_none': return !s.parent.done;
+      case 'student_done': return s.student.done;
+      case 'student_none': return !s.student.done;
+      case 'ready': return s.stage === 'consultation_completed';
+      default: return true;
+    }
+  });
+  if (countEl) countEl.textContent = `${rows.length} / ${consultRows.length}건`;
+  if (!rows.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;">조건에 맞는 상담 기록이 없습니다.</div>'; return; }
+  const e = escapeConsultHtml;
+  const chip = (cls, txt) => `<span class="cf-chip ${cls}">${txt}</span>`;
+  const surveyChip = (label, x) => x.done
+    ? chip('ok', `${label} · <b>${e(x.code)}</b> ${e(x.typeName)}`)
+    : chip(label === '학생' && x.label && x.label.includes('미방문') ? 'warn' : 'none', `${label} · ${e(x.label || '미실시')}`);
+  el.innerHTML = rows.map((r) => {
+    const d = r.data, s = consultDesc(r);
+    const dateStr = d.createdAt?.toDate ? formatConsultDate(d.createdAt.toDate()) : '-';
+    const upd = s?.updatedAt?.toDate ? formatConsultDate(s.updatedAt.toDate()) : dateStr;
+    const stageTxt = s ? s.stageLabel + (s.isFlow && s.video && s.video.status !== 'pending' ? ` · 영상 ${s.video.label}` : '') : '신청서 접수';
+    return `
+      <div class="consult-item cf-item">
+        <div class="consult-main">
+          <span class="consult-level">${e(d.level || '-')}</span>
+          <span class="consult-name">${e(d.studentName || '이름없음')}</span>
+          ${d.source === 'tablet' ? '<span class="consult-src">🖊 태블릿</span>'
+            : d.source === 'qr' ? '<span class="consult-src">📱 QR</span>'
+            : '<span class="consult-src web">홈페이지</span>'}
+          <span class="consult-sub">${e(d.schoolGrade || '')} · ${e(d.branch || '')} · ${dateStr}</span>
+        </div>
+        <div class="cf-status">
+          ${chip('ok', '신청서 ✓')}
+          ${s ? surveyChip('학부모', s.parent) + surveyChip('학생', s.student) : ''}
+        </div>
+        <div class="cf-meta">
+          <span class="cf-stage ${e(s?.stage || '')}">${e(stageTxt)}</span>
+          <span>학부모 ${e(d.parentPhone || '-')}</span>
+          <span>최종 수정 ${upd}</span>
+        </div>
+        <div class="cf-actions">
+          <button class="btn btn-primary btn-sm" onclick="openConsultRecord('${r.id}')">통합 상담 기록</button>
+          <button class="btn btn-secondary btn-sm" onclick="openConsultRecord('${r.id}','form')">신청서 상세</button>
+          <button class="btn btn-secondary btn-sm" onclick="openConsultRecord('${r.id}','parent')">학부모 결과</button>
+          <button class="btn btn-secondary btn-sm" onclick="openConsultRecord('${r.id}','student')">학생 결과</button>
+          <button class="btn btn-secondary btn-sm" onclick="startConsultSurvey('${r.id}','student')">학생 설문 시작</button>
+          <button class="btn btn-secondary btn-sm" onclick="printConsultSheet('${r.id}')">서식으로 보기 / 다운로드</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── 통합 상담 기록 (신청서 + 학부모 설문 + 학생 설문 + 진행 상태) ──
+window.openConsultRecord = async function(cid, focus) {
+  const modal = document.getElementById('consultRecordModal');
+  const body = document.getElementById('crBody');
+  crCurrent = cid;
+  modal.classList.add('open');
+  document.body.classList.add('ck-lock');
+  if (!focus || body.dataset.cid !== cid) body.innerHTML = '<div class="cr-empty">불러오는 중...</div>';
+  const CF = await consultFlowModule();
+  let d;
+  try {
+    const snap = await getDoc(doc(db, 'consultForms', cid));
+    if (!snap.exists()) { body.innerHTML = '<div class="cr-empty"><b>상담 기록을 찾을 수 없습니다.</b>삭제되었거나 주소가 잘못되었습니다.</div>'; return; }
+    d = snap.data();
+    window._consultData = window._consultData || {};
+    window._consultData[cid] = d;
+    const row = consultRows.find((x) => x.id === cid); if (row) row.data = d;
+  } catch(e) { body.innerHTML = `<div class="cr-empty"><b>불러오지 못했습니다.</b>${escapeConsultHtml(e.message)}</div>`; return; }
+  // 설문 응답 전체 — 상담ID 문서만 사용하고 consultId·role을 다시 확인 (다른 학생 결과가 섞이지 않도록)
+  const prof = { parent: null, student: null };
+  const profErr = {};
+  await Promise.all(['parent', 'student'].map(async (role) => {
+    try {
+      const ps = await getDoc(doc(db, 'learningProfiles', `${cid}_${role}`));
+      if (ps.exists() && ps.data().consultId === cid && ps.data().role === role) prof[role] = ps.data();
+    } catch(e) { profErr[role] = e.message; }
+    if (!prof[role]) { const lg = consultLegacyProfiles[cid]?.[role]; if (lg && lg.consultId === cid) prof[role] = lg; }
+  }));
+  if (crCurrent !== cid) return;
+  body.dataset.cid = cid;
+  body.innerHTML = consultRecordHtml(cid, d, prof, profErr, CF);
+  if (focus) { const t = document.getElementById('cr-sec-' + focus); if (t) t.scrollIntoView({ block: 'start', behavior: 'smooth' }); }
+  else document.getElementById('consultRecordModal').scrollTop = 0;
+};
+window.closeConsultRecord = function() {
+  crCurrent = null;
+  document.getElementById('consultRecordModal').classList.remove('open');
+  if (!document.getElementById('consultKiosk').classList.contains('open')) document.body.classList.remove('ck-lock');
+};
+
+function crFmt(ts) { return ts?.toDate ? formatConsultDate(ts.toDate()) : ''; }
+function crAxisRows(p, CF) {
+  // 저장 당시 결과 화면의 축 정보(axisDetail)를 그대로 표시. 예전 저장본은 점수와 축 이름만 표시
+  const keys = ['M', 'S', 'E', 'T'];
+  return keys.map((k) => {
+    const L = CF ? CF.AXIS_LABEL[k] : { name: k, hiName: '', loName: '', hi: '', lo: '' };
+    const ad = p.axisDetail?.[k];
+    const v = ad ? ad.value : (p.axes ? p.axes[k] : null);
+    const name = ad?.name || L.name;
+    if (v === null || v === undefined) return { k, name, v: null, side: null, sideName: '판단 보류', text: "'잘 모르겠다' 응답이 많아 판단하지 않음", lo: ad?.loName || L.loName, hi: ad?.hiName || L.hiName };
+    const hi = v >= 50;
+    return { k, name, v, side: ad?.side || (hi ? L.hi : L.lo), sideName: (ad?.balanced ?? (v >= 40 && v <= 60) ? '균형에 가까움 · ' : '') + (ad?.sideName || (hi ? L.hiName : L.loName)),
+      text: ad?.text || '', lo: ad?.loName || L.loName, hi: ad?.hiName || L.hiName };
+  });
+}
+function crSurveyCol(cid, role, d, p, err, CF) {
+  const e = escapeConsultHtml;
+  const label = role === 'parent' ? '학부모 설문' : '학생 설문';
+  const sum = d[`${role}Survey`];
+  const done = (sum && sum.status === 'completed') || !!p;
+  if (!done) {
+    const why = role === 'student' && d.visitWith === 'parent' ? '학생 미방문 · 학부모만 상담' : role === 'student' ? '아직 진행하지 않았습니다' : '아직 진행하지 않았습니다';
+    return `<div class="cr-col" id="cr-sec-${role}"><h5>${label}</h5>
+      <div class="cr-empty"><b>미실시</b>${why}${err ? `<br><span style="color:#ff9090">응답 조회 오류: ${e(err)}</span>` : ''}
+      <div style="margin-top:14px"><button class="btn btn-primary btn-sm" onclick="startConsultSurvey('${cid}','${role}')">${role === 'student' ? '학생 설문 시작' : '학부모 설문 진행'}</button></div></div></div>`;
+  }
+  const src = p || sum;
+  const code = String(src.code || sum?.code || '');
+  const when = crFmt(sum?.at) || crFmt(p?.completedAt) || crFmt(p?.createdAt);
+  const axes = crAxisRows(p || { axes: sum?.axes }, CF);
+  const extraLabels = { studyTime: '평일 혼자 공부 시간', manager: '가정 내 공부 관리', phone: '휴대폰 사용 규칙' };
+  const extra = p?.extra ? Object.entries(p.extra) : [];
+  return `<div class="cr-col" id="cr-sec-${role}">
+    <h5>${label} <span class="cr-when">${e(when)} 완료${p?.source === 'standalone-link' ? ' · 단독 설문에서 연결' : ''}</span></h5>
+    <div class="cr-code">${code.split('').map((c) => `<span>${e(c)}</span>`).join('')}</div>
+    <div class="cr-type">${e(src.typeName || sum?.typeName || '')}</div>
+    ${axes.map((a) => `<div class="cr-axis">
+      <div class="cr-axis-top"><b>${e(a.name)}</b><span>${e(a.sideName)}${a.v !== null ? ` · ${a.v}` : ''}</span></div>
+      ${a.v !== null ? `<div class="cr-bar"><i style="left:${a.v}%"></i></div><div class="cr-bar-lbl"><span>${e(a.lo)}</span><span>${e(a.hi)}</span></div>` : ''}
+      ${a.text ? `<p>${e(a.text)}</p>` : ''}</div>`).join('')}
+    ${p?.focus ? `<div class="cr-focus"><b>상담 때 집중할 부분 · ${e(p.focus.name)}</b>${e(p.focus.text)}</div>` : ''}
+    ${extra.length ? `<div class="cr-extra">${extra.map(([k, v]) => `<div><span>${e(extraLabels[k] || k)}</span><b>${e(v)}</b></div>`).join('')}</div>` : ''}
+    ${!p ? `<p class="cr-note">응답 원본을 불러오지 못해 요약만 표시합니다.${err ? ' (' + e(err) + ')' : ''}</p>` : ''}
+    ${role === 'student' ? `<div style="margin-top:12px"><button class="btn btn-secondary btn-sm" onclick="startConsultSurvey('${cid}','student')">학생 설문 다시 하기</button></div>` : ''}
+  </div>`;
+}
+function consultRecordHtml(cid, d, prof, profErr, CF) {
+  const e = escapeConsultHtml;
+  const s = CF ? CF.describeRecord(d, { parent: prof.parent, student: prof.student }) : null;
+  const join = (a) => (a && a.length ? a.map(e).join(', ') : '-');
+  const progress = d.level === '고등'
+    ? `${join(d.highSubjects)}${d.highLevel ? ' · 난이도 ' + e(d.highLevel) : ''}`
+    : ([d.progressGrade, d.progressSemester, d.progressUnit].filter(Boolean).map(e).join(' ') || '-');
+  const ex = d.examScores || {};
+  const exams = [ex.round1, ex.round2, ex.round3, ex.round4].map((x, i) => (x ? `${i + 1}회 ${e(x)}` : '')).filter(Boolean).join(' / ') || '-';
+  const sc = d.selfCheck || {};
+  const visitWith = d.visitWith === 'both' ? '학생과 함께' : d.visitWith === 'parent' ? '학부모님만' : '-';
+  const step = (cls, label, val) => `<div class="cr-step ${cls}">${label}<b>${val}</b></div>`;
+  const pDone = s ? s.parent.done : !!prof.parent;
+  const sDone = s ? s.student.done : !!prof.student;
+  const video = s?.video;
+  const steps = `
+    ${step('ok', '상담신청서', `저장 ${e(crFmt(d.formSavedAt || d.createdAt) || '완료')}`)}
+    ${step(pDone ? 'ok' : '', '학부모 설문', pDone ? `완료 ${e(crFmt(s?.parent.at) || '')}` : '미실시')}
+    ${step(sDone ? 'ok' : (d.visitWith === 'parent' ? 'warn' : ''), '학생 설문', sDone ? `완료 ${e(crFmt(s?.student.at) || '')}` : e(s?.student.label || '미실시'))}
+    ${step(video && ['completed'].includes(video.status) ? 'ok' : '', '안내 영상', video ? e(video.label) + (video.at ? ' ' + e(crFmt(video.at)) : '') : '해당 없음')}
+    ${step(s?.stage === 'consultation_completed' ? 'ok' : '', '진행 상태', e(s?.stageLabel || '신청서 접수'))}`;
+
+  // 축별 비교: 두 결과의 축 방향(같음/다름)만 나란히 보여줌 — 새 해석·유형을 만들지 않음
+  let cmp = '';
+  if (pDone && sDone) {
+    const pa = crAxisRows(prof.parent || { axes: d.parentSurvey?.axes }, CF);
+    const sa = crAxisRows(prof.student || { axes: d.studentSurvey?.axes }, CF);
+    cmp = `<div class="cr-sec"><h4>축별 비교 (학부모 관찰 ↔ 학생 응답)</h4>
+      <table class="cr-table"><thead><tr><th>축</th><th>학부모</th><th>학생</th><th>비교</th></tr></thead><tbody>
+      ${pa.map((a, i) => { const b = sa[i]; const both = a.v !== null && b.v !== null;
+        const same = both && a.side === b.side;
+        return `<tr><td>${e(a.name)}</td><td>${a.v === null ? '판단 보류' : e(a.sideName) + ' · ' + a.v}</td><td>${b.v === null ? '판단 보류' : e(b.sideName) + ' · ' + b.v}</td>
+          <td>${!both ? '<span class="cr-muted">한쪽 판단 보류</span>' : same ? '<span class="cr-same">같은 방향</span>' : '<span class="cr-diff">차이 있음</span>'}${both ? ` <span class="cr-muted">(점수 차 ${Math.abs(a.v - b.v)})</span>` : ''}</td></tr>`; }).join('')}
+      </tbody></table></div>`;
+  }
+  // 문항별 응답 (같은 축끼리 나란히)
+  let answers = '';
+  if (prof.parent?.answers?.length || prof.student?.answers?.length) {
+    const byAxis = (p) => { const m = {}; (p?.answers || []).forEach((x) => { const k = x.axis || 'etc'; (m[k] = m[k] || []).push(x); }); return m; };
+    const pa = byAxis(prof.parent), sa = byAxis(prof.student);
+    const names = { M: '학습 동기', S: '학습 전략', E: '실행 관리', T: '실전 안정', etc: '참고 문항' };
+    const cell = (list) => (list && list.length ? list.map((x) => `<div class="cr-qa"><span>${e(x.q)}</span><b>${e(x.a ?? '-')}</b></div>`).join('') : '<span class="cr-muted">-</span>');
+    answers = `<div class="cr-sec"><h4>문항별 응답</h4>
+      <table class="cr-table"><thead><tr><th style="width:90px">축</th><th>학부모 응답</th><th>학생 응답</th></tr></thead><tbody>
+      ${['M', 'S', 'E', 'T', 'etc'].map((k) => (pa[k] || sa[k]) ? `<tr><td>${names[k]}</td><td>${cell(pa[k])}</td><td>${cell(sa[k])}</td></tr>` : '').join('')}
+      </tbody></table></div>`;
+  }
+  return `
+    <div class="cr-head">
+      <div>
+        <div class="cr-title">${e(d.studentName || '이름없음')} <span>${e(d.level ? d.level + '부' : '')}</span></div>
+        <div class="cr-sub">${e(d.schoolGrade || '')} · ${e(d.branch || '')} · 접수 ${e(crFmt(d.createdAt) || '-')}${d.flowVersion === 2 ? '' : ' · 기존 방식 접수'}</div>
+      </div>
+      <div class="cr-acts">
+        <button class="btn btn-primary btn-sm" onclick="startConsultSurvey('${cid}','student')">학생 설문 시작</button>
+        ${pDone ? '' : `<button class="btn btn-secondary btn-sm" onclick="startConsultSurvey('${cid}','parent')">학부모 설문 진행</button>`}
+        <button class="btn btn-secondary btn-sm" onclick="printConsultSheet('${cid}')">신청서 서식 보기</button>
+        <button class="btn btn-secondary btn-sm" onclick="window.open('consult-deck.html?deck=middle','_blank')">상담자료 열기</button>
+      </div>
+    </div>
+    <div class="cr-sec"><h4>상담 진행</h4><div class="cr-steps">${steps}</div></div>
+    <div class="cr-sec" id="cr-sec-form"><h4>학생 기본 정보 · 상담신청서</h4>
+      <div class="cr-info">
+        <div><span>학생</span><b>${e(d.studentName || '-')}</b></div>
+        <div><span>학교 / 학년</span><b>${e(d.schoolGrade || '-')}</b></div>
+        <div><span>과정 · 지점</span><b>${e(d.level ? d.level + '부' : '-')} · ${e(d.branch || '-')}</b></div>
+        <div><span>학부모 연락처</span><b>${e(d.parentPhone || '-')}</b></div>
+        <div><span>학생 연락처</span><b>${e(d.studentPhone || '-')}</b></div>
+        <div><span>오늘 오신 분</span><b>${visitWith}</b></div>
+        <div><span>방문 경로</span><b>${join(d.visitPath)}${d.visitPathEtc ? ' / ' + e(d.visitPathEtc) : ''}</b></div>
+        <div><span>진도</span><b>${progress}</b></div>
+        <div><span>최근 시험</span><b>${exams}</b></div>
+        <div><span>자신 있는 영역</span><b>${join(d.strongAreas)}</b></div>
+        <div><span>어려워하는 영역</span><b>${join(d.weakAreas)}</b></div>
+        <div><span>자가진단</span><b>연산 ${sc.calcScore ?? '-'} · 정확도 ${sc.accuracyScore ?? '-'} · 흥미 ${sc.interestScore ?? '-'}</b></div>
+      </div>
+    </div>
+    <div class="cr-sec"><h4>학습 성향 설문 결과 <span class="cr-muted" style="font-weight:500">— 학부모·학생 결과는 각각 따로 보관되며 합치지 않습니다</span></h4>
+      <div class="cr-cmp">
+        ${crSurveyCol(cid, 'parent', d, prof.parent, profErr.parent, CF)}
+        ${crSurveyCol(cid, 'student', d, prof.student, profErr.student, CF)}
+      </div>
+    </div>
+    ${cmp}
+    ${answers}`;
+}
+
+// ── 설문 시작 (관리자 세션의 태블릿 화면 안에서 진행 → 학생이 관리자 화면으로 나갈 수 없음) ──
+window.startConsultSurvey = function(cid, role) {
+  if (role !== 'student' && role !== 'parent') return;
+  const q = new URLSearchParams({ cid, role, kiosk: '1' });
+  // 학부모 설문은 상담 흐름 그대로(결과 → 안내 영상) 이어서 진행
+  if (role === 'parent') { q.set('flow', 'visit'); q.set('src', 'tablet'); }
+  if (document.getElementById('consultRecordModal').classList.contains('open')) closeConsultRecord();
+  openConsultKiosk('learning-profile.html?' + q.toString());
+};
+
+// iframe(태블릿 상담지·설문)에서 저장 알림이 오면 목록·통합 화면 새로고침
+window.addEventListener('message', (ev) => {
+  if (ev.origin !== location.origin || !ev.data || ev.data.type !== 'swc-consult') return;
+  clearTimeout(consultRefreshTimer);
+  consultRefreshTimer = setTimeout(() => {
+    if (document.getElementById('tab-consult')?.classList.contains('active')) initConsultTab();
+  }, 700);
+});
+
+// ── 상담 안내 영상 설정 (consultConfig/video) ──
+let cvConfig = null;
+let cvPromoList = [];
+async function loadConsultVideoSetting() {
+  const sum = document.getElementById('cvSummary');
+  if (!sum) return;
+  try {
+    const snap = await getDoc(doc(db, 'consultConfig', 'video'));
+    cvConfig = snap.exists() ? snap.data() : null;
+  } catch(e) { sum.textContent = '설정을 불러오지 못했습니다: ' + e.message; return; }
+  try {
+    const ps = await getDocs(query(collection(db, 'promoVideos'), orderBy('order', 'asc')));
+    cvPromoList = []; ps.forEach((x) => { const v = x.data(); if (v.vimeoId) cvPromoList.push({ vimeoId: String(v.vimeoId), title: v.title || '' }); });
+  } catch(e) { cvPromoList = []; }
+  const sel = document.getElementById('cvPromo');
+  const ids = new Set(cvPromoList.map((v) => v.vimeoId));
+  const extra = cvConfig?.vimeoId && !ids.has(String(cvConfig.vimeoId)) ? [{ vimeoId: String(cvConfig.vimeoId), title: (cvConfig.title || '') + ' (홍보영상 목록에 없음)' }] : [];
+  sel.innerHTML = '<option value="">선택하세요</option>' + [...extra, ...cvPromoList]
+    .map((v) => `<option value="${escapeConsultHtml(v.vimeoId)}" data-title="${escapeConsultHtml(v.title)}">${escapeConsultHtml(v.title || v.vimeoId)} · Vimeo ${escapeConsultHtml(v.vimeoId)}</option>`).join('');
+  const kind = !cvConfig || cvConfig.enabled === false ? 'none' : cvConfig.vimeoId ? 'promo' : 'url';
+  document.getElementById('cvKind').value = kind;
+  if (kind === 'promo') sel.value = String(cvConfig.vimeoId);
+  document.getElementById('cvUrl').value = kind === 'url' ? (cvConfig.url || '') : '';
+  document.getElementById('cvStart').value = cvConfig?.start ? cvConfig.start : '';
+  document.getElementById('cvEnd').value = cvConfig?.end ? cvConfig.end : '';
+  cvKindChanged();
+  sum.textContent = kind === 'none' ? '등록 안 됨 · 영상 단계 없이 바로 완료'
+    : kind === 'promo' ? `홍보영상 · ${cvConfig.title || 'Vimeo ' + cvConfig.vimeoId}` : `주소 · ${cvConfig.url}`;
+}
+window.cvKindChanged = function() {
+  const k = document.getElementById('cvKind').value;
+  document.getElementById('cvPromoWrap').style.display = k === 'promo' ? '' : 'none';
+  document.getElementById('cvUrlWrap').style.display = k === 'url' ? '' : 'none';
+  ['cvStart', 'cvEnd'].forEach((id) => { document.getElementById(id).closest('.form-group').style.display = k === 'none' ? 'none' : ''; });
+};
+function cvReadForm() {
+  const kind = document.getElementById('cvKind').value;
+  const st = parseFloat(document.getElementById('cvStart').value), en = parseFloat(document.getElementById('cvEnd').value);
+  const data = { enabled: kind !== 'none', vimeoId: '', url: '', title: '', start: isFinite(st) && st > 0 ? st : 0, end: isFinite(en) && en > 0 ? en : null };
+  if (kind === 'promo') {
+    const opt = document.getElementById('cvPromo').selectedOptions[0];
+    if (!opt || !opt.value) return { error: '홍보영상을 선택해 주세요.' };
+    data.vimeoId = opt.value; data.title = (opt.dataset.title || '').replace(/ \(홍보영상 목록에 없음\)$/, '');
+  } else if (kind === 'url') {
+    const u = document.getElementById('cvUrl').value.trim();
+    if (!u) return { error: '영상 주소를 입력해 주세요.' };
+    data.url = u;
+  }
+  if (data.end !== null && data.end <= data.start) return { error: '끝 시간은 시작 시간보다 커야 합니다.' };
+  return { data };
+}
+window.saveConsultVideoSetting = async function() {
+  const msg = document.getElementById('cvMsg');
+  const { data, error } = cvReadForm();
+  if (error) { msg.style.color = '#ff9090'; msg.textContent = error; return; }
+  msg.style.color = ''; msg.textContent = '저장 중...';
+  try {
+    await setDoc(doc(db, 'consultConfig', 'video'), { ...data, updatedAt: Timestamp.now(), updatedBy: auth.currentUser?.email || '' });
+    msg.textContent = '✓ 저장했습니다. 다음 상담부터 적용됩니다.';
+    showToast('상담 안내 영상 설정을 저장했습니다');
+    loadConsultVideoSetting();
+  } catch(e) { msg.style.color = '#ff9090'; msg.textContent = '저장하지 못했습니다: ' + e.message; }
+};
+window.previewConsultVideo = async function() {
+  const msg = document.getElementById('cvMsg');
+  const { data, error } = cvReadForm();
+  if (error) { msg.style.color = '#ff9090'; msg.textContent = error; return; }
+  if (!data.enabled) { msg.style.color = ''; msg.textContent = '영상을 사용하지 않도록 설정되어 있습니다.'; return; }
+  const CF = await consultFlowModule();
+  const src = CF ? CF.parseVideoSource(data) : null;
+  if (!src) { msg.style.color = '#ff9090'; msg.textContent = '영상 주소를 확인해 주세요.'; return; }
+  const url = src.kind === 'vimeo' ? `https://vimeo.com/${src.id}${src.hash ? '/' + src.hash : ''}${src.start ? '#t=' + Math.floor(src.start) + 's' : ''}`
+    : src.kind === 'youtube' ? `https://www.youtube.com/watch?v=${src.id}${src.start ? '&t=' + Math.floor(src.start) + 's' : ''}` : src.url;
+  window.open(url, '_blank');
 };
 
 // ══════ 태블릿 상담지 (학생·학부모 직접 입력) ══════
-const CK_ACCENT = { '초등': '#a78bda', '중등': '#e0a22c', '고등': '#5fa3cf' };
+// 상담지·설문·안내 영상은 consult-visit.html / learning-profile.html 을 이 화면 안(iframe)에 띄워 진행합니다.
+// (QR 상담지와 같은 화면·같은 저장 방식, 관리자 로그인 상태로 저장)
 let ckBound = false;
-let ckSubmitting = false;
-
-function ckSel(id) {
-  return [...document.querySelectorAll(`#${id} .ck-chip.on`)].map(b => b.dataset.v);
-}
-function ckSetSingle(id, v) {
-  document.querySelectorAll(`#${id} .ck-chip`).forEach(b => b.classList.toggle('on', b.dataset.v === v));
-}
-function ckFormatPhone(v) {
-  const n = v.replace(/\D/g, '').slice(0, 11);
-  if (n.length < 4) return n;
-  if (n.length < 8) return `${n.slice(0,3)}-${n.slice(3)}`;
-  return `${n.slice(0,3)}-${n.slice(3, n.length - 4)}-${n.slice(-4)}`;
-}
-function ckApplyLevel(level) {
-  const kiosk = document.getElementById('consultKiosk');
-  kiosk.style.setProperty('--ck-accent', CK_ACCENT[level] || '#c9a94a');
-  const low = document.getElementById('ckProgressLow');
-  const high = document.getElementById('ckProgressHigh');
-  const hint = document.getElementById('ckProgressHint');
-  if (!level) {
-    low.style.display = 'none'; high.style.display = 'none';
-    hint.textContent = '과정 구분을 먼저 선택해 주세요.';
-    return;
-  }
-  if (level === '고등') {
-    low.style.display = 'none'; high.style.display = 'block';
-    hint.textContent = '지금까지 배운(또는 배우고 있는) 과목을 선택해 주세요.';
-  } else {
-    high.style.display = 'none'; low.style.display = 'block';
-    hint.textContent = '현재 어디까지 공부했는지 적어주세요. (선행 포함)';
-    const grades = level === '초등' ? ['1학년','2학년','3학년','4학년','5학년','6학년'] : ['1학년','2학년','3학년'];
-    const prefix = level === '초등' ? '초' : '중';
-    document.getElementById('ckPGrade').innerHTML =
-      '<option value="">선택</option>' + grades.map(g => `<option value="${g}">${prefix}${g.replace('학년','')}</option>`).join('');
-  }
-}
-
 function ckBindOnce() {
   if (ckBound) return;
   ckBound = true;
-  // 단일 선택 그룹
-  ['ckLevel','ckBranch','ckHighLevel'].forEach(id => {
-    document.querySelectorAll(`#${id} .ck-chip`).forEach(b => b.addEventListener('click', () => {
-      ckSetSingle(id, b.dataset.v);
-      if (id === 'ckLevel') ckApplyLevel(b.dataset.v);
-    }));
-  });
-  // 다중 선택 그룹
-  ['ckVisit','ckHighSubj','ckStrong','ckWeak'].forEach(id => {
-    document.querySelectorAll(`#${id} .ck-chip`).forEach(b => b.addEventListener('click', () => b.classList.toggle('on')));
-  });
-  // 전화번호 자동 하이픈
-  ['ckParentPhone','ckStudentPhone'].forEach(id => {
-    const el = document.getElementById(id);
-    el.addEventListener('input', () => { el.value = ckFormatPhone(el.value); });
-  });
-  // 점수 숫자만
-  ['ckS1','ckS2','ckS3','ckS4'].forEach(id => {
-    const el = document.getElementById(id);
-    el.addEventListener('input', () => { el.value = el.value.replace(/[^0-9~\-]/g, '').slice(0, 7); });
-  });
-  // 자가진단 슬라이더
-  [['ckCalc','ckCalcV'],['ckAcc','ckAccV'],['ckInt','ckIntV']].forEach(([r, v]) => {
-    const el = document.getElementById(r);
-    el.addEventListener('input', () => { document.getElementById(v).textContent = el.value; });
-  });
   // 종료 버튼: 1.5초 길게 눌러야 종료 (학생·학부모가 실수로 관리자 화면에 들어가지 않도록)
   const exitBtn = document.getElementById('ckExitBtn');
   let holdTimer = null;
@@ -9492,26 +9930,14 @@ function ckBindOnce() {
   exitBtn.addEventListener('contextmenu', e => e.preventDefault());
 }
 
-window.resetConsultKiosk = function() {
-  document.querySelectorAll('#consultKiosk .ck-chip.on').forEach(b => b.classList.remove('on'));
-  ['ckName','ckSchool','ckParentPhone','ckStudentPhone','ckVisitEtc','ckPUnit','ckS1','ckS2','ckS3','ckS4']
-    .forEach(id => { document.getElementById(id).value = ''; });
-  document.getElementById('ckPSem').value = '';
-  [['ckCalc','ckCalcV'],['ckAcc','ckAccV'],['ckInt','ckIntV']].forEach(([r, v]) => {
-    document.getElementById(r).value = 5; document.getElementById(v).textContent = '5';
-  });
-  document.getElementById('ckAgree').checked = false;
-  document.getElementById('ckErr').textContent = '';
-  ckSetSingle('ckBranch', '평촌관');
-  ckApplyLevel('');
-  document.getElementById('ckForm').style.display = 'block';
-  document.getElementById('ckDone').style.display = 'none';
-  document.getElementById('consultKiosk').scrollTop = 0;
-};
-
-window.openConsultKiosk = function() {
+window.openConsultKiosk = function(url) {
   ckBindOnce();
-  resetConsultKiosk();
+  const target = typeof url === 'string' && url ? url : '';
+  if (!target) {
+    // 새 상담지: 이전 사용자의 진행 정보·임시 입력값이 이 기기에 남지 않도록 비움
+    try { sessionStorage.removeItem('swc_consult_flow:kiosk'); sessionStorage.removeItem('swc_consult_draft:kiosk'); } catch(e) {}
+  }
+  document.getElementById('ckFrame').src = target || 'consult-visit.html?src=tablet&kiosk=1&b=' + encodeURIComponent('평촌관');
   document.getElementById('consultKiosk').classList.add('open');
   document.body.classList.add('ck-lock');
   const el = document.documentElement;
@@ -9520,74 +9946,14 @@ window.openConsultKiosk = function() {
 
 window.closeConsultKiosk = function() {
   document.getElementById('consultKiosk').classList.remove('open');
-  document.body.classList.remove('ck-lock');
+  document.getElementById('ckFrame').src = 'about:blank';
+  if (!document.getElementById('consultRecordModal').classList.contains('open')) document.body.classList.remove('ck-lock');
   try {
     if (document.fullscreenElement || document.webkitFullscreenElement) {
       (document.exitFullscreen || document.webkitExitFullscreen)?.call(document)?.catch?.(()=>{});
     }
   } catch(e) {}
   if (document.getElementById('tab-consult')?.classList.contains('active')) initConsultTab();
-};
-
-window.submitConsultKiosk = async function() {
-  if (ckSubmitting) return;
-  const errEl = document.getElementById('ckErr');
-  const val = (id) => document.getElementById(id).value.trim();
-  const level = ckSel('ckLevel')[0] || '';
-  const branch = ckSel('ckBranch')[0] || '평촌관';
-  const studentName = val('ckName');
-  const schoolGrade = val('ckSchool');
-  const parentPhone = val('ckParentPhone');
-
-  let msg = '';
-  if (!level) msg = '과정 구분(초등/중등/고등)을 선택해 주세요.';
-  else if (!studentName) msg = '학생 이름을 입력해 주세요.';
-  else if (!schoolGrade) msg = '학교 / 학년을 입력해 주세요.';
-  else if (parentPhone.replace(/\D/g, '').length < 10) msg = '학부모 연락처를 정확히 입력해 주세요.';
-  else if (!document.getElementById('ckAgree').checked) msg = '개인정보 수집·이용에 동의해 주세요.';
-  if (msg) { errEl.textContent = msg; return; }
-  errEl.textContent = '';
-
-  const data = {
-    source: 'tablet',
-    level, branch, studentName, schoolGrade, parentPhone,
-    studentPhone: val('ckStudentPhone'),
-    visitPath: ckSel('ckVisit'),
-    visitPathEtc: val('ckVisitEtc'),
-    examScores: { round1: val('ckS1'), round2: val('ckS2'), round3: val('ckS3'), round4: val('ckS4') },
-    strongAreas: ckSel('ckStrong'),
-    weakAreas: ckSel('ckWeak'),
-    selfCheck: {
-      calcScore: Number(document.getElementById('ckCalc').value),
-      accuracyScore: Number(document.getElementById('ckAcc').value),
-      interestScore: Number(document.getElementById('ckInt').value),
-    },
-    agreePrivacy: true,
-    createdAt: Timestamp.now(),
-  };
-  if (level === '고등') {
-    data.highSubjects = ckSel('ckHighSubj');
-    data.highLevel = ckSel('ckHighLevel')[0] || '';
-  } else {
-    data.progressGrade = document.getElementById('ckPGrade').value;
-    data.progressSemester = document.getElementById('ckPSem').value;
-    data.progressUnit = val('ckPUnit');
-  }
-
-  const btn = document.getElementById('ckSubmitBtn');
-  ckSubmitting = true;
-  btn.disabled = true; btn.textContent = '제출 중...';
-  try {
-    await addDoc(collection(db, 'consultForms'), data);
-    document.getElementById('ckForm').style.display = 'none';
-    document.getElementById('ckDone').style.display = 'block';
-    document.getElementById('consultKiosk').scrollTop = 0;
-  } catch(e) {
-    errEl.textContent = '제출 중 오류가 발생했습니다. 선생님께 말씀해 주세요. (' + e.message + ')';
-  } finally {
-    ckSubmitting = false;
-    btn.disabled = false; btn.textContent = '작성 완료';
-  }
 };
 
 // ══════ 홈페이지 팝업 관리 (index.html 첫 화면 팝업) ══════
@@ -9830,18 +10196,32 @@ window.openConsultQr = async function() {
       (snap) => {
         const live = document.getElementById('cqLive');
         let added = false;
+        // 새 상담 플로우: 상담신청서 저장 후 학부모 설문·영상 진행 상황도 실시간 표시
+        const flowTxt = (d) => {
+          if (d.flowVersion !== 2) return '';
+          if (d.stage === 'consultation_completed') return '상담 준비 완료';
+          if (d.parentSurvey?.status === 'completed') return `학부모 설문 완료 · ${d.parentSurvey.code || ''}`;
+          return '학부모 설문 진행 중';
+        };
         snap.docChanges().forEach(ch => {
-          if (ch.type !== 'added' || cqSeen.has(ch.doc.id)) return;
           const d = ch.doc.data();
           if (d.source !== 'qr') return;
-          cqSeen.add(ch.doc.id);
           window._consultData = window._consultData || {};
+          if (ch.type === 'modified' && cqSeen.has(ch.doc.id)) {
+            window._consultData[ch.doc.id] = d;
+            const st = live.querySelector(`[data-cq="${ch.doc.id}"] .cq-flow`);
+            if (st) st.textContent = flowTxt(d);
+            return;
+          }
+          if (ch.type !== 'added' || cqSeen.has(ch.doc.id)) return;
+          cqSeen.add(ch.doc.id);
           window._consultData[ch.doc.id] = d;
           if (!added) { live.querySelector('.cq-live-empty')?.remove(); added = true; }
           const t = d.createdAt?.toDate ? formatConsultDate(d.createdAt.toDate()).slice(11) : '';
           const item = document.createElement('div');
           item.className = 'cq-live-item';
-          item.innerHTML = `<span>✅ <b>${escapeConsultHtml(d.studentName || '')}</b> · ${escapeConsultHtml(d.schoolGrade || '')} · ${escapeConsultHtml(d.level || '')}부 <span style="color:var(--muted);font-size:11.5px;">${t}</span></span>
+          item.dataset.cq = ch.doc.id;
+          item.innerHTML = `<span>✅ <b>${escapeConsultHtml(d.studentName || '')}</b> · ${escapeConsultHtml(d.schoolGrade || '')} · ${escapeConsultHtml(d.level || '')}부 <span style="color:var(--muted);font-size:11.5px;">${t}</span> <span class="cq-flow" style="color:var(--gold);font-size:11.5px;">${escapeConsultHtml(flowTxt(d))}</span></span>
             <button class="btn btn-secondary btn-sm" onclick="printConsultSheet('${ch.doc.id}')">서식 보기</button>`;
           live.prepend(item);
           showToast(`📱 ${d.studentName || ''} 상담지가 접수되었습니다`);
@@ -10635,7 +11015,7 @@ window.deleteScheduleEvent = async function (id) {
     { id:'records',      label:'기록 조회',      icon:'', category:'ops',     tabId:'records',      init:'initRecordsTab',
       keywords:['기록','조회','기록조회','히스토리','이력','지난기록'] },
     { id:'consult',      label:'상담 신청',      icon:'', category:'ops',     tabId:'consult',      init:'initConsultTab',
-      keywords:['상담','상담신청','문의','입학','신규상담','접수','상담지','태블릿','방문상담','상담자료','qr','QR','큐알'] },
+      keywords:['상담','상담신청','문의','입학','신규상담','접수','상담지','태블릿','방문상담','상담자료','qr','QR','큐알','상담 기록','상담기록','설문','학부모 설문','학생 설문','학습 성향','성향','안내 영상','상담 영상'] },
     { id:'consultdeck',  label:'상담자료 관리',  icon:'', category:'ops',     tabId:'consultdeck',  init:'initConsultDeckTab',
       keywords:['상담자료','상담 자료','프레젠테이션','상담 프레젠테이션','학부모 상담','중등 상담','태블릿','설명회','상담'] },
     { id:'schedule',     label:'학원 일정',      icon:'', category:'ops',     tabId:'schedule',     init:'initScheduleTab',
@@ -10950,7 +11330,7 @@ window.deleteScheduleEvent = async function (id) {
   <div class="cq-box">
     <button class="cq-close" onclick="closeConsultQr()">✕</button>
     <h3 style="margin:0 0 6px;">📱 QR 상담지</h3>
-    <div style="font-size:12.5px;color:var(--muted);margin-bottom:18px;line-height:1.6;">상담 오신 분이 휴대폰 카메라로 스캔하면 상담지가 열립니다. 전송하면 아래 실시간 접수와 상담 신청 목록에 바로 저장됩니다.</div>
+    <div style="font-size:12.5px;color:var(--muted);margin-bottom:18px;line-height:1.6;">상담 오신 분이 휴대폰 카메라로 스캔하면 상담지가 열립니다. 상담지를 작성하고 <b>다음 단계로</b>를 누르면 아래 실시간 접수와 상담 기록에 바로 저장되고, 이어서 학부모 설문 진행 상황도 표시됩니다.</div>
     <div class="cq-body">
       <div class="cq-qr">
         <div id="cqCanvas"></div>
@@ -10973,6 +11353,14 @@ window.deleteScheduleEvent = async function (id) {
   </div>
 </div>
 
+<!-- 통합 상담 기록 (상담신청서 + 학부모 설문 + 학생 설문 + 진행 상태) -->
+<div id="consultRecordModal" onclick="if(event.target===this)closeConsultRecord()">
+  <div class="cr-box">
+    <button class="cq-close" onclick="closeConsultRecord()" aria-label="닫기">✕</button>
+    <div id="crBody"></div>
+  </div>
+</div>
+
 <!-- 태블릿 상담지 (학생·학부모 직접 입력) -->
 <div id="consultKiosk">
   <div class="ck-top">
@@ -10983,145 +11371,7 @@ window.deleteScheduleEvent = async function (id) {
     <div class="ck-exit" id="ckExitBtn"><div class="ck-exit-fill"></div><span>길게 눌러 종료</span></div>
   </div>
 
-  <div class="ck-wrap" id="ckForm">
-    <div class="ck-hello">
-      <h2>방문해 주셔서 감사합니다 😊</h2>
-      <p>정확한 상담을 위해 아래 내용을 작성해 주세요.<br>모르는 항목은 비워두셔도 괜찮습니다.</p>
-    </div>
-
-    <div class="ck-card">
-      <h4>과정 구분 <span class="req">필수</span></h4>
-      <p class="ck-hint">현재 학생의 학교급을 선택해 주세요.</p>
-      <div class="ck-seg" id="ckLevel">
-        <button type="button" class="ck-chip" data-v="초등">초등부</button>
-        <button type="button" class="ck-chip" data-v="중등">중등부</button>
-        <button type="button" class="ck-chip" data-v="고등">고등부</button>
-      </div>
-    </div>
-
-    <div class="ck-card">
-      <h4>상담 장소</h4>
-      <div class="ck-seg two" id="ckBranch" style="margin-top:12px;">
-        <button type="button" class="ck-chip" data-v="평촌관">평촌관</button>
-        <button type="button" class="ck-chip" data-v="산본관">산본관</button>
-      </div>
-    </div>
-
-    <div class="ck-card">
-      <h4>기본 정보</h4>
-      <p class="ck-hint">학생 이름, 학교/학년, 학부모 연락처는 꼭 입력해 주세요.</p>
-      <div class="ck-grid">
-        <div class="ck-field"><label>학생 이름 <span class="req">*</span></label><input type="text" id="ckName" placeholder="홍길동" autocomplete="off"></div>
-        <div class="ck-field"><label>학교 / 학년 <span class="req">*</span></label><input type="text" id="ckSchool" placeholder="예: 평촌중 2학년" autocomplete="off"></div>
-        <div class="ck-field"><label>학부모 연락처 <span class="req">*</span></label><input type="tel" inputmode="numeric" id="ckParentPhone" placeholder="010-0000-0000" autocomplete="off"></div>
-        <div class="ck-field"><label>학생 연락처</label><input type="tel" inputmode="numeric" id="ckStudentPhone" placeholder="010-0000-0000" autocomplete="off"></div>
-      </div>
-    </div>
-
-    <div class="ck-card">
-      <h4>방문 경로</h4>
-      <p class="ck-hint">해당하는 것을 모두 선택해 주세요.</p>
-      <div class="ck-chips" id="ckVisit">
-        <button type="button" class="ck-chip" data-v="인터넷 검색">인터넷 검색</button>
-        <button type="button" class="ck-chip" data-v="광고">광고</button>
-        <button type="button" class="ck-chip" data-v="지나가다 보고">지나가다 보고</button>
-        <button type="button" class="ck-chip" data-v="주변 권유">주변 권유</button>
-        <button type="button" class="ck-chip" data-v="우연히 찾아옴">우연히 찾아옴</button>
-      </div>
-      <div class="ck-field" style="margin-top:14px;"><input type="text" id="ckVisitEtc" placeholder="기타 (직접 입력)" autocomplete="off"></div>
-    </div>
-
-    <div class="ck-card" id="ckProgressCard">
-      <h4>진도 상황</h4>
-      <p class="ck-hint" id="ckProgressHint">과정 구분을 먼저 선택해 주세요.</p>
-      <div id="ckProgressLow" style="display:none;">
-        <div class="ck-grid" style="grid-template-columns:1fr 1fr 2fr;">
-          <div class="ck-field"><label>학년</label><select id="ckPGrade"></select></div>
-          <div class="ck-field"><label>학기</label><select id="ckPSem"><option value="">선택</option><option>1학기</option><option>2학기</option></select></div>
-          <div class="ck-field"><label>단원</label><input type="text" id="ckPUnit" placeholder="예: 일차함수" autocomplete="off"></div>
-        </div>
-      </div>
-      <div id="ckProgressHigh" style="display:none;">
-        <div class="ck-field"><label>배운 과목 (모두 선택)</label></div>
-        <div class="ck-chips" id="ckHighSubj">
-          <button type="button" class="ck-chip" data-v="공통수학1">공통수학1</button>
-          <button type="button" class="ck-chip" data-v="공통수학2">공통수학2</button>
-          <button type="button" class="ck-chip" data-v="대수">대수</button>
-          <button type="button" class="ck-chip" data-v="미적분1">미적분1</button>
-          <button type="button" class="ck-chip" data-v="확률과 통계">확률과 통계</button>
-          <button type="button" class="ck-chip" data-v="미적분2">미적분2</button>
-          <button type="button" class="ck-chip" data-v="기하">기하</button>
-        </div>
-        <div class="ck-field" style="margin-top:18px;"><label>학습 난이도</label></div>
-        <div class="ck-seg" id="ckHighLevel">
-          <button type="button" class="ck-chip" data-v="기본">기본</button>
-          <button type="button" class="ck-chip" data-v="응용">응용</button>
-          <button type="button" class="ck-chip" data-v="심화">심화</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="ck-card">
-      <h4>최근 시험 결과</h4>
-      <p class="ck-hint">대략적인 점수대로 적어주셔도 됩니다.</p>
-      <div class="ck-scores">
-        <div class="ck-field ck-score"><label>1회</label><input type="text" inputmode="numeric" id="ckS1"><em>점</em></div>
-        <div class="ck-field ck-score"><label>2회</label><input type="text" inputmode="numeric" id="ckS2"><em>점</em></div>
-        <div class="ck-field ck-score"><label>3회</label><input type="text" inputmode="numeric" id="ckS3"><em>점</em></div>
-        <div class="ck-field ck-score"><label>4회</label><input type="text" inputmode="numeric" id="ckS4"><em>점</em></div>
-      </div>
-    </div>
-
-    <div class="ck-card">
-      <h4>자신 있는 영역</h4>
-      <p class="ck-hint">성취도가 높은 영역을 모두 선택해 주세요.</p>
-      <div class="ck-chips" id="ckStrong">
-        <button type="button" class="ck-chip" data-v="수와 연산">수와 연산</button>
-        <button type="button" class="ck-chip" data-v="문자와 식">문자와 식</button>
-        <button type="button" class="ck-chip" data-v="함수">함수</button>
-        <button type="button" class="ck-chip" data-v="기하">기하</button>
-        <button type="button" class="ck-chip" data-v="확률과 통계">확률과 통계</button>
-      </div>
-    </div>
-
-    <div class="ck-card">
-      <h4>어려워하는 영역</h4>
-      <p class="ck-hint">성취도가 낮은 영역을 모두 선택해 주세요.</p>
-      <div class="ck-chips" id="ckWeak">
-        <button type="button" class="ck-chip" data-v="수와 연산">수와 연산</button>
-        <button type="button" class="ck-chip" data-v="문자와 식">문자와 식</button>
-        <button type="button" class="ck-chip" data-v="함수">함수</button>
-        <button type="button" class="ck-chip" data-v="기하">기하</button>
-        <button type="button" class="ck-chip" data-v="확률과 통계">확률과 통계</button>
-      </div>
-    </div>
-
-    <div class="ck-card">
-      <h4>학습 자가진단</h4>
-      <p class="ck-hint">학생 본인이 생각하는 점수를 골라주세요. (0~10점)</p>
-      <div class="ck-range-row"><span class="nm">연산 능력</span><input type="range" min="0" max="10" step="1" value="5" id="ckCalc"><span class="v"><b id="ckCalcV">5</b><small> /10</small></span></div>
-      <div class="ck-range-row"><span class="nm">풀이 정확도</span><input type="range" min="0" max="10" step="1" value="5" id="ckAcc"><span class="v"><b id="ckAccV">5</b><small> /10</small></span></div>
-      <div class="ck-range-row"><span class="nm">수학 흥미도</span><input type="range" min="0" max="10" step="1" value="5" id="ckInt"><span class="v"><b id="ckIntV">5</b><small> /10</small></span></div>
-    </div>
-
-    <div class="ck-card">
-      <label class="ck-agree">
-        <input type="checkbox" id="ckAgree">
-        <span><b>[필수] 개인정보 수집·이용 동의</b><br>
-        <span style="font-size:13px;color:#8a8476;">수집 항목: 학생 이름, 학교/학년, 연락처 · 이용 목적: 수강 상담 및 안내 · 보유 기간: 상담 종료 후 1년</span></span>
-      </label>
-    </div>
-
-    <button type="button" class="ck-submit" id="ckSubmitBtn" onclick="submitConsultKiosk()">작성 완료</button>
-    <div class="ck-err" id="ckErr"></div>
-  </div>
-
-  <div class="ck-done" id="ckDone">
-    <div class="ic">🎉</div>
-    <h2>작성해 주셔서 감사합니다!</h2>
-    <p>상담지가 제출되었습니다.<br>태블릿을 선생님께 전달해 주세요.</p>
-    <button type="button" onclick="resetConsultKiosk()">새 상담지 작성</button>
-  </div>
+  <div class="ck-frame-wrap"><iframe class="ck-frame" id="ckFrame" title="상담지 작성" src="about:blank" allow="autoplay; fullscreen; picture-in-picture"></iframe></div>
 </div>
 
 </body>

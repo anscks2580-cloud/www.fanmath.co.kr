@@ -26,7 +26,7 @@ const BRAND = {
   consultUrl: 'consult.html',
   phone: '031-386-8899',
   kakao: 'https://pf.kakao.com/_KxaxdlX',
-  saveCollection: 'learningProfiles'   // Firestore 저장 컬렉션 (null 이면 저장 안 함)
+  saveCollection: 'learningProfiles'   // 참고용: 상담 기록과 연결된 결과는 consult-flow.js 에서 learningProfiles/{상담ID}_{역할} 로 저장 (보안 규칙과 연결되어 있어 이름 고정)
 };
 
 /* 4개 측정 축 — 각 축은 연구로 검증된 학습 요인에 근거 */
@@ -296,6 +296,65 @@ h1 em{font-style:normal;color:var(--purple);background:linear-gradient(transpare
   .axis,.card,.fact{break-inside:avoid}
 }
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+/* ── 상담 진행 연동 (상담신청서 → 학부모 설문 → 결과 → 안내 영상) ── */
+[hidden]{display:none!important}
+body.kiosk .top{display:none}
+body.kiosk .wrap{max-width:760px}
+.steps{position:relative;z-index:2;max-width:680px;margin:0 auto;padding:0 20px 4px}
+.steps ol{list-style:none;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.steps li{display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;padding:8px 4px;border-radius:999px;background:rgba(251,249,244,.8);border:1px solid var(--line);font-size:12.5px;font-weight:700;color:var(--ink-3);white-space:nowrap}
+.steps li b{flex:none;width:19px;height:19px;border-radius:50%;display:grid;place-items:center;font-size:11px;background:rgba(37,28,64,.08);color:var(--ink-3)}
+.steps li span{overflow:hidden;text-overflow:ellipsis}
+.steps li.on{color:var(--ink);border-color:var(--gold);background:var(--paper);box-shadow:0 0 0 3px rgba(201,162,74,.14)}
+.steps li.on b{background:var(--gold);color:#fff}
+.steps li.done b{background:var(--purple-deep);color:var(--gold-bright)}
+body.kiosk .steps{padding-top:18px;max-width:760px}
+.steps .ls{display:none}
+@media (max-width:480px){.steps .lf{display:none}.steps .ls{display:inline}.steps li{font-size:12px;gap:4px}}
+
+.who{font-size:13px;font-weight:700;color:var(--purple);padding:6px 12px;border-radius:999px;background:rgba(107,90,158,.1);max-width:52%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.loading{padding:90px 0;text-align:center;color:var(--ink-3);font-size:15px}
+.spin{display:inline-block;width:28px;height:28px;border-radius:50%;border:3px solid rgba(37,28,64,.12);border-top-color:var(--gold);animation:spin 1s linear infinite;margin-bottom:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.flow-msg{margin-top:40px;text-align:center}
+.flow-msg h2{margin-top:12px;font-size:clamp(22px,5vw,28px);font-weight:800;letter-spacing:-.04em}
+.flow-msg p{margin-top:12px;font-size:15px;line-height:1.7;color:var(--ink-2)}
+.flow-msg .res-actions{margin-top:26px}
+.save-state{display:flex;flex-direction:column;align-items:center;gap:10px;line-height:1.6}
+.save-state.saving{color:var(--ink-3)}
+.save-state.ok,.save-state.restored{color:var(--purple);font-weight:700}
+.save-state.err{color:#B4483C;font-weight:600}
+.ghost.sm{height:38px;padding:0 14px;font-size:13px}
+.handoff{text-align:center;padding:14px 16px;border-radius:16px;background:rgba(107,90,158,.08);border:1px solid rgba(107,90,158,.2);font-size:14.5px;font-weight:700;color:var(--purple)}
+.confirm{margin-top:22px}
+.confirm p{font-size:16px;line-height:1.7;color:var(--ink-2)}
+.confirm p b{color:var(--ink)}
+.gate-err{margin-top:12px;min-height:20px;font-size:13.5px;color:#B4483C;text-align:center}
+
+.vid-head{text-align:center}
+.vid-title{margin-top:12px;font-size:clamp(22px,5vw,30px);font-weight:800;letter-spacing:-.045em;line-height:1.35}
+.vid-stage{position:relative;margin-top:20px;border-radius:20px;overflow:hidden;background:#0E0A1C;aspect-ratio:16/9;display:grid;place-items:center}
+.vid-stage.file{aspect-ratio:auto;min-height:220px}
+.vid-stage video{display:block;width:100%;max-height:72vh;background:#000}
+.vid-stage iframe,.vid-stage #ytHolder{position:absolute;inset:0;width:100%;height:100%;border:0}
+.vid-msg{position:absolute;inset:0;display:grid;place-items:center;text-align:center;padding:24px;color:rgba(244,240,232,.8);font-size:15px;line-height:1.7;z-index:2;pointer-events:none}
+.vid-msg small{color:rgba(244,240,232,.55)}
+.vid-tap{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(14,10,28,.72);color:#F4F0E8;font-size:16px;font-weight:700}
+.vid-tap span{width:84px;height:84px;border-radius:50%;display:grid;place-items:center;background:var(--gold-bright);color:var(--purple-deep);font-size:30px;padding-left:6px}
+.vid-ctrl{margin-top:12px;display:flex;justify-content:center;gap:10px;min-height:44px}
+
+.link-box p{font-size:13.5px}
+.link-row{display:flex;gap:8px;margin-top:12px}
+.link-row input{flex:1;min-width:0;height:46px;border-radius:12px;border:1px solid var(--line);background:#fff;padding:0 14px;font-size:15px}
+.link-list{margin-top:12px;display:grid;gap:8px}
+.link-item{display:block;width:100%;text-align:left;padding:13px 15px;border-radius:14px;background:#fff;border:1px solid var(--line);font-size:14px;line-height:1.55}
+.link-item b{font-size:15px}
+.link-item small{display:block;color:var(--ink-3);font-size:12.5px}
+.link-item em{font-style:normal;font-size:12px;font-weight:700;color:#B4483C}
+@media (hover:hover){.link-item:hover{border-color:rgba(45,35,80,.4)}}
+.link-msg{margin-top:10px;font-size:13.5px;color:var(--ink-3)}
+.link-msg.ok{color:var(--purple);font-weight:700}
+.link-msg.err{color:#B4483C}
 </style>
 </head>
 <body>
@@ -304,6 +363,15 @@ h1 em{font-style:normal;color:var(--purple);background:linear-gradient(transpare
   <div class="brand"><img id="brandLogo" alt=""><b>송우찬수학학원</b><span>평촌관</span></div>
   <div class="top-tag">Learning Profile</div>
 </header>
+
+<nav class="steps" id="steps" aria-label="상담 진행 단계" hidden>
+  <ol>
+    <li><b>1</b><span class="lf">상담신청서</span><span class="ls">신청서</span></li>
+    <li><b>2</b><span class="lf">학부모 설문</span><span class="ls">설문</span></li>
+    <li><b>3</b><span class="lf">결과 확인</span><span class="ls">결과</span></li>
+    <li><b>4</b><span class="lf">안내 영상</span><span class="ls">영상</span></li>
+  </ol>
+</nav>
 
 <main class="wrap"><div class="screen" id="screen"></div></main>
 
@@ -316,7 +384,7 @@ const PRINT = '<svg viewBox="0 0 24 24"><path d="M7 9V4h10v5M7 17H5a2 2 0 0 1-2-
 const $ = (s, el = document) => el.querySelector(s);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const screen = $('#screen');
-const state = { role:null, idx:0, answers:[] };
+const state = { role:null, idx:0, answers:[], saving:false, saved:false };
 
 if (BRAND.logo) $('#brandLogo').src = BRAND.logo; else $('#brandLogo').remove();
 $('#brandLogo') && $('#brandLogo').addEventListener('error', e => e.target.remove());
@@ -324,8 +392,54 @@ $('#brandLogo') && $('#brandLogo').addEventListener('error', e => e.target.remov
 const Q = () => state.role === 'student' ? STUDENT_Q : PARENT_Q;
 function show(html){ screen.innerHTML = html; screen.style.animation = 'none'; void screen.offsetWidth; screen.style.animation = ''; window.scrollTo(0,0); }
 
+/* ---------- 0. 상담 기록 연결 (URL 파라미터) ----------
+   learning-profile.html                              → 단독 체험 모드 (저장 안 함, 기존과 동일)
+   learning-profile.html?cid=상담ID&role=parent&flow=visit → 상담신청서 다음 단계 (학부모 설문 → 결과 → 안내 영상)
+   learning-profile.html?cid=상담ID&role=student         → 관리자 화면에서 시작하는 학생 설문 (관리자 로그인 필요)
+   ※ 학생 이름·연락처는 URL에 넣지 않고 상담 기록에서 불러옵니다. */
+const PARAMS = new URLSearchParams(location.search);
+const LINK = {
+  cid: (PARAMS.get('cid') || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 40) || null,
+  role: PARAMS.get('role'),
+  flow: PARAMS.get('flow') === 'visit' ? 'visit' : 'admin',
+  kiosk: PARAMS.get('kiosk') === '1',
+  s: (PARAMS.get('s') || '').replace(/[^\w-]/g, '').slice(0, 40),
+  src: PARAMS.get('src') === 'tablet' ? 'tablet' : ''
+};
+const CTX = { api:null, session:null, record:null, name:'', lastResult:null, videoSrc:undefined, videoErr:null, videoFinishing:false, admin:null };
+if (LINK.kiosk) document.body.classList.add('kiosk');
+const isVisitFlow = () => !!LINK.cid && LINK.flow === 'visit';
+let apiPromise = null;
+function loadApi(){ return apiPromise || (apiPromise = import('./consult-flow.js').then(m => (CTX.api = m)).catch(e => { apiPromise = null; throw e; })); }
+function notifyParent(event, extra = {}){ try { if (window.parent !== window) window.parent.postMessage({ type:'swc-consult', event, ...extra }, location.origin); } catch(e){} }
+function fmtTime(ts){
+  const d = ts && ts.toDate ? ts.toDate() : (ts instanceof Date ? ts : null);
+  if (!d) return '';
+  const p = n => String(n).padStart(2, '0');
+  return `${d.getMonth()+1}월 ${d.getDate()}일 ${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+function formUrl(){
+  const q = new URLSearchParams();
+  const b = CTX.record && CTX.record.branch; if (b) q.set('b', b);
+  if (LINK.s) q.set('s', LINK.s);
+  if (LINK.kiosk) q.set('kiosk', '1');
+  if (LINK.src) q.set('src', LINK.src);
+  return 'consult-visit.html' + (q.toString() ? '?' + q.toString() : '');
+}
+function setSteps(n){
+  const el = $('#steps');
+  if (!isVisitFlow() || !n){ el.hidden = true; return; }
+  el.hidden = false;
+  el.querySelectorAll('li').forEach((li, i) => {
+    li.classList.toggle('on', i + 1 === n);
+    li.classList.toggle('done', i + 1 < n);
+    if (i + 1 === n) li.setAttribute('aria-current', 'step'); else li.removeAttribute('aria-current');
+  });
+}
+
 /* ---------- 1. 인트로 ---------- */
 function renderIntro(){
+  setSteps(0);
   show(`
     <p class="eyebrow">RESEARCH-BASED LEARNING PROFILE</p>
     <h1>감이 아니라 <em>연구</em>로,<br>우리 아이 공부 습관을 봅니다</h1>
@@ -364,30 +478,43 @@ function renderIntro(){
     </div>
     <p class="note">※ 위 연구에서 검증된 요인을 바탕으로 학원에서 구성한 상담용 체크이며, 표준화된 심리검사는 아닙니다.</p>
     <p class="foot">SONG WOOCHAN MATH ACADEMY · PYEONGCHON</p>`);
-  screen.querySelectorAll('[data-role]').forEach(b => b.addEventListener('click', () => startSurvey(b.dataset.role)));
+  // 상담 기록과 연결된 경우(관리자 화면에서 연 경우)에는 대상 학생 확인 화면을 거쳐 시작
+  screen.querySelectorAll('[data-role]').forEach(b => b.addEventListener('click', () => LINK.cid ? renderConfirm(b.dataset.role) : startSurvey(b.dataset.role)));
 }
 
-/* ---------- 2. 연결 정보 (URL 파라미터) ----------
-   상담지(consultForms) 작성 완료 후 아래처럼 이동시키면 결과가 해당 상담지에 연결됩니다.
-     learning-profile.html?cid=상담지문서ID            → 학생/학부모 선택 화면
-     learning-profile.html?cid=상담지문서ID&role=parent → 바로 학부모용 시작
-     (&name=학생이름 을 붙이면 결과 화면에 이름 표시 — 저장은 하지 않음)
-   cid 없이 열면 저장 없이 결과만 보여주는 체험/시연 모드로 동작합니다. */
-const PARAMS = new URLSearchParams(location.search);
-const LINK = { cid: PARAMS.get('cid') || null, name: PARAMS.get('name') || '', role: PARAMS.get('role') };
-function startSurvey(role){
-  state.role = role; state.idx = 0;
+/* ---------- 2. 설문 시작 ---------- */
+/* 상담 기록과 연결된 설문은 고른 답(번호만)을 이 탭에 잠시 보관 → 새로고침해도 이어서 진행 */
+const ANS_TTL = 2 * 3600 * 1000;
+const ansKey = role => `swc_lp_answers:${LINK.cid}:${role}`;
+function saveAnswersLocal(){ if (!LINK.cid) return; try { sessionStorage.setItem(ansKey(state.role), JSON.stringify({ at: Date.now(), a: state.answers.map(x => x === undefined ? null : x) })); } catch(e){} }
+function loadAnswersLocal(role){
+  if (!LINK.cid) return null;
+  try { const v = JSON.parse(sessionStorage.getItem(ansKey(role)) || 'null'); if (v && Date.now() - v.at < ANS_TTL && Array.isArray(v.a)) return v.a; } catch(e){}
+  return null;
+}
+function clearAnswersLocal(role){ try { sessionStorage.removeItem(ansKey(role || state.role)); } catch(e){} }
+function startSurvey(role, opts = {}){
+  state.role = role; state.idx = 0; state.saved = false;
   state.answers = new Array(Q().length).fill(undefined);
+  const kept = opts.resume ? loadAnswersLocal(role) : null;
+  if (kept && kept.length === state.answers.length){
+    state.answers = kept.map(x => (x === null || x === undefined) ? undefined : x);
+    const first = state.answers.findIndex(x => x === undefined);
+    if (first === -1){ state.idx = state.answers.length - 1; renderResult(); return; }
+    state.idx = first;
+  } else if (!opts.resume) clearAnswersLocal(role);
   renderQuestion();
 }
 
 /* ---------- 3. 문항 ---------- */
 function renderQuestion(){
+  setSteps(2);
   const list = Q(), q = list[state.idx], n = list.length;
   const axisLabel = q.axis ? AXES[q.axis].name : '참고 정보';
   const picked = state.answers[state.idx];
+  const who = CTX.name ? `<span class="who">${esc(CTX.name)} 학생 · ${state.role === 'student' ? '학생' : '학부모'}</span>` : '';
   show(`
-    <div class="qtop"><button class="back" id="bk">${BACK}이전</button><span class="count"><b>${String(state.idx+1).padStart(2,'0')}</b> / ${String(n).padStart(2,'0')}</span></div>
+    <div class="qtop"><button class="back" id="bk">${BACK}이전</button>${who}<span class="count"><b>${String(state.idx+1).padStart(2,'0')}</b> / ${String(n).padStart(2,'0')}</span></div>
     <div class="progress"><i style="width:${(state.idx / n) * 100}%"></i></div>
     <p class="q-axis">${axisLabel}</p>
     <h2 class="q-text">${q.text}</h2>
@@ -396,11 +523,19 @@ function renderQuestion(){
       ${q.opts.map((o, i) => `<button class="opt ${o[0]==='잘 모르겠다'?'unknown':''} ${picked===i?'on':''}" data-i="${i}"><span>${esc(o[0])}</span><span class="mk"></span></button>`).join('')}
     </div>`);
   requestAnimationFrame(() => { const p = $('.progress i'); if (p) p.style.width = ((state.idx + (picked!==undefined?1:0)) / n * 100) + '%'; });
-  $('#bk').addEventListener('click', () => { if (state.idx === 0) renderIntro(); else { state.idx--; renderQuestion(); } });
+  $('#bk').addEventListener('click', () => {
+    if (state.idx > 0){ state.idx--; renderQuestion(); return; }
+    if (isVisitFlow()) location.href = formUrl();          // 상담신청서로 돌아가기 (저장된 내용 그대로 불러옴)
+    else if (LINK.cid) renderConfirm(state.role);
+    else renderIntro();
+  });
+  let moving = false;
   screen.querySelectorAll('.opt').forEach(b => b.addEventListener('click', () => {
+    if (moving) return; moving = true;
     screen.querySelectorAll('.opt').forEach(x => x.classList.remove('on'));
     b.classList.add('on');
     state.answers[state.idx] = +b.dataset.i;
+    saveAnswersLocal();
     $('.progress i').style.width = ((state.idx + 1) / n * 100) + '%';
     setTimeout(() => { if (state.idx < n - 1){ state.idx++; renderQuestion(); } else renderResult(); }, 260);
   }));
@@ -425,9 +560,10 @@ function score(){
 }
 
 /* ---------- 5. 결과 ---------- */
-function renderResult(){
+function renderResult(opts = {}){
+  setSteps(3);
   const { axes, code, extra } = score();
-  const isS = state.role === 'student', name = esc(LINK.name);
+  const isS = state.role === 'student', name = esc(CTX.name);
   const typeName = TYPE_NAMES[code] || '관찰 정보 보완 필요';
   const valid = Object.entries(axes).filter(([,v]) => v !== null);
   const weakest = valid.length ? valid.sort((a, b) => a[1] - b[1])[0] : null;
@@ -455,6 +591,35 @@ function renderResult(){
     <p class="sec-title">상담 때 집중할 부분</p>
     <div class="focus"><b>${AXES[weakest[0]].name.toUpperCase()}</b><p>${AXES[weakest[0]].loText}</p></div>` : '';
 
+  let actions;
+  if (isVisitFlow()) actions = `
+    <div class="res-actions">
+      <button class="cta full" id="toVideo" disabled style="margin-top:0">다음 단계로 · 안내 영상<span class="arw">${ARROW}</span></button>
+      <div class="row">
+        <button class="ghost" id="edit">${BACK}응답 수정</button>
+        <button class="ghost" id="print">${PRINT}저장·인쇄</button>
+      </div>
+    </div>`;
+  else if (LINK.cid) actions = `
+    <div class="res-actions">
+      <div class="handoff" id="handoff" hidden>저장되었습니다. 태블릿을 선생님께 전달해 주세요.</div>
+      <div class="row">
+        <button class="ghost" id="edit">${BACK}응답 수정</button>
+        <button class="ghost" id="print">${PRINT}저장·인쇄</button>
+        ${LINK.kiosk ? '' : '<a class="ghost" href="admin.html">관리자 화면으로</a>'}
+      </div>
+    </div>`;
+  else actions = `
+    <div class="res-actions">
+      <a class="cta full" href="${esc(BRAND.consultUrl)}" style="margin-top:0">상담 신청하기<span class="arw">${ARROW}</span></a>
+      <div class="row">
+        <button class="ghost" id="other">${isS ? '학부모용도 작성하기' : '학생용도 작성하기'}</button>
+        <button class="ghost" id="print">${PRINT}저장·인쇄</button>
+        <button class="ghost" id="retry">${RETRY}처음으로</button>
+      </div>
+    </div>
+    <div id="linkPanel"></div>`;
+
   show(`
     <div class="res-head">
       <p class="eyebrow gold">${isS ? 'MY LEARNING PROFILE' : 'OBSERVED PROFILE'}</p>
@@ -468,59 +633,470 @@ function renderResult(){
     ${axisHtml}
     ${focusHtml}
     ${factsHtml}
-    <p class="save-state" id="saveState">${BRAND.saveCollection && LINK.cid ? '결과를 상담지에 연결하는 중…' : ''}</p>
-    <div class="res-actions">
-      ${LINK.cid ? '' : `<a class="cta full" href="${esc(BRAND.consultUrl)}" style="margin-top:0">상담 신청하기<span class="arw">${ARROW}</span></a>`}
-      <div class="row">
-        <button class="ghost" id="other">${isS ? '학부모용도 작성하기' : '학생용도 작성하기'}</button>
-        <button class="ghost" id="print">${PRINT}저장·인쇄</button>
-        <button class="ghost" id="retry">${RETRY}처음으로</button>
-      </div>
-    </div>
+    <p class="save-state" id="saveState" aria-live="polite"></p>
+    ${actions}
     <p class="foot">송우찬수학학원 평촌관 · <a href="tel:${BRAND.phone}">${BRAND.phone}</a></p>`);
 
   requestAnimationFrame(() => setTimeout(() => screen.querySelectorAll('.bar i').forEach(el => el.style.left = el.dataset.v + '%'), 60));
   $('#print').addEventListener('click', () => window.print());
-  $('#retry').addEventListener('click', () => { state.role = null; renderIntro(); });
-  $('#other').addEventListener('click', () => { startSurvey(isS ? 'parent' : 'student'); });
+  const edit = $('#edit');
+  if (edit) edit.addEventListener('click', () => { state.idx = Q().length - 1; renderQuestion(); });
+  if ($('#retry')) $('#retry').addEventListener('click', () => { state.role = null; renderIntro(); });
+  if ($('#other')) $('#other').addEventListener('click', () => { startSurvey(isS ? 'parent' : 'student'); });
+  const toVideo = $('#toVideo');
+  if (toVideo) toVideo.addEventListener('click', () => { if (!toVideo.disabled) renderVideo(); });
 
-  saveResult({ axes, code, typeName, extra });
+  CTX.lastResult = buildPayload({ axes, code, extra, typeName, weakest });
+  if (LINK.cid){
+    if (opts.restored !== undefined) setSave('restored', opts.restored);
+    else saveFlowResult();
+  } else renderLinkPanel();
 }
 
-/* ---------- 6. 저장 (Firestore) ---------- */
-async function saveResult(r){
-  const el = $('#saveState');
-  if (!BRAND.saveCollection || !LINK.cid || !window.__saveProfile){ if (el) el.textContent = ''; return; }
+/* 저장용 결과 묶음 — 관리자 화면은 이 값을 그대로 보여줌 (새 진단을 따로 만들지 않음) */
+function buildPayload({ axes, code, extra, typeName, weakest }){
   const list = Q();
   const answers = list.map((q, i) => ({ q: q.text.replace(/<br>/g, ' '), axis: q.axis, a: q.opts[state.answers[i]]?.[0] ?? null, score: q.opts[state.answers[i]]?.[1] ?? null }));
-  try {
-    await window.__saveProfile(BRAND.saveCollection, {
-      consultId: LINK.cid, role: state.role,
-      code: r.code, typeName: r.typeName, axes: r.axes, extra: r.extra, answers
-    });
-    if (el){ el.textContent = '✓ 결과가 상담지에 연결되었습니다. 상담 때 함께 확인해요.'; el.classList.add('ok'); }
-  } catch(e){
-    console.error(e);
-    if (el) el.textContent = '결과 전달이 되지 않았어요. [저장·인쇄]로 화면을 저장해 상담 때 보여주세요.';
-  }
+  const axisDetail = {};
+  Object.keys(AXES).forEach(k => {
+    const a = AXES[k], v = axes[k], hi = v !== null && v >= 50;
+    axisDetail[k] = { name: a.name, value: v, hiName: a.hiName, loName: a.loName,
+      side: v === null ? null : (hi ? a.hi : a.lo), sideName: v === null ? null : (hi ? a.hiName : a.loName),
+      balanced: v !== null && v >= 40 && v <= 60, text: v === null ? null : (hi ? a.hiText : a.loText) };
+  });
+  const focus = weakest && weakest[1] < 50 ? { axis: weakest[0], name: AXES[weakest[0]].name, text: AXES[weakest[0]].loText } : null;
+  return { code, typeName, axes, extra, answers, answerIdx: state.answers.map(x => x === undefined ? null : x), axisDetail, focus };
 }
 
-if (LINK.role === 'student' || LINK.role === 'parent') startSurvey(LINK.role); else renderIntro();
-</script>
+/* ---------- 6. 저장 (상담 기록에 연결) ---------- */
+function setSave(kind, text){
+  const el = $('#saveState'); if (!el) return;
+  el.className = 'save-state ' + kind;
+  if (kind === 'saving') el.innerHTML = '결과를 상담 기록에 저장하는 중…';
+  else if (kind === 'ok') el.innerHTML = '✓ 결과가 상담 기록에 저장되었습니다.';
+  else if (kind === 'restored') el.innerHTML = `✓ 저장된 결과입니다${text ? ' · ' + esc(text) : ''}`;
+  else if (kind === 'err'){
+    el.innerHTML = `<span>${esc(text)}</span><button class="ghost sm" id="saveRetry">${RETRY}다시 저장</button>`;
+    $('#saveRetry').addEventListener('click', () => saveFlowResult());
+  }
+  const ok = kind === 'ok' || kind === 'restored';
+  const next = $('#toVideo'); if (next) next.disabled = !ok;   // 저장이 확인돼야 다음 단계로
+  const ho = $('#handoff'); if (ho) ho.hidden = kind !== 'ok';
+}
+async function saveFlowResult(){
+  if (state.saving || !CTX.lastResult) return;
+  state.saving = true; state.saved = false;
+  setSave('saving');
+  try {
+    const api = await loadApi();
+    CTX.record = await api.saveSurvey(CTX.session, LINK.cid, state.role, CTX.lastResult);
+    state.saved = true;
+    clearAnswersLocal();
+    setSave('ok');
+    notifyParent('survey_saved', { cid: LINK.cid, role: state.role });
+  } catch(e){
+    console.error('[설문 결과 저장 실패]', e);
+    setSave('err', CTX.api ? CTX.api.errorMessage(e, '결과 저장') : '결과를 저장하지 못했습니다. 다시 시도해 주세요.');
+  } finally { state.saving = false; }
+}
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-const app = initializeApp({
-  apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
-  authDomain: "songmath.firebaseapp.com",
-  projectId: "songmath",
-  storageBucket: "songmath.firebasestorage.app",
-  messagingSenderId: "936295436575",
-  appId: "1:936295436575:web:d1e201508719850cfbe02a"
-});
-const db = getFirestore(app);
-window.__saveProfile = (col, data) => addDoc(collection(db, col), { ...data, branch: '평촌관', createdAt: serverTimestamp() });
+/* ---------- 7. 안내 영상 ---------- */
+const PLAYER = { el:null, api:null, timer:null, ended:false, unmute:null, tap:null, vimeoP:null, ytP:null };
+function loadScript(src){
+  return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.async = true; s.onload = res; s.onerror = () => rej(new Error('script ' + src)); document.head.appendChild(s); });
+}
+function ensureVimeo(){ if (window.Vimeo && window.Vimeo.Player) return Promise.resolve(); return PLAYER.vimeoP || (PLAYER.vimeoP = loadScript('https://player.vimeo.com/api/player.js').catch(e => { PLAYER.vimeoP = null; throw e; })); }
+function ensureYT(){
+  if (window.YT && window.YT.Player) return Promise.resolve();
+  return PLAYER.ytP || (PLAYER.ytP = new Promise((res, rej) => {
+    const prev = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => { if (prev) prev(); res(); };
+    loadScript('https://www.youtube.com/iframe_api').catch(e => { PLAYER.ytP = null; rej(e); });
+  }));
+}
+async function prefetchVideo(){
+  try {
+    const api = await loadApi();
+    const cfg = await api.loadVideoConfig(CTX.session);
+    CTX.videoSrc = api.parseVideoSource(cfg); CTX.videoErr = null;
+    if (CTX.videoSrc && CTX.videoSrc.kind === 'vimeo') ensureVimeo().catch(() => {});
+    if (CTX.videoSrc && CTX.videoSrc.kind === 'youtube') ensureYT().catch(() => {});
+  } catch(e){ console.error('[안내 영상 설정 불러오기 실패]', e); CTX.videoSrc = undefined; CTX.videoErr = e; }
+}
+function renderVideo(){
+  setSteps(4);
+  const name = esc(CTX.name);
+  if (CTX.videoSrc === undefined){
+    if (CTX.videoErr){
+      show(`<div class="flow-msg"><p class="eyebrow gold">GUIDE VIDEO</p><h2>안내 영상 정보를 불러오지 못했습니다</h2>
+        <p>${esc(CTX.api ? CTX.api.errorMessage(CTX.videoErr, '영상 정보 확인') : '인터넷 연결을 확인해 주세요.')}<br>상담 진행에는 문제가 없습니다.</p>
+        <div class="res-actions"><button class="cta full" id="vRetry">${RETRY.replace('<svg', '<svg width="16" height="16"')} 다시 시도</button><button class="ghost" id="vSkip">영상 없이 완료하기</button></div></div>`);
+      $('#vRetry').addEventListener('click', async () => { renderLoading('영상 정보를 확인하는 중…'); await prefetchVideo(); renderVideo(); });
+      $('#vSkip').addEventListener('click', () => finishVideo('failed'));
+      return;
+    }
+    renderLoading('영상 정보를 확인하는 중…');
+    prefetchVideo().then(renderVideo);
+    return;
+  }
+  if (!CTX.videoSrc){ finishVideo('none'); return; }   // 등록된 영상이 없으면 영상 단계 없이 완료
+  const src = CTX.videoSrc;
+  show(`
+    <div class="vid-head">
+      <p class="eyebrow gold">GUIDE VIDEO</p>
+      <h2 class="vid-title">상담 전에 안내 영상을<br>잠시 봐 주세요</h2>
+      ${name ? `<p class="res-who">${name} 학생 학부모님</p>` : ''}
+    </div>
+    <div class="vid-stage ${src.kind === 'file' ? 'file' : ''}" id="vidStage">
+      <div class="vid-msg" id="vidMsg">영상을 불러오는 중…</div>
+      <button class="vid-tap" id="vidTap" hidden aria-label="영상 재생"><span>▶</span>눌러서 재생</button>
+    </div>
+    <div class="vid-ctrl"><button class="ghost" id="vidSound" hidden>🔊 소리 켜기</button></div>
+    <div class="res-actions"><div class="row"><button class="ghost" id="vidSkip">영상 건너뛰고 완료하기</button></div></div>`);
+  $('#vidSkip').addEventListener('click', () => finishVideo('skipped'));
+  $('#vidSound').addEventListener('click', () => PLAYER.unmute && PLAYER.unmute());
+  $('#vidTap').addEventListener('click', () => PLAYER.tap && PLAYER.tap());
+  mountPlayer(src);   // 버튼을 누른 직후 바로 재생 시도 (브라우저 자동 재생 정책상 소리 재생 가능성이 가장 높음)
+}
+function mountPlayer(src){
+  const stage = $('#vidStage'), msg = $('#vidMsg');
+  PLAYER.ended = false;
+  const ui = {
+    playing(){ clearTimeout(PLAYER.timer); if (msg) msg.hidden = true; const t = $('#vidTap'); if (t) t.hidden = true; },
+    needTap(){ clearTimeout(PLAYER.timer); if (msg) msg.hidden = true; const t = $('#vidTap'); if (t) t.hidden = false; },
+    muted(){ const b = $('#vidSound'); if (b) b.hidden = false; },
+    ended(){ if (PLAYER.ended) return; PLAYER.ended = true; finishVideo('completed'); },
+    error(why){ clearTimeout(PLAYER.timer); showVideoError(why); }
+  };
+  clearTimeout(PLAYER.timer);
+  PLAYER.timer = setTimeout(() => ui.error('timeout'), 20000);
+  if (src.kind === 'file'){
+    const v = document.createElement('video');
+    v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', '');
+    v.playsInline = true; v.controls = true; v.preload = 'auto';
+    v.src = src.url;
+    stage.appendChild(v); PLAYER.el = v;
+    v.addEventListener('loadedmetadata', () => { if (src.start && v.currentTime < src.start) v.currentTime = src.start; }, { once:true });
+    v.addEventListener('playing', ui.playing);
+    v.addEventListener('ended', ui.ended);
+    v.addEventListener('timeupdate', () => { if (src.end && v.currentTime >= src.end){ v.pause(); ui.ended(); } });
+    v.addEventListener('error', () => ui.error('load'));
+    const p = v.play();
+    if (p && p.catch) p.catch(err => {
+      if (err && err.name === 'NotAllowedError'){ v.muted = true; v.play().then(ui.muted).catch(ui.needTap); }
+    });
+    PLAYER.unmute = () => { v.muted = false; v.volume = 1; $('#vidSound').hidden = true; };
+    PLAYER.tap = () => { v.muted = false; v.play().then(ui.playing).catch(() => { v.muted = true; v.play().then(() => { ui.playing(); ui.muted(); }).catch(() => ui.error('blocked')); }); };
+  } else if (src.kind === 'vimeo'){
+    const f = document.createElement('iframe');
+    f.src = `https://player.vimeo.com/video/${encodeURIComponent(src.id)}?${src.hash ? 'h=' + encodeURIComponent(src.hash) + '&' : ''}autoplay=1&playsinline=1&title=0&byline=0&portrait=0&dnt=1${src.start ? '#t=' + Math.floor(src.start) + 's' : ''}`;
+    f.allow = 'autoplay; fullscreen; picture-in-picture'; f.setAttribute('allowfullscreen', ''); f.title = src.title || '상담 안내 영상';
+    stage.appendChild(f); PLAYER.el = f;
+    ensureVimeo().then(() => {
+      const pl = new Vimeo.Player(f); PLAYER.api = pl;
+      pl.on('play', ui.playing); pl.on('ended', ui.ended); pl.on('error', () => ui.error('load'));
+      if (src.end) pl.on('timeupdate', d => { if (d.seconds >= src.end){ pl.pause().catch(() => {}); ui.ended(); } });
+      pl.ready().then(() => pl.play())
+        .catch(() => pl.setMuted(true).then(() => pl.play()).then(ui.muted).catch(ui.needTap));
+      PLAYER.unmute = () => { pl.setMuted(false).catch(() => {}); pl.setVolume(1).catch(() => {}); $('#vidSound').hidden = true; };
+      PLAYER.tap = () => { pl.setMuted(false).then(() => pl.play()).then(ui.playing).catch(() => pl.setMuted(true).then(() => pl.play()).then(() => { ui.playing(); ui.muted(); }).catch(() => ui.error('blocked'))); };
+    }).catch(() => ui.error('load'));
+  } else if (src.kind === 'youtube'){
+    const holder = document.createElement('div'); holder.id = 'ytHolder'; stage.appendChild(holder);
+    ensureYT().then(() => {
+      const vars = { autoplay:1, playsinline:1, rel:0, modestbranding:1 };
+      if (src.start) vars.start = Math.floor(src.start);
+      if (src.end) vars.end = Math.floor(src.end);
+      const pl = new YT.Player('ytHolder', { videoId: src.id, playerVars: vars, events: {
+        onReady: e => {
+          e.target.playVideo();
+          setTimeout(() => {
+            const st = e.target.getPlayerState();
+            if (st === YT.PlayerState.PLAYING || st === YT.PlayerState.BUFFERING) return;
+            e.target.mute(); e.target.playVideo();
+            setTimeout(() => { if (e.target.getPlayerState() === YT.PlayerState.PLAYING) ui.muted(); else ui.needTap(); }, 1500);
+          }, 1500);
+        },
+        onStateChange: e => { if (e.data === YT.PlayerState.PLAYING) ui.playing(); if (e.data === YT.PlayerState.ENDED) ui.ended(); },
+        onError: () => ui.error('load')
+      }});
+      PLAYER.api = pl;
+      PLAYER.unmute = () => { pl.unMute(); pl.setVolume(100); $('#vidSound').hidden = true; };
+      PLAYER.tap = () => { pl.unMute(); pl.playVideo(); };
+    }).catch(() => ui.error('load'));
+  }
+}
+function destroyPlayer(){
+  clearTimeout(PLAYER.timer);
+  try { if (PLAYER.api && PLAYER.api.destroy) PLAYER.api.destroy(); } catch(e){}
+  try { if (PLAYER.el && PLAYER.el.pause) PLAYER.el.pause(); } catch(e){}
+  PLAYER.el = null; PLAYER.api = null; PLAYER.unmute = null; PLAYER.tap = null;
+}
+function showVideoError(why){
+  destroyPlayer();
+  const stage = $('#vidStage'); if (!stage) return;
+  stage.classList.remove('file');
+  stage.innerHTML = `<div class="vid-msg"><div>${why === 'blocked' ? '이 브라우저에서 영상 재생이 막혀 있습니다.' : why === 'timeout' ? '영상을 불러오는 데 시간이 오래 걸리고 있습니다.' : '안내 영상을 불러오지 못했습니다.'}<br><small>상담 진행에는 문제가 없습니다.</small></div></div>`;
+  const b = $('#vidSound'); if (b) b.hidden = true;
+  const acts = screen.querySelector('.res-actions');
+  acts.innerHTML = `<button class="cta full" id="vRetry" style="margin-top:0">다시 재생해 보기<span class="arw">${ARROW}</span></button><div class="row"><button class="ghost" id="vDone">영상 없이 완료하기</button></div>`;
+  $('#vRetry').addEventListener('click', () => renderVideo());
+  $('#vDone').addEventListener('click', () => finishVideo('failed'));
+}
+/* 영상 단계 마무리 — 영상 기록 저장에 실패해도 상담신청서·설문 결과는 이미 저장되어 있으므로 진행을 막지 않음 */
+async function finishVideo(status){
+  if (CTX.videoFinishing) return;
+  CTX.videoFinishing = true;
+  destroyPlayer();
+  renderLoading('마무리하는 중…');
+  let warn = '';
+  try { const api = await loadApi(); await api.saveVideoStatus(CTX.session, LINK.cid, status); }
+  catch(e){ console.error('[영상 단계 기록 실패]', e); warn = CTX.api ? CTX.api.errorMessage(e, '영상 진행 기록') : '영상 진행 기록을 저장하지 못했습니다.'; }
+  CTX.videoStatus = status;
+  CTX.videoFinishing = false;
+  renderDone({ warn });
+}
+
+/* ---------- 8. 완료 ---------- */
+function renderDone({ warn = '', generic = false } = {}){
+  setSteps(4);
+  document.querySelectorAll('#steps li').forEach(li => { li.classList.remove('on'); li.classList.add('done'); });
+  const api = CTX.api, r = CTX.record || {}, name = esc(CTX.name);
+  if (api) api.pointer.set({ cid: LINK.cid, done: true }, LINK.s);
+  notifyParent('flow_done', { cid: LINK.cid });
+  const isAdmin = CTX.session && CTX.session.mode === 'admin';
+  const canStudent = !generic && isAdmin && LINK.kiosk && r.visitWith === 'both' && !(r.studentSurvey && r.studentSurvey.status === 'completed');
+  const vLabel = api && CTX.videoStatus ? (api.VIDEO_LABEL[CTX.videoStatus] || '') : '';
+  const studentLabel = r.studentSurvey && r.studentSurvey.status === 'completed' ? '저장 완료'
+    : r.visitWith === 'parent' ? '이번 방문에는 진행하지 않음' : '상담 때 진행';
+  show(`
+    <div class="res-head">
+      <p class="eyebrow gold">READY</p>
+      <h1 class="type-name">상담 준비가 끝났습니다</h1>
+      <p class="res-sub">${name ? name + ' 학생 학부모님, ' : ''}작성해 주셔서 감사합니다.<br>잠시 후 선생님께서 상담을 도와드리겠습니다.</p>
+    </div>
+    ${generic ? '' : `
+    <div class="facts" style="margin-top:26px">
+      <div class="fact"><span>상담신청서</span><b>저장 완료</b></div>
+      <div class="fact"><span>학부모 설문</span><b>${esc((r.parentSurvey && r.parentSurvey.typeName) || '저장 완료')}</b></div>
+      <div class="fact"><span>학생 설문</span><b>${studentLabel}</b></div>
+      ${vLabel ? `<div class="fact"><span>안내 영상</span><b>${esc(vLabel)}</b></div>` : ''}
+    </div>`}
+    ${warn ? `<p class="disclaimer">${esc(warn)}<br>상담신청서와 설문 결과는 이미 저장되어 있습니다.</p>` : ''}
+    <div class="res-actions">
+      ${canStudent ? `<button class="cta full" id="toStudent" style="margin-top:0">학생 설문 이어서 하기<span class="arw">${ARROW}</span></button>` : ''}
+      <div class="row"><button class="ghost" id="newForm">${LINK.kiosk ? '새 상담지 작성' : '다른 자녀 상담지 추가 작성'}</button></div>
+    </div>
+    ${LINK.kiosk ? '<p class="note" style="text-align:center">태블릿을 선생님께 전달해 주세요.</p>' : ''}
+    <p class="foot">송우찬수학학원 평촌관 · <a href="tel:${BRAND.phone}">${BRAND.phone}</a></p>`);
+  // 공용 기기 보호: QR 방문자 세션은 여기서 종료 (같은 기기 다음 사용자가 이 기록을 열 수 없음)
+  if (api && CTX.session && CTX.session.mode === 'visitor') api.endVisitorSession();
+  const ts = $('#toStudent');
+  if (ts) ts.addEventListener('click', () => {
+    const q = new URLSearchParams({ cid: LINK.cid, role: 'student' }); if (LINK.kiosk) q.set('kiosk', '1');
+    location.href = 'learning-profile.html?' + q.toString();
+  });
+  $('#newForm').addEventListener('click', () => {
+    if (api) api.pointer.clear(LINK.s);
+    const q = new URLSearchParams();
+    const b = r.branch; if (b) q.set('b', b);
+    if (LINK.s) q.set('s', LINK.s);
+    if (LINK.kiosk) q.set('kiosk', '1');
+    if (LINK.src) q.set('src', LINK.src);
+    location.href = 'consult-visit.html' + (q.toString() ? '?' + q.toString() : '');
+  });
+}
+
+/* ---------- 9. 보조 화면 ---------- */
+function renderLoading(msg){ show(`<div class="loading"><span class="spin"></span><p>${esc(msg)}</p></div>`); }
+function renderFlowError(msg, retry){
+  show(`<div class="flow-msg"><p class="eyebrow gold">NOTICE</p><h2>진행할 수 없습니다</h2><p>${esc(msg)}</p>
+    <div class="res-actions">
+      ${retry ? `<button class="cta full" id="fRetry" style="margin-top:0">다시 시도<span class="arw">${ARROW}</span></button>` : ''}
+      ${isVisitFlow() ? `<div class="row"><a class="ghost" href="${esc(formUrl())}">상담신청서로 돌아가기</a></div>` : ''}
+    </div></div>`);
+  if (retry) $('#fRetry').addEventListener('click', retry);
+}
+/* 관리자 화면에서 연 학생 설문 — 대상 학생 확인 */
+function renderConfirm(role){
+  if (role !== 'student' && role !== 'parent') return renderIntro();
+  setSteps(0);
+  const r = CTX.record || {}, s = r[role + 'Survey'], done = s && s.status === 'completed';
+  const other = role === 'student' ? '학부모' : '학생';
+  const kept = loadAnswersLocal(role), total = (role === 'student' ? STUDENT_Q : PARENT_Q).length;
+  const keptN = kept && kept.length === total ? kept.filter(x => x !== null).length : 0;
+  show(`
+    <p class="eyebrow">${role === 'student' ? 'STUDENT SURVEY' : 'PARENT SURVEY'}</p>
+    <h1><em>${esc(CTX.name)}</em> 학생${role === 'student' ? '' : ' 학부모님'}</h1>
+    <p class="lead">${esc([r.schoolGrade, r.level ? r.level + '부' : '', r.branch].filter(Boolean).join(' · '))}</p>
+    <div class="card confirm">
+      <p>${role === 'student' ? `<b>${esc(CTX.name)}</b> 학생 본인이 맞으면 시작해 주세요.` : `<b>${esc(CTX.name)}</b> 학생의 학부모님이 맞으면 시작해 주세요.`}</p>
+      <p class="note">${role === 'student' ? '9문항 · 약 2분' : '10문항 · 약 3분'} · 정답은 없습니다. 있는 그대로 골라 주세요.</p>
+    </div>
+    ${done ? `<p class="disclaimer">${esc(fmtTime(s.at))}에 작성한 ${role === 'student' ? '학생' : '학부모'} 설문(${esc(s.typeName || '')})이 이미 있습니다. 새로 작성하면 ${role === 'student' ? '학생' : '학부모'} 결과만 새 응답으로 바뀌고, ${other} 결과는 그대로 유지됩니다.</p>` : ''}
+    ${keptN ? `<button class="cta full" id="resume">이어서 하기 (${keptN}/${total})<span class="arw">${ARROW}</span></button>` : ''}
+    <button class="${keptN ? 'ghost' : 'cta full'}" id="go" ${keptN ? 'style="margin-top:12px"' : ''}>${keptN ? '처음부터 다시' : done ? '새로 작성하기' : '시작하기'}${keptN ? '' : `<span class="arw">${ARROW}</span>`}</button>
+    ${done ? '<div class="res-actions"><div class="row"><button class="ghost" id="view">기존 결과 보기</button></div></div>' : ''}`);
+  $('#go').addEventListener('click', () => startSurvey(role));
+  if ($('#resume')) $('#resume').addEventListener('click', () => startSurvey(role, { resume:true }));
+  const v = $('#view');
+  if (v) v.addEventListener('click', async () => {
+    v.disabled = true;
+    if (!(await showSavedResult(role))){ v.disabled = false; v.textContent = '저장된 응답을 불러오지 못했습니다'; }
+  });
+}
+/* 저장된 응답으로 결과 화면 다시 보기 (다시 저장하지 않음) */
+async function showSavedResult(role){
+  try {
+    const api = await loadApi();
+    const prof = await api.loadProfile(CTX.session, LINK.cid, role);
+    const list = role === 'student' ? STUDENT_Q : PARENT_Q;
+    if (!prof || !Array.isArray(prof.answerIdx) || prof.answerIdx.length !== list.length) return false;
+    state.role = role;
+    state.answers = prof.answerIdx.map(x => (x === null || x === undefined) ? undefined : x);
+    state.idx = list.length - 1;
+    const s = CTX.record && CTX.record[role + 'Survey'];
+    renderResult({ restored: fmtTime((s && s.at) || prof.completedAt) });
+    return true;
+  } catch(e){ console.error('[저장된 응답 불러오기 실패]', e); return false; }
+}
+function renderGate(){
+  setSteps(0);
+  show(`
+    <p class="eyebrow">ADMIN</p>
+    <h1>관리자 로그인</h1>
+    <p class="lead">상담 기록에 연결된 설문은 관리자 화면에서 시작합니다.<br>관리자 계정으로 로그인해 주세요.</p>
+    <form id="gate" class="card" style="margin-top:22px">
+      <div class="field" style="margin-top:0"><label>관리자 이메일</label><input type="email" id="gEmail" autocomplete="username" required></div>
+      <div class="field"><label>비밀번호</label><input type="password" id="gPw" autocomplete="current-password" required></div>
+      <button class="cta full" id="gBtn" type="submit">로그인<span class="arw">${ARROW}</span></button>
+      <p class="gate-err" id="gErr"></p>
+    </form>`);
+  $('#gate').addEventListener('submit', async e => {
+    e.preventDefault();
+    const b = $('#gBtn'); b.disabled = true; $('#gErr').textContent = '';
+    try { const api = await loadApi(); await api.adminSignIn($('#gEmail').value.trim(), $('#gPw').value); boot(); }
+    catch(x){ $('#gErr').textContent = x.message || '로그인하지 못했습니다.'; b.disabled = false; }
+  });
+}
+
+/* ---------- 10. 단독 결과 → 상담 기록 연결 (관리자 로그인 기기에서만 보임) ----------
+   이름만 같은 기록은 자동 연결하지 않고, 이름·학교·연락처를 확인해 관리자가 직접 고릅니다. */
+const LINKER = { list:null, done:false };
+function renderLinkPanel(){
+  const el = $('#linkPanel');
+  if (!el || !CTX.admin) return;
+  LINKER.done = false;
+  const roleKo = state.role === 'student' ? '학생' : '학부모';
+  el.innerHTML = `
+    <p class="sec-title">관리자 · 상담 기록에 연결</p>
+    <div class="axis link-box">
+      <p class="note" style="margin-top:0">이 ${roleKo} 설문 결과를 상담 기록에 연결합니다. 이름 또는 연락처(4자리 이상)로 찾은 뒤 <b>학교·연락처를 확인해 직접 선택</b>해 주세요. 이름만 같은 기록은 자동으로 연결하지 않습니다.</p>
+      <form class="link-row" id="lkForm"><input id="lkQ" type="search" placeholder="학생 이름 또는 연락처" autocomplete="off"><button class="ghost" type="submit">찾기</button></form>
+      <div class="link-list" id="lkList"></div>
+      <p class="link-msg" id="lkMsg"></p>
+    </div>`;
+  $('#lkForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const q = $('#lkQ').value.trim(), msg = $('#lkMsg'), listEl = $('#lkList');
+    msg.className = 'link-msg'; listEl.innerHTML = '';
+    if (!q){ msg.textContent = '이름 또는 연락처를 입력해 주세요.'; return; }
+    msg.textContent = '찾는 중…';
+    try {
+      const api = await loadApi();
+      if (!LINKER.list) LINKER.list = await api.listRecentConsults(CTX.admin, 400);
+      const dq = api.digits(q);
+      const hits = LINKER.list.filter(d => dq.length >= 4
+        ? (api.digits(d.parentPhone).includes(dq) || api.digits(d.studentPhone).includes(dq))
+        : String(d.studentName || '').replace(/\s/g, '').includes(q.replace(/\s/g, ''))).slice(0, 30);
+      if (!hits.length){ msg.textContent = '일치하는 상담 기록이 없습니다.'; return; }
+      msg.textContent = hits.length > 1 ? `${hits.length}건 — 학교·연락처를 확인해 선택해 주세요.` : '';
+      listEl.innerHTML = hits.map(d => {
+        const s = d[state.role + 'Survey'], has = s && s.status === 'completed';
+        const dt = d.createdAt && d.createdAt.toDate ? d.createdAt.toDate().toLocaleDateString('ko-KR') : '';
+        return `<button type="button" class="link-item" data-id="${esc(d.id)}">
+          <b>${esc(d.studentName || '이름 없음')}</b> · ${esc(d.schoolGrade || '')} · ${esc(d.level ? d.level + '부' : '')} · ${esc(d.branch || '')}
+          <small>학부모 ${esc(d.parentPhone || '-')} · 학생 ${esc(d.studentPhone || '-')} · 접수 ${esc(dt)}</small>
+          ${has ? `<em>이미 ${roleKo} 설문(${esc(s.typeName || '')})이 있음 — 선택하면 새 결과로 바뀝니다</em>` : ''}</button>`;
+      }).join('');
+    } catch(x){ console.error(x); msg.className = 'link-msg err'; msg.textContent = CTX.api ? CTX.api.errorMessage(x, '상담 기록 조회') : '상담 기록을 불러오지 못했습니다.'; }
+  });
+  $('#lkList').addEventListener('click', async e => {
+    const b = e.target.closest('.link-item'); if (!b || LINKER.done) return;
+    const d = (LINKER.list || []).find(x => x.id === b.dataset.id); if (!d) return;
+    const s = d[state.role + 'Survey'], has = s && s.status === 'completed';
+    if (!confirm(`${d.studentName} (${d.schoolGrade || '-'}, 학부모 ${d.parentPhone || '-'}) 상담 기록에 이 ${roleKo} 설문 결과를 연결할까요?${has ? '\n기존 ' + roleKo + ' 결과는 새 결과로 바뀝니다. (다른 쪽 설문 결과는 그대로 유지)' : ''}`)) return;
+    const msg = $('#lkMsg'); msg.className = 'link-msg'; msg.textContent = '연결하는 중…';
+    LINKER.done = true;
+    try {
+      const api = await loadApi();
+      await api.saveSurvey(CTX.admin, d.id, state.role, CTX.lastResult, { source:'standalone-link' });
+      msg.className = 'link-msg ok'; msg.textContent = `✓ ${d.studentName} 학생 상담 기록에 ${roleKo} 설문 결과를 연결했습니다.`;
+      $('#lkList').innerHTML = ''; LINKER.list = null;
+    } catch(x){ LINKER.done = false; console.error(x); msg.className = 'link-msg err'; msg.textContent = CTX.api ? CTX.api.errorMessage(x, '연결') : '연결하지 못했습니다.'; }
+  });
+}
+async function detectAdminForLink(){
+  try { const api = await loadApi(); CTX.admin = await api.detectAdmin(); if (CTX.admin) renderLinkPanel(); } catch(e){}
+}
+
+/* ---------- 11. 시작 ---------- */
+async function boot(){
+  if (!LINK.cid){            // 단독 체험 모드 — 기존 동작 그대로 (저장하지 않음)
+    if (LINK.role === 'student' || LINK.role === 'parent') startSurvey(LINK.role); else renderIntro();
+    detectAdminForLink();
+    return;
+  }
+  let api;
+  try { api = await loadApi(); }
+  catch(e){ console.error(e); return renderFlowError('페이지 구성 요소를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.', boot); }
+  // 이미 마친 상담 (완료 후 새로고침) — 방문자 세션은 종료되었으므로 완료 화면만 표시
+  const p = api.pointer.get(LINK.s);
+  if (isVisitFlow() && p && p.done && p.cid === LINK.cid){ CTX.name = ''; return renderDone({ generic:true }); }
+  renderLoading('상담 기록을 불러오는 중…');
+  let session;
+  try { session = await api.openSession({ allowVisitor: isVisitFlow() }); }
+  catch(e){ console.error(e); return renderFlowError(api.errorMessage(e, '연결'), boot); }
+  if (!session) return renderGate();
+  CTX.session = session;
+  let rec;
+  try { rec = await api.loadConsult(session, LINK.cid); }
+  catch(e){ console.error(e); return renderFlowError(api.errorMessage(e, '상담 기록 불러오기'), boot); }
+  if (!rec) return renderFlowError('상담 기록을 찾을 수 없습니다. 상담신청서부터 다시 진행해 주세요.', null);
+  CTX.record = rec; CTX.name = rec.studentName || '';
+
+  if (isVisitFlow()){
+    api.pointer.set({ cid: LINK.cid }, LINK.s);
+    prefetchVideo();
+    if (rec.parentSurvey && rec.parentSurvey.status === 'completed'){
+      // 이미 완료된 학부모 설문은 처음부터 다시 하지 않고 저장된 결과를 보여줌
+      if (await showSavedResult('parent')) return;
+      return renderSavedSummary(rec);
+    }
+    return startSurvey('parent', { resume:true });
+  }
+  const role = LINK.role === 'student' || LINK.role === 'parent' ? LINK.role : null;
+  if (!role) return renderIntro();
+  renderConfirm(role);
+}
+/* 응답 원본을 다시 그릴 수 없을 때(문항 변경 등) 저장된 요약만 표시 */
+function renderSavedSummary(rec){
+  setSteps(3);
+  const s = rec.parentSurvey || {};
+  show(`<div class="res-head"><p class="eyebrow gold">OBSERVED PROFILE</p>
+      <p class="res-who">${esc(CTX.name)} · 학부모 응답</p>
+      <div class="code">${String(s.code || '').split('').map(c => `<span>${esc(c)}</span>`).join('')}</div>
+      <h1 class="type-name">${esc(s.typeName || '')}</h1>
+      <p class="res-sub">${esc(fmtTime(s.at))}에 저장된 학부모 설문 결과입니다.</p></div>
+    <div class="res-actions">
+      <button class="cta full" id="toVideo">다음 단계로 · 안내 영상<span class="arw">${ARROW}</span></button>
+      <div class="row"><button class="ghost" id="redo">${RETRY}설문 다시 하기</button></div>
+    </div>`);
+  $('#toVideo').addEventListener('click', () => renderVideo());
+  $('#redo').addEventListener('click', () => startSurvey('parent'));
+}
+
+boot();
 </script>
 </body>
 </html>
