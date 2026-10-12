@@ -540,7 +540,7 @@
         "title": "온라인 학습관",
         "url": "www.fanmath.co.kr",
         "headline": "오프라인의 부족함을 채우기 위한 송우찬 수학학원의 온라인 학습 공간",
-        "screenshot": "",
+        "screenshot": "consult-deck/img/online-site.jpg",
         "screenshot2": ""
       }
     },
@@ -558,7 +558,7 @@
             "thumbTop": "2021년도 1학기 기말고사 대비",
             "thumbMain": "필수유형 특강",
             "thumbSub": "[중3]",
-            "image": ""
+            "image": "consult-deck/img/online-1.jpg"
           },
           {
             "title": "내신대비 START 모의테스트 해설 강의",
@@ -566,7 +566,7 @@
             "thumbTop": "내신대비 FINAL",
             "thumbMain": "모의테스트 해설강의",
             "thumbSub": "<중학교 2학년>",
-            "image": ""
+            "image": "consult-deck/img/online-2.jpg"
           },
           {
             "title": "부득이한 결석에 대한 보충 강의",
@@ -574,7 +574,7 @@
             "thumbTop": "송우찬 수학학원",
             "thumbMain": "김용진 선생님",
             "thumbSub": "보충 강의실",
-            "image": ""
+            "image": "consult-deck/img/online-3.jpg"
           }
         ],
         "notes": [
