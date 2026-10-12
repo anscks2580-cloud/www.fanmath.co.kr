@@ -18,6 +18,16 @@
    learningProfiles/{상담ID}_parent , {상담ID}_student  — 설문 응답 전체 (역할별로 따로 보관,
                              같은 문서 ID에 저장하므로 여러 번 저장해도 중복 기록이 생기지 않음)
    consultConfig/video     — 상담 안내 영상 설정 (관리자 페이지에서 등록, 누구나 읽기)
+   consultConfig/lounge    — 상담 라운지(consult-lounge.html) 샘플 강의 구성 (관리자 페이지에서 등록, 누구나 읽기)
+                             { enabled, intro, videos: [{ vimeoId, title, desc, from }] }
+
+   [접속 방식 — 2026.10 변경]
+   · 상담 페이지(consult-visit → learning-profile → consult-lounge)는 링크(QR)로만 들어오며
+     홈페이지·관리자 페이지 어디에도 연결되어 있지 않습니다.
+   · 방문자 화면은 관리자 로그인과 상관없이 항상 '방문자(익명) 세션'으로 저장합니다(visitorOnly).
+     → 관리자 계정이 로그인된 기기에서 열어도 관리자 권한이 상담 화면에 쓰이지 않음
+   · 관리자 세션은 관리자 페이지 안(kiosk=1)에서 원장님이 직접 진행하는 설문에만 사용합니다.
+   · 학생이 함께 온 경우(visitWith='both') 학부모 설문을 마친 같은 휴대폰으로 학생 설문까지 이어서 저장할 수 있습니다.
    ===================================================================== */
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
 import { getAuth, signInAnonymously, signInWithEmailAndPassword, signOut } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
@@ -113,8 +123,9 @@ function withTimeout(p, ms = 20000) {
 }
 
 /* ── 세션 ─────────────────────────────────────────────────────
-   1) 이 기기 브라우저에 관리자 로그인이 되어 있으면 관리자 권한으로 저장 (태블릿 키오스크·학생 설문)
-   2) 아니면 별도 앱 이름의 익명 세션으로 저장 (QR로 접속한 학부모 휴대폰)
+   1) visitorOnly 가 아니고 이 기기 브라우저에 관리자 로그인이 되어 있으면 관리자 권한으로 저장
+      (관리자 페이지 안에서 원장님이 직접 진행하는 설문: kiosk=1)
+   2) 그 외에는 별도 앱 이름의 익명 세션으로 저장 (QR·링크로 접속한 상담 방문자)
       → 기본 앱의 관리자/학생 로그인과 섞이지 않음 */
 const VISITOR_APP = 'swcConsultVisitor';
 function defaultApp() { return getApps().find(a => a.name === '[DEFAULT]') || initializeApp(FIREBASE_CONFIG); }
@@ -142,9 +153,11 @@ export async function adminSignIn(email, password) {
   return s;
 }
 
-export async function openSession({ allowVisitor = true } = {}) {
-  const admin = await detectAdmin();
-  if (admin) return admin;
+export async function openSession({ allowVisitor = true, visitorOnly = false } = {}) {
+  if (!visitorOnly) {
+    const admin = await detectAdmin();
+    if (admin) return admin;
+  }
   if (!allowVisitor) return null;
   const app = visitorApp();
   const auth = getAuth(app);
@@ -243,7 +256,7 @@ export async function saveConsultForm(session, cid, form, meta = {}) {
    학부모·학생 결과는 서로 다른 필드·문서에 저장되므로 덮어쓰거나 합치지 않습니다. */
 export async function saveSurvey(session, cid, role, r, { source } = {}) {
   if (role !== 'parent' && role !== 'student') throw new FlowError('unknown', '알 수 없는 설문 구분입니다.');
-  if (role === 'student' && session.mode !== 'admin') throw new FlowError('permission', '학생 설문은 관리자 화면에서 시작해 주세요.');
+  // 학생 설문: 관리자 화면에서 시작하거나, 방문자 본인 상담 기록(같은 휴대폰)에서 이어서 진행 — 권한은 보안 규칙에서 확인
   const record = await loadConsult(session, cid);
   if (!record) throw new FlowError('not-found', '상담 기록을 찾을 수 없습니다.');
   const now = serverTimestamp();
@@ -321,6 +334,28 @@ export function parseVideoSource(cfg) {
   m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/))([\w-]{11})/i);
   if (m) return { ...base, kind: 'youtube', id: m[1] };
   return { ...base, kind: 'file', url };
+}
+
+/* ── 상담 라운지(샘플 강의) 설정 ─────────────────────────────────
+   로그인 없이 읽는 공개 설정이므로 별도 앱 이름으로 열어 다른 로그인 상태와 섞지 않습니다. */
+const LOUNGE_APP = 'swcConsultLounge';
+export async function loadLoungeConfig() {
+  const app = getApps().find(a => a.name === LOUNGE_APP) || initializeApp(FIREBASE_CONFIG, LOUNGE_APP);
+  try {
+    const snap = await withTimeout(getDoc(doc(getFirestore(app), 'consultConfig', 'lounge')), 12000);
+    return normalizeLounge(snap.exists() ? snap.data() : null);
+  } catch (e) { throw toFlowError(e); }
+}
+export function normalizeLounge(cfg) {
+  const videos = (cfg && Array.isArray(cfg.videos) ? cfg.videos : [])
+    .map(v => ({
+      vimeoId: String((v && v.vimeoId) || '').replace(/\D/g, ''),
+      title: String((v && v.title) || '').slice(0, 80),
+      desc: String((v && v.desc) || '').slice(0, 200),
+      from: String((v && v.from) || '')
+    }))
+    .filter(v => v.vimeoId);
+  return { enabled: !!cfg && cfg.enabled !== false, intro: String((cfg && cfg.intro) || '').slice(0, 300), videos };
 }
 
 /* ── 관리자 목록·통합 화면용 상태 요약 ──────────────────────────

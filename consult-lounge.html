@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#F4F0E8">
+<title>수업 미리보기 | 송우찬수학학원</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap">
+<!-- =====================================================================
+     consult-lounge.html — 상담 라운지 (샘플 강의 · 상담자료 다시 보기)
+     · 상담 방문자가 원장님을 기다리는 동안 보는 화면. 링크(QR)로만 들어오며
+       홈페이지·관리자 페이지 어디에도 연결되어 있지 않고, 이 화면에서도 밖으로 나가는 링크가 없습니다.
+     · 로그인 없이 동작: 관리자 페이지 [상담 신청 → 샘플 강의 구성]에서 고른 영상만
+       consultConfig/lounge 에서 읽어 보여줍니다. (학생용 강의 목록 videos 컬렉션은 읽지 않음)
+     · ?embed=1 : 상담 준비 완료 화면(learning-profile.html) 안에서 열린 경우 → [돌아가기] 표시
+     · ?b=평촌관|산본관 : 지점 표시
+     ===================================================================== -->
+<style>
+:root{
+  --bg:#F4F0E8; --paper:#FBF9F4; --ink:#1E1733; --ink-2:#5A5370; --ink-3:#8E879E;
+  --line:rgba(37,28,64,.12); --hair:rgba(37,28,64,.08);
+  --purple:#2D2350; --purple-deep:#251C40; --purple-soft:#6B5A9E;
+  --gold:#C9A24A; --gold-bright:#F0C040;
+  --ease:cubic-bezier(.2,.7,.2,1);
+  --serif:'Cormorant Garamond','Times New Roman',serif;
+  --sans:'Pretendard Variable',Pretendard,-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Noto Sans KR',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:100vh;min-height:100svh;-webkit-font-smoothing:antialiased;word-break:keep-all;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(800px 800px at 100% -10%,rgba(107,90,158,.12),transparent 60%),radial-gradient(700px 700px at -10% 110%,rgba(201,162,74,.14),transparent 60%)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:2px solid var(--purple-soft);outline-offset:3px}
+[hidden]{display:none!important}
+
+.top{position:relative;z-index:2;display:flex;align-items:center;gap:12px;padding:calc(18px + env(safe-area-inset-top)) clamp(20px,4vw,48px) 18px}
+.brand{display:flex;align-items:center;gap:9px;font-size:15px;letter-spacing:-.02em;min-width:0}
+.brand img{width:30px;height:30px;object-fit:contain;flex:none}
+.brand b{font-weight:800;white-space:nowrap}.brand span{color:var(--ink-2);font-weight:500;white-space:nowrap}
+.top-tag{margin-left:auto;font-family:var(--serif);font-style:italic;color:var(--ink-3);font-size:15px;white-space:nowrap}
+.back{margin-left:auto;display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 16px 0 12px;border-radius:999px;border:1px solid var(--line);background:rgba(251,249,244,.85);font-size:14px;font-weight:700;color:var(--ink-2);flex:none}
+.back svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+body.embed .top-tag{display:none}
+
+.wrap{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:8px 20px calc(56px + env(safe-area-inset-bottom))}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:12px;font-weight:700;letter-spacing:.26em;color:var(--purple-soft)}
+.eyebrow::before{content:"";width:18px;height:1px;background:currentColor;opacity:.5}
+h1{margin-top:16px;font-size:clamp(28px,6vw,42px);font-weight:800;letter-spacing:-.045em;line-height:1.3}
+h1 em{font-style:normal;color:var(--purple);background:linear-gradient(transparent 64%,rgba(201,162,74,.3) 64%,rgba(201,162,74,.3) 92%,transparent 92%)}
+.lead{margin-top:14px;font-size:16px;line-height:1.75;color:var(--ink-2);max-width:620px;white-space:pre-line}
+.hero{animation:in .6s var(--ease)}
+@keyframes in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.sec{margin-top:40px}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.sec-head p{font-size:12px;font-weight:700;letter-spacing:.24em;color:var(--gold)}
+.sec-head span{font-size:13px;color:var(--ink-3)}
+
+.vlist{margin-top:18px;display:grid;grid-template-columns:1fr;gap:18px}
+@media (min-width:720px){.vlist{grid-template-columns:1fr 1fr;gap:22px}}
+.vcard{display:flex;flex-direction:column;justify-content:flex-start;width:100%;text-align:left;border-radius:22px;background:var(--paper);border:1px solid var(--line);overflow:hidden;box-shadow:0 12px 30px -24px rgba(37,28,64,.45);transition:transform .35s var(--ease),box-shadow .35s var(--ease),border-color .35s;animation:in .6s var(--ease) both}
+@media (hover:hover){.vcard:hover{transform:translateY(-3px);border-color:rgba(45,35,80,.32);box-shadow:0 22px 40px -26px rgba(37,28,64,.55)}}
+.vcard:active{transform:scale(.985)}
+.thumb{position:relative;display:block;aspect-ratio:16/9;background:linear-gradient(135deg,#2D2350 0%,#3F3270 55%,#6B5A9E 100%);overflow:hidden}
+.thumb img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .5s}
+.thumb img.on{opacity:1}
+.thumb::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,transparent 45%,rgba(20,14,38,.55))}
+.thumb .no{position:absolute;left:18px;top:12px;z-index:1;font-family:var(--serif);font-size:30px;line-height:1;color:rgba(255,255,255,.92);text-shadow:0 2px 12px rgba(0,0,0,.25)}
+.thumb .play{position:absolute;right:16px;bottom:14px;z-index:1;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:var(--gold-bright);color:var(--purple-deep);box-shadow:0 10px 24px -8px rgba(0,0,0,.45);transition:transform .35s var(--ease)}
+.thumb .play svg{width:18px;height:18px;fill:currentColor;margin-left:3px}
+@media (hover:hover){.vcard:hover .play{transform:scale(1.08)}}
+.thumb .dur{position:absolute;left:18px;bottom:16px;z-index:1;font-size:12px;font-weight:700;color:#fff;padding:4px 9px;border-radius:999px;background:rgba(20,14,38,.5)}
+.vbody{display:block;padding:16px 18px 18px}
+.vbody b{display:block;font-size:17px;font-weight:800;letter-spacing:-.03em;line-height:1.45}
+.vbody p{margin-top:6px;font-size:14px;line-height:1.6;color:var(--ink-2)}
+
+.skel{border-radius:22px;background:var(--paper);border:1px solid var(--hair);overflow:hidden}
+.skel i{display:block;aspect-ratio:16/9;background:linear-gradient(90deg,rgba(37,28,64,.06),rgba(37,28,64,.11),rgba(37,28,64,.06));background-size:200% 100%;animation:sh 1.4s linear infinite}
+.skel u{display:block;height:16px;margin:18px;border-radius:8px;width:60%;background:rgba(37,28,64,.07)}
+@keyframes sh{to{background-position:-200% 0}}
+.empty{margin-top:18px;padding:26px 22px;border-radius:20px;border:1px dashed rgba(37,28,64,.2);text-align:center;font-size:14.5px;line-height:1.7;color:var(--ink-3)}
+
+.deck-card{margin-top:18px;display:flex;align-items:center;gap:18px;width:100%;text-align:left;padding:22px;border-radius:22px;background:var(--purple-deep);color:#F4F0E8;box-shadow:0 18px 36px -22px rgba(37,28,64,.8);transition:transform .35s var(--ease)}
+@media (hover:hover){.deck-card:hover{transform:translateY(-2px)}}
+.deck-card:active{transform:scale(.985)}
+.deck-card .ic{flex:none;width:54px;height:54px;border-radius:16px;display:grid;place-items:center;background:rgba(240,192,64,.14);color:var(--gold-bright)}
+.deck-card .ic svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8}
+.deck-card b{display:block;font-size:17px;font-weight:800;letter-spacing:-.03em}
+.deck-card small{display:block;margin-top:4px;font-size:13.5px;line-height:1.55;color:rgba(244,240,232,.7)}
+.deck-card .arw{margin-left:auto;flex:none;width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:rgba(240,192,64,.16);color:var(--gold-bright)}
+.deck-card .arw svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:2}
+
+.foot{text-align:center;margin-top:48px;font-size:11px;letter-spacing:.2em;color:var(--ink-3)}
+
+/* 영상 재생 */
+.player{position:fixed;inset:0;z-index:60;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:calc(64px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));background:rgba(14,10,28,.92);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);animation:fade .3s var(--ease)}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.player .frame{position:relative;width:min(100%,1100px,calc((100svh - 220px) * 16 / 9));aspect-ratio:16/9;border-radius:14px;overflow:hidden;background:#000;box-shadow:0 30px 80px -30px rgba(0,0,0,.8)}
+.player iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.player .meta{width:min(100%,1100px,calc((100svh - 220px) * 16 / 9));margin-top:16px;color:#F0EDF8}
+.player .meta b{display:block;font-size:17px;font-weight:800;letter-spacing:-.03em;line-height:1.45}
+.player .meta p{margin-top:6px;font-size:14px;line-height:1.6;color:rgba(240,237,248,.7)}
+.player .nav{display:flex;gap:8px;margin-top:14px}
+.player .nav button{height:40px;padding:0 16px;border-radius:999px;border:1px solid rgba(240,237,248,.22);color:#F0EDF8;font-size:13.5px;font-weight:700}
+.player .nav button:disabled{opacity:.3;cursor:default}
+.x{position:fixed;top:calc(14px + env(safe-area-inset-top));right:14px;z-index:61;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:rgba(240,237,248,.12);color:#F0EDF8;border:1px solid rgba(240,237,248,.2)}
+.x svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2}
+body.lock{overflow:hidden}
+
+/* 상담자료 (consult-intro.html) — learning-profile.html 과 같은 방식: 세로 휴대폰은 화면을 돌려서 표시 */
+.deck-full{position:fixed;inset:0;z-index:60;background:#0E0A1C}
+.deck-full iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
+.deck-full .x{position:absolute}
+.deck-rotate{display:none;position:absolute;left:50%;top:calc(14px + env(safe-area-inset-top));transform:translateX(-50%);z-index:3;padding:9px 16px;border-radius:999px;background:rgba(26,18,48,.85);color:#F0EDF8;font-size:13px;font-weight:600;white-space:nowrap;pointer-events:none;transition:opacity .6s}
+@media (orientation:portrait) and (max-width:700px){
+  .deck-rotate{display:block}
+  .deck-full iframe{inset:auto;top:50%;left:50%;width:100vh;height:100vw;transform:translate(-50%,-50%) rotate(90deg)}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="brand"><img src="assets/logo-watermark.png" alt="" onerror="this.style.display='none'"><b>송우찬수학학원</b><span id="branch">평촌관</span></div>
+  <div class="top-tag">Lounge</div>
+  <button class="back" id="back" type="button" hidden><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg>돌아가기</button>
+</header>
+
+<main class="wrap">
+  <section class="hero">
+    <p class="eyebrow">WHILE YOU WAIT</p>
+    <h1>상담 전에<br><em>실제 수업</em>을 먼저 만나보세요</h1>
+    <p class="lead" id="intro">원장님이 오시기 전까지 송우찬수학학원의 실제 강의 영상과 상담자료를 편하게 둘러보세요.</p>
+  </section>
+
+  <section class="sec" id="lecSec">
+    <div class="sec-head"><p>SAMPLE LECTURES</p><span id="lecCount">샘플 강의</span></div>
+    <div class="vlist" id="vlist">
+      <div class="skel"><i></i><u></u></div>
+      <div class="skel"><i></i><u></u></div>
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><p>CONSULTING DECK</p><span>상담자료</span></div>
+    <button class="deck-card" id="openDeck" type="button">
+      <span class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="13" rx="2"/><path d="M8 21h8M12 17v4M10 8.5v5l4-2.5z"/></svg></span>
+      <span><b>상담자료 다시 보기</b><small>프로그램 · 교재 · 관리 시스템을 한 번에 소개합니다</small></span>
+      <span class="arw"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+    </button>
+  </section>
+
+  <p class="foot" id="foot">SONG WOOCHAN MATH · 평촌관</p>
+</main>
+
+<div class="player" id="player" hidden role="dialog" aria-modal="true" aria-label="강의 영상">
+  <button class="x" id="pClose" type="button" aria-label="닫기"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <div class="frame" id="pFrame"></div>
+  <div class="meta">
+    <b id="pTitle"></b><p id="pDesc"></p>
+    <div class="nav"><button type="button" id="pPrev">이전 강의</button><button type="button" id="pNext">다음 강의</button></div>
+  </div>
+</div>
+
+<div class="deck-full" id="deck" hidden role="dialog" aria-modal="true" aria-label="상담자료">
+  <button class="x" id="dClose" type="button" aria-label="닫기"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  <p class="deck-rotate" id="dRotate">휴대폰을 가로로 돌려서 봐 주세요</p>
+</div>
+
+<script type="module">
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const PARAMS = new URLSearchParams(location.search);
+const EMBED = PARAMS.get('embed') === '1' && window.parent !== window;
+const BRANCH = ['평촌관', '산본관'].includes(PARAMS.get('b')) ? PARAMS.get('b') : '평촌관';
+const PLAY = '<svg viewBox="0 0 24 24"><path d="M7 4.5v15l13-7.5z"/></svg>';
+
+$('#branch').textContent = BRANCH;
+$('#foot').textContent = 'SONG WOOCHAN MATH · ' + BRANCH;
+if (EMBED) {
+  document.body.classList.add('embed');
+  $('#back').hidden = false;
+  $('#back').addEventListener('click', () => {
+    try { window.parent.postMessage({ type: 'swc-lounge', event: 'close' }, location.origin); } catch (e) {}
+  });
+}
+
+/* ── 샘플 강의 목록 ── */
+let VIDEOS = [];
+let current = -1;
+
+function fmtDur(sec) {
+  sec = Math.round(Number(sec) || 0);
+  if (!sec) return '';
+  const m = Math.floor(sec / 60), s = sec % 60;
+  return m >= 60 ? `${Math.floor(m / 60)}시간 ${m % 60}분` : `${m}:${String(s).padStart(2, '0')}`;
+}
+
+function renderList() {
+  const box = $('#vlist');
+  if (!VIDEOS.length) {
+    box.outerHTML = '<div class="empty" id="vlist">샘플 강의를 준비하고 있습니다.<br>아래 상담자료를 먼저 둘러봐 주세요.</div>';
+    $('#lecCount').textContent = '준비 중';
+    return;
+  }
+  $('#lecCount').textContent = `샘플 강의 ${VIDEOS.length}편`;
+  box.innerHTML = VIDEOS.map((v, i) => `
+    <button class="vcard" type="button" data-i="${i}" style="animation-delay:${Math.min(i, 6) * 70}ms">
+      <span class="thumb"><img alt="" data-thumb="${esc(v.vimeoId)}"><span class="no">${String(i + 1).padStart(2, '0')}</span><span class="dur" hidden></span><span class="play">${PLAY}</span></span>
+      <span class="vbody"><b>${esc(v.title || '샘플 강의')}</b>${v.desc ? `<p>${esc(v.desc)}</p>` : ''}</span>
+    </button>`).join('');
+  box.querySelectorAll('.vcard').forEach(b => b.addEventListener('click', () => openPlayer(Number(b.dataset.i))));
+  VIDEOS.forEach((v, i) => loadThumb(v, box.querySelector(`[data-i="${i}"]`)));
+}
+
+/* 썸네일: Vimeo oEmbed (실패하면 기본 배경 그대로) */
+async function loadThumb(v, card) {
+  try {
+    const r = await fetch(`https://vimeo.com/api/oembed.json?url=${encodeURIComponent('https://vimeo.com/' + v.vimeoId)}&width=960`);
+    if (!r.ok) return;
+    const j = await r.json();
+    const img = card.querySelector('img');
+    if (j.thumbnail_url) {
+      img.onload = () => img.classList.add('on');
+      img.src = j.thumbnail_url.replace(/_\d+x\d+/, '_960x540');
+    }
+    const d = fmtDur(j.duration);
+    if (d) { const el = card.querySelector('.dur'); el.textContent = d; el.hidden = false; }
+  } catch (e) {}
+}
+
+/* ── 영상 재생 ── */
+function openPlayer(i) {
+  const v = VIDEOS[i]; if (!v) return;
+  current = i;
+  const src = `https://player.vimeo.com/video/${encodeURIComponent(v.vimeoId)}?autoplay=1&title=0&byline=0&portrait=0&playsinline=1&dnt=1`;
+  $('#pFrame').innerHTML = `<iframe src="${src}" title="${esc(v.title)}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+  $('#pTitle').textContent = v.title || '샘플 강의';
+  $('#pDesc').textContent = v.desc || '';
+  $('#pPrev').disabled = i <= 0;
+  $('#pNext').disabled = i >= VIDEOS.length - 1;
+  $('#player').hidden = false;
+  document.body.classList.add('lock');
+}
+function closePlayer() {
+  $('#pFrame').innerHTML = '';
+  $('#player').hidden = true;
+  current = -1;
+  if ($('#deck').hidden) document.body.classList.remove('lock');
+}
+$('#pClose').addEventListener('click', closePlayer);
+$('#pPrev').addEventListener('click', () => openPlayer(current - 1));
+$('#pNext').addEventListener('click', () => openPlayer(current + 1));
+$('#player').addEventListener('click', e => { if (e.target.id === 'player') closePlayer(); });
+
+/* ── 상담자료 (consult-intro.html: 표지 → [시작하기]) ── */
+let rotTimer = null;
+function openDeck() {
+  const box = $('#deck');
+  box.querySelector('iframe')?.remove();
+  const f = document.createElement('iframe');
+  f.title = '송우찬수학학원 상담자료';
+  f.allow = 'autoplay; fullscreen';
+  f.src = 'consult-intro.html';
+  box.prepend(f);
+  box.hidden = false;
+  document.body.classList.add('lock');
+  const r = $('#dRotate'); r.style.opacity = '1';
+  clearTimeout(rotTimer); rotTimer = setTimeout(() => { r.style.opacity = '0'; }, 6000);
+}
+function closeDeck() {
+  const box = $('#deck');
+  box.querySelector('iframe')?.remove();
+  box.hidden = true;
+  if ($('#player').hidden) document.body.classList.remove('lock');
+}
+$('#openDeck').addEventListener('click', openDeck);
+$('#dClose').addEventListener('click', closeDeck);
+
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  if (!$('#player').hidden) closePlayer(); else if (!$('#deck').hidden) closeDeck();
+});
+
+/* ── 설정 불러오기 ── */
+(async function boot() {
+  try {
+    const api = await import('./consult-flow.js');
+    const cfg = await api.loadLoungeConfig();
+    if (cfg.intro) $('#intro').textContent = cfg.intro;
+    VIDEOS = cfg.enabled ? cfg.videos : [];
+  } catch (e) {
+    console.error('[상담 라운지 설정 불러오기 실패]', e);
+    VIDEOS = [];
+  }
+  renderList();
+})();
+</script>
+</body>
+</html>

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
-<meta name="robots" content="noindex">
+<meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#f7f5f0">
 <title>상담지 작성 | 송우찬 수학학원</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
@@ -89,6 +89,8 @@ body {
 .done .ic { font-size:58px; margin-bottom:16px; }
 .done h2 { font-size:24px; font-weight:800; margin:0 0 12px; }
 .done p { font-size:15px; color:#7a7466; line-height:1.7; margin:0; }
+.done .lounge { display:block; width:100%; max-width:340px; margin:30px auto 0; font-size:16px; font-weight:800; padding:17px 22px; border-radius:100px; border:0; background:#251C40; color:#F4F0E8; text-decoration:none; font-family:inherit; box-shadow:0 14px 30px -14px rgba(37,28,64,.7); }
+.done .lounge + .again { margin-top:14px; }
 .done .again { margin-top:34px; font-size:14px; font-weight:700; padding:13px 22px; border-radius:100px; border:1.5px solid #d9d3c5; background:#fff; color:#7a7466; font-family:inherit; }
 
 /* 진행 단계 표시 */
@@ -296,6 +298,7 @@ body.kiosk .hello h2 { font-size:26px; }
   <div class="ic">🎉</div>
   <h2 id="doneTitle">전송이 완료되었습니다!</h2>
   <p id="doneText">작성해 주셔서 감사합니다.<br>잠시 후 선생님께서 상담을 도와드리겠습니다.</p>
+  <a class="lounge" id="loungeBtn" href="consult-lounge.html">기다리시는 동안 · 수업 미리보기</a>
   <button type="button" class="again" id="againBtn">다른 자녀 상담지 추가 작성</button>
 </div>
 
@@ -320,6 +323,7 @@ const qrSession = (params.get('s') || '').slice(0, 40).replace(/[^\w-]/g, '');
 const KIOSK = params.get('kiosk') === '1';                     // 관리자 페이지 '태블릿 상담지' 안에서 열린 경우
 const SRC = params.get('src') === 'tablet' ? 'tablet' : 'qr';
 if (KIOSK) document.body.classList.add('kiosk');
+document.getElementById('loungeBtn').href = 'consult-lounge.html?b=' + encodeURIComponent(initBranch);
 
 const $ = (id) => document.getElementById(id);
 const sel = (id) => [...document.querySelectorAll(`#${id} .chip.on`)].map(b => b.dataset.v);
@@ -498,7 +502,8 @@ function showDone(kind) {
 /* ── 상담 진행 (consult-flow.js) ── */
 let F = null, session = null, currentCid = null, busy = false;
 async function flow() { if (!F) F = await import('./consult-flow.js'); return F; }
-async function sess() { const f = await flow(); if (!session) session = await f.openSession({ allowVisitor: true }); return session; }
+// 관리자 페이지 안(KIOSK)이 아니면 항상 방문자 세션 — 관리자 로그인된 기기에서 열어도 관리자 권한을 쓰지 않음
+async function sess() { const f = await flow(); if (!session) session = await f.openSession({ allowVisitor: true, visitorOnly: !KIOSK }); return session; }
 const notifyParent = (event, extra = {}) => { try { if (window.parent !== window) window.parent.postMessage({ type: 'swc-consult', event, ...extra }, location.origin); } catch(e) {} };
 
 function passParams() {
