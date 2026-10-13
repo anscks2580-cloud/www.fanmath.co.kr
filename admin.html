@@ -9982,7 +9982,7 @@ function ciCardHtml(d, prof, CF) {
         <div class="info">${rows.map((r) => `<div class="${r[2] || ''}"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('')}</div>
       </div>
       ${surveys || '<div class="sec"><div class="st"><i></i>학습 성향 설문 결과</div><p class="none">아직 진행한 설문이 없습니다.</p></div>'}
-      <p class="ft">설문 결과는 응답하신 실제 학습 행동을 바탕으로 정리한 <b>상담 참고 자료</b>이며 심리검사가 아닙니다.<br>송우찬수학학원 ${e(d.branch || '평촌관')} · 031-386-8899</p>
+      <p class="ft">설문 결과는 응답하신 실제 학습 행동을 바탕으로 정리한 <b>상담 참고 자료</b>이며 심리검사가 아닙니다.<br>송우찬수학학원 ${e(d.branch || '평촌관')} · ${String(d.branch || '').includes('산본') ? '031-346-8899' : '031-386-8899'}</p>
     </div>
   </div>`;
 }
