@@ -318,6 +318,25 @@ body.on-dark .nb .hint em{color:var(--night)}
 /* 04 클리닉 */
 .cmp{display:flex;align-items:center;gap:clamp(12px,1.6vw,22px);margin:clamp(14px,3vh,30px) 0 0}
 .cmp span{font-size:clamp(26px,min(3vw,5vh),44px);font-weight:800;letter-spacing:-.04em}
+/* 04-A: 헤드라인은 본문과 비슷한 크기, '소수정예 ≠ 맞춤식 수업'은 아래에 크게 */
+.cw-hl{font-size:calc(var(--fs-body) * 1.12);font-weight:700;color:var(--ink);line-height:1.6}
+.cw-hl+.cw-hl{margin-top:clamp(8px,1.4vh,14px)}
+.cw-big{margin-top:auto;padding-top:clamp(22px,4vh,44px);display:flex;flex-direction:column;align-items:center;text-align:center}
+.cw-sub{font-size:var(--fs-h2);font-weight:850;letter-spacing:-.035em;line-height:1.25;color:var(--ink)}
+.cmp.big{margin-top:clamp(12px,2.4vh,24px);justify-content:center}
+.cmp.big span{font-size:clamp(34px,min(4.4vw,7vh),68px)}
+.cmp.big .eq{width:clamp(50px,5.4vw,80px);height:clamp(50px,5.4vw,80px)}
+.cols.nos{flex:1 0 auto}
+/* 06-A: 따옴표 강조 문구 */
+.mw-quote{margin-top:auto;padding-top:clamp(22px,4vh,44px);text-align:center;font-size:clamp(30px,min(3.9vw,6.6vh),60px);font-weight:850;letter-spacing:-.04em;line-height:1.3;color:var(--ink)}
+/* 06-C: 실시 공고 사진 */
+.nt-img{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;margin-top:clamp(6px,1.6vh,16px)}
+.nt-img figure{max-width:min(100%,980px);width:100%}
+.nt-img img{max-height:calc(100vh - var(--top) - var(--bottom) - 170px);width:auto;max-width:100%;margin:0 auto}
+/* 07-A: 학업성취도·월말보고서 사진 */
+.cad-img{position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#fff;cursor:zoom-in}
+.cad-img img{display:block;width:100%;height:auto;max-height:calc((100vh - var(--top) - var(--bottom)) * .3);object-fit:contain;background:#fff}
+.contact span.ph.br{flex:0 0 100%}
 .cmp .eq{position:relative;width:clamp(40px,4vw,60px);height:clamp(40px,4vw,60px);display:grid;place-items:center}
 .cmp .eq i{position:absolute;left:12%;right:12%;height:4px;border-radius:2px;background:var(--ink)}
 .cmp .eq i:nth-child(1){top:36%}.cmp .eq i:nth-child(2){bottom:36%}
@@ -337,7 +356,7 @@ body.on-dark .nb .hint em{color:var(--night)}
 
 /* 05 내신대비 */
 .kw{position:relative;display:grid;place-items:center;height:100%;min-height:200px}
-.kw b{font-size:clamp(130px,min(19vw,32vh),300px);font-weight:900;letter-spacing:-.06em;line-height:1;color:transparent;
+.kw b{font-size:clamp(130px,min(19vw,32vh),300px);font-weight:900;letter-spacing:-.06em;line-height:1;color:var(--gold);
   -webkit-text-stroke:2px var(--gold-deep)}
 .kw small{position:absolute;bottom:8%;font-size:var(--fs-lead);font-weight:700;color:var(--ink)}
 .proc{display:grid;grid-template-columns:repeat(4,1fr);gap:0;position:relative;margin-top:clamp(10px,3vh,30px)}
@@ -814,12 +833,12 @@ const R = {
   'clinic-why': { render(d, ctx) {
     const hl = d.headline || [], P = d.paragraphs || [];
     return `<div class="scene-inner">${secHead(ctx, true, d.titleEn)}
-      <div class="cols c46" style="margin-top:clamp(10px,2.6vh,26px)">
-        <div>${hl.map((l, i) => `<p ${rvc('lead', 0, 'rise', 200 + i * 220)}>${T(l)}</p>`).join('')}
-          <div ${rv(1, 'rise')} style="margin-top:clamp(24px,5vh,50px)"><div style="font-size:var(--fs-lead);font-weight:800;letter-spacing:-.03em;color:var(--ink)">${T(d.subtitle)}</div>
-          <div class="cmp" id="cmp"><span class="l">${esc(d.compareLeft)}</span><span class="eq"><i></i><i></i><b></b></span><span>${esc(d.compareRight)}</span></div></div></div>
+      <div class="cols c46 nos" style="margin-top:clamp(10px,2.6vh,26px)">
+        <div>${hl.map((l, i) => `<p ${rvc('lead cw-hl', 0, 'rise', 200 + i * 220)}>${T(l)}</p>`).join('')}</div>
         <div>${P.map((p, i) => `<p ${rvc('para body', i < 2 ? 2 : 3)} style="--d:${i === 1 ? 250 : 0}ms">${T(p)}</p>`).join('')}</div>
-      </div></div>`;
+      </div>
+      <div ${rvc('cw-big', 1, 'rise')}><div class="cw-sub">${T(d.subtitle)}</div>
+        <div class="cmp big" id="cmp"><span class="l">${esc(d.compareLeft)}</span><span class="eq"><i></i><i></i><b></b></span><span>${esc(d.compareRight)}</span></div></div></div>`;
   }, hook(el, n) { $('#cmp', el)?.classList.toggle('neq', n >= 2); }},
 
   /* ── 04-B 클리닉 흐름 ── */
@@ -869,11 +888,11 @@ const R = {
   'mock-why': { render(d, ctx) {
     const hl = d.headline || [];
     return `<div class="scene-inner">${secHead(ctx, true)}
-      <div class="cols c46" style="margin-top:clamp(10px,2.4vh,24px)">
-        <div>${hl.map((l, i) => `<p ${rvc('lead', 0, 'rise', 200 + i * 220)}>${T(l)}</p>`).join('')}
-          <p ${rvc('', 1, 'left')} style="margin-top:clamp(24px,5vh,50px);font-size:var(--fs-h2);font-weight:800;letter-spacing:-.035em;line-height:1.25">${T(d.subtitle)}</p></div>
+      <div class="cols c46 nos" style="margin-top:clamp(10px,2.4vh,24px)">
+        <div>${hl.map((l, i) => `<p ${rvc('lead', 0, 'rise', 200 + i * 220)}>${T(l)}</p>`).join('')}</div>
         <div>${paras(d.paragraphs, 2)}</div>
-      </div></div>`;
+      </div>
+      <p ${rvc('mw-quote', 1, 'rise')}>${T(d.subtitle)}</p></div>`;
   }},
 
   /* ── 06-B 모의테스트 일정 ── */
@@ -894,6 +913,8 @@ const R = {
 
   /* ── 06-C 실시 공고 ── */
   'mock-notice': { render(d, ctx) {
+    if (d.image) return `<div class="scene-inner">${secHead(ctx)}<h2 ${rvc('st', 0, 'rise', 60)}>${esc(d.title || '')}</h2>
+      <div class="nt-img">${figure(d.image, d.imageCaption, 0, 'rise', 150)}</div></div>`;
     const bank = +d.bankPercent || 70;
     return `<div class="scene-inner">${secHead(ctx)}<h2 ${rvc('st', 0, 'rise', 60)}>${esc(d.title || '')}</h2>
       <div class="cols c46 mid" style="flex:1">
@@ -913,14 +934,15 @@ const R = {
 
   /* ── 07-A 학습상황 파악 ── */
   'report-why': { render(d, ctx) {
+    const cadImg = (src, cap) => `<div class="cad-img"><img class="zoomable" src="${esc(src)}" data-zoom="${esc(src)}" data-cap="${esc(cap || '')}" alt="${esc(cap || '')}" loading="lazy">${ZOOM_ICON}</div>`;
     const chips = a => (a || []).map((t, i) => `<span class="rv" data-s="3" data-a="scale" style="--d:${300 + i * 90}ms">${esc(t)}</span>`).join('');
     return `<div class="scene-inner">${secHead(ctx, true)}
       <div class="cols c46" style="margin-top:clamp(6px,2vh,20px)">
         <div><p ${rvc('lead', 0, 'rise', 200)} style="font-size:var(--fs-h2);font-weight:800;color:var(--ink);line-height:1.25">${T(d.subtitle)}</p>
           <p ${rvc('para body gap-m', 1)}>${T(d.problem)}</p><p ${rvc('para body', 2)}>${T(d.answer)}</p></div>
         <div>
-          <div ${rvc('cad', 3, 'rise')}><div class="ch"><b>${esc(d.weeklyLabel)}</b><span>${esc(d.weeklyCadence)}</span></div><div class="its">${chips(d.weeklyItems)}</div></div>
-          <div ${rvc('cad', 3, 'rise', 200)}><div class="ch"><b>${esc(d.monthlyLabel)}</b><span>${esc(d.monthlyCadence)}</span></div><div class="its">${chips(d.monthlyItems)}</div></div>
+          <div ${rvc('cad', 3, 'rise')}><div class="ch"><b>${esc(d.weeklyLabel)}</b><span>${esc(d.weeklyCadence)}</span></div>${d.weeklyImage ? cadImg(d.weeklyImage, d.weeklyLabel) : `<div class="its">${chips(d.weeklyItems)}</div>`}</div>
+          <div ${rvc('cad', 3, 'rise', 200)}><div class="ch"><b>${esc(d.monthlyLabel)}</b><span>${esc(d.monthlyCadence)}</span></div>${d.monthlyImage ? cadImg(d.monthlyImage, d.monthlyLabel) : `<div class="its">${chips(d.monthlyItems)}</div>`}</div>
           <p ${rvc('para body gap-m', 4)}>${T(d.closing)}</p>
         </div></div></div>`;
   }},
@@ -942,7 +964,7 @@ const R = {
           <span ${rvc('wb-tag', 0, 'fade', 400)}>${esc(d.bannerTag)}</span>
           <p ${rvc('wb-q', 2, 'rise')}>${esc(d.question)}</p>
           <ul class="wb-pts">${(d.points || []).map((p, i) => `<li class="rv" data-s="2" data-a="rise" style="--d:${150 + i * 160}ms">${T(p)}</li>`).join('')}</ul>
-          <div ${rvc('contact', 3, 'rise')}><span style="width:100%">${T(d.bannerContact)}</span><b>Phone</b><span class="ph">${T('{{phone}}')}</span></div>
+          <div ${rvc('contact', 3, 'rise')}><span style="width:100%">${T(d.bannerContact)}</span>${(d.phones && d.phones.length) ? d.phones.map(p => `<span class="ph br">${T(p)}</span>`).join('') : `<b>Phone</b><span class="ph">${T('{{phone}}')}</span>`}</div>
         </div></div></div>`;
   }, hook(el, n) {
     const L = $$('.ln.k', el); L.forEach(x => { clearTimeout(x._t); x.classList.remove('hl'); });
@@ -993,7 +1015,7 @@ const R = {
           <p ${rvc('small', 1, 'fade')} style="margin-top:20px">${esc(d.screenshot2 ? '' : '동영상강의 화면 예시')}</p></div>
         <div ${rvc('device', 0, 'rise', 450)} id="dev"><div class="vp"><div class="pg pg1">${pg1}</div><div class="pg pg2">${pg2}</div></div></div>
       </div></div>`;
-  }, hook(el, n) { $('#dev', el).classList.toggle('p2', n >= 1); }},
+  }, hook(el, n) { $('#dev', el).classList.toggle('p2', n >= 1 && !window.CD_SHARE); }},   // 공유 링크(휴대폰)에서는 첫 화면 캡처를 그대로 보여 줌
 
   /* ── 08-B 3가지 강의 ── */
   'online-programs': { render(d, ctx) {
