@@ -209,7 +209,7 @@
           },
           {
             "name": "HYPER",
-            "desc": "심화문항들의 출제포인트와 풀이법을 익힐 수 있는 교재",
+            "desc": "심화문항들의 출제포인트와 풀이법을\n익힐 수 있는 교재",
             "books": "일등급 수학 · 블랙라벨",
             "image": "consult-deck/img/book-hyper.jpg"
           }
@@ -580,9 +580,10 @@
             "title": "부득이한 결석에 대한 보충 강의",
             "desc": "부득이한 사정에 의한 ==결석이 발생하는 경우 각 선생님별 보충 강의실을 이용하여 결석한 수업을 온라인으로 학습==할 수 있습니다.",
             "thumbTop": "송우찬 수학학원",
-            "thumbMain": "김용진 선생님",
-            "thumbSub": "보충 강의실",
-            "image": "consult-deck/img/online-3.jpg"
+            "thumbMain": "보충 강의실",
+            "thumbSub": "온라인 학습관",
+            "image": "consult-deck/img/online-site-2026.jpg",
+            "fit": "cover"
           }
         ],
         "notes": [

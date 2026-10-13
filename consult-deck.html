@@ -334,8 +334,11 @@ body.on-dark .nb .hint em{color:var(--night)}
 .nt-img figure{max-width:min(100%,980px);width:100%}
 .nt-img img{max-height:calc(100vh - var(--top) - var(--bottom) - 170px);width:auto;max-width:100%;margin:0 auto}
 /* 07-A: 학업성취도·월말보고서 사진 */
+.cad-row{display:grid;grid-template-columns:1fr 1fr;gap:clamp(14px,1.8vw,26px);align-items:start}
+.cad-row .cad+.cad{margin-top:0}
+@media (max-width:760px){.cad-row{grid-template-columns:1fr}.cad-row .cad+.cad{margin-top:clamp(18px,3.4vh,34px)}}
 .cad-img{position:relative;border-radius:12px;overflow:hidden;border:1px solid var(--line);background:#fff;cursor:zoom-in}
-.cad-img img{display:block;width:100%;height:auto;max-height:calc((100vh - var(--top) - var(--bottom)) * .3);object-fit:contain;background:#fff}
+.cad-img img{display:block;width:100%;height:auto}
 .contact span.ph.br{flex:0 0 100%}
 .cmp .eq{position:relative;width:clamp(40px,4vw,60px);height:clamp(40px,4vw,60px);display:grid;place-items:center}
 .cmp .eq i{position:absolute;left:12%;right:12%;height:4px;border-radius:2px;background:var(--ink)}
@@ -356,8 +359,7 @@ body.on-dark .nb .hint em{color:var(--night)}
 
 /* 05 내신대비 */
 .kw{position:relative;display:grid;place-items:center;height:100%;min-height:200px}
-.kw b{font-size:clamp(130px,min(19vw,32vh),300px);font-weight:900;letter-spacing:-.06em;line-height:1;color:var(--gold);
-  -webkit-text-stroke:2px var(--gold-deep)}
+.kw b{font-size:clamp(130px,min(19vw,32vh),300px);font-weight:900;letter-spacing:-.06em;line-height:1;color:var(--ink)}
 .kw small{position:absolute;bottom:8%;font-size:var(--fs-lead);font-weight:700;color:var(--ink)}
 .proc{display:grid;grid-template-columns:repeat(4,1fr);gap:0;position:relative;margin-top:clamp(10px,3vh,30px)}
 .proc .pl{position:absolute;left:0;right:0;top:27px;height:2px;background:var(--line-2)}
@@ -941,8 +943,8 @@ const R = {
         <div><p ${rvc('lead', 0, 'rise', 200)} style="font-size:var(--fs-h2);font-weight:800;color:var(--ink);line-height:1.25">${T(d.subtitle)}</p>
           <p ${rvc('para body gap-m', 1)}>${T(d.problem)}</p><p ${rvc('para body', 2)}>${T(d.answer)}</p></div>
         <div>
-          <div ${rvc('cad', 3, 'rise')}><div class="ch"><b>${esc(d.weeklyLabel)}</b><span>${esc(d.weeklyCadence)}</span></div>${d.weeklyImage ? cadImg(d.weeklyImage, d.weeklyLabel) : `<div class="its">${chips(d.weeklyItems)}</div>`}</div>
-          <div ${rvc('cad', 3, 'rise', 200)}><div class="ch"><b>${esc(d.monthlyLabel)}</b><span>${esc(d.monthlyCadence)}</span></div>${d.monthlyImage ? cadImg(d.monthlyImage, d.monthlyLabel) : `<div class="its">${chips(d.monthlyItems)}</div>`}</div>
+          <div class="${d.weeklyImage && d.monthlyImage ? 'cad-row' : ''}"><div ${rvc('cad', 3, 'rise')}><div class="ch"><b>${esc(d.weeklyLabel)}</b><span>${esc(d.weeklyCadence)}</span></div>${d.weeklyImage ? cadImg(d.weeklyImage, d.weeklyLabel) : `<div class="its">${chips(d.weeklyItems)}</div>`}</div>
+          <div ${rvc('cad', 3, 'rise', 200)}><div class="ch"><b>${esc(d.monthlyLabel)}</b><span>${esc(d.monthlyCadence)}</span></div>${d.monthlyImage ? cadImg(d.monthlyImage, d.monthlyLabel) : `<div class="its">${chips(d.monthlyItems)}</div>`}</div></div>
           <p ${rvc('para body gap-m', 4)}>${T(d.closing)}</p>
         </div></div></div>`;
   }},
@@ -1022,7 +1024,7 @@ const R = {
     const I = d.items || [];
     return `<div class="scene-inner">${secHead(ctx)}<h2 ${rvc('st', 0, 'rise', 60)}>${esc(d.title || '')}</h2>
       <div>${I.map((it, i) => `<div class="op rv" data-s="${i + 1}" data-a="left">
-        <div class="thumb t${(i % 3) + 1}">${it.image ? `<img class="zoomable" src="${esc(it.image)}" data-zoom="${esc(it.image)}" alt="">` : `<small>${esc(it.thumbTop)}</small><b>${esc(it.thumbMain)}</b><span>${esc(it.thumbSub)}</span>`}</div>
+        <div class="thumb t${(i % 3) + 1}">${it.image ? `<img class="zoomable" src="${esc(it.image)}" data-zoom="${esc(it.image)}" alt=""${it.fit === 'cover' ? ' style="object-fit:cover"' : ''}>` : `<small>${esc(it.thumbTop)}</small><b>${esc(it.thumbMain)}</b><span>${esc(it.thumbSub)}</span>`}</div>
         <div><h3><em>${i + 1}.</em>${T(it.title)}</h3><p class="para body">${T(it.desc)}</p></div></div>`).join('')}</div>
       <div ${rvc('notes', I.length + 1, 'fade')}>${(d.notes || []).map(n => `<p>${T(n)}</p>`).join('')}</div></div>`;
   }},
