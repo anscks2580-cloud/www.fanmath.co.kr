@@ -1445,11 +1445,10 @@ body.ck-lock { overflow:hidden; }
           <div class="cdk-share-acts">
             <button class="btn btn-primary btn-sm" id="cdk-middle-share-make" onclick="cdkShare('middle')">🔗 공유 링크 만들기</button>
             <button class="btn btn-secondary btn-sm" data-cdk-on="middle" disabled onclick="cdkSharePreview('middle')">📱 휴대폰 화면으로 보기</button>
-            <button class="btn btn-secondary btn-sm" data-cdk-on="middle" disabled onclick="cdkShareRenew('middle')">새 링크로 바꾸기</button>
             <button class="btn btn-secondary btn-sm" data-cdk-on="middle" disabled onclick="cdkShareStop('middle')">공유 중지</button>
           </div>
           <p class="cdk-share-note">이 링크를 카카오톡으로 보내면 어머님들이 <b style="color:var(--off-white);">로그인 없이 휴대폰으로 상담자료만</b> 볼 수 있습니다. 링크로는 관리자 페이지·상담 기록 등 다른 화면이나 데이터에 들어갈 수 없습니다.<br>
-            편집에서 저장하면 이미 보낸 링크에도 자동으로 반영됩니다. [새 링크로 바꾸기]·[공유 중지]를 누르면 이전에 보낸 링크는 열리지 않습니다.</p>
+            편집에서 저장하면 이미 보낸 링크에도 자동으로 반영되고, 링크 주소는 바뀌지 않습니다. [공유 중지]를 누르면 지금까지 보낸 링크는 열리지 않습니다.</p>
         </div>
         <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border-soft);border-radius:10px;opacity:0.55;">
           <div style="flex:1;"><div style="font-size:15px;font-weight:700;">고등 프로그램</div><div style="font-size:12px;color:var(--muted);margin-top:3px;">준비 중</div></div>
@@ -3016,7 +3015,7 @@ window.initConsultDeckTab = async () => {
 // 링크를 받은 학부모님은 로그인 없이 그 상담자료만 휴대폰으로 볼 수 있습니다.
 // · 링크로는 상담자료 화면만 열리며 관리자 페이지·상담 기록 등 다른 데이터에는 접근 불가
 // · 편집(consult-deck-admin.html)에서 저장하면 공유 문서에도 자동 반영
-// · [새 링크로 바꾸기]/[공유 중지] 시 이전에 보낸 링크는 더 이상 열리지 않음
+// · 링크 주소는 한 번 만들면 계속 같음, [공유 중지] 시 이전에 보낸 링크는 더 이상 열리지 않음
 function cdkShareUrl(deckId, token) { return new URL(`consult-deck.html?deck=${encodeURIComponent(deckId)}&share=${token}`, location.href).href; }
 function cdkNewToken() {
   const abc = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
@@ -3092,16 +3091,6 @@ window.cdkShareCopy = async function(deckId, silent) {
 window.cdkSharePreview = function(deckId) {
   const url = document.getElementById(`cdk-${deckId}-share-url`)?.value;
   if (url) window.open(url, 'cdkSharePreview', 'width=420,height=860');
-};
-window.cdkShareRenew = async function(deckId) {
-  if (!confirm('새 링크로 바꿀까요?\n이전에 카카오톡으로 보낸 링크는 더 이상 열리지 않습니다.')) return;
-  try {
-    const docs = await cdkShareDocs(deckId);
-    await Promise.all(docs.map((x) => deleteDoc(x.ref)));
-    await cdkWriteShare(deckId, cdkNewToken());
-    await cdkShareLoad(deckId);
-    cdkShareCopy(deckId, true);
-  } catch (e) { console.error(e); showToast('새 링크를 만들지 못했습니다: ' + (e.code || e.message)); cdkShareLoad(deckId); }
 };
 window.cdkShareStop = async function(deckId) {
   if (!confirm('공유를 중지할까요?\n지금까지 보낸 링크가 모두 열리지 않게 됩니다.')) return;
