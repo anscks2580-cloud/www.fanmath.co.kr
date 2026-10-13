@@ -359,7 +359,7 @@ body.deck-open{overflow:hidden}
 .link-msg{margin-top:10px;font-size:13.5px;color:var(--ink-3)}
 .link-msg.ok{color:var(--purple);font-weight:700}
 .link-msg.err{color:#B4483C}
-/* 상담 라운지 (consult-lounge.html: 샘플 강의 · 상담자료 다시 보기) */
+/* 상담 라운지 (consult-lounge.html: 샘플 강의 · 상담자료 미리보기) */
 .lounge-full{position:fixed;inset:0;z-index:50;background:var(--bg)}
 .lounge-full iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block}
 .ghost.wide{width:100%;height:54px;justify-content:center;font-size:15px;font-weight:700;color:var(--ink)}
@@ -797,7 +797,7 @@ function renderDone({ warn = '', generic = false } = {}){
   });
 }
 
-/* ---------- 8-1. 상담 라운지 (샘플 강의 · 상담자료 다시 보기) ----------
+/* ---------- 8-1. 상담 라운지 (샘플 강의 · 상담자료 미리보기) ----------
    consult-lounge.html 을 화면 위에 띄움 → 라운지의 [돌아가기]를 누르면 이 완료 화면으로 돌아옴 */
 const LOUNGE = { el:null };
 function openLounge(){
