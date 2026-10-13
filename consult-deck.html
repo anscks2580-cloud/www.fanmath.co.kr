@@ -15,6 +15,8 @@
 /* ══════════════════════════════════════════════
    송우찬수학학원 상담 프레젠테이션 (consult-deck)
    - 내용: Firestore consultDecks/{deck} (없으면 consult-deck/{deck}.json 기본값)
+   - 학부모 공유 링크: ?deck=middle&share=토큰 → 로그인 없이 consultConfig/deckShare_{토큰} 공유본만 표시
+     (관리자 로그인 화면·편집 기능·다른 데이터에는 접근하지 않음, 기기에 사본도 남기지 않음)
    - 레이아웃·모션: Scene type별 렌더러 (아래 R 객체)
    ══════════════════════════════════════════════ */
 :root{
@@ -205,7 +207,7 @@ body.on-dark .nb .hint em{color:var(--night)}
 .gate-card .go:disabled{opacity:.6}
 .gate-card .err{color:#FF9C8A;font-size:13px;margin-top:12px;min-height:18px}
 .gate-card .msg{color:var(--muted-on-dark);font-size:14px}
-#loading{position:fixed;inset:0;z-index:50;background:var(--night);display:grid;place-items:center;color:var(--muted-on-dark);font-size:14px;transition:opacity .5s}
+#loading{position:fixed;inset:0;z-index:50;background:var(--night);display:grid;place-items:center;color:var(--muted-on-dark);font-size:14px;line-height:1.8;text-align:center;padding:24px;transition:opacity .5s}
 #loading.hide{opacity:0;pointer-events:none}
 #toast{position:fixed;left:50%;bottom:calc(var(--bottom) + 8px);transform:translateX(-50%) translateY(10px);z-index:60;
   background:var(--night);color:var(--cream-on-dark);font-size:13px;padding:10px 18px;border-radius:20px;opacity:0;transition:all .3s;pointer-events:none}
@@ -578,6 +580,8 @@ body.on-dark .nb .hint em{color:var(--night)}
   .menu-list{grid-template-columns:1fr}
   .secbar{display:none}
 }
+/* 학부모 공유 링크: 단계 표시 점 숨김(한 번에 모두 표시) */
+body.shared #stepDots{display:none}
 @media (prefers-reduced-motion:reduce){
   .rv,.rv[data-a]{transform:none!important;filter:none!important;clip-path:none!important;transition:opacity .3s!important}
   .scene{transform:none!important}
@@ -1127,7 +1131,8 @@ function show(i, step, dir = 1, instant = false) {
     setTimeout(() => prevEl.classList.remove('out-left', 'out-right'), 700);
     $$('.lit', prevEl).forEach(x => x.classList.remove('lit'));
   }
-  App.i = i; App.step = step === 'end' ? el._max : Math.min(step, el._max);
+  // 학부모 공유 링크(휴대폰 혼자 보기)는 단계별로 나눠 보이지 않고 화면 내용을 한 번에 모두 표시
+  App.i = i; App.step = (step === 'end' || window.CD_SHARE) ? el._max : Math.min(step, el._max);
   // 진입 상태 준비
   el.classList.add('instant'); applyStep(el, step === 'end' || instant ? App.step : -1);
   el.classList.remove('from-right', 'from-left', 'from-below');
@@ -1149,7 +1154,7 @@ function next() {
 }
 function prev() {
   const el = App.els[App.i];
-  if (App.step > 0) { App.step--; el.classList.remove('spot'); el.classList.add('instant'); applyStep(el, App.step); requestAnimationFrame(() => el.classList.remove('instant')); updateChrome(); }
+  if (App.step > 0 && !window.CD_SHARE) { App.step--; el.classList.remove('spot'); el.classList.add('instant'); applyStep(el, App.step); requestAnimationFrame(() => el.classList.remove('instant')); updateChrome(); }
   else if (App.i > 0) show(App.i - 1, 'end', -1);
 }
 function gotoSection(id) { const i = App.seq.findIndex(s => s.section === id); if (i >= 0) show(i, 0, i >= App.i ? 1 : -1); closeOverlay('menu'); }
@@ -1350,7 +1355,42 @@ if (window.__CD_TEST__) loadDefaultDeck().then(boot);
 
 <!-- ════════ 6) Firebase 인증 · 데이터 ════════ -->
 <script type="module">
-if (!window.__CD_TEST__) (async () => {
+/* ── 학부모 공유 링크 모드 ── */
+const SHARE = (window.CD.PARAMS.get('share') || '').replace(/[^A-Za-z0-9]/g, '').slice(0, 64);
+if (SHARE && !window.__CD_TEST__) (async () => {
+  const CD = window.CD, loading = document.getElementById('loading');
+  document.getElementById('gate').remove();
+  document.body.classList.add('shared');
+  const fail = (msg) => { loading.classList.remove('hide'); loading.innerHTML = msg; };
+  try {
+    const [appM, fsM] = await Promise.all([
+      import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js'),
+      import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js'),
+    ]);
+    const app = appM.initializeApp({
+      apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
+      authDomain: "songmath.firebaseapp.com",
+      projectId: "songmath",
+      storageBucket: "songmath.firebasestorage.app",
+      messagingSenderId: "936295436575",
+      appId: "1:936295436575:web:d1e201508719850cfbe02a"
+    }, 'swcDeckShare');
+    const snap = await fsM.getDoc(fsM.doc(fsM.getFirestore(app), 'consultConfig', 'deckShare_' + SHARE));
+    const s = snap.exists() ? snap.data() : null;
+    if (!s || s.enabled === false || (s.shareDeckId && s.shareDeckId !== CD.DECK_ID)) {
+      return fail('링크가 만료되었거나 주소가 올바르지 않습니다.<br>학원으로 문의해 주세요 · 031-386-8899');
+    }
+    const def = await CD.loadDefaultDeck();
+    window.CD_SHARE = true;
+    CD.boot(CD.mergeDeck(s.deck || null, def));
+    setTimeout(() => CD.toast('› 버튼이나 옆으로 밀어서 넘겨 보세요'), 900);
+  } catch (e) {
+    console.error('[공유 상담자료]', e);
+    fail('상담자료를 불러오지 못했습니다.<br>인터넷 연결을 확인한 뒤 다시 열어 주세요.');
+  }
+})();
+
+if (!SHARE && !window.__CD_TEST__) (async () => {
   const CD = window.CD, gate = document.getElementById('gate'), loading = document.getElementById('loading');
   const OK_KEY = 'cd_ok', CACHE_KEY = 'cd_cache_' + CD.DECK_ID, DRAFT_KEY = 'cd_draft_' + CD.DECK_ID;
   const isPreview = CD.PARAMS.get('preview') === '1';

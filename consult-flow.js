@@ -1,6 +1,6 @@
 /* =====================================================================
    consult-flow.js — 방문 상담 진행 공통 모듈
-   상담신청서(consult-visit.html) → 학부모 설문(learning-profile.html) → 결과 → 안내 영상
+   상담신청서(consult-visit.html) → 학부모 설문(learning-profile.html) → 결과 확인(여기서 종료, 2026.10.13~)
    + 관리자 페이지(admin.html)의 상담 기록 목록·통합 화면이 같은 상태 정의를 씁니다.
    단계 이름 · 저장 · 저장 확인 로직은 이 파일 한 곳에서만 관리합니다.
 
@@ -55,7 +55,7 @@ export const STAGE = Object.freeze({
 export const STAGE_LABEL = {
   form_in_progress: '상담신청서 작성 중',
   form_completed: '신청서 저장 · 학부모 설문 전',
-  parent_survey_completed: '학부모 설문 완료 · 영상 전',
+  parent_survey_completed: '학부모 설문 완료',
   consultation_completed: '상담 준비 완료'
 };
 export const SURVEY = Object.freeze({ NOT_STARTED: 'not_started', COMPLETED: 'completed' });
@@ -63,7 +63,7 @@ export const VIDEO = Object.freeze({ PENDING: 'pending', COMPLETED: 'completed',
 export const VIDEO_LABEL = { pending: '보기 전', completed: '끝까지 시청', skipped: '중간에 마침', failed: '불러오기 실패', none: '없음' };
 
 /* 화면 상단 진행 표시 (consult-visit · learning-profile 공통) */
-export const FLOW_STEPS = ['상담신청서', '학부모 설문', '결과 확인', '안내 영상'];
+export const FLOW_STEPS = ['상담신청서', '학부모 설문', '결과 확인'];
 
 /* 상담신청서 입력 항목 (consult-visit.html 기존 항목 그대로) */
 export const FORM_FIELDS = ['level', 'branch', 'studentName', 'schoolGrade', 'parentPhone', 'studentPhone',
@@ -254,7 +254,9 @@ export async function saveConsultForm(session, cid, form, meta = {}) {
 
 /* 설문 결과 저장 — learningProfiles/{상담ID}_{역할} + 상담 기록 요약을 한 번에(원자적으로) 저장 후 서버에서 다시 읽어 확인.
    학부모·학생 결과는 서로 다른 필드·문서에 저장되므로 덮어쓰거나 합치지 않습니다. */
-export async function saveSurvey(session, cid, role, r, { source } = {}) {
+/* finish: 방문 플로우(QR)의 학부모 설문 — 결과 확인이 마지막 단계이므로 저장과 함께 '상담 준비 완료'로 기록
+   (2026.10.13: 결과 다음의 상담자료 자동 재생 단계 삭제) */
+export async function saveSurvey(session, cid, role, r, { source, finish = false } = {}) {
   if (role !== 'parent' && role !== 'student') throw new FlowError('unknown', '알 수 없는 설문 구분입니다.');
   // 학생 설문: 관리자 화면에서 시작하거나, 방문자 본인 상담 기록(같은 휴대폰)에서 이어서 진행 — 권한은 보안 규칙에서 확인
   const record = await loadConsult(session, cid);
@@ -277,6 +279,11 @@ export async function saveSurvey(session, cid, role, r, { source } = {}) {
     updatedAt: now
   };
   if (role === 'parent' && (!record.stage || record.stage === STAGE.FORM_COMPLETED)) upd.stage = STAGE.PARENT_SURVEY_COMPLETED;
+  if (role === 'parent' && finish) {
+    upd.stage = STAGE.CONSULTATION_COMPLETED;
+    upd.completedAt = now;
+    if (!record.video || !record.video.status || record.video.status === VIDEO.PENDING) upd.video = { status: VIDEO.NONE, at: now };
+  }
   const batch = writeBatch(session.db);
   batch.set(pref, profile);
   batch.update(cref, upd);

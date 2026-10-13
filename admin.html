@@ -370,6 +370,76 @@
 .cr-title span { font-size:12px; font-weight:700; padding:3px 10px; border-radius:100px; background:rgba(240,192,64,0.12); color:var(--gold); vertical-align:middle; margin-left:6px; }
 .cr-sub { font-size:12.5px; color:var(--muted); margin-top:4px; }
 .cr-acts { display:flex; gap:6px; flex-wrap:wrap; }
+
+/* 상담 결과 이미지 (카카오톡 전달용) — 미리보기 모달 */
+#consultImgModal { position:fixed; inset:0; z-index:99998; display:none; align-items:flex-start; justify-content:center; background:rgba(0,0,0,0.78); padding:24px 14px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+#consultImgModal.open { display:flex; }
+.ci-box { width:100%; max-width:560px; background:#15171c; border:1px solid var(--border-soft); border-radius:16px; padding:22px 20px 24px; position:relative; }
+.ci-box h3 { margin:0 30px 6px 0; font-size:17px; }
+.ci-hint { font-size:12.5px; color:var(--muted); line-height:1.65; margin:0 0 14px; }
+.ci-prev { background:#0e0f12; border:1px solid var(--border-soft); border-radius:12px; padding:10px; max-height:62vh; overflow-y:auto; text-align:center; }
+.ci-prev img { display:block; width:100%; height:auto; border-radius:8px; }
+.ci-prev .ci-wait { padding:60px 10px; color:var(--muted); font-size:13px; }
+.ci-btns { display:flex; gap:8px; flex-wrap:wrap; margin-top:14px; }
+.ci-btns .btn { flex:1 1 140px; }
+/* 이미지로 그려지는 카드 (화면 밖에서 그린 뒤 PNG로 변환) */
+.ci-host { position:fixed; left:-12000px; top:0; z-index:-1; pointer-events:none; }
+.ci-card { width:720px; box-sizing:border-box; background:#F6F3EC; color:#1E1736; font-family:'Pretendard','Apple SD Gothic Neo','Noto Sans KR',sans-serif; line-height:1.5; text-align:left; }
+.ci-card * { box-sizing:border-box; margin:0; padding:0; }
+.ci-card .h { background:#1A1230; color:#F0EDF8; padding:32px 40px 30px; }
+.ci-card .brand { display:flex; align-items:center; gap:10px; font-size:17px; font-weight:800; }
+.ci-card .brand img { width:32px; height:32px; object-fit:contain; background:#fff; border-radius:50%; padding:4px; }
+.ci-card .brand span { font-weight:500; color:rgba(240,237,248,.6); font-size:15px; }
+.ci-card .eye { margin-top:24px; font-size:12px; font-weight:700; letter-spacing:.26em; color:#F0C040; }
+.ci-card .nm { margin-top:8px; font-size:31px; font-weight:800; letter-spacing:-.03em; }
+.ci-card .nm small { font-size:17px; font-weight:600; color:rgba(240,237,248,.7); margin-left:8px; letter-spacing:0; }
+.ci-card .dt { margin-top:6px; font-size:13px; color:rgba(240,237,248,.55); }
+.ci-card .b { padding:22px 28px 28px; }
+.ci-card .sec { background:#fff; border:1px solid rgba(30,23,54,.08); border-radius:18px; padding:22px 24px 20px; margin-top:16px; }
+.ci-card .sec:first-child { margin-top:0; }
+.ci-card .st { display:flex; align-items:center; gap:8px; font-size:16px; font-weight:800; margin-bottom:14px; }
+.ci-card .st i { display:block; width:4px; height:17px; border-radius:2px; background:#F0C040; }
+.ci-card .st em { font-style:normal; font-size:12.5px; font-weight:600; color:#8A84A0; margin-left:auto; }
+.ci-card .info { display:grid; grid-template-columns:1fr 1fr; column-gap:22px; }
+.ci-card .info div { padding:10px 0; border-bottom:1px solid rgba(30,23,54,.08); }
+.ci-card .info div.f { grid-column:1 / -1; }
+.ci-card .info span { display:block; font-size:12px; color:#8A84A0; font-weight:600; }
+.ci-card .info b { display:block; margin-top:2px; font-size:15px; font-weight:700; color:#1E1736; word-break:keep-all; }
+.ci-card .code { display:flex; gap:6px; }
+.ci-card .code span { width:40px; height:44px; border-radius:10px; background:#1A1230; color:#F0C040; font-size:21px; font-weight:800; display:flex; align-items:center; justify-content:center; }
+.ci-card .tn { margin-top:12px; font-size:22px; font-weight:800; letter-spacing:-.02em; }
+.ci-card .ts { margin-top:4px; font-size:13.5px; color:#6B6584; }
+.ci-card .ax { margin-top:18px; padding-top:16px; border-top:1px solid rgba(30,23,54,.08); }
+.ci-card .ax-t { display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+.ci-card .ax-t b { font-size:15px; font-weight:800; }
+.ci-card .ax-t span { font-size:13.5px; font-weight:700; color:#93700C; }
+.ci-card .bar { position:relative; height:8px; border-radius:4px; background:#ECEAF2; margin:12px 8px 0; }
+.ci-card .bar i { position:absolute; top:-5px; width:18px; height:18px; margin-left:-9px; border-radius:50%; background:#1A1230; border:3px solid #F0C040; }
+.ci-card .bl { display:flex; justify-content:space-between; margin-top:8px; font-size:12px; color:#8A84A0; font-weight:600; }
+.ci-card .ax p { margin-top:10px; font-size:13.5px; line-height:1.7; color:#3B3356; word-break:keep-all; }
+.ci-card .ax p.nd { color:#8A84A0; }
+.ci-card .fc { margin-top:18px; background:#FFF8E1; border-left:4px solid #F0C040; border-radius:10px; padding:14px 16px; }
+.ci-card .fc b { display:block; font-size:13px; font-weight:800; color:#93700C; }
+.ci-card .fc p { margin-top:4px; font-size:13.5px; line-height:1.7; color:#3B3356; word-break:keep-all; }
+.ci-card .ex { margin-top:16px; display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.ci-card .ex div { background:#F6F3EC; border-radius:10px; padding:10px 12px; }
+.ci-card .ex span { display:block; font-size:11.5px; color:#8A84A0; font-weight:600; }
+.ci-card .ex b { display:block; margin-top:2px; font-size:14px; font-weight:700; word-break:keep-all; }
+.ci-card .none { font-size:14px; color:#8A84A0; }
+.ci-card .ft { margin-top:18px; text-align:center; font-size:12px; line-height:1.7; color:#8A84A0; word-break:keep-all; }
+.ci-card .ft b { color:#3B3356; }
+
+/* 상담자료 학부모 공유 링크 */
+.cdk-share { padding:14px 16px; border:1px solid var(--border-soft); border-radius:10px; background:rgba(255,255,255,0.02); }
+.cdk-share-top { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.cdk-share-top b { font-size:14px; }
+.cdk-share-st { font-size:12px; color:var(--muted); }
+.cdk-share-st.on { color:#8fd9a8; }
+.cdk-share-st.warn { color:#ffb36b; }
+.cdk-share-row { display:flex; gap:8px; margin-top:10px; }
+.cdk-share-row input { flex:1; min-width:0; }
+.cdk-share-acts { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.cdk-share-note { font-size:12px; color:var(--muted); line-height:1.7; margin:10px 0 0; }
 .cr-sec { margin-top:24px; }
 .cr-sec h4 { font-size:13px; color:var(--gold); font-weight:700; margin:0 0 10px; }
 .cr-steps { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:8px; }
@@ -1294,7 +1364,7 @@ body.ck-lock { overflow:hidden; }
     <div class="card">
       <h3>📥 상담 신청 · 상담 기록</h3>
       <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
-        홈페이지 상담 신청 폼(consult.html)과 상담 QR로 접수된 내역입니다. 상담 QR은 방문하신 분 휴대폰에서 <b style="color:var(--off-white);">상담신청서 → 학부모 설문 → 결과 → 상담자료 → 수업 미리보기</b>로 이어지고, 결과는 이 목록의 상담 기록에 함께 저장됩니다. 학생과 함께 오신 경우 같은 휴대폰으로 <b style="color:var(--off-white);">학생 설문</b>까지 이어서 할 수 있고, 각 기록의 <b style="color:var(--off-white);">학생 설문 시작</b>으로 원장님이 직접 진행할 수도 있습니다.
+        홈페이지 상담 신청 폼(consult.html)과 상담 QR로 접수된 내역입니다. 상담 QR은 방문하신 분 휴대폰에서 <b style="color:var(--off-white);">상담신청서 → 학부모 설문 → 결과 확인</b>까지 진행하고 끝나며, 결과는 이 목록의 상담 기록에 함께 저장됩니다. 각 기록의 <b style="color:var(--off-white);">📷 결과 이미지</b>로 인적사항·설문 결과를 이미지로 저장해 카카오톡으로 전달할 수 있습니다. 학생과 함께 오신 경우 같은 휴대폰으로 <b style="color:var(--off-white);">학생 설문</b>까지 이어서 할 수 있고, 각 기록의 <b style="color:var(--off-white);">학생 설문 시작</b>으로 원장님이 직접 진행할 수도 있습니다.
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;padding:14px 16px;background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);border-radius:10px;">
         <button class="btn btn-primary" onclick="openConsultQr()">📱 상담 QR · 오늘 현황</button>
@@ -1358,13 +1428,28 @@ body.ck-lock { overflow:hidden; }
     <div class="card">
       <h3>🎞 상담자료 관리</h3>
       <div style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6;">
-        학부모 상담 때 태블릿으로 한 화면씩 넘겨가며 설명하는 상담 프레젠테이션입니다. <b style="color:var(--off-white);">편집</b>에서 제목·설명·이미지·화면 순서·표시 여부를 바꾸고 저장하면 바로 반영됩니다. 관리자 로그인 상태에서만 열립니다.
+        학부모 상담 때 태블릿으로 한 화면씩 넘겨가며 설명하는 상담 프레젠테이션입니다. <b style="color:var(--off-white);">편집</b>에서 제목·설명·이미지·화면 순서·표시 여부를 바꾸고 저장하면 바로 반영됩니다. <b style="color:var(--off-white);">상담자료 열기</b>는 관리자 로그인 상태에서만 열리고, 학부모님께는 아래 <b style="color:var(--gold);">공유 링크</b>를 카카오톡으로 보내 주세요.
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;">
         <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);border-radius:10px;">
           <div style="flex:1;min-width:180px;"><div style="font-size:15px;font-weight:700;">중등 프로그램</div><div id="cdk-middle-status" style="font-size:12px;color:var(--muted);margin-top:3px;">확인 중...</div></div>
           <button class="btn btn-primary" onclick="window.open('consult-deck.html?deck=middle','_blank')">▶ 상담자료 열기</button>
           <button class="btn btn-secondary" onclick="window.open('consult-deck-admin.html?deck=middle','_blank')">✏️ 편집</button>
+        </div>
+        <div class="cdk-share" id="cdk-middle-share">
+          <div class="cdk-share-top"><b>🔗 중등 상담자료 · 학부모 공유 링크</b><span class="cdk-share-st" id="cdk-middle-share-st">확인 중...</span></div>
+          <div class="cdk-share-row">
+            <input type="text" id="cdk-middle-share-url" readonly placeholder="아직 만든 링크가 없습니다" onclick="this.select()">
+            <button class="btn btn-secondary btn-sm" data-cdk-on="middle" disabled onclick="cdkShareCopy('middle')">복사</button>
+          </div>
+          <div class="cdk-share-acts">
+            <button class="btn btn-primary btn-sm" id="cdk-middle-share-make" onclick="cdkShare('middle')">🔗 공유 링크 만들기</button>
+            <button class="btn btn-secondary btn-sm" data-cdk-on="middle" disabled onclick="cdkSharePreview('middle')">📱 휴대폰 화면으로 보기</button>
+            <button class="btn btn-secondary btn-sm" data-cdk-on="middle" disabled onclick="cdkShareRenew('middle')">새 링크로 바꾸기</button>
+            <button class="btn btn-secondary btn-sm" data-cdk-on="middle" disabled onclick="cdkShareStop('middle')">공유 중지</button>
+          </div>
+          <p class="cdk-share-note">이 링크를 카카오톡으로 보내면 어머님들이 <b style="color:var(--off-white);">로그인 없이 휴대폰으로 상담자료만</b> 볼 수 있습니다. 링크로는 관리자 페이지·상담 기록 등 다른 화면이나 데이터에 들어갈 수 없습니다.<br>
+            편집에서 저장하면 이미 보낸 링크에도 자동으로 반영됩니다. [새 링크로 바꾸기]·[공유 중지]를 누르면 이전에 보낸 링크는 열리지 않습니다.</p>
         </div>
         <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border-soft);border-radius:10px;opacity:0.55;">
           <div style="flex:1;"><div style="font-size:15px;font-weight:700;">고등 프로그램</div><div style="font-size:12px;color:var(--muted);margin-top:3px;">준비 중</div></div>
@@ -2914,6 +2999,7 @@ window.doLogout = async () => { await signOut(auth); };
 window.initConsultDeckTab = async () => {
   const el = document.getElementById('cdk-middle-status');
   if (!el) return;
+  cdkShareLoad('middle');
   try {
     const snap = await getDoc(doc(db, 'consultDecks', 'middle'));
     if (!snap.exists()) { el.textContent = '기본 내용(PDF 원본) 사용 중 · 아직 편집해서 저장한 적 없음'; return; }
@@ -2922,6 +3008,109 @@ window.initConsultDeckTab = async () => {
     const hidden = (d.scenes || []).filter(x => x.visible === false).length;
     el.textContent = '마지막 저장 ' + (t || '-') + (d.updatedBy ? ' · ' + d.updatedBy : '') + (hidden ? ' · 숨긴 화면 ' + hidden + '개' : '');
   } catch (e) { el.textContent = '저장 정보를 불러오지 못했습니다 (' + (e.code || e.message) + ')'; }
+};
+
+// ── 상담자료 학부모 공유 링크 (consultConfig/deckShare_{무작위 토큰}) ──
+// consultConfig 는 원래 로그인 없이 읽는 공개 설정 컬렉션(수정은 관리자만)이라 보안 규칙 변경 없이 동작합니다.
+// 공유 문서에는 상담자료(학원 소개 내용)만 들어가고 개인정보는 들어가지 않습니다.
+// 링크를 받은 학부모님은 로그인 없이 그 상담자료만 휴대폰으로 볼 수 있습니다.
+// · 링크로는 상담자료 화면만 열리며 관리자 페이지·상담 기록 등 다른 데이터에는 접근 불가
+// · 편집(consult-deck-admin.html)에서 저장하면 공유 문서에도 자동 반영
+// · [새 링크로 바꾸기]/[공유 중지] 시 이전에 보낸 링크는 더 이상 열리지 않음
+function cdkShareUrl(deckId, token) { return new URL(`consult-deck.html?deck=${encodeURIComponent(deckId)}&share=${token}`, location.href).href; }
+function cdkNewToken() {
+  const abc = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
+  const a = new Uint8Array(24); crypto.getRandomValues(a);
+  return Array.from(a, (b) => abc[b % abc.length]).join('');
+}
+const CDK_PREFIX = 'deckShare_';
+async function cdkShareDocs(deckId) {
+  const qs = await getDocs(query(collection(db, 'consultConfig'), where('shareDeckId', '==', deckId)));
+  return qs.docs.filter((x) => x.id.startsWith(CDK_PREFIX));
+}
+const cdkTok = (d) => d.id.slice(CDK_PREFIX.length);
+async function cdkDeckSnapshot(deckId) {
+  const s = await getDoc(doc(db, 'consultDecks', deckId));
+  if (!s.exists()) return { deck: null, at: null };
+  const o = { ...s.data() };
+  const at = o.updatedAt || null;
+  delete o.updatedAt; delete o.updatedBy;
+  return { deck: o, at };
+}
+function cdkFmt(ts) { return ts?.toDate ? ts.toDate().toLocaleString('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }) : ''; }
+function cdkShareRender(deckId, share, deckAt) {
+  const st = document.getElementById(`cdk-${deckId}-share-st`);
+  const inp = document.getElementById(`cdk-${deckId}-share-url`);
+  if (!st || !inp) return;
+  const on = !!share;
+  inp.value = on ? cdkShareUrl(deckId, share.id) : '';
+  document.querySelectorAll(`[data-cdk-on="${deckId}"]`).forEach((b) => { b.disabled = !on; });
+  const mk = document.getElementById(`cdk-${deckId}-share-make`);
+  if (mk) mk.textContent = on ? '🔄 최신 내용 반영' : '🔗 공유 링크 만들기';
+  if (!on) { st.className = 'cdk-share-st'; st.textContent = '공유하지 않는 중 · 링크를 만들면 카카오톡으로 보낼 수 있습니다'; return; }
+  const shareMs = share.data.updatedAt?.toMillis?.() || 0, deckMs = deckAt?.toMillis?.() || 0;
+  const stale = deckMs && shareMs && deckMs > shareMs + 1000;
+  st.className = 'cdk-share-st ' + (stale ? 'warn' : 'on');
+  st.textContent = stale ? '편집 내용이 링크에 아직 반영되지 않았습니다 → [최신 내용 반영]을 눌러 주세요'
+    : `공유 중 · 마지막 반영 ${cdkFmt(share.data.updatedAt) || '-'}`;
+}
+window.cdkShareLoad = async function(deckId) {
+  const st = document.getElementById(`cdk-${deckId}-share-st`);
+  try {
+    const [docs, snap] = await Promise.all([cdkShareDocs(deckId), getDoc(doc(db, 'consultDecks', deckId)).catch(() => null)]);
+    const live = docs.find((x) => x.data().enabled !== false);
+    cdkShareRender(deckId, live ? { id: cdkTok(live), data: live.data() } : null, snap?.exists() ? snap.data().updatedAt : null);
+  } catch (e) {
+    if (st) { st.className = 'cdk-share-st warn'; st.textContent = '공유 링크 정보를 불러오지 못했습니다 (' + (e.code || e.message) + ')'; }
+  }
+};
+async function cdkWriteShare(deckId, token, createdAt) {
+  const { deck } = await cdkDeckSnapshot(deckId);
+  const now = Timestamp.now();
+  await setDoc(doc(db, 'consultConfig', CDK_PREFIX + token), { shareDeckId: deckId, deck, enabled: true, createdAt: createdAt || now, updatedAt: now });
+}
+window.cdkShare = async function(deckId) {
+  const btn = document.getElementById(`cdk-${deckId}-share-make`);
+  if (btn) { btn.disabled = true; btn.textContent = '처리 중…'; }
+  try {
+    const docs = await cdkShareDocs(deckId);
+    const live = docs.find((x) => x.data().enabled !== false);
+    const token = live ? cdkTok(live) : cdkNewToken();
+    await cdkWriteShare(deckId, token, live?.data().createdAt);
+    showToast(live ? '최신 내용을 공유 링크에 반영했습니다' : '공유 링크를 만들었습니다');
+    if (!live) cdkShareCopy(deckId, true);
+  } catch (e) { console.error(e); showToast('공유 링크 처리 실패: ' + (e.code || e.message)); }
+  if (btn) btn.disabled = false;
+  cdkShareLoad(deckId);
+};
+window.cdkShareCopy = async function(deckId, silent) {
+  const url = document.getElementById(`cdk-${deckId}-share-url`)?.value;
+  if (!url) { if (!silent) showToast('먼저 공유 링크를 만들어 주세요'); return; }
+  try { await navigator.clipboard.writeText(url); showToast('링크를 복사했습니다. 카카오톡에 붙여넣어 보내세요'); }
+  catch (e) { prompt('아래 링크를 복사하세요', url); }
+};
+window.cdkSharePreview = function(deckId) {
+  const url = document.getElementById(`cdk-${deckId}-share-url`)?.value;
+  if (url) window.open(url, 'cdkSharePreview', 'width=420,height=860');
+};
+window.cdkShareRenew = async function(deckId) {
+  if (!confirm('새 링크로 바꿀까요?\n이전에 카카오톡으로 보낸 링크는 더 이상 열리지 않습니다.')) return;
+  try {
+    const docs = await cdkShareDocs(deckId);
+    await Promise.all(docs.map((x) => deleteDoc(x.ref)));
+    await cdkWriteShare(deckId, cdkNewToken());
+    await cdkShareLoad(deckId);
+    cdkShareCopy(deckId, true);
+  } catch (e) { console.error(e); showToast('새 링크를 만들지 못했습니다: ' + (e.code || e.message)); cdkShareLoad(deckId); }
+};
+window.cdkShareStop = async function(deckId) {
+  if (!confirm('공유를 중지할까요?\n지금까지 보낸 링크가 모두 열리지 않게 됩니다.')) return;
+  try {
+    const docs = await cdkShareDocs(deckId);
+    await Promise.all(docs.map((x) => deleteDoc(x.ref)));
+    showToast('공유를 중지했습니다');
+  } catch (e) { console.error(e); showToast('공유 중지 실패: ' + (e.code || e.message)); }
+  cdkShareLoad(deckId);
 };
 
 // ── 학생 로드 ──
@@ -9648,7 +9837,7 @@ function renderConsultList() {
     const d = r.data, s = consultDesc(r);
     const dateStr = d.createdAt?.toDate ? formatConsultDate(d.createdAt.toDate()) : '-';
     const upd = s?.updatedAt?.toDate ? formatConsultDate(s.updatedAt.toDate()) : dateStr;
-    const stageTxt = s ? s.stageLabel + (s.isFlow && s.video && s.video.status !== 'pending' ? ` · 상담자료 ${s.video.label}` : '') : '신청서 접수';
+    const stageTxt = s ? s.stageLabel + (s.isFlow && s.video && s.video.status !== 'pending' && s.video.status !== 'none' ? ` · 상담자료 ${s.video.label}` : '') : '신청서 접수';
     return `
       <div class="consult-item cf-item">
         <div class="consult-main">
@@ -9675,6 +9864,7 @@ function renderConsultList() {
           <button class="btn btn-secondary btn-sm" onclick="openConsultRecord('${r.id}','student')">학생 결과</button>
           <button class="btn btn-secondary btn-sm" onclick="startConsultSurvey('${r.id}','student')">학생 설문 시작</button>
           <button class="btn btn-secondary btn-sm" onclick="printConsultSheet('${r.id}')">서식으로 보기 / 다운로드</button>
+          <button class="btn btn-secondary btn-sm" onclick="saveConsultImage('${r.id}')">📷 결과 이미지 (카톡 전달용)</button>
         </div>
       </div>`;
   }).join('');
@@ -9718,6 +9908,172 @@ window.closeConsultRecord = function() {
   crCurrent = null;
   document.getElementById('consultRecordModal').classList.remove('open');
   if (!document.getElementById('consultKiosk').classList.contains('open')) document.body.classList.remove('ck-lock');
+};
+
+// ══════ 상담 결과 이미지 (카카오톡 전달용) ══════
+// 상담신청서 인적사항 + 학부모(·학생) 설문 결과를 세로형 PNG 한 장으로 만들어 관리부에서 학부모님께 전달
+// 내부용 정보(방문 경로·진행 상태·문항별 응답)는 넣지 않습니다.
+const CI = { blob: null, name: '' };
+function ciLoadLib() {
+  if (window.html2canvas) return Promise.resolve();
+  return new Promise((res, rej) => {
+    const sc = document.createElement('script');
+    sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    sc.onload = () => res();
+    sc.onerror = () => rej(new Error('이미지 변환 도구를 불러오지 못했습니다. 인터넷 연결을 확인해 주세요.'));
+    document.head.appendChild(sc);
+  });
+}
+function ciLoadFont() {
+  if (!document.getElementById('ciFont')) {
+    const l = document.createElement('link');
+    l.id = 'ciFont'; l.rel = 'stylesheet';
+    l.href = 'https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css';
+    document.head.appendChild(l);
+  }
+}
+function ciSurveyHtml(role, d, p, CF) {
+  const e = escapeConsultHtml;
+  const sum = d[`${role}Survey`];
+  const done = (sum && sum.status === 'completed') || !!p;
+  const title = role === 'parent' ? '학부모 설문 결과' : '학생 설문 결과';
+  if (!done) return '';
+  const src = p || sum;
+  const code = String(src.code || sum?.code || '');
+  const when = crFmt(sum?.at) || crFmt(p?.completedAt) || crFmt(p?.createdAt);
+  const name = d.studentName ? e(d.studentName) + ' 학생' : '자녀';
+  const axes = crAxisRows(p || { axes: sum?.axes }, CF);
+  const extraLabels = { studyTime: '평일 혼자 공부 시간', manager: '가정 내 공부 관리', phone: '휴대폰 사용 규칙' };
+  const extra = p?.extra ? Object.entries(p.extra).filter(([, v]) => v !== null && v !== undefined && v !== '') : [];
+  return `<div class="sec">
+    <div class="st"><i></i>${title}<em>${e(when ? when.slice(0, 10) + ' 작성' : '')}</em></div>
+    <div class="code">${code.split('').map((c) => `<span>${e(c)}</span>`).join('')}</div>
+    <div class="tn">${e(src.typeName || sum?.typeName || '')}</div>
+    <div class="ts">${role === 'parent' ? `학부모님이 관찰하신 ${name}의 학습 모습` : '학생 본인이 답한 실제 학습 행동'}을 4가지 축으로 정리했습니다.</div>
+    ${axes.map((a) => `<div class="ax">
+      <div class="ax-t"><b>${e(a.name)}</b><span>${e(a.sideName)}</span></div>
+      ${a.v !== null ? `<div class="bar"><i style="left:${Math.max(0, Math.min(100, a.v))}%"></i></div><div class="bl"><span>${e(a.lo)}</span><span>${e(a.hi)}</span></div>` : ''}
+      ${a.text ? `<p class="${a.v === null ? 'nd' : ''}">${e(a.text)}</p>` : ''}</div>`).join('')}
+    ${p?.focus ? `<div class="fc"><b>상담 때 집중할 부분 · ${e(p.focus.name)}</b><p>${e(p.focus.text)}</p></div>` : ''}
+    ${extra.length ? `<div class="ex">${extra.map(([k, v]) => `<div><span>${e(extraLabels[k] || k)}</span><b>${e(v)}</b></div>`).join('')}</div>` : ''}
+  </div>`;
+}
+function ciCardHtml(d, prof, CF) {
+  const e = escapeConsultHtml;
+  const join = (a) => (a && a.length ? a.map(e).join(', ') : '');
+  const progress = d.level === '고등'
+    ? `${join(d.highSubjects)}${d.highLevel ? (d.highSubjects?.length ? ' · ' : '') + '난이도 ' + e(d.highLevel) : ''}`
+    : [d.progressGrade, d.progressSemester, d.progressUnit].filter(Boolean).map(e).join(' ');
+  const ex = d.examScores || {};
+  const exams = [ex.round1, ex.round2, ex.round3, ex.round4].map((x, i) => (x ? `${i + 1}회 ${e(x)}` : '')).filter(Boolean).join(' / ');
+  const sc = d.selfCheck || {};
+  const self = [['연산', sc.calcScore], ['정확도', sc.accuracyScore], ['흥미', sc.interestScore]].filter(([, v]) => v !== undefined && v !== null && v !== '').map(([k, v]) => `${k} ${e(v)}`).join(' · ');
+  const rows = [
+    ['학생 이름', e(d.studentName || '')], ['학교 / 학년', e(d.schoolGrade || '')],
+    ['과정', [d.level ? e(d.level) + '부' : '', e(d.branch || '')].filter(Boolean).join(' · ')],
+    ['학부모 연락처', e(d.parentPhone || '')], ['학생 연락처', e(d.studentPhone || '')],
+    [d.level === '고등' ? '수강 희망 과목' : '현재 진도', progress, 'f'],
+    ['최근 시험 점수', exams, 'f'],
+    ['자신 있는 영역', join(d.strongAreas), 'f'], ['어려워하는 영역', join(d.weakAreas), 'f'],
+    ['자가진단', self, 'f'],
+  ].filter((r) => r[1]);
+  const halves = rows.filter((r) => !r[2]);
+  if (halves.length % 2) halves[halves.length - 1][2] = 'f';   // 반쪽 칸이 홀수면 마지막 칸을 한 줄 전체로
+  const surveys = ciSurveyHtml('parent', d, prof.parent, CF) + ciSurveyHtml('student', d, prof.student, CF);
+  const date = d.createdAt?.toDate ? formatConsultDate(d.createdAt.toDate()).slice(0, 10) : '';
+  return `<div class="ci-card">
+    <div class="h">
+      <div class="brand"><img src="swc-logo.png" alt="">송우찬수학학원<span>${e(d.branch || '평촌관')}</span></div>
+      <div class="eye">CONSULTATION REPORT</div>
+      <div class="nm">${e(d.studentName || '')}<small>${e(d.schoolGrade || '')}</small></div>
+      <div class="dt">상담 신청서 · 학습 성향 설문 결과${date ? ' · ' + date : ''}</div>
+    </div>
+    <div class="b">
+      <div class="sec"><div class="st"><i></i>학생 정보 · 상담 신청서</div>
+        <div class="info">${rows.map((r) => `<div class="${r[2] || ''}"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('')}</div>
+      </div>
+      ${surveys || '<div class="sec"><div class="st"><i></i>학습 성향 설문 결과</div><p class="none">아직 진행한 설문이 없습니다.</p></div>'}
+      <p class="ft">설문 결과는 응답하신 실제 학습 행동을 바탕으로 정리한 <b>상담 참고 자료</b>이며 심리검사가 아닙니다.<br>송우찬수학학원 ${e(d.branch || '평촌관')} · 031-386-8899</p>
+    </div>
+  </div>`;
+}
+async function ciLoadRecord(cid) {
+  const snap = await getDoc(doc(db, 'consultForms', cid));
+  if (!snap.exists()) throw new Error('상담 기록을 찾을 수 없습니다.');
+  const d = snap.data();
+  const prof = { parent: null, student: null };
+  await Promise.all(['parent', 'student'].map(async (role) => {
+    try {
+      const ps = await getDoc(doc(db, 'learningProfiles', `${cid}_${role}`));
+      if (ps.exists() && ps.data().consultId === cid && ps.data().role === role) prof[role] = ps.data();
+    } catch (e) { console.warn('learningProfiles 조회 실패', e); }
+    if (!prof[role]) { const lg = consultLegacyProfiles[cid]?.[role]; if (lg && lg.consultId === cid) prof[role] = lg; }
+  }));
+  return { d, prof };
+}
+window.saveConsultImage = async function(cid) {
+  const modal = document.getElementById('consultImgModal');
+  const prev = document.getElementById('ciPrev');
+  CI.blob = null;
+  ['ciSave', 'ciCopy', 'ciShare'].forEach((id) => { document.getElementById(id).disabled = true; });
+  prev.innerHTML = '<div class="ci-wait">이미지를 만드는 중…</div>';
+  modal.classList.add('open');
+  document.body.classList.add('ck-lock');
+  let host = null;
+  try {
+    ciLoadFont();
+    const CF = await consultFlowModule();
+    const [{ d, prof }] = await Promise.all([ciLoadRecord(cid), ciLoadLib()]);
+    host = document.createElement('div');
+    host.className = 'ci-host';
+    host.innerHTML = ciCardHtml(d, prof, CF);
+    document.body.appendChild(host);
+    try { await document.fonts.load('700 16px Pretendard'); await document.fonts.load('800 16px Pretendard'); await document.fonts.ready; } catch (e) {}
+    await Promise.all([...host.querySelectorAll('img')].map((im) => im.complete ? 0 : new Promise((r) => { im.onload = im.onerror = r; })));
+    const card = host.firstElementChild;
+    const canvas = await window.html2canvas(card, { scale: 1.5, backgroundColor: '#F6F3EC', logging: false, useCORS: true, windowWidth: 760, scrollX: 0, scrollY: 0 });
+    CI.blob = await new Promise((r) => canvas.toBlob(r, 'image/png'));
+    if (!CI.blob) throw new Error('이미지를 만들지 못했습니다.');
+    const ymd = (d.createdAt?.toDate ? d.createdAt.toDate() : new Date()).toISOString().slice(0, 10).replace(/-/g, '');
+    CI.name = `상담결과_${String(d.studentName || '학생').replace(/[\\/:*?"<>|\s]/g, '')}_${ymd}.png`;
+    prev.innerHTML = '';
+    const img = new Image();
+    img.alt = '상담 결과 이미지';
+    img.src = URL.createObjectURL(CI.blob);
+    prev.appendChild(img);
+    document.getElementById('ciSave').disabled = false;
+    const canCopy = !!(navigator.clipboard && window.ClipboardItem && window.isSecureContext);
+    const file = new File([CI.blob], CI.name, { type: 'image/png' });
+    const canShare = !!(navigator.canShare && navigator.canShare({ files: [file] })) && matchMedia('(pointer:coarse)').matches;
+    const cb = document.getElementById('ciCopy'), sb = document.getElementById('ciShare');
+    cb.hidden = !canCopy; cb.disabled = !canCopy;
+    sb.hidden = !canShare; sb.disabled = !canShare;
+  } catch (e) {
+    console.error('[상담 결과 이미지]', e);
+    prev.innerHTML = `<div class="ci-wait" style="color:#ff9090;">${escapeConsultHtml(e.message || '이미지를 만들지 못했습니다.')}</div>`;
+  } finally { if (host) host.remove(); }
+};
+window.closeConsultImage = function() {
+  document.getElementById('consultImgModal').classList.remove('open');
+  const im = document.querySelector('#ciPrev img'); if (im) URL.revokeObjectURL(im.src);
+  if (!document.getElementById('consultRecordModal').classList.contains('open') && !document.getElementById('consultKiosk').classList.contains('open')) document.body.classList.remove('ck-lock');
+};
+window.ciDownload = function() {
+  if (!CI.blob) return;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(CI.blob); a.download = CI.name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+};
+window.ciCopy = async function() {
+  if (!CI.blob) return;
+  try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': CI.blob })]); showToast('이미지를 복사했습니다. 카카오톡 채팅창에 Ctrl+V 하세요'); }
+  catch (e) { console.error(e); showToast('복사하지 못했습니다. [이미지 저장]을 이용해 주세요'); }
+};
+window.ciShare = async function() {
+  if (!CI.blob) return;
+  try { await navigator.share({ files: [new File([CI.blob], CI.name, { type: 'image/png' })], title: '상담 결과' }); }
+  catch (e) { if (e.name !== 'AbortError') { console.error(e); showToast('공유하지 못했습니다. [이미지 저장]을 이용해 주세요'); } }
 };
 
 function crFmt(ts) { return ts?.toDate ? formatConsultDate(ts.toDate()) : ''; }
@@ -9785,7 +10141,7 @@ function consultRecordHtml(cid, d, prof, profErr, CF) {
     ${step('ok', '상담신청서', `저장 ${e(crFmt(d.formSavedAt || d.createdAt) || '완료')}`)}
     ${step(pDone ? 'ok' : '', '학부모 설문', pDone ? `완료 ${e(crFmt(s?.parent.at) || '')}` : '미실시')}
     ${step(sDone ? 'ok' : (d.visitWith === 'parent' ? 'warn' : ''), '학생 설문', sDone ? `완료 ${e(crFmt(s?.student.at) || '')}` : e(s?.student.label || '미실시'))}
-    ${step(video && ['completed'].includes(video.status) ? 'ok' : '', '상담자료', video ? e(video.label) + (video.at ? ' ' + e(crFmt(video.at)) : '') : '해당 없음')}
+    ${video && video.status !== 'none' && video.status !== 'pending' ? step(video.status === 'completed' ? 'ok' : '', '상담자료', e(video.label) + (video.at ? ' ' + e(crFmt(video.at)) : '')) : ''}
     ${step(s?.stage === 'consultation_completed' ? 'ok' : '', '진행 상태', e(s?.stageLabel || '신청서 접수'))}`;
 
   // 축별 비교: 두 결과의 축 방향(같음/다름)만 나란히 보여줌 — 새 해석·유형을 만들지 않음
@@ -9822,6 +10178,7 @@ function consultRecordHtml(cid, d, prof, profErr, CF) {
       <div class="cr-acts">
         <button class="btn btn-primary btn-sm" onclick="startConsultSurvey('${cid}','student')">학생 설문 시작</button>
         ${pDone ? '' : `<button class="btn btn-secondary btn-sm" onclick="startConsultSurvey('${cid}','parent')">학부모 설문 진행</button>`}
+        <button class="btn btn-primary btn-sm" onclick="saveConsultImage('${cid}')">📷 결과 이미지 (카톡 전달용)</button>
         <button class="btn btn-secondary btn-sm" onclick="printConsultSheet('${cid}')">신청서 서식 보기</button>
         <button class="btn btn-secondary btn-sm" onclick="window.open('consult-deck.html?deck=middle','_blank')">상담자료 열기</button>
       </div>
@@ -10457,7 +10814,7 @@ body{font-family:'Pretendard','Apple SD Gothic Neo',sans-serif;color:#1E1733;-we
 h1{margin-top:4mm;font-size:25px;font-weight:800;letter-spacing:-.04em;line-height:1.35}
 .sub{margin-top:3mm;font-size:12.5px;color:#5A5370;line-height:1.6}
 .qr{margin-top:9mm;padding:5mm;background:#fff;border-radius:6mm;box-shadow:0 4mm 10mm -6mm rgba(37,28,64,.35)}.qr img{display:block;width:62mm;height:62mm}
-.steps{margin-top:9mm;display:grid;grid-template-columns:repeat(4,1fr);gap:2.5mm;width:100%}
+.steps{margin-top:9mm;display:grid;grid-template-columns:repeat(3,1fr);gap:2.5mm;width:100%}
 .steps div{padding:3mm 1mm;border-radius:3mm;background:#FBF9F4;border:1px solid rgba(37,28,64,.12);font-size:10.5px;font-weight:700;line-height:1.45}
 .steps b{display:block;font-size:9px;color:#C9A24A;letter-spacing:.1em}
 .foot{margin-top:auto;font-size:10px;color:#8E879E;letter-spacing:.15em}</style></head><body>
@@ -10465,7 +10822,7 @@ h1{margin-top:4mm;font-size:25px;font-weight:800;letter-spacing:-.04em;line-heig
 <p class="ey">CONSULTATION</p><h1>상담 전에 휴대폰으로<br>먼저 작성해 주세요</h1>
 <p class="sub">카메라로 QR을 비추면 바로 열립니다 · 약 5분</p>
 <div class="qr"><img src="${src}"></div>
-<div class="steps"><div><b>01</b>상담신청서</div><div><b>02</b>학부모 설문</div><div><b>03</b>결과 · 상담자료</div><div><b>04</b>수업 미리보기</div></div>
+<div class="steps"><div><b>01</b>상담신청서</div><div><b>02</b>학부모 설문</div><div><b>03</b>결과 확인</div></div>
 <p class="foot">SONG WOOCHAN MATH</p></div>
 <script>window.onload=()=>setTimeout(()=>window.print(),400)<\/script></body></html>`);
   w.document.close();
@@ -11557,7 +11914,7 @@ window.deleteScheduleEvent = async function (id) {
   <div class="cq-box">
     <button class="cq-close" onclick="closeConsultQr()">✕</button>
     <h3 style="margin:0 0 6px;">📱 상담 QR · 오늘 현황</h3>
-    <div style="font-size:12.5px;color:var(--muted);margin-bottom:18px;line-height:1.6;">상담 오신 분이 <b>본인 휴대폰</b>으로 스캔하면 상담 전용 화면이 열립니다 (관리자 로그인 필요 없음). 상담신청서 → 학부모 설문 → 결과 → 상담자료 → 수업 미리보기 순서로 진행되고, 아래 오늘 현황과 상담 기록에 바로 저장됩니다. QR 주소는 바뀌지 않으니 <b>인쇄해서 상담 테이블에 두고</b> 계속 쓰면 됩니다.</div>
+    <div style="font-size:12.5px;color:var(--muted);margin-bottom:18px;line-height:1.6;">상담 오신 분이 <b>본인 휴대폰</b>으로 스캔하면 상담 전용 화면이 열립니다 (관리자 로그인 필요 없음). 상담신청서 → 학부모 설문 → 결과 확인 순서로 진행되고(결과 확인 후 종료), 아래 오늘 현황과 상담 기록에 바로 저장됩니다. QR 주소는 바뀌지 않으니 <b>인쇄해서 상담 테이블에 두고</b> 계속 쓰면 됩니다.</div>
     <div class="cq-body">
       <div class="cq-qr">
         <div id="cqCanvas"></div>
@@ -11591,6 +11948,23 @@ window.deleteScheduleEvent = async function (id) {
   <div class="cr-box">
     <button class="cq-close" onclick="closeConsultRecord()" aria-label="닫기">✕</button>
     <div id="crBody"></div>
+  </div>
+</div>
+
+<!-- 상담 결과 이미지 (상담신청서 인적사항 + 설문 결과 → PNG, 카카오톡 전달용) -->
+<div id="consultImgModal" onclick="if(event.target===this)closeConsultImage()">
+  <div class="ci-box">
+    <button class="cq-close" onclick="closeConsultImage()" aria-label="닫기">✕</button>
+    <h3>📷 상담 결과 이미지</h3>
+    <p class="ci-hint">상담신청서 인적사항과 설문 결과를 한 장의 이미지로 만들었습니다.<br>
+      <b style="color:var(--off-white);">PC</b>: [이미지 복사] 후 PC 카카오톡 채팅창에 <b style="color:var(--gold);">Ctrl+V</b> 하거나, 저장한 파일을 끌어다 놓으세요.<br>
+      <b style="color:var(--off-white);">휴대폰</b>: [공유하기] → 카카오톡을 고르면 바로 보낼 수 있습니다.</p>
+    <div class="ci-prev" id="ciPrev"><div class="ci-wait">이미지를 만드는 중…</div></div>
+    <div class="ci-btns">
+      <button class="btn btn-primary" id="ciSave" disabled onclick="ciDownload()">⬇ 이미지 저장</button>
+      <button class="btn btn-secondary" id="ciCopy" disabled onclick="ciCopy()" hidden>📋 이미지 복사</button>
+      <button class="btn btn-secondary" id="ciShare" disabled onclick="ciShare()" hidden>📤 공유하기 (카카오톡)</button>
+    </div>
   </div>
 </div>
 

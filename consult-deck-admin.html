@@ -477,6 +477,14 @@ $('#btnSave').onclick = async () => {
     if (cur.exists()) await addDoc(collection(db, 'consultDecks', DECK, 'history'), { deck: cleanForSave(cur.data()), savedAt: serverTimestamp(), savedBy: S.user?.email || '' });
     await setDoc(ref, { ...cleanForSave(S.deck), updatedAt: serverTimestamp(), updatedBy: S.user?.email || '' });
     S.savedJSON = JSON.stringify(S.deck); S.existed = true; markDirty(); toast('저장했습니다. 상담 화면에 바로 반영됩니다.');
+    // 학부모 공유 링크(consultConfig/deckShare_*)가 있으면 같은 내용으로 갱신 → 이미 보낸 링크에도 바로 반영
+    try {
+      const { where, updateDoc } = S.fb;
+      const ss = await getDocs(query(collection(db, 'consultConfig'), where('shareDeckId', '==', DECK)));
+      const live = ss.docs.filter(x => x.id.startsWith('deckShare_'));
+      await Promise.all(live.map(x => updateDoc(x.ref, { deck: cleanForSave(S.deck), updatedAt: serverTimestamp() })));
+      if (live.length) toast('저장했습니다. 학부모 공유 링크에도 바로 반영됩니다.');
+    } catch (x) { console.warn('[공유 링크 반영 실패]', x); toast('저장은 됐지만 공유 링크 반영에 실패했습니다. 관리자 페이지 상담자료 관리에서 [최신 내용 반영]을 눌러 주세요.', 1); }
     // 보관본은 최근 10개만 유지
     const hs = await getDocs(query(collection(db, 'consultDecks', DECK, 'history'), orderBy('savedAt', 'desc')));
     hs.docs.slice(10).forEach(x => deleteDoc(x.ref).catch(() => {}));

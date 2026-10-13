@@ -302,7 +302,7 @@ h1 em{font-style:normal;color:var(--purple);background:linear-gradient(transpare
 body.kiosk .top{display:none}
 body.kiosk .wrap{max-width:760px}
 .steps{position:relative;z-index:2;max-width:680px;margin:0 auto;padding:0 20px 4px}
-.steps ol{list-style:none;display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.steps ol{list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .steps li{display:flex;align-items:center;justify-content:center;gap:5px;min-width:0;padding:8px 4px;border-radius:999px;background:rgba(251,249,244,.8);border:1px solid var(--line);font-size:12.5px;font-weight:700;color:var(--ink-3);white-space:nowrap}
 .steps li b{flex:none;width:19px;height:19px;border-radius:50%;display:grid;place-items:center;font-size:11px;background:rgba(37,28,64,.08);color:var(--ink-3)}
 .steps li span{overflow:hidden;text-overflow:ellipsis}
@@ -378,7 +378,6 @@ body.deck-open{overflow:hidden}
     <li><b>1</b><span class="lf">상담신청서</span><span class="ls">신청서</span></li>
     <li><b>2</b><span class="lf">학부모 설문</span><span class="ls">설문</span></li>
     <li><b>3</b><span class="lf">결과 확인</span><span class="ls">결과</span></li>
-    <li><b>4</b><span class="lf">상담자료</span><span class="ls">자료</span></li>
   </ol>
 </nav>
 
@@ -403,7 +402,7 @@ function show(html){ screen.innerHTML = html; screen.style.animation = 'none'; v
 
 /* ---------- 0. 상담 기록 연결 (URL 파라미터) ----------
    learning-profile.html                              → 단독 체험 모드 (저장 안 함, 기존과 동일)
-   learning-profile.html?cid=상담ID&role=parent&flow=visit → 상담신청서 다음 단계 (학부모 설문 → 결과 → 상담자료)
+   learning-profile.html?cid=상담ID&role=parent&flow=visit → 상담신청서 다음 단계 (학부모 설문 → 결과 확인에서 종료)
    learning-profile.html?cid=상담ID&role=student&flow=visit → 학부모 설문을 마친 같은 휴대폰에서 이어서 하는 학생 설문 (방문자 세션)
    learning-profile.html?cid=상담ID&role=student         → 관리자 화면에서 시작하는 학생 설문 (관리자 로그인 필요)
    ※ 방문 플로우(flow=visit)는 관리자 페이지 안(kiosk=1)이 아니면 관리자 로그인과 상관없이 항상 방문자 세션으로 저장
@@ -613,7 +612,7 @@ function renderResult(opts = {}){
     </div>`;
   else if (isVisitFlow()) actions = `
     <div class="res-actions">
-      <button class="cta full" id="toVideo" disabled style="margin-top:0">다음 단계로 · 상담자료 보기<span class="arw">${ARROW}</span></button>
+      <button class="cta full" id="toDone" disabled style="margin-top:0">설문 완료하기<span class="arw">${ARROW}</span></button>
       <div class="row">
         <button class="ghost" id="edit">${BACK}응답 수정</button>
         <button class="ghost" id="print">${PRINT}저장·인쇄</button>
@@ -662,10 +661,8 @@ function renderResult(opts = {}){
   if (edit) edit.addEventListener('click', () => { state.idx = Q().length - 1; renderQuestion(); });
   if ($('#retry')) $('#retry').addEventListener('click', () => { state.role = null; renderIntro(); });
   if ($('#other')) $('#other').addEventListener('click', () => { startSurvey(isS ? 'parent' : 'student'); });
-  const toVideo = $('#toVideo');
-  if (toVideo) toVideo.addEventListener('click', () => { if (!toVideo.disabled) renderDeck(); });
   const toDone = $('#toDone');
-  if (toDone) toDone.addEventListener('click', () => { if (!toDone.disabled) renderDone(); });
+  if (toDone) toDone.addEventListener('click', () => { if (!toDone.disabled) finishFlow(); });
 
   CTX.lastResult = buildPayload({ axes, code, extra, typeName, weakest });
   if (LINK.cid){
@@ -701,8 +698,7 @@ function setSave(kind, text){
     $('#saveRetry').addEventListener('click', () => saveFlowResult());
   }
   const ok = kind === 'ok' || kind === 'restored';
-  const next = $('#toVideo'); if (next) next.disabled = !ok;   // 저장이 확인돼야 다음 단계로
-  const fin = $('#toDone'); if (fin) fin.disabled = !ok;
+  const fin = $('#toDone'); if (fin) fin.disabled = !ok;   // 저장이 확인돼야 완료
   const ho = $('#handoff'); if (ho) ho.hidden = kind !== 'ok';
 }
 async function saveFlowResult(){
@@ -711,7 +707,7 @@ async function saveFlowResult(){
   setSave('saving');
   try {
     const api = await loadApi();
-    CTX.record = await api.saveSurvey(CTX.session, LINK.cid, state.role, CTX.lastResult);
+    CTX.record = await api.saveSurvey(CTX.session, LINK.cid, state.role, CTX.lastResult, { finish: isVisitFlow() && state.role === 'parent' });
     state.saved = true;
     clearAnswersLocal();
     setSave('ok');
@@ -722,72 +718,22 @@ async function saveFlowResult(){
   } finally { state.saving = false; }
 }
 
-/* ---------- 7. 상담자료 (자동 재생 프레젠테이션 consult-intro.html) ----------
-   결과 저장 후 전체 화면으로 열려 표지 없이 바로 재생 → 끝나면 목차(상세 내용) 화면에서 멈춤.
-   왼쪽 아래 [상담 준비 완료]를 누르면 완료 화면으로. 끝까지 재생되면 '끝까지 시청'으로 자동 기록. */
-const DECK_URL = 'consult-intro.html?autostart=1';
-const DECK = { el:null, started:false, reached:false, timer:null };
-function onDeckMessage(e){
-  if (e.origin !== location.origin || !e.data || e.data.type !== 'swc-intro' || !DECK.el) return;
-  if (e.data.event === 'started'){ DECK.started = true; clearTimeout(DECK.timer); }
-  if (e.data.event === 'menu' && !DECK.reached){
-    DECK.reached = true;
-    const b = DECK.el.querySelector('.deck-done'); if (b) b.classList.add('ready');
-    // 끝까지 재생됨 → 진행 기록 (화면은 그대로 두고 원장님·학부모님이 목차를 계속 볼 수 있음)
-    loadApi().then(api => api.saveVideoStatus(CTX.session, LINK.cid, 'completed')).then(() => { CTX.videoStatus = 'completed'; }).catch(err => console.error('[상담자료 기록 실패]', err));
+/* ---------- 7. 설문 완료 → 완료 화면 ----------
+   방문 플로우는 결과 확인이 마지막 단계 (2026.10.13 상담자료 자동 재생 단계 삭제).
+   설문 저장 때 '상담 준비 완료'로 함께 기록하며, 예전에 저장된 기록(결과까지만 저장된 상태)은 여기서 마무리 기록 */
+async function finishFlow(){
+  const r = CTX.record || {};
+  if (state.role === 'parent' && isVisitFlow() && CTX.session && r.stage !== 'consultation_completed'){
+    renderLoading('마무리하는 중…');
+    try { const api = await loadApi(); await api.saveVideoStatus(CTX.session, LINK.cid, 'none'); }
+    catch(e){ console.error('[마무리 기록 실패]', e); }
   }
-}
-window.addEventListener('message', onDeckMessage);
-function renderDeck(){
-  setSteps(4);
-  closeDeck();
-  DECK.started = false; DECK.reached = false;
-  const wrap = document.createElement('div');
-  wrap.className = 'deck-full';
-  wrap.innerHTML = `<iframe title="송우찬수학학원 상담자료" allow="autoplay; fullscreen"></iframe>
-    <p class="deck-rotate">휴대폰을 가로로 돌려서 봐 주세요</p>
-    <button class="deck-done" type="button">상담 준비 완료 ✓</button>`;
-  document.body.appendChild(wrap); document.body.classList.add('deck-open');
-  DECK.el = wrap;
-  wrap.querySelector('iframe').src = DECK_URL;   // 버튼을 누른 직후 열어 배경음 재생이 허용될 가능성을 높임
-  wrap.querySelector('.deck-done').addEventListener('click', () => finishVideo(DECK.reached ? 'completed' : 'skipped'));
-  setTimeout(() => { const r = wrap.querySelector('.deck-rotate'); if (r) r.style.opacity = '0'; }, 6000);
-  // 일정 시간 안에 재생이 시작되지 않으면 (파일 누락·네트워크 문제) 안내
-  DECK.timer = setTimeout(() => { if (!DECK.started && DECK.el === wrap) deckError(); }, 15000);
-}
-function deckError(){
-  if (!DECK.el) return;
-  const box = document.createElement('div');
-  box.className = 'deck-err';
-  box.innerHTML = `<div><b style="font-size:18px">상담자료를 불러오지 못했습니다</b><p>인터넷 연결을 확인해 주세요.<br>상담신청서와 설문 결과는 이미 저장되어 있습니다.</p>
-    <div class="row"><button class="pri" type="button" data-a="retry">다시 시도</button><button type="button" data-a="done">상담자료 없이 완료하기</button></div></div>`;
-  DECK.el.appendChild(box);
-  box.addEventListener('click', e => { const a = e.target.closest('[data-a]'); if (!a) return; if (a.dataset.a === 'retry') renderDeck(); else finishVideo('failed'); });
-}
-function closeDeck(){
-  clearTimeout(DECK.timer);
-  if (DECK.el){ DECK.el.remove(); DECK.el = null; }
-  document.body.classList.remove('deck-open');
-}
-/* 상담자료 단계 마무리 — 기록 저장에 실패해도 상담신청서·설문 결과는 이미 저장되어 있으므로 진행을 막지 않음 */
-async function finishVideo(status){
-  if (CTX.videoFinishing) return;
-  CTX.videoFinishing = true;
-  closeDeck();
-  renderLoading('마무리하는 중…');
-  let warn = '';
-  if (CTX.videoStatus !== 'completed' || status !== 'completed'){
-    try { const api = await loadApi(); await api.saveVideoStatus(CTX.session, LINK.cid, status); }
-    catch(e){ console.error('[상담자료 단계 기록 실패]', e); warn = CTX.api ? CTX.api.errorMessage(e, '진행 기록') : '진행 기록을 저장하지 못했습니다.'; }
-  }
-  CTX.videoStatus = status;
-  CTX.videoFinishing = false;
-  renderDone({ warn });
+  renderDone();
 }
 
 /* ---------- 8. 완료 ---------- */
 function renderDone({ warn = '', generic = false } = {}){
-  setSteps(4);
+  setSteps(3);
   document.querySelectorAll('#steps li').forEach(li => { li.classList.remove('on'); li.classList.add('done'); });
   const api = CTX.api, r = CTX.record || {}, name = esc(CTX.name);
   const isAdmin = CTX.session && CTX.session.mode === 'admin';
@@ -801,8 +747,6 @@ function renderDone({ warn = '', generic = false } = {}){
   const visitorStudent = canStudent && !isAdmin;
   if (api) api.pointer.set({ cid: LINK.cid, done: true, studentPending: visitorStudent }, LINK.s);
   notifyParent('flow_done', { cid: LINK.cid });
-  const vs = CTX.videoStatus || (r.video && r.video.status) || '';
-  const vLabel = api && vs && vs !== 'pending' ? (api.VIDEO_LABEL[vs] || '') : '';
   const studentLabel = studentDone ? '저장 완료'
     : r.visitWith === 'parent' ? '이번 방문에는 진행하지 않음' : '상담 때 진행';
   show(`
@@ -818,7 +762,6 @@ function renderDone({ warn = '', generic = false } = {}){
       <div class="fact"><span>상담신청서</span><b>저장 완료</b></div>
       <div class="fact"><span>학부모 설문</span><b>${esc((r.parentSurvey && r.parentSurvey.typeName) || '저장 완료')}</b></div>
       <div class="fact"><span>학생 설문</span><b>${studentLabel}</b></div>
-      ${vLabel ? `<div class="fact"><span>상담자료</span><b>${esc(vLabel)}</b></div>` : ''}
     </div>`}
     ${warn ? `<p class="disclaimer">${esc(warn)}<br>상담신청서와 설문 결과는 이미 저장되어 있습니다.</p>` : ''}
     <div class="res-actions">
@@ -870,7 +813,7 @@ function openLounge(){
 }
 function closeLounge(){
   if (LOUNGE.el){ LOUNGE.el.remove(); LOUNGE.el = null; }
-  if (!DECK.el) document.body.classList.remove('deck-open');
+  document.body.classList.remove('deck-open');
 }
 window.addEventListener('message', e => {
   if (e.origin !== location.origin || !e.data || e.data.type !== 'swc-lounge') return;
@@ -1064,10 +1007,10 @@ function renderSavedSummary(rec){
       <h1 class="type-name">${esc(s.typeName || '')}</h1>
       <p class="res-sub">${esc(fmtTime(s.at))}에 저장된 학부모 설문 결과입니다.</p></div>
     <div class="res-actions">
-      <button class="cta full" id="toVideo">다음 단계로 · 상담자료 보기<span class="arw">${ARROW}</span></button>
+      <button class="cta full" id="toDone">설문 완료하기<span class="arw">${ARROW}</span></button>
       <div class="row"><button class="ghost" id="redo">${RETRY}설문 다시 하기</button></div>
     </div>`);
-  $('#toVideo').addEventListener('click', () => renderDeck());
+  $('#toDone').addEventListener('click', () => { state.role = 'parent'; finishFlow(); });
   $('#redo').addEventListener('click', () => startSurvey('parent'));
 }
 

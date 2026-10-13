@@ -95,7 +95,7 @@ body {
 
 /* 진행 단계 표시 */
 .flowbar { max-width:640px; margin:0 auto; padding:14px 14px 0; }
-.flowbar ol { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(4,1fr); gap:6px; }
+.flowbar ol { list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
 .flowbar li {
   display:flex; align-items:center; justify-content:center; gap:5px; min-width:0;
   padding:8px 4px; border-radius:100px; background:#fff; border:1px solid #e6e1d6;
@@ -140,7 +140,6 @@ body.kiosk .hello h2 { font-size:26px; }
     <li class="on" aria-current="step"><b>1</b><span class="lf">상담신청서</span><span class="ls">신청서</span></li>
     <li><b>2</b><span class="lf">학부모 설문</span><span class="ls">설문</span></li>
     <li><b>3</b><span class="lf">결과 확인</span><span class="ls">결과</span></li>
-    <li><b>4</b><span class="lf">상담자료</span><span class="ls">자료</span></li>
   </ol>
 </nav>
 
@@ -528,8 +527,8 @@ function showResume(rec) {
   const doneParent = rec.parentSurvey && rec.parentSurvey.status === 'completed';
   box.className = 'notice';
   box.innerHTML = doneParent
-    ? `<b>학부모 설문까지 저장된 상담지입니다.</b><br>내용을 고칠 수 있고, 바로 결과·상담자료로 이어갈 수도 있어요.
-       <div class="act"><button type="button" id="resumeGo">결과 · 상담자료로 이동</button></div>`
+    ? `<b>학부모 설문까지 저장된 상담지입니다.</b><br>내용을 고칠 수 있고, 바로 결과로 이동할 수도 있어요.
+       <div class="act"><button type="button" id="resumeGo">설문 결과로 이동</button></div>`
     : `<b>작성하신 상담지를 불러왔습니다.</b><br>확인 후 아래 <b>다음 단계로</b>를 눌러 주세요.`;
   box.hidden = false;
   const go = $('resumeGo');
