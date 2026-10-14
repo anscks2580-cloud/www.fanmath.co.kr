@@ -10788,8 +10788,13 @@ function loadQrLib() {
 }
 
 // kind: 'qr' 방문자 휴대폰(QR) · 'tablet' 학원 태블릿(관리자 로그인 안 된 브라우저) · 'lounge' 수업 미리보기만
+// 문자·카톡·QR용 짧은 주소 (pc/index.html · sb/index.html 이 상담지로 바로 연결)
+const CONSULT_SHORT = { '평촌관': 'pc', '산본관': 'sb' };
 function consultLinkUrl(kind = 'qr') {
   const branch = document.getElementById('cqBranch').value;
+  if (kind === 'qr' && /^https?:$/.test(location.protocol) && CONSULT_SHORT[branch]) {
+    return new URL(CONSULT_SHORT[branch], location.href).toString();
+  }
   const u = new URL(kind === 'lounge' ? 'consult-lounge.html' : 'consult-visit.html', location.href);
   u.search = '';
   u.hash = '';
