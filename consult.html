@@ -63,6 +63,8 @@
   .self-check span { font-size:12px; color: var(--off-white); flex:1; }
   .self-check input[type=range] { flex:2; accent-color: var(--gold); }
   .self-check .val { width:38px; text-align:right; font-size:13px; font-weight:700; color:var(--gold); }
+  .sc-block { margin-top:12px; padding:14px 14px 12px; border:1px solid var(--border-soft); border-radius:12px; background: rgba(255,255,255,0.02); }
+  .sc-title { font-size:12px; font-weight:700; color: var(--gold); margin-bottom:10px; }
 
   .hidden { display:none !important; }
 
@@ -236,23 +238,48 @@
         </div>
       </div>
 
-      <!-- 학습 자가진단 -->
+      <!-- 학습 자가진단 : 학생 본인 평가 / 학부모님 평가 (하나 또는 둘 다) -->
       <div class="f-section">
-        <div class="f-label">학습 자가진단<span class="f-sub">본인 또는 학부모님이 생각하는 점수 (0~10)</span></div>
-        <div class="self-check">
-          <span>연산 능력</span>
-          <input type="range" min="0" max="10" value="5" data-target="calcScoreVal" oninput="document.getElementById('calcScoreVal').textContent=this.value">
-          <span class="val" id="calcScoreVal">5</span>
+        <div class="f-label">학습 자가진단<span class="f-sub">평가하는 분을 선택해 주세요 · 둘 다 선택 가능 (0~10)</span></div>
+        <div class="chip-group" id="selfWhoGroup">
+          <label class="chip-opt"><input type="checkbox" value="student" checked>학생 본인 평가</label>
+          <label class="chip-opt"><input type="checkbox" value="parent">학부모님 평가</label>
         </div>
-        <div class="self-check">
-          <span>풀이 정확도</span>
-          <input type="range" min="0" max="10" value="5" data-target="accuracyScoreVal" oninput="document.getElementById('accuracyScoreVal').textContent=this.value">
-          <span class="val" id="accuracyScoreVal">5</span>
+        <div class="sc-block" id="scStudentBlock">
+          <div class="sc-title">학생 본인이 생각하는 점수</div>
+          <div class="self-check">
+            <span>연산 능력</span>
+            <input type="range" min="0" max="10" value="5" oninput="document.getElementById('calcScoreVal').textContent=this.value">
+            <span class="val" id="calcScoreVal">5</span>
+          </div>
+          <div class="self-check">
+            <span>풀이 정확도</span>
+            <input type="range" min="0" max="10" value="5" oninput="document.getElementById('accuracyScoreVal').textContent=this.value">
+            <span class="val" id="accuracyScoreVal">5</span>
+          </div>
+          <div class="self-check">
+            <span>수학 흥미도</span>
+            <input type="range" min="0" max="10" value="5" oninput="document.getElementById('interestScoreVal').textContent=this.value">
+            <span class="val" id="interestScoreVal">5</span>
+          </div>
         </div>
-        <div class="self-check">
-          <span>수학 흥미도</span>
-          <input type="range" min="0" max="10" value="5" data-target="interestScoreVal" oninput="document.getElementById('interestScoreVal').textContent=this.value">
-          <span class="val" id="interestScoreVal">5</span>
+        <div class="sc-block hidden" id="scParentBlock">
+          <div class="sc-title">학부모님이 보시는 학생 점수</div>
+          <div class="self-check">
+            <span>연산 능력</span>
+            <input type="range" min="0" max="10" value="5" oninput="document.getElementById('pCalcScoreVal').textContent=this.value">
+            <span class="val" id="pCalcScoreVal">5</span>
+          </div>
+          <div class="self-check">
+            <span>풀이 정확도</span>
+            <input type="range" min="0" max="10" value="5" oninput="document.getElementById('pAccuracyScoreVal').textContent=this.value">
+            <span class="val" id="pAccuracyScoreVal">5</span>
+          </div>
+          <div class="self-check">
+            <span>수학 흥미도</span>
+            <input type="range" min="0" max="10" value="5" oninput="document.getElementById('pInterestScoreVal').textContent=this.value">
+            <span class="val" id="pInterestScoreVal">5</span>
+          </div>
         </div>
       </div>
 
@@ -318,7 +345,9 @@ function buildTelegramMessage(d) {
   lines.push('📝 시험점수: ' + (exams.length ? exams.join(' / ') : '-'));
   lines.push('💪 강점: ' + join(d.strongAreas));
   lines.push('⚠️ 약점: ' + join(d.weakAreas));
-  lines.push('🧮 자가진단: 연산 ' + d.selfCheck.calcScore + ' · 정확도 ' + d.selfCheck.accuracyScore + ' · 흥미 ' + d.selfCheck.interestScore);
+  const scLine = (who, x) => x ? '🧮 자가진단(' + who + '): 연산 ' + x.calcScore + ' · 정확도 ' + x.accuracyScore + ' · 흥미 ' + x.interestScore : '';
+  const scLines = [scLine('학생 본인', d.selfCheck?.student), scLine('학부모', d.selfCheck?.parent)].filter(Boolean);
+  lines.push(...(scLines.length ? scLines : ['🧮 자가진단: -']));
   lines.push('');
   lines.push('🕒 ' + new Date().toLocaleString('ko-KR'));
   return lines.join('\n');
@@ -356,6 +385,22 @@ levelTabs.addEventListener('click', (e) => {
   }
 });
 
+/* 자가진단: 선택한 평가자(학생 본인 / 학부모)만 저장 */
+function selfWho() { return getCheckedValues('selfWhoGroup'); }
+function applySelfWho() {
+  const on = selfWho();
+  document.getElementById('scStudentBlock').classList.toggle('hidden', !on.includes('student'));
+  document.getElementById('scParentBlock').classList.toggle('hidden', !on.includes('parent'));
+}
+document.querySelectorAll('#selfWhoGroup input').forEach(i => i.addEventListener('change', applySelfWho));
+function collectSelfCheck() {
+  const on = selfWho();
+  const num = (id) => Number(document.getElementById(id).textContent);
+  const o = {};
+  if (on.includes('student')) o.student = { calcScore: num('calcScoreVal'), accuracyScore: num('accuracyScoreVal'), interestScore: num('interestScoreVal') };
+  if (on.includes('parent')) o.parent = { calcScore: num('pCalcScoreVal'), accuracyScore: num('pAccuracyScoreVal'), interestScore: num('pInterestScoreVal') };
+  return o;
+}
 function getCheckedValues(groupId) {
   return [...document.querySelectorAll('#' + groupId + ' input:checked')].map(el => el.value);
 }
@@ -392,11 +437,7 @@ form.addEventListener('submit', async (e) => {
     },
     strongAreas: getCheckedValues('highAreaGroup'),
     weakAreas: getCheckedValues('lowAreaGroup'),
-    selfCheck: {
-      calcScore: Number(document.getElementById('calcScoreVal').textContent),
-      accuracyScore: Number(document.getElementById('accuracyScoreVal').textContent),
-      interestScore: Number(document.getElementById('interestScoreVal').textContent)
-    },
+    selfCheck: collectSelfCheck(),
     createdAt: serverTimestamp(),
     status: 'new'
   };

@@ -9852,7 +9852,6 @@ function renderConsultList() {
           <button class="btn btn-secondary btn-sm" onclick="openConsultRecord('${r.id}','parent')">학부모 결과</button>
           <button class="btn btn-secondary btn-sm" onclick="openConsultRecord('${r.id}','student')">학생 결과</button>
           <button class="btn btn-secondary btn-sm" onclick="startConsultSurvey('${r.id}','student')">학생 설문 시작</button>
-          <button class="btn btn-secondary btn-sm" onclick="printConsultSheet('${r.id}')">서식으로 보기 / 다운로드</button>
           <button class="btn btn-secondary btn-sm" onclick="saveConsultImage('${r.id}')">📷 결과 이미지 (카톡 전달용)</button>
         </div>
       </div>`;
@@ -9947,6 +9946,19 @@ function ciSurveyHtml(role, d, p, CF) {
     ${extra.length ? `<div class="ex">${extra.map(([k, v]) => `<div><span>${e(extraLabels[k] || k)}</span><b>${e(v)}</b></div>`).join('')}</div>` : ''}
   </div>`;
 }
+// 자가진단: { student:{...}, parent:{...} } (2026.10~) / 예전 저장본은 { calcScore, ... } (평가자 구분 없음)
+function selfCheckGroups(sc) {
+  sc = sc || {};
+  const out = [];
+  if (sc.student) out.push({ who: '학생 본인', s: sc.student });
+  if (sc.parent) out.push({ who: '학부모', s: sc.parent });
+  if (!out.length && (sc.calcScore !== undefined || sc.accuracyScore !== undefined || sc.interestScore !== undefined)) out.push({ who: '', s: sc });
+  return out;
+}
+function selfCheckLine(s) {
+  return [['연산', s.calcScore], ['정확도', s.accuracyScore], ['흥미', s.interestScore]]
+    .filter(([, v]) => v !== undefined && v !== null && v !== '').map(([k, v]) => `${k} ${escapeConsultHtml(v)}`).join(' · ');
+}
 function ciCardHtml(d, prof, CF) {
   const e = escapeConsultHtml;
   const join = (a) => (a && a.length ? a.map(e).join(', ') : '');
@@ -9955,8 +9967,7 @@ function ciCardHtml(d, prof, CF) {
     : [d.progressGrade, d.progressSemester, d.progressUnit].filter(Boolean).map(e).join(' ');
   const ex = d.examScores || {};
   const exams = [ex.round1, ex.round2, ex.round3, ex.round4].map((x, i) => (x ? `${i + 1}회 ${e(x)}` : '')).filter(Boolean).join(' / ');
-  const sc = d.selfCheck || {};
-  const self = [['연산', sc.calcScore], ['정확도', sc.accuracyScore], ['흥미', sc.interestScore]].filter(([, v]) => v !== undefined && v !== null && v !== '').map(([k, v]) => `${k} ${e(v)}`).join(' · ');
+  const selfRows = selfCheckGroups(d.selfCheck).map((g) => [g.who ? `자가진단 (${g.who})` : '자가진단', selfCheckLine(g.s), 'f']);
   const rows = [
     ['학생 이름', e(d.studentName || '')], ['학교 / 학년', e(d.schoolGrade || '')],
     ['과정', [d.level ? e(d.level) + '부' : '', e(d.branch || '')].filter(Boolean).join(' · ')],
@@ -9964,7 +9975,7 @@ function ciCardHtml(d, prof, CF) {
     [d.level === '고등' ? '수강 희망 과목' : '현재 진도', progress, 'f'],
     ['최근 시험 점수', exams, 'f'],
     ['자신 있는 영역', join(d.strongAreas), 'f'], ['어려워하는 영역', join(d.weakAreas), 'f'],
-    ['자가진단', self, 'f'],
+    ...selfRows,
   ].filter((r) => r[1]);
   const halves = rows.filter((r) => !r[2]);
   if (halves.length % 2) halves[halves.length - 1][2] = 'f';   // 반쪽 칸이 홀수면 마지막 칸을 한 줄 전체로
@@ -10031,11 +10042,10 @@ window.saveConsultImage = async function(cid) {
     img.src = URL.createObjectURL(CI.blob);
     prev.appendChild(img);
     document.getElementById('ciSave').disabled = false;
-    const canCopy = !!(navigator.clipboard && window.ClipboardItem && window.isSecureContext);
     const file = new File([CI.blob], CI.name, { type: 'image/png' });
     const canShare = !!(navigator.canShare && navigator.canShare({ files: [file] })) && matchMedia('(pointer:coarse)').matches;
     const cb = document.getElementById('ciCopy'), sb = document.getElementById('ciShare');
-    cb.hidden = !canCopy; cb.disabled = !canCopy;
+    cb.hidden = false; cb.disabled = false;
     sb.hidden = !canShare; sb.disabled = !canShare;
   } catch (e) {
     console.error('[상담 결과 이미지]', e);
@@ -10056,8 +10066,27 @@ window.ciDownload = function() {
 };
 window.ciCopy = async function() {
   if (!CI.blob) return;
-  try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': CI.blob })]); showToast('이미지를 복사했습니다. 카카오톡 채팅창에 Ctrl+V 하세요'); }
-  catch (e) { console.error(e); showToast('복사하지 못했습니다. [이미지 저장]을 이용해 주세요'); }
+  const okMsg = '이미지를 복사했습니다. 카카오톡 채팅창에 Ctrl+V(붙여넣기) 하세요';
+  // 1) 표준 클립보드 API (크롬·엣지·사파리 최신)
+  if (navigator.clipboard && window.ClipboardItem) {
+    try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': CI.blob })]); showToast(okMsg); return; }
+    catch (e) { console.warn('[이미지 복사] clipboard.write 실패 → 대체 방식 시도', e); }
+  }
+  // 2) 대체: 이미지를 화면 밖에 놓고 선택해서 복사 (구형 브라우저·보안 제한 환경)
+  try {
+    const url = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(CI.blob); });
+    const box = document.createElement('div');
+    box.contentEditable = 'true';
+    box.style.cssText = 'position:fixed;left:-10000px;top:0;opacity:0;';
+    const im = new Image(); im.src = url; box.appendChild(im); document.body.appendChild(box);
+    await new Promise((r) => (im.complete ? r() : (im.onload = im.onerror = r)));
+    const range = document.createRange(); range.selectNode(im);
+    const selc = window.getSelection(); selc.removeAllRanges(); selc.addRange(range);
+    const ok = document.execCommand('copy');
+    selc.removeAllRanges(); box.remove();
+    if (ok) { showToast(okMsg); return; }
+  } catch (e) { console.warn('[이미지 복사] 대체 방식 실패', e); }
+  showToast('이 브라우저에서는 바로 복사가 안 됩니다. 미리보기 이미지를 마우스 오른쪽 버튼(휴대폰은 길게 누르기) → [이미지 복사]를 눌러 주세요');
 };
 window.ciShare = async function() {
   if (!CI.blob) return;
@@ -10120,7 +10149,7 @@ function consultRecordHtml(cid, d, prof, profErr, CF) {
     : ([d.progressGrade, d.progressSemester, d.progressUnit].filter(Boolean).map(e).join(' ') || '-');
   const ex = d.examScores || {};
   const exams = [ex.round1, ex.round2, ex.round3, ex.round4].map((x, i) => (x ? `${i + 1}회 ${e(x)}` : '')).filter(Boolean).join(' / ') || '-';
-  const sc = d.selfCheck || {};
+  const scGroups = selfCheckGroups(d.selfCheck);
   const visitWith = d.visitWith === 'both' ? '학생과 함께' : d.visitWith === 'parent' ? '학부모님만' : '-';
   const step = (cls, label, val) => `<div class="cr-step ${cls}">${label}<b>${val}</b></div>`;
   const pDone = s ? s.parent.done : !!prof.parent;
@@ -10168,7 +10197,6 @@ function consultRecordHtml(cid, d, prof, profErr, CF) {
         <button class="btn btn-primary btn-sm" onclick="startConsultSurvey('${cid}','student')">학생 설문 시작</button>
         ${pDone ? '' : `<button class="btn btn-secondary btn-sm" onclick="startConsultSurvey('${cid}','parent')">학부모 설문 진행</button>`}
         <button class="btn btn-primary btn-sm" onclick="saveConsultImage('${cid}')">📷 결과 이미지 (카톡 전달용)</button>
-        <button class="btn btn-secondary btn-sm" onclick="printConsultSheet('${cid}')">신청서 서식 보기</button>
         <button class="btn btn-secondary btn-sm" onclick="window.open('consult-deck.html?deck=middle','_blank')">상담자료 열기</button>
       </div>
     </div>
@@ -10186,7 +10214,7 @@ function consultRecordHtml(cid, d, prof, profErr, CF) {
         <div><span>최근 시험</span><b>${exams}</b></div>
         <div><span>자신 있는 영역</span><b>${join(d.strongAreas)}</b></div>
         <div><span>어려워하는 영역</span><b>${join(d.weakAreas)}</b></div>
-        <div><span>자가진단</span><b>연산 ${sc.calcScore ?? '-'} · 정확도 ${sc.accuracyScore ?? '-'} · 흥미 ${sc.interestScore ?? '-'}</b></div>
+        ${scGroups.length ? scGroups.map((g) => `<div><span>${g.who ? '자가진단 · ' + g.who : '자가진단'}</span><b>${selfCheckLine(g.s) || '-'}</b></div>`).join('') : '<div><span>자가진단</span><b>-</b></div>'}
       </div>
     </div>
     <div class="cr-sec"><h4>학습 성향 설문 결과 <span class="cr-muted" style="font-weight:500">— 학부모·학생 결과는 각각 따로 보관되며 합치지 않습니다</span></h4>
@@ -10760,7 +10788,7 @@ window.openConsultQr = async function() {
           item.className = 'cq-live-item';
           item.dataset.cq = ch.doc.id;
           item.innerHTML = `<span>✅ <b>${escapeConsultHtml(d.studentName || '')}</b> · ${escapeConsultHtml(d.schoolGrade || '')} · ${escapeConsultHtml(d.level || '')}부 <span style="color:var(--muted);font-size:11.5px;">${t}</span> <span class="cq-flow" style="color:var(--gold);font-size:11.5px;">${escapeConsultHtml(flowTxt(d))}</span></span>
-            <span style="display:flex;gap:6px;"><button class="btn btn-secondary btn-sm" onclick="closeConsultQr();openConsultRecord('${ch.doc.id}')">상담 기록</button><button class="btn btn-secondary btn-sm" onclick="printConsultSheet('${ch.doc.id}')">서식 보기</button></span>`;
+            <span style="display:flex;gap:6px;"><button class="btn btn-secondary btn-sm" onclick="closeConsultQr();openConsultRecord('${ch.doc.id}')">상담 기록</button></span>`;
           live.prepend(item);
           if (!initial) showToast(`📱 ${d.studentName || ''} 상담지가 접수되었습니다`);
         });
@@ -10933,11 +10961,12 @@ window.printConsultSheet = function(docId) {
       </div>
       <div class="ps-section">
         <div class="ps-sec-title">학습 자가진단</div>
-        <div class="ps-scorebox" style="margin-left:11px;">
-          <span>연산 능력 : ${d.selfCheck?.calcScore ?? '-'} / 10점</span>
-          <span>풀이 정확도 : ${d.selfCheck?.accuracyScore ?? '-'} / 10점</span>
-          <span>수학 흥미도 : ${d.selfCheck?.interestScore ?? '-'} / 10점</span>
-        </div>
+        ${(selfCheckGroups(d.selfCheck).length ? selfCheckGroups(d.selfCheck) : [{ who: '', s: {} }]).map((g) => `<div class="ps-scorebox" style="margin-left:11px;">
+          ${g.who ? `<span><b>${g.who}</b></span>` : ''}
+          <span>연산 능력 : ${g.s.calcScore ?? '-'} / 10점</span>
+          <span>풀이 정확도 : ${g.s.accuracyScore ?? '-'} / 10점</span>
+          <span>수학 흥미도 : ${g.s.interestScore ?? '-'} / 10점</span>
+        </div>`).join('')}
       </div>
       <div class="ps-section">
         <div class="ps-sec-title">상담 내용</div>
@@ -11951,7 +11980,7 @@ window.deleteScheduleEvent = async function (id) {
     <div class="ci-prev" id="ciPrev"><div class="ci-wait">이미지를 만드는 중…</div></div>
     <div class="ci-btns">
       <button class="btn btn-primary" id="ciSave" disabled onclick="ciDownload()">⬇ 이미지 저장</button>
-      <button class="btn btn-secondary" id="ciCopy" disabled onclick="ciCopy()" hidden>📋 이미지 복사</button>
+      <button class="btn btn-primary" id="ciCopy" disabled onclick="ciCopy()">📋 이미지 복사</button>
       <button class="btn btn-secondary" id="ciShare" disabled onclick="ciShare()" hidden>📤 공유하기 (카카오톡)</button>
     </div>
   </div>

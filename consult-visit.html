@@ -73,6 +73,11 @@ body {
 .range-row input[type=range] { flex:1; accent-color:var(--ck-accent); height:32px; min-width:0; }
 .range-row .v { width:52px; text-align:right; font-size:18px; font-weight:800; color:var(--ck-accent); flex-shrink:0; }
 .range-row .v small { font-size:11px; color:#9a9384; font-weight:600; }
+.who-seg { margin-top:12px; }
+.sc-block { margin-top:12px; padding:16px 14px 14px; border:1.5px solid #ece6d8; border-radius:14px; background:#fdfcf9; }
+.sc-block[hidden], .sc-none[hidden] { display:none; }
+.sc-title { font-size:13.5px; font-weight:800; color:var(--ck-accent); margin-bottom:12px; }
+.sc-none { margin:12px 0 0; font-size:13px; color:#9a9384; text-align:center; }
 .agree { display:flex; align-items:flex-start; gap:10px; font-size:14px; line-height:1.6; color:#4a4538; cursor:pointer; }
 .agree input { width:22px; height:22px; margin-top:2px; accent-color:var(--ck-accent); flex-shrink:0; }
 .submit {
@@ -269,10 +274,24 @@ body.kiosk .hello h2 { font-size:26px; }
 
   <div class="card">
     <h4>학습 자가진단</h4>
-    <p class="hint">학생 본인이 생각하는 점수를 골라주세요. (0~10점)</p>
-    <div class="range-row"><span class="nm">연산 능력</span><input type="range" min="0" max="10" step="1" value="5" id="ckCalc"><span class="v"><b id="ckCalcV">5</b><small> /10</small></span></div>
-    <div class="range-row"><span class="nm">풀이 정확도</span><input type="range" min="0" max="10" step="1" value="5" id="ckAcc"><span class="v"><b id="ckAccV">5</b><small> /10</small></span></div>
-    <div class="range-row"><span class="nm">수학 흥미도</span><input type="range" min="0" max="10" step="1" value="5" id="ckInt"><span class="v"><b id="ckIntV">5</b><small> /10</small></span></div>
+    <p class="hint">누가 평가하는지 선택해 주세요. 둘 다 선택하면 각각 따로 기록됩니다. (0~10점)</p>
+    <div class="seg two who-seg" id="ckWho">
+      <button type="button" class="chip on" data-v="student">학생 본인 평가</button>
+      <button type="button" class="chip" data-v="parent">학부모님 평가</button>
+    </div>
+    <div class="sc-block" id="ckScStudent">
+      <div class="sc-title">학생 본인이 생각하는 점수</div>
+      <div class="range-row"><span class="nm">연산 능력</span><input type="range" min="0" max="10" step="1" value="5" id="ckCalc"><span class="v"><b id="ckCalcV">5</b><small> /10</small></span></div>
+      <div class="range-row"><span class="nm">풀이 정확도</span><input type="range" min="0" max="10" step="1" value="5" id="ckAcc"><span class="v"><b id="ckAccV">5</b><small> /10</small></span></div>
+      <div class="range-row"><span class="nm">수학 흥미도</span><input type="range" min="0" max="10" step="1" value="5" id="ckInt"><span class="v"><b id="ckIntV">5</b><small> /10</small></span></div>
+    </div>
+    <div class="sc-block" id="ckScParent" hidden>
+      <div class="sc-title">학부모님이 보시는 학생 점수</div>
+      <div class="range-row"><span class="nm">연산 능력</span><input type="range" min="0" max="10" step="1" value="5" id="ckPCalc"><span class="v"><b id="ckPCalcV">5</b><small> /10</small></span></div>
+      <div class="range-row"><span class="nm">풀이 정확도</span><input type="range" min="0" max="10" step="1" value="5" id="ckPAcc"><span class="v"><b id="ckPAccV">5</b><small> /10</small></span></div>
+      <div class="range-row"><span class="nm">수학 흥미도</span><input type="range" min="0" max="10" step="1" value="5" id="ckPInt"><span class="v"><b id="ckPIntV">5</b><small> /10</small></span></div>
+    </div>
+    <p class="sc-none" id="ckWhoNone" hidden>자가진단을 건너뜁니다. 필요하면 위에서 선택해 주세요.</p>
   </div>
 
   <div class="card">
@@ -373,9 +392,18 @@ function applyLevel(level) {
 ['ckS1','ckS2','ckS3','ckS4'].forEach(id => {
   const el = $(id); el.addEventListener('input', () => { el.value = el.value.replace(/[^0-9~\-]/g, '').slice(0, 7); });
 });
-[['ckCalc','ckCalcV'],['ckAcc','ckAccV'],['ckInt','ckIntV']].forEach(([r, v]) => {
+[['ckCalc','ckCalcV'],['ckAcc','ckAccV'],['ckInt','ckIntV'],['ckPCalc','ckPCalcV'],['ckPAcc','ckPAccV'],['ckPInt','ckPIntV']].forEach(([r, v]) => {
   $(r).addEventListener('input', () => { $(v).textContent = $(r).value; });
 });
+/* 자가진단: 학생 본인 평가 / 학부모님 평가 — 둘 중 하나 또는 둘 다 선택 */
+function applyWho() {
+  const on = sel('ckWho');
+  $('ckScStudent').hidden = !on.includes('student');
+  $('ckScParent').hidden = !on.includes('parent');
+  $('ckWhoNone').hidden = on.length > 0;
+}
+document.querySelectorAll('#ckWho .chip').forEach(b => b.addEventListener('click', () => { b.classList.toggle('on'); applyWho(); }));
+applyWho();
 
 setSingle('ckBranch', initBranch);
 $('branchBadge').textContent = initBranch;
@@ -395,11 +423,7 @@ function collectForm() {
     examScores: { round1: val('ckS1'), round2: val('ckS2'), round3: val('ckS3'), round4: val('ckS4') },
     strongAreas: sel('ckStrong'),
     weakAreas: sel('ckWeak'),
-    selfCheck: {
-      calcScore: Number($('ckCalc').value),
-      accuracyScore: Number($('ckAcc').value),
-      interestScore: Number($('ckInt').value),
-    },
+    selfCheck: collectSelfCheck(),
   };
   if (level === '고등') {
     data.highSubjects = sel('ckHighSubj');
@@ -410,6 +434,15 @@ function collectForm() {
     data.progressUnit = val('ckPUnit');
   }
   return data;
+}
+/* 자가진단 저장 형태: { student: {calcScore, accuracyScore, interestScore}, parent: {...} } — 선택한 쪽만 저장 */
+function collectSelfCheck() {
+  const on = sel('ckWho');
+  const pick = (a, b, c) => ({ calcScore: Number($(a).value), accuracyScore: Number($(b).value), interestScore: Number($(c).value) });
+  const o = {};
+  if (on.includes('student')) o.student = pick('ckCalc', 'ckAcc', 'ckInt');
+  if (on.includes('parent')) o.parent = pick('ckPCalc', 'ckPAcc', 'ckPInt');
+  return o;
 }
 let restoring = false;
 function applyForm(d) {
@@ -426,10 +459,17 @@ function applyForm(d) {
   setMulti('ckStrong', d.strongAreas); setMulti('ckWeak', d.weakAreas);
   if (d.highLevel) setSingle('ckHighLevel', d.highLevel);
   setv('ckPGrade', d.progressGrade); setv('ckPSem', d.progressSemester); setv('ckPUnit', d.progressUnit);
-  const sc = d.selfCheck || {};
-  [['ckCalc','ckCalcV',sc.calcScore],['ckAcc','ckAccV',sc.accuracyScore],['ckInt','ckIntV',sc.interestScore]].forEach(([r, v, x]) => {
-    if (x !== undefined && x !== null) { $(r).value = x; $(v).textContent = x; }
-  });
+  if (d.selfCheck) {
+    const sc = d.selfCheck;
+    const scS = sc.student || (sc.calcScore !== undefined ? sc : null);   // 예전 저장본(평가자 구분 없음)은 학생 본인 평가로 표시
+    const scP = sc.parent || null;
+    setMulti('ckWho', [scS ? 'student' : '', scP ? 'parent' : ''].filter(Boolean));
+    const fill = (s, ids) => { if (!s) return; [['calcScore', ids[0]], ['accuracyScore', ids[1]], ['interestScore', ids[2]]].forEach(([k, id]) => {
+      const x = s[k]; if (x !== undefined && x !== null) { $(id).value = x; $(id + 'V').textContent = x; } }); };
+    fill(scS, ['ckCalc', 'ckAcc', 'ckInt']);
+    fill(scP, ['ckPCalc', 'ckPAcc', 'ckPInt']);
+    applyWho();
+  }
   if (d.agreePrivacy || d.agree) $('ckAgree').checked = true;
   restoring = false;
 }
