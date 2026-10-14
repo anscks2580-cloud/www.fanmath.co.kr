@@ -66,6 +66,20 @@
 .cal-empty { font-size:13px; color:var(--muted); padding:8px 2px; }
 .cal-x { background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; padding:2px 6px; }
 .cal-x:hover { color:#ff9090; }
+/* 해야 할 업무 체크 (완료 = 가운데 줄) */
+.cal-chk { width:16px; height:16px; accent-color:#5fd98a; flex-shrink:0; cursor:pointer; margin:0; }
+.cal-chk:disabled { cursor:default; }
+.cal-item.is-done { opacity:0.55; border-color:var(--border-soft) !important; background:rgba(255,255,255,0.02) !important; }
+.cal-item.is-done .cal-item-title { text-decoration:line-through; color:var(--muted) !important; }
+.cal-item.is-done .cal-dot { background:#5fd98a !important; }
+.cal-done-tag { font-size:10px; font-weight:600; color:#5fd98a; margin-left:4px; text-decoration:none; display:inline-block; }
+.cal-sec-row { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+.cal-sec-row .cal-sec { margin-right:auto; }
+.cal-prog { font-size:11px; color:var(--muted); margin:14px 0 6px; white-space:nowrap; }
+.cal-prog b { color:#5fd98a; }
+.cal-prog-bar { height:4px; border-radius:2px; background:rgba(255,255,255,0.08); overflow:hidden; margin:-2px 0 8px; }
+.cal-prog-bar i { display:block; height:100%; background:#5fd98a; border-radius:2px; }
+.cal-done-dot { font-size:10px; color:#5fd98a; }
 .cal-badge { display:none; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:#ff6b6b; color:#fff; font-size:11px; font-weight:700; margin-left:4px; }
 @media (max-width:600px){ .cal-cell { min-height:62px; padding:4px; } .cal-chip, .cal-deadline, .cal-hol { display:none; } }
 .teacher-tab.active::after { transform:scaleX(1); }
@@ -335,6 +349,7 @@ select option:disabled { color:#9B94B3; }
           <span><b style="color:#ffb35c;">●</b> 시험기간</span>
           <span><b style="color:#5fd98a;">●</b> 행사</span>
           <span><b style="color:var(--gold);">●</b> 할 일</span>
+          <span><b style="color:#5fd98a;">✓</b> 완료한 할 일</span>
         </div>
       </div>
       <div>
@@ -390,9 +405,7 @@ select option:disabled { color:#9B94B3; }
         <button class="rating-btn" id="grade-중1" onclick="filterByGrade('중1',this)">중1</button>
         <button class="rating-btn" id="grade-중2" onclick="filterByGrade('중2',this)">중2</button>
         <button class="rating-btn" id="grade-중3" onclick="filterByGrade('중3',this)">중3</button>
-        <button class="rating-btn" id="grade-고1" onclick="filterByGrade('고1',this)">고1</button>
-        <button class="rating-btn" id="grade-고2" onclick="filterByGrade('고2',this)">고2</button>
-        <button class="rating-btn" id="grade-고3" onclick="filterByGrade('고3',this)">고3</button>
+        <span style="font-size:11px;color:var(--muted);margin-left:4px;">※ 주간성취도는 중등부 대상 — 고등부 학생은 표시되지 않습니다</span>
       </div>
       <!-- 이름 검색 -->
       <div style="margin-bottom:16px;">
@@ -909,6 +922,11 @@ let currentDayFilter = 'all';
 let currentGradeFilter = 'all';
 let studentSearchQuery = '';
 let myStudents = []; // 내 담당 학생만
+// 주간성취도 작성 대상: 중등부(초·중)만. 고1~고3·N수 등 고등부는 제외
+function isWeeklyTarget(s) {
+  const g = String(s?.grade || '').trim();
+  return !(g.startsWith('고') || /N수|재수|졸업/.test(g));
+}
 let weeklyReportsCache = {}; // docId -> 저장된 데이터 (수정용)
 let editingWeeklyDoc = null; // { docId, weekKey, weekLabel } 수정 중인 기록
 
@@ -1083,7 +1101,9 @@ const DAY_GROUP = {
 };
 
 function renderWeeklyStudentSelect() {
-  let filtered = myStudents;
+  // 고등부 제외 (단, 예전 기록 수정 중인 학생은 표시)
+  const editSid = editingWeeklyDoc ? (weeklyReportsCache[editingWeeklyDoc.docId]?.studentId || '') : '';
+  let filtered = myStudents.filter(s => isWeeklyTarget(s) || s.id === editSid);
   // 요일 그룹 필터
   const days = DAY_GROUP[currentDayFilter];
   if (days) {
@@ -2488,6 +2508,7 @@ const CAL_DOW = ['일','월','화','수','목','금','토'];
 let calEvents = [];      // 나에게 해당하는 학원 일정
 let calTodos = [];       // 내 할 일
 let calAutoTodos = [];   // 자동 할 일 (오늘 기준)
+let calAutoChecks = {};  // 해야 할 업무 '완료' 체크 { autoKey: teacherTodos docId }
 let calViewMonth = null; // Date (해당 월 1일)
 let calSelected = null;  // 'YYYY-MM-DD'
 let calLoaded = false;
@@ -2525,9 +2546,13 @@ async function calLoadEvents() {
 async function calLoadTodos() {
   try {
     const snap = await getDocs(query(collection(db, 'teacherTodos'), where('uid', '==', currentTeacher.uid)));
-    calTodos = [];
-    snap.forEach(d => calTodos.push({ id: d.id, ...d.data() }));
-  } catch (e) { console.warn('[일정] 내 할 일 불러오기 실패:', e.message); calTodos = []; }
+    calTodos = []; calAutoChecks = {};
+    snap.forEach(d => {
+      const x = { id: d.id, ...d.data() };
+      if (x.kind === 'autoCheck') { if (x.autoKey) calAutoChecks[x.autoKey] = d.id; }
+      else calTodos.push(x);
+    });
+  } catch (e) { console.warn('[일정] 내 할 일 불러오기 실패:', e.message); calTodos = []; calAutoChecks = {}; }
 }
 
 async function calMyDocs(col) {
@@ -2561,28 +2586,30 @@ async function calBuildAutoTodos() {
     sSnap.forEach(d => my.push({ id: d.id, ...d.data() }));
   } catch (e) { my = (typeof myStudents !== 'undefined' ? myStudents : []); }
 
-  // ① 주간성취도 (지난주분, 금요일까지)
+  // ① 주간성취도 (지난주분, 금요일까지) — 중등부 학생만
   try {
-    if (my.length) {
+    const wTargets = my.filter(isWeeklyTarget);
+    if (wTargets.length) {
       const rows = await calMyDocs('weeklyReports');
       const done = new Set(rows.filter(r => r.weekKey === lastWeekKey).map(r => r.studentId));
-      const left = my.filter(s => !done.has(s.id));
-      if (left.length) {
-        list.push({
-          level: dueLevel, tab: 'weekly',
-          title: `주간성취도 — ${left.length}명 남음`,
-          detail: `${lastWeekLabel}분 · ${dueLabel} · ${left.slice(0, 6).map(s => s.name).join(', ')}${left.length > 6 ? ` 외 ${left.length - 6}명` : ''}`,
-        });
-      }
+      const left = wTargets.filter(s => !done.has(s.id));
+      list.push(left.length ? {
+        key: `weekly:${lastWeekKey}`, level: dueLevel, tab: 'weekly',
+        title: `주간성취도 — ${left.length}명 남음`,
+        detail: `${lastWeekLabel}분 · ${dueLabel} · ${left.slice(0, 6).map(s => s.name).join(', ')}${left.length > 6 ? ` 외 ${left.length - 6}명` : ''}`,
+      } : {
+        key: `weekly:${lastWeekKey}`, level: 'soon', tab: 'weekly', sysDone: true,
+        title: '주간성취도 — 전원 작성', detail: `${lastWeekLabel}분 · ${wTargets.length}명 제출 완료`,
+      });
     }
   } catch (e) { console.warn('[일정] 주간성취도 확인 실패:', e.message); }
 
   // ② 반별 진도 (지난주분, 금요일까지)
   try {
     const rows = await calMyDocs('progressReports');
-    if (!rows.some(r => r.weekKey === lastWeekKey)) {
-      list.push({ level: dueLevel, tab: 'progress', title: '반별 진도 입력', detail: `${lastWeekLabel}분 · ${dueLabel}` });
-    }
+    const sent = rows.some(r => r.weekKey === lastWeekKey);
+    list.push({ key: `progress:${lastWeekKey}`, level: sent ? 'soon' : dueLevel, tab: 'progress', sysDone: sent,
+      title: '반별 진도 입력', detail: sent ? `${lastWeekLabel}분 · 제출 완료` : `${lastWeekLabel}분 · ${dueLabel}` });
   } catch (e) { console.warn('[일정] 반별 진도 확인 실패:', e.message); }
 
   // ③ 월말보고서 (다음 달 3일 마감)
@@ -2595,15 +2622,20 @@ async function calBuildAutoTodos() {
     const d = now.getDate();
     if (!has(prevKey)) {
       list.push({
-        level: d > 3 ? 'overdue' : d === 3 ? 'due' : 'soon', tab: 'monthly',
+        key: `monthly:${prevKey}`, level: d > 3 ? 'overdue' : d === 3 ? 'due' : 'soon', tab: 'monthly',
         title: `${prev.getMonth()+1}월 월말보고서 제출`,
         detail: d > 3 ? `마감 지남 (${now.getMonth()+1}/3)` : d === 3 ? '오늘 마감' : `${now.getMonth()+1}/3까지`,
       });
+    } else if (d <= 10) {
+      list.push({ key: `monthly:${prevKey}`, level: 'soon', tab: 'monthly', sysDone: true,
+        title: `${prev.getMonth()+1}월 월말보고서 제출`, detail: '제출 완료' });
     }
     const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-    if (d >= lastDay - 5 && !has(curKey)) {
+    if (d >= lastDay - 5) {
       const nm = new Date(now.getFullYear(), now.getMonth() + 1, 3);
-      list.push({ level: 'soon', tab: 'monthly', title: `${now.getMonth()+1}월 월말보고서 준비`, detail: `${calMD(nm)}까지` });
+      const sent = has(curKey);
+      list.push({ key: `monthly:${curKey}`, level: 'soon', tab: 'monthly', sysDone: sent,
+        title: `${now.getMonth()+1}월 월말보고서 준비`, detail: sent ? '제출 완료' : `${calMD(nm)}까지` });
     }
   } catch (e) { console.warn('[일정] 월말보고서 확인 실패:', e.message); }
 
@@ -2614,19 +2646,20 @@ async function calBuildAutoTodos() {
     const daysSince = Math.round((now - sat) / 86400000);
     if (daysSince <= 4 && !calIsOff(satStr)) {
       const rows = await calMyDocs('satClinicReports');
-      if (!rows.some(r => r.date === satStr)) {
-        list.push({
-          level: daysSince === 0 ? 'due' : 'overdue', tab: 'clinic', tabInit: 'initClinicTab',
-          title: '토요클리닉 보고',
-          detail: daysSince === 0 ? '오늘 클리닉 내용 제출 (없었으면 "없음" 제출)' : `${calMD(sat)} 클리닉 미제출`,
-        });
-      }
+      const sent = rows.some(r => r.date === satStr);
+      list.push(sent ? {
+        key: `clinic:${satStr}`, level: 'soon', tab: 'clinic', tabInit: 'initClinicTab', sysDone: true,
+        title: '토요클리닉 보고', detail: `${calMD(sat)} 클리닉 제출 완료`,
+      } : {
+        key: `clinic:${satStr}`, level: daysSince === 0 ? 'due' : 'overdue', tab: 'clinic', tabInit: 'initClinicTab',
+        title: '토요클리닉 보고',
+        detail: daysSince === 0 ? '오늘 클리닉 내용 제출 (없었으면 "없음" 제출)' : `${calMD(sat)} 클리닉 미제출`,
+      });
     }
   } catch (e) { console.warn('[일정] 토요클리닉 확인 실패:', e.message); }
 
-  const rank = { overdue: 0, due: 1, soon: 2 };
-  list.sort((a, b) => rank[a.level] - rank[b.level]);
   calAutoTodos = list;
+  calSortAuto();
 }
 
 // ── 초기화 (로그인 직후 호출) ──
@@ -2656,24 +2689,80 @@ function calRenderAll() {
   calRenderDay();
   const badge = document.getElementById('calTodayBadge');
   if (badge) {
-    const n = calAutoTodos.filter(t => t.level !== 'soon').length + calTodos.filter(t => t.date === calTodayStr() && !t.done).length;
+    const n = calAutoTodos.filter(t => t.level !== 'soon' && !calAutoDone(t)).length + calTodos.filter(t => t.date === calTodayStr() && !t.done).length;
     badge.textContent = n ? n : '';
     badge.style.display = n ? 'inline-flex' : 'none';
   }
 }
 
+// ── 해야 할 업무: 완료 여부 (제출 확인 또는 선생님이 직접 체크) ──
+function calAutoDone(t) { return !!(t.sysDone || (t.key && calAutoChecks[t.key])); }
+function calSortAuto() {
+  const rank = { overdue: 0, due: 1, soon: 2 };
+  calAutoTodos.sort((a, b) => (calAutoDone(a) - calAutoDone(b)) || (rank[a.level] - rank[b.level]));
+}
+window.calToggleAuto = async function (key, checked, el) {
+  if (!key || !currentTeacher) return;
+  if (el) el.disabled = true;
+  try {
+    if (checked && !calAutoChecks[key]) {
+      const ref = await addDoc(collection(db, 'teacherTodos'), {
+        uid: currentTeacher.uid, teacherName: currentTeacher.name, kind: 'autoCheck', autoKey: key,
+        date: calTodayStr(), text: '', done: true, createdAt: new Date().toISOString(),
+      });
+      calAutoChecks[key] = ref.id;
+    } else if (!checked && calAutoChecks[key]) {
+      await deleteDoc(doc(db, 'teacherTodos', calAutoChecks[key]));
+      delete calAutoChecks[key];
+    }
+  } catch (e) {
+    alert('저장 실패: ' + e.message);
+    if (el) { el.checked = !checked; el.disabled = false; }
+    return;
+  }
+  calSortAuto();
+  calRenderAll();
+  if (document.getElementById('calTodayModal').style.display === 'flex') calRenderPopup();
+};
+
 // ── 공통 렌더 조각 ──
+function calProgHtml(done, total) {
+  if (!total) return '';
+  return `<span class="cal-prog">완료 <b>${done}</b> / ${total}</span>`;
+}
+function calSecHtml(label, done, total) {
+  return `<div class="cal-sec-row"><div class="cal-sec">${label}</div>${calProgHtml(done, total)}</div>`
+    + (total ? `<div class="cal-prog-bar"><i style="width:${Math.round(done / total * 100)}%"></i></div>` : '');
+}
+function calAutoSecHtml(items) {
+  return calSecHtml('해야 할 업무', items.filter(calAutoDone).length, items.length);
+}
+function calTodoSecHtml(dateStr) {
+  const items = calTodos.filter(t => t.date === dateStr);
+  return calSecHtml('내 할 일', items.filter(t => t.done).length, items.length);
+}
 function calAutoHtml(items) {
   if (!items.length) return `<div class="cal-empty">✅ 밀린 업무가 없어요.</div>`;
-  return items.map(t => `
-    <div class="cal-item cal-${t.level}" onclick="calGoTab('${t.tab}','${t.tabInit || ''}')">
+  const html = items.map(t => {
+    const done = calAutoDone(t);
+    const k = calEsc(t.key || '');
+    const chk = t.sysDone
+      ? `<input type="checkbox" class="cal-chk" checked disabled title="제출이 확인되어 자동으로 완료 처리됐어요" onclick="event.stopPropagation()">`
+      : `<input type="checkbox" class="cal-chk" ${done ? 'checked' : ''} title="다 했으면 체크" onclick="event.stopPropagation()" onchange="calToggleAuto('${k}',this.checked,this)">`;
+    const tag = done ? `<span class="cal-done-tag">${t.sysDone ? '✓ 제출 확인' : '✓ 완료 체크'}</span>` : '';
+    return `
+    <div class="cal-item cal-${t.level}${done ? ' is-done' : ''}" onclick="calGoTab('${t.tab}','${t.tabInit || ''}')">
+      ${chk}
       <span class="cal-dot"></span>
       <div style="flex:1;min-width:0;">
-        <div class="cal-item-title">${calEsc(t.title)}</div>
+        <div class="cal-item-title">${calEsc(t.title)}${tag}</div>
         <div class="cal-item-sub">${calEsc(t.detail)}</div>
       </div>
       <span class="cal-go">바로가기 ›</span>
-    </div>`).join('');
+    </div>`;
+  }).join('');
+  const allDone = items.every(calAutoDone);
+  return (allDone ? `<div class="cal-empty" style="padding-top:0;">✅ 이번 업무를 모두 마쳤어요.</div>` : '') + html;
 }
 function calEventsHtml(dateStr) {
   const evs = calEventsOn(dateStr);
@@ -2711,10 +2800,10 @@ function calRenderToday() {
   el.innerHTML = `
     <div class="card-title">📋 오늘 · ${d.getMonth()+1}월 ${d.getDate()}일 (${CAL_DOW[d.getDay()]})</div>
     ${calHolidayHtml(today)}
-    <div class="cal-sec">해야 할 업무</div>
+    ${calAutoSecHtml(calAutoTodos)}
     ${calAutoHtml(calAutoTodos)}
     ${calEventsOn(today).length ? `<div class="cal-sec">학원 일정</div>${calEventsHtml(today)}` : ''}
-    ${calTodos.some(t => t.date === today) ? `<div class="cal-sec">내 할 일</div>${calTodosHtml(today)}` : ''}`;
+    ${calTodos.some(t => t.date === today) ? `${calTodoSecHtml(today)}${calTodosHtml(today)}` : ''}`;
 }
 
 // ── 월 달력 ──
@@ -2742,6 +2831,7 @@ function calRenderMonth() {
     const hol = KR_HOLIDAYS[ds];
     const evs = calEventsOn(ds);
     const tds = calTodos.filter(t => t.date === ds && !t.done);
+    const tdsDone = calTodos.filter(t => t.date === ds && t.done).length;
     const dueChips = [];
     if (d.getDay() === 5) dueChips.push('주간 마감');
     if (d.getDate() === 3) dueChips.push('월말 마감');
@@ -2754,7 +2844,7 @@ function calRenderMonth() {
         ${evs.slice(0, 2).map(e => `<div class="cal-chip" style="border-left-color:${CAL_TYPE_COLOR[e.type] || '#b9b2cf'};">${calEsc(e.title)}</div>`).join('')}
         ${evs.length > 2 ? `<div class="cal-more">+${evs.length - 2}</div>` : ''}
         ${dueChips.map(c => `<div class="cal-deadline">${c}</div>`).join('')}
-        ${tds.length ? `<div class="cal-todo-dot">● ${tds.length}</div>` : ''}
+        ${(tds.length || tdsDone) ? `<div>${tds.length ? `<span class="cal-todo-dot">● ${tds.length}</span>` : ''}${tds.length && tdsDone ? ' ' : ''}${tdsDone ? `<span class="cal-done-dot">✓ ${tdsDone}</span>` : ''}</div>` : ''}
       </div>`;
   }
   el.innerHTML = html;
@@ -2766,7 +2856,8 @@ function calRenderDay() {
   if (!el || !calSelected) return;
   const d = calParse(calSelected);
   const isToday = calSelected === calTodayStr();
-  const body = calHolidayHtml(calSelected) + calEventsHtml(calSelected) + calTodosHtml(calSelected);
+  const todoHtml = calTodosHtml(calSelected);
+  const body = calHolidayHtml(calSelected) + calEventsHtml(calSelected) + (todoHtml ? calTodoSecHtml(calSelected) + todoHtml : '');
   el.innerHTML = `
     <div class="card-title" style="margin-bottom:12px;">🗓 ${d.getMonth()+1}월 ${d.getDate()}일 (${CAL_DOW[d.getDay()]})${isToday ? ' · 오늘' : ''}</div>
     ${body || '<div class="cal-empty">등록된 일정이 없어요.</div>'}
@@ -2831,10 +2922,10 @@ function calRenderPopup() {
     <div style="font-size:13px;color:var(--muted);margin-bottom:4px;">${d.getFullYear()}년 ${d.getMonth()+1}월 ${d.getDate()}일 (${CAL_DOW[d.getDay()]})</div>
     <div style="font-size:19px;font-weight:700;margin-bottom:14px;">${calEsc(name)} 선생님, 오늘 할 일이에요</div>
     ${calHolidayHtml(today)}
-    <div class="cal-sec">해야 할 업무</div>
+    ${calAutoSecHtml(calAutoTodos)}
     ${calAutoHtml(calAutoTodos)}
     ${calEventsOn(today).length ? `<div class="cal-sec">학원 일정</div>${calEventsHtml(today)}` : ''}
-    ${calTodos.some(t => t.date === today) ? `<div class="cal-sec">내 할 일</div>${calTodosHtml(today)}` : ''}`;
+    ${calTodos.some(t => t.date === today) ? `${calTodoSecHtml(today)}${calTodosHtml(today)}` : ''}`;
 }
 window.openTodayPopup = async function (refresh = true) {
   if (refresh && calLoaded) {
