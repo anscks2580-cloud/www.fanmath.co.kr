@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>상담 프로그램 | 송우찬수학학원</title>
+<meta property="og:title" content="송우찬수학학원 · 상담 프로그램 다시 보기">
+<meta property="og:description" content="상담 때 함께 본 고등부 프로그램을 휴대폰으로 다시 볼 수 있습니다.">
+<meta property="og:image" content="https://www.fanmath.co.kr/swc-logo.png">
+<meta property="og:url" content="https://www.fanmath.co.kr/h">
+<!-- 문자·카톡용 짧은 주소: www.fanmath.co.kr/h → 지금 공유 중인 'high' 상담자료 링크로 이동
+     (관리자 페이지 상담자료 관리에서 [공유 중지]하면 이 주소도 함께 열리지 않음) -->
+</head>
+<body style="font-family:sans-serif;text-align:center;padding:60px 20px;color:#555;">
+<p id="msg">상담 프로그램을 여는 중입니다…</p>
+<script>
+(async function () {
+  var DECK = 'high';
+  var msg = document.getElementById('msg');
+  try {
+    var r = await fetch('https://firestore.googleapis.com/v1/projects/songmath/databases/(default)/documents:runQuery', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ structuredQuery: {
+        from: [{ collectionId: 'consultConfig' }],
+        where: { fieldFilter: { field: { fieldPath: 'shareDeckId' }, op: 'EQUAL', value: { stringValue: DECK } } },
+        limit: 10 } })
+    });
+    var rows = await r.json();
+    var tok = '';
+    (Array.isArray(rows) ? rows : []).forEach(function (x) {
+      var d = x.document; if (!d || tok) return;
+      var id = d.name.split('/').pop();
+      var en = d.fields && d.fields.enabled;
+      if (id.indexOf('deckShare_') === 0 && !(en && en.booleanValue === false)) tok = id.slice(10);
+    });
+    if (!tok) { msg.innerHTML = '지금은 상담 프로그램을 볼 수 없습니다.<br>학원으로 문의해 주세요 · 031-386-8899'; return; }
+    location.replace('../consult-deck.html?deck=' + DECK + '&share=' + encodeURIComponent(tok) + location.hash);
+  } catch (e) {
+    msg.innerHTML = '불러오지 못했습니다. 인터넷 연결을 확인한 뒤 다시 열어 주세요.';
+  }
+})();
+</script>
+</body>
+</html>

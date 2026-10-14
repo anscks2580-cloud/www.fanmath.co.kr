@@ -336,7 +336,8 @@ const db = getFirestore(app);
 
 const ACCENT = { '초등': '#a78bda', '중등': '#e0a22c', '고등': '#5fa3cf' };
 const params = new URLSearchParams(location.search);
-const initBranch = ['평촌관','산본관'].includes(params.get('b')) ? params.get('b') : '평촌관';
+const branchGiven = ['평촌관','산본관'].includes(params.get('b'));   // 지점 없는 공용 링크(/c)면 학부모님이 직접 선택
+const initBranch = branchGiven ? params.get('b') : '평촌관';
 const qrSession = (params.get('s') || '').slice(0, 40).replace(/[^\w-]/g, '');
 const KIOSK = params.get('kiosk') === '1';                     // 관리자 페이지 '태블릿 상담지' 안에서 열린 경우
 const SRC = params.get('src') === 'tablet' ? 'tablet' : 'qr';
@@ -380,7 +381,7 @@ function applyLevel(level) {
     if (id === 'ckWith' && b.classList.contains('on')) { b.classList.remove('on'); return; }
     setSingle(id, b.dataset.v);
     if (id === 'ckLevel') applyLevel(b.dataset.v);
-    if (id === 'ckBranch') $('branchBadge').textContent = b.dataset.v;
+    if (id === 'ckBranch') showBranch(b.dataset.v);
   }));
 });
 ['ckVisit','ckHighSubj','ckStrong','ckWeak'].forEach(id => {
@@ -405,8 +406,13 @@ function applyWho() {
 document.querySelectorAll('#ckWho .chip').forEach(b => b.addEventListener('click', () => { b.classList.toggle('on'); applyWho(); }));
 applyWho();
 
-setSingle('ckBranch', initBranch);
-$('branchBadge').textContent = initBranch;
+function showBranch(v) {
+  $('branchBadge').textContent = v || '';
+  $('branchBadge').style.display = v ? '' : 'none';
+  $('loungeBtn').href = 'consult-lounge.html?b=' + encodeURIComponent(v || initBranch);
+}
+if (branchGiven) { setSingle('ckBranch', initBranch); showBranch(initBranch); }
+else showBranch('');
 
 /* ── 입력값 모으기 · 채우기 ── */
 function collectForm() {
@@ -448,7 +454,7 @@ let restoring = false;
 function applyForm(d) {
   restoring = true;
   if (d.level) { setSingle('ckLevel', d.level); applyLevel(d.level); }
-  if (d.branch) { setSingle('ckBranch', d.branch); $('branchBadge').textContent = d.branch; }
+  if (d.branch) { setSingle('ckBranch', d.branch); showBranch(d.branch); }
   setSingle('ckWith', d.visitWith || '');
   const setv = (id, v) => { if (v !== undefined && v !== null) $(id).value = v; };
   setv('ckName', d.studentName); setv('ckSchool', d.schoolGrade);
@@ -498,6 +504,7 @@ $('ckAgree').addEventListener('change', saveDraft);
 /* ── 기존 방식 전송 (설문 연동을 쓸 수 없을 때의 대체 경로 — 예전 '전송하기'와 동일) ── */
 const SENT_KEY = 'swc_consult_sent_' + (qrSession || 'default');
 function validate() {
+  if (!(sel('ckBranch')[0])) return '상담 장소(평촌관 / 산본관)를 선택해 주세요.';
   if (!(sel('ckLevel')[0])) return '과정 구분(초등/중등/고등)을 선택해 주세요.';
   if (!val('ckName')) return '학생 이름을 입력해 주세요.';
   if (!val('ckSchool')) return '학교 / 학년을 입력해 주세요.';

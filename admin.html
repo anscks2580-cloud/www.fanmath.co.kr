@@ -3016,7 +3016,12 @@ window.initConsultDeckTab = async () => {
 // · 링크로는 상담자료 화면만 열리며 관리자 페이지·상담 기록 등 다른 데이터에는 접근 불가
 // · 편집(consult-deck-admin.html)에서 저장하면 공유 문서에도 자동 반영
 // · 링크 주소는 한 번 만들면 계속 같음, [공유 중지] 시 이전에 보낸 링크는 더 이상 열리지 않음
-function cdkShareUrl(deckId, token) { return new URL(`consult-deck.html?deck=${encodeURIComponent(deckId)}&share=${token}`, location.href).href; }
+// 문자·카톡용 짧은 주소: www.fanmath.co.kr/m (중등) · /h (고등) → 지금 공유 중인 링크로 이동 (m/index.html · h/index.html)
+const CDK_SHORT = { middle: 'm', high: 'h' };
+function cdkShareUrl(deckId, token) {
+  if (CDK_SHORT[deckId] && /^https?:$/.test(location.protocol)) return new URL(CDK_SHORT[deckId], location.href).href;
+  return new URL(`consult-deck.html?deck=${encodeURIComponent(deckId)}&share=${token}`, location.href).href;
+}
 function cdkNewToken() {
   const abc = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
   const a = new Uint8Array(24); crypto.getRandomValues(a);
@@ -10788,13 +10793,11 @@ function loadQrLib() {
 }
 
 // kind: 'qr' 방문자 휴대폰(QR) · 'tablet' 학원 태블릿(관리자 로그인 안 된 브라우저) · 'lounge' 수업 미리보기만
-// 문자·카톡·QR용 짧은 주소 (pc/index.html · sb/index.html 이 상담지로 바로 연결)
-const CONSULT_SHORT = { '평촌관': 'pc', '산본관': 'sb' };
+// 문자·카톡·QR용 짧은 공용 주소 www.fanmath.co.kr/c (c/index.html → 상담지, 지점은 학부모님이 선택)
+// (지점 고정 주소 /pc · /sb 도 계속 작동)
 function consultLinkUrl(kind = 'qr') {
   const branch = document.getElementById('cqBranch').value;
-  if (kind === 'qr' && /^https?:$/.test(location.protocol) && CONSULT_SHORT[branch]) {
-    return new URL(CONSULT_SHORT[branch], location.href).toString();
-  }
+  if (kind === 'qr' && /^https?:$/.test(location.protocol)) return new URL('c', location.href).toString();
   const u = new URL(kind === 'lounge' ? 'consult-lounge.html' : 'consult-visit.html', location.href);
   u.search = '';
   u.hash = '';
