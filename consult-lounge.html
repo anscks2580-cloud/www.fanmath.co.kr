@@ -59,8 +59,11 @@ h1 em{font-style:normal;color:var(--purple);background:linear-gradient(transpare
 .sec-head p{font-size:12px;font-weight:700;letter-spacing:.24em;color:var(--gold)}
 .sec-head span{font-size:13px;color:var(--ink-3)}
 
-.vlist{margin-top:18px;display:grid;grid-template-columns:1fr;gap:18px}
-@media (min-width:720px){.vlist{grid-template-columns:1fr 1fr;gap:22px}}
+/* 샘플 강의: 한 줄에 3개 (휴대폰은 가로로 밀어서 보기) */
+.vlist{margin-top:18px;display:grid;grid-auto-flow:column;grid-auto-columns:minmax(220px,64%);gap:14px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin-left:-20px;margin-right:-20px;padding:2px 20px 10px;scroll-padding:0 20px}
+.vlist::-webkit-scrollbar{display:none}
+.vlist .vcard{scroll-snap-align:start}
+@media (min-width:600px){.vlist{grid-auto-flow:row;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-columns:auto;overflow:visible;margin-left:0;margin-right:0;padding:0;gap:16px}}
 .vcard{display:flex;flex-direction:column;justify-content:flex-start;width:100%;text-align:left;border-radius:22px;background:var(--paper);border:1px solid var(--line);overflow:hidden;box-shadow:0 12px 30px -24px rgba(37,28,64,.45);transition:transform .35s var(--ease),box-shadow .35s var(--ease),border-color .35s;animation:in .6s var(--ease) both}
 @media (hover:hover){.vcard:hover{transform:translateY(-3px);border-color:rgba(45,35,80,.32);box-shadow:0 22px 40px -26px rgba(37,28,64,.55)}}
 .vcard:active{transform:scale(.985)}
@@ -76,6 +79,15 @@ h1 em{font-style:normal;color:var(--purple);background:linear-gradient(transpare
 .vbody{display:block;padding:16px 18px 18px}
 .vbody b{display:block;font-size:17px;font-weight:800;letter-spacing:-.03em;line-height:1.45}
 .vbody p{margin-top:6px;font-size:14px;line-height:1.6;color:var(--ink-2)}
+/* 작은 카드 크기 맞춤 */
+.vcard{border-radius:18px}
+.thumb .no{left:12px;top:9px;font-size:22px}
+.thumb .play{right:10px;bottom:10px;width:38px;height:38px}
+.thumb .play svg{width:14px;height:14px;margin-left:2px}
+.thumb .dur{left:10px;bottom:12px;font-size:11px;padding:3px 8px}
+.vbody{padding:12px 14px 14px}
+.vbody b{font-size:14.5px;line-height:1.4}
+.vbody p{margin-top:4px;font-size:12.5px;line-height:1.5}
 
 .skel{border-radius:22px;background:var(--paper);border:1px solid var(--hair);overflow:hidden}
 .skel i{display:block;aspect-ratio:16/9;background:linear-gradient(90deg,rgba(37,28,64,.06),rgba(37,28,64,.11),rgba(37,28,64,.06));background-size:200% 100%;animation:sh 1.4s linear infinite}
