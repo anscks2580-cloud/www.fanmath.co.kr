@@ -10015,7 +10015,7 @@ window.saveConsultImage = async function(cid) {
   const modal = document.getElementById('consultImgModal');
   const prev = document.getElementById('ciPrev');
   CI.blob = null;
-  ['ciSave', 'ciCopy', 'ciShare'].forEach((id) => { document.getElementById(id).disabled = true; });
+  ['ciSave', 'ciCopy', 'ciPrint', 'ciShare'].forEach((id) => { document.getElementById(id).disabled = true; });
   prev.innerHTML = '<div class="ci-wait">이미지를 만드는 중…</div>';
   modal.classList.add('open');
   document.body.classList.add('ck-lock');
@@ -10046,6 +10046,7 @@ window.saveConsultImage = async function(cid) {
     const canShare = !!(navigator.canShare && navigator.canShare({ files: [file] })) && matchMedia('(pointer:coarse)').matches;
     const cb = document.getElementById('ciCopy'), sb = document.getElementById('ciShare');
     cb.hidden = false; cb.disabled = false;
+    document.getElementById('ciPrint').disabled = false;
     sb.hidden = !canShare; sb.disabled = !canShare;
   } catch (e) {
     console.error('[상담 결과 이미지]', e);
@@ -10087,6 +10088,34 @@ window.ciCopy = async function() {
     if (ok) { showToast(okMsg); return; }
   } catch (e) { console.warn('[이미지 복사] 대체 방식 실패', e); }
   showToast('이 브라우저에서는 바로 복사가 안 됩니다. 미리보기 이미지를 마우스 오른쪽 버튼(휴대폰은 길게 누르기) → [이미지 복사]를 눌러 주세요');
+};
+// 프린트: 만든 이미지를 A4 한 장에 맞춰 출력 (관리자 페이지 화면과 분리된 숨은 창에서 인쇄)
+window.ciPrint = async function() {
+  if (!CI.blob) return;
+  try {
+    const url = await new Promise((res, rej) => { const fr = new FileReader(); fr.onload = () => res(fr.result); fr.onerror = rej; fr.readAsDataURL(CI.blob); });
+    const old = document.getElementById('ciPrintFrame'); if (old) old.remove();
+    const fr = document.createElement('iframe');
+    fr.id = 'ciPrintFrame';
+    fr.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
+    document.body.appendChild(fr);
+    const title = CI.name.replace(/\.png$/i, '');
+    const w = fr.contentWindow, d = w.document;
+    d.open();
+    d.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeConsultHtml(title)}</title><style>
+      @page { size: A4 portrait; margin: 8mm; }
+      html, body { margin:0; padding:0; background:#fff; }
+      body { display:flex; justify-content:center; align-items:flex-start; }
+      img { display:block; max-width:100%; max-height:calc(297mm - 16mm - 2mm); width:auto; height:auto; object-fit:contain;
+            -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+    </style></head><body><img id="im" src="${url}" alt=""></body></html>`);
+    d.close();
+    const im = d.getElementById('im');
+    await new Promise((r) => (im.complete ? r() : (im.onload = im.onerror = r)));
+    w.focus();
+    w.print();
+    setTimeout(() => fr.remove(), 60000);
+  } catch (e) { console.error('[상담 결과 이미지 프린트]', e); showToast('프린트하지 못했습니다. [이미지 저장] 후 파일을 열어 인쇄해 주세요'); }
 };
 window.ciShare = async function() {
   if (!CI.blob) return;
@@ -11981,6 +12010,7 @@ window.deleteScheduleEvent = async function (id) {
     <div class="ci-btns">
       <button class="btn btn-primary" id="ciSave" disabled onclick="ciDownload()">⬇ 이미지 저장</button>
       <button class="btn btn-primary" id="ciCopy" disabled onclick="ciCopy()">📋 이미지 복사</button>
+      <button class="btn btn-secondary" id="ciPrint" disabled onclick="ciPrint()">🖨 프린트</button>
       <button class="btn btn-secondary" id="ciShare" disabled onclick="ciShare()" hidden>📤 공유하기 (카카오톡)</button>
     </div>
   </div>
