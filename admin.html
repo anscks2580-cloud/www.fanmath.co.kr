@@ -1365,7 +1365,7 @@ body.ck-lock { overflow:hidden; }
     <div class="card">
       <h3>📥 상담 신청 · 상담 기록</h3>
       <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
-        홈페이지 상담 신청 폼(consult.html)과 상담 QR로 접수된 내역입니다. 상담 QR은 방문하신 분 휴대폰에서 <b style="color:var(--off-white);">상담신청서 → 학부모 설문 → 결과 확인</b>까지 진행하고 끝나며, 결과는 이 목록의 상담 기록에 함께 저장됩니다. 각 기록의 <b style="color:var(--off-white);">📷 결과 이미지</b>로 인적사항·설문 결과를 이미지로 저장해 카카오톡으로 전달할 수 있습니다. 학생과 함께 오신 경우 같은 휴대폰으로 <b style="color:var(--off-white);">학생 설문</b>까지 이어서 할 수 있고, 각 기록의 <b style="color:var(--off-white);">학생 설문 시작</b>으로 원장님이 직접 진행할 수도 있습니다.
+        홈페이지 상담 신청 폼(consult.html)과 상담 QR로 접수된 내역입니다. 상담 QR은 방문하신 분 휴대폰에서 <b style="color:var(--off-white);">상담신청서 → 학부모 설문 → 결과 확인</b>까지 진행하고 끝나며, 결과는 이 목록의 상담 기록에 함께 저장됩니다. 각 기록의 <b style="color:var(--off-white);">📷 결과 이미지</b>로 설문 결과(개인정보 제외)를 이미지로 저장해 카카오톡으로 전달할 수 있습니다. 학생과 함께 오신 경우 같은 휴대폰으로 <b style="color:var(--off-white);">학생 설문</b>까지 이어서 할 수 있고, 각 기록의 <b style="color:var(--off-white);">학생 설문 시작</b>으로 원장님이 직접 진행할 수도 있습니다.
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;padding:14px 16px;background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);border-radius:10px;">
         <button class="btn btn-primary" onclick="openConsultQr()">📱 상담 QR · 오늘 현황</button>
@@ -9905,8 +9905,8 @@ window.closeConsultRecord = function() {
 };
 
 // ══════ 상담 결과 이미지 (카카오톡 전달용) ══════
-// 상담신청서 인적사항 + 학부모(·학생) 설문 결과를 세로형 PNG 한 장으로 만들어 관리부에서 학부모님께 전달
-// 내부용 정보(방문 경로·진행 상태·문항별 응답)는 넣지 않습니다.
+// 학부모(·학생) 설문 결과만 세로형 PNG 한 장으로 만들어 관리부에서 학부모님께 전달
+// 개인정보(학교·학년·연락처·성적 등 상담신청서 인적사항)와 내부용 정보(방문 경로·진행 상태·문항별 응답)는 넣지 않습니다.
 const CI = { blob: null, name: '' };
 function ciLoadLib() {
   if (window.html2canvas) return Promise.resolve();
@@ -9991,13 +9991,10 @@ function ciCardHtml(d, prof, CF) {
     <div class="h">
       <div class="brand"><img src="swc-logo.png" alt="">송우찬수학학원<span>${e(d.branch || '평촌관')}</span></div>
       <div class="eye">CONSULTATION REPORT</div>
-      <div class="nm">${e(d.studentName || '')}<small>${e(d.schoolGrade || '')}</small></div>
-      <div class="dt">상담 신청서 · 학습 성향 설문 결과${date ? ' · ' + date : ''}</div>
+      <div class="nm">${e(d.studentName || '')}</div>
+      <div class="dt">학습 성향 설문 결과${date ? ' · ' + date : ''}</div>
     </div>
     <div class="b">
-      <div class="sec"><div class="st"><i></i>학생 정보 · 상담 신청서</div>
-        <div class="info">${rows.map((r) => `<div class="${r[2] || ''}"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('')}</div>
-      </div>
       ${surveys || '<div class="sec"><div class="st"><i></i>학습 성향 설문 결과</div><p class="none">아직 진행한 설문이 없습니다.</p></div>'}
       <p class="ft">설문 결과는 응답하신 실제 학습 행동을 바탕으로 정리한 <b>상담 참고 자료</b>이며 심리검사가 아닙니다.<br>송우찬수학학원 ${e(d.branch || '평촌관')} · ${String(d.branch || '').includes('산본') ? '031-346-8899' : '031-386-8899'}</p>
     </div>
@@ -12050,12 +12047,12 @@ window.deleteScheduleEvent = async function (id) {
   </div>
 </div>
 
-<!-- 상담 결과 이미지 (상담신청서 인적사항 + 설문 결과 → PNG, 카카오톡 전달용) -->
+<!-- 상담 결과 이미지 (설문 결과만 → PNG, 카카오톡 전달용 · 개인정보 제외) -->
 <div id="consultImgModal" onclick="if(event.target===this)closeConsultImage()">
   <div class="ci-box">
     <button class="cq-close" onclick="closeConsultImage()" aria-label="닫기">✕</button>
     <h3>📷 상담 결과 이미지</h3>
-    <p class="ci-hint">상담신청서 인적사항과 설문 결과를 한 장의 이미지로 만들었습니다.<br>
+    <p class="ci-hint">설문 결과만 한 장의 이미지로 만들었습니다. (연락처·학교 등 개인정보는 들어가지 않습니다)<br>
       <b style="color:var(--off-white);">PC</b>: [이미지 복사] 후 PC 카카오톡 채팅창에 <b style="color:var(--gold);">Ctrl+V</b> 하거나, 저장한 파일을 끌어다 놓으세요.<br>
       <b style="color:var(--off-white);">휴대폰</b>: [공유하기] → 카카오톡을 고르면 바로 보낼 수 있습니다.</p>
     <div class="ci-prev" id="ciPrev"><div class="ci-wait">이미지를 만드는 중…</div></div>
