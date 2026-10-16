@@ -53,6 +53,8 @@ aside{border-right:1px solid var(--line);padding:16px 12px 40px;overflow:auto;ma
 .tree-item:hover{background:rgba(255,255,255,.04)}
 .tree-item.sel{background:var(--card-2)}
 .tree-item .nm{flex:1;min-width:0;font-size:13.5px;line-height:1.35}
+.tree-item .nm .aud{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:9px;font-size:10.5px;font-style:normal;font-weight:700;vertical-align:1px;background:rgba(240,192,64,.18);color:var(--gold)}
+.tree-item .nm .aud.share{background:rgba(160,140,220,.18);color:#B9A8EE}
 .tree-item .nm small{display:block;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tree-item.off .nm{opacity:.38;text-decoration:line-through}
 .tree-sec{margin-top:10px}
@@ -199,7 +201,14 @@ const NAMES = {
   'online-site': ['온라인 학습관 화면', 'PDF 10p 헤드라인·홈페이지'], 'online-programs': ['온라인 강의 3종', 'PDF 10p 강의·주석'],
   'care-attendance': ['출결관리 시스템', 'PDF 11p 1번'], 'care-kakao': ['카카오톡 플러스친구', 'PDF 11p 2번·채팅 이미지'], 'care-friend': ['카톡친구맺기', 'PDF 11p 친구맺기·ID 이미지'],
   'thanks': ['감사합니다', 'PDF 12p'],
+  // 2026-10 상담 화면 전용 (학부모 공유 링크에는 원래 화면이 그대로 나감)
+  'books-stages-c': ['단계별 대표교재 + 교재 선정 원칙', '교재 사진 아래 본문 함께 표시'],
+  'exam-process-c': ['시험 대비 과정 (5단계 · 사진)', '05 기출문제 풀이 추가 · 하단 사진'],
+  'mock-timeline-c': ['모의테스트 일정 + 성적분석표', '일정 오른쪽 성적분석표 사진'],
+  'online-site-c': ['온라인 학습관 화면', '홈페이지 첫 화면 캡처'],
+  'care-payment': ['온라인 결제 방법 안내', '카톡친구맺기 대신'],
 };
+const AUD_LABEL = { consult: '상담 화면 전용', share: '학부모 링크 전용' };
 
 /* ── 필드 스키마: t = text | area | list | obj | img | num | bool ── */
 const F = (k, l, t = 'text', x = {}) => ({ k, l, t, ...x });
@@ -213,7 +222,8 @@ const SCHEMA = {
     F('periods', '시기', 'obj', { item: '시기', fields: [F('label', '시기명'), F('sub', '보조 표기'), F('exam', '내신기간 강조', 'bool'), F('current', '현행 (줄마다 한 칸)', 'area'), F('advance', '선행 (줄마다 한 칸)', 'area')] }),
     F('note', '주석', 'area')],
   'books-intro': [F('subtitle', '소제목'), F('paragraphs', '본문', 'list')],
-  'books-stages': [F('title', '화면 제목'), F('stages', '단계별 교재', 'obj', { item: '단계', fields: [F('name', '단계명'), F('desc', '설명', 'area'), F('books', '교재명'), F('image', '교재 사진', 'img')] })],
+  'books-stages': [F('title', '화면 제목'), F('stages', '단계별 교재', 'obj', { item: '단계', fields: [F('name', '단계명'), F('desc', '설명', 'area'), F('books', '교재명'), F('image', '교재 사진', 'img')] }),
+    F('paragraphs', '본문 (넣으면 교재 아래에 2단으로 표시)', 'list')],
   'daily-intro': [F('titleEn', '영문 제목'), F('headline', '헤드라인 (줄 단위)', 'list'), F('image', '시험지 이미지', 'img'), F('imageCaption', '이미지 설명')],
   'daily-review': [F('subtitle', '소제목'), F('loopCenter', '원 가운데 글자'), F('loop', '원 위 단계 (3개)', 'list', { short: true }), F('paragraphs', '본문', 'list')],
   'clinic-why': [F('titleEn', '영문 제목'), F('headline', '헤드라인 (줄 단위)', 'list'), F('subtitle', '소제목'), F('compareLeft', '비교 왼쪽'), F('compareRight', '비교 오른쪽'), F('paragraphs', '본문', 'list')],
@@ -221,10 +231,12 @@ const SCHEMA = {
     F('steps', '진행 단계', 'obj', { item: '단계', fields: [F('title', '단계명'), F('desc', '설명')] }), F('paragraph', '본문', 'area'), F('badge', '강조 문구')],
   'exam-goal': [F('headline', '헤드라인', 'area'), F('keyword', '크게 보여줄 단어'), F('paragraphs', '본문', 'list')],
   'exam-start': [F('title', '화면 제목'), F('image', '교재 표지 이미지', 'img'), F('imageCaption', '이미지 설명'), F('paragraphs', '본문', 'list')],
-  'exam-process': [F('title', '화면 제목'), F('steps', '과정', 'obj', { item: '단계', fields: [F('title', '단계명'), F('desc', '설명')] }), F('paragraph', '본문', 'area')],
+  'exam-process': [F('title', '화면 제목'), F('steps', '과정', 'obj', { item: '단계', fields: [F('title', '단계명'), F('desc', '설명')] }), F('paragraph', '본문', 'area'),
+    F('photos', '과정 아래 사진', 'obj', { item: '사진', fields: [F('image', '사진', 'img'), F('caption', '사진 설명')] })],
   'mock-why': [F('headline', '헤드라인 (줄 단위)', 'list'), F('subtitle', '소제목'), F('paragraphs', '본문', 'list')],
   'mock-timeline': [F('title', '화면 제목'), F('examLabel', '시험 표시'),
-    F('rounds', '회차', 'obj', { item: '회차', fields: [F('label', '회차명'), F('when', '시기 표기'), F('weeks', '시험 몇 주 전', 'num'), F('desc', '설명', 'area')] }), F('paragraph', '본문', 'area')],
+    F('rounds', '회차', 'obj', { item: '회차', fields: [F('label', '회차명'), F('when', '시기 표기'), F('weeks', '시험 몇 주 전', 'num'), F('desc', '설명', 'area')] }), F('paragraph', '본문', 'area'),
+    F('photos', '오른쪽 사진 (성적분석표 등)', 'obj', { item: '사진', fields: [F('image', '사진', 'img'), F('caption', '사진 설명')] })],
   'mock-notice': [F('title', '화면 제목'), F('image', '공고 사진 (넣으면 아래 항목 대신 사진으로 표시)', 'img'), F('imageCaption', '사진 설명'), F('noticeTitle', '공고 제목', 'area'),
     F('rounds', '일정', 'obj', { item: '회차', fields: [F('label', '회차'), F('date', '날짜')] }),
     F('rangeLabel', '시험범위 제목'), F('rangeText', '시험범위 내용', 'area'), F('bankPercent', '문제은행 비율 (%)', 'num'), F('bankLabel', '문제은행 표기'), F('otherLabel', '기타문제 표기'),
@@ -249,6 +261,8 @@ const SCHEMA = {
     F('chatMsg', '학원 메시지', 'area'), F('replyName', '답장 이름'), F('reply', '답장')],
   'care-friend': [F('title', '화면 제목'), F('addLead', '안내 문구'), F('steps', '단계', 'obj', { item: '단계', fields: [F('label', '단계명'), F('text', '설명', 'area')] }),
     F('cardTitle', '카드 제목', 'area'), F('cardText', '카드 내용', 'area'), F('cardHours', '운영 시간')],
+  'care-payment': [F('title', '화면 제목'), F('lead', '안내 문구'), F('steps', '단계', 'obj', { item: '단계', fields: [F('label', '단계명'), F('text', '설명', 'area')] }),
+    F('cardTitle', '카드 제목', 'area'), F('cardItems', '카드 항목 (결제 수단 등)', 'list'), F('cardFoot', '카드 아래 문구')],
   'thanks': [F('text', '문구')],
 };
 const META_FIELDS = [F('meta.brand', '학원명'), F('meta.docTitle', '표지 큰 제목'), F('meta.programTitle', '프로그램명'), F('meta.slogan', '슬로건'), F('meta.tagline', '영문 태그라인')];
@@ -284,7 +298,7 @@ function renderTree() {
     const [nm, sub] = sceneTitle(sc); const idx = list ? list.indexOf(sc) : -1;
     const fixed = sc.type === 'intro';
     return `<div class="tree-item ${sel.kind === 'scene' && sel.id === sc.id ? 'sel' : ''} ${sc.visible === false ? 'off' : ''}" data-scene="${esc(sc.id)}">
-      <span class="nm">${esc(nm)}<small>${esc(sub)}</small></span>
+      <span class="nm">${esc(nm)}${sc.audience ? `<em class="aud ${esc(sc.audience)}">${esc(AUD_LABEL[sc.audience] || '')}</em>` : ''}<small>${esc(sub)}</small></span>
       ${canMove ? `<button class="ib" data-mv-scene="${esc(sc.id)}" data-dir="-1" ${idx <= 0 ? 'disabled' : ''} aria-label="위로">${ICON.up}</button><button class="ib" data-mv-scene="${esc(sc.id)}" data-dir="1" ${idx >= list.length - 1 ? 'disabled' : ''} aria-label="아래로">${ICON.down}</button>` : ''}
       ${fixed ? '' : `<button class="ib" data-vis-scene="${esc(sc.id)}" aria-label="${sc.visible === false ? '보이기' : '숨기기'}" title="${sc.visible === false ? '숨김 상태 · 눌러서 보이기' : '눌러서 숨기기'}">${sc.visible === false ? ICON.eyeOff : ICON.eye}</button>`}</div>`;
   };
@@ -385,6 +399,8 @@ function renderPanel() {
   P.innerHTML = `<h2>${esc(nm)}</h2><p class="sub">${sec ? `<b>${esc(sec.label)}</b> 섹션 · ` : ''}원본 ${esc(sub)} · 레이아웃과 등장 순서는 고정이고 내용만 바뀝니다.</p>
     <div class="panel-acts"><button class="btn sm" data-preview-scene="${esc(sc.id)}">이 화면 미리보기</button>
       <label class="btn sm" style="cursor:pointer"><input type="checkbox" data-path="scenes.${si}.visible" data-bool="1" ${sc.visible !== false ? 'checked' : ''} ${sc.type === 'intro' ? 'disabled' : ''} style="accent-color:var(--gold)"> 상담 화면에 표시</label>
+      <label class="btn sm" style="cursor:pointer">표시 대상 <select data-path="scenes.${si}.audience" style="margin-left:6px;background:transparent;color:inherit;border:1px solid var(--line, #444);border-radius:6px;padding:2px 4px">
+        ${[['', '모두'], ['consult', '상담 화면만'], ['share', '학부모 링크만']].map(([v, l]) => `<option value="${v}" ${(sc.audience || '') === v ? 'selected' : ''}>${l}</option>`).join('')}</select></label>
       <button class="btn sm ghost" data-reset-scene="${esc(sc.id)}">이 화면 기본값으로 되돌리기</button></div>
     ${schema.length ? MARKUP_HINT : '<p class="note-box">표지 문구는 <b>공통 설정</b>에서 수정합니다.</p>'}
     ${schema.map(f => fieldHTML(f, sc.data?.[f.k], `scenes.${si}.data.${f.k}`)).join('')}`;
@@ -395,7 +411,7 @@ $('#panel').addEventListener('input', e => {
   let v = el.dataset.bool ? el.checked : el.dataset.num ? (el.value === '' ? '' : +el.value) : el.value;
   setP(S.deck, path, v);
   if (el.closest('.img-fld')) { const pv = el.closest('.img-fld').querySelector('.pv'); pv.style.backgroundImage = v ? `url('${v}')` : ''; pv.textContent = v ? '' : '이미지 없음'; }
-  if (path.endsWith('.label') && path.startsWith('sections') || path.endsWith('.visible')) renderTree();
+  if (path.endsWith('.label') && path.startsWith('sections') || path.endsWith('.visible') || path.endsWith('.audience')) renderTree();
   markDirty();
 });
 $('#panel').addEventListener('change', e => { if (e.target.dataset.bool) e.target.dispatchEvent(new Event('input', { bubbles: true })); });
@@ -459,7 +475,9 @@ function shrinkImage(file, max) {
 /* ── 미리보기 · 열기 ── */
 function preview(sceneId) {
   try { localStorage.setItem('cd_draft_' + DECK, JSON.stringify(S.deck)); } catch (e) { return toast('미리보기 데이터를 저장하지 못했습니다.', 1); }
-  window.open(`consult-deck.html?deck=${DECK}&preview=1${sceneId ? '#' + encodeURIComponent(sceneId) : ''}`, 'cdpreview');
+  const sc = sceneId && S.deck.scenes.find(s => s.id === sceneId);
+  const as = sc?.audience === 'share' ? '&as=share' : '';   // 학부모 링크 전용 화면은 공유 링크 구성으로 미리보기
+  window.open(`consult-deck.html?deck=${DECK}&preview=1${as}${sceneId ? '#' + encodeURIComponent(sceneId) : ''}`, 'cdpreview');
 }
 $('#btnPreview').onclick = () => preview(S.sel.kind === 'scene' ? S.sel.id : S.sel.kind === 'section' ? S.deck.scenes.find(s => s.section === S.sel.id)?.id : '');
 $('#btnOpen').onclick = () => {
@@ -515,7 +533,29 @@ $('#histModal').addEventListener('click', e => {
 });
 
 /* ── 기본값 병합 (consult-deck.html의 mergeDeck과 같은 규칙) ── */
+/** consult-deck.html 의 migrateDeck 과 같은 내용 (rev 올림 시 저장본 유지 + 수정 사항만 반영) */
+function migrateDeck(saved, def) {
+  if (!saved || !def || (saved.rev || 1) >= (def.rev || 1)) return saved;
+  const s = clone(saved);
+  const sc = id => (s.scenes || []).find(x => x.id === id);
+  if ((saved.rev || 1) < 2) {
+    const g = sc('learning-goals'); (g?.data?.stages || []).forEach(t => { if (t.name === 'STANDARD' && t.ko === '개념') t.ko = '기본'; });
+    const lt = sc('learning-text'); if (lt?.data?.paragraphs) lt.data.paragraphs = lt.data.paragraphs.map(p => String(p).replace('개념(STANDARD)', '기본(STANDARD)'));
+    const bs = sc('books-stages'); (bs?.data?.stages || []).forEach(t => { if (t.name === 'STANDARD' && t.desc) t.desc = t.desc.replace('본격적인 개념학습을 위한 교재', '탄탄한 기본학습을 위한 교재'); });
+    const cf = sc('clinic-flow'); if (cf?.data && /중학교\s*3학년/.test(cf.data.badge || '')) cf.data.badge = '';
+  }
+  const ids = new Set((s.scenes || []).map(x => x.id));
+  def.scenes.forEach((d, i) => {
+    if (ids.has(d.id)) return;
+    let at = -1;
+    for (let j = i - 1; j >= 0 && at < 0; j--) at = s.scenes.findIndex(x => x.id === def.scenes[j].id);
+    s.scenes.splice(at + 1, 0, clone(d)); ids.add(d.id);
+  });
+  s.rev = def.rev;
+  return s;
+}
 function merge(saved, def) {
+  saved = migrateDeck(saved, def);
   if (!saved) return clone(def);
   const out = { ...clone(def), ...clone(saved), meta: { ...def.meta, ...(saved.meta || {}) }, contact: { ...def.contact, ...(saved.contact || {}) } };
   const ds = new Map(def.scenes.map(s => [s.id, s]));
