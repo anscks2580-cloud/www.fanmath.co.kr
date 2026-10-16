@@ -310,7 +310,7 @@
     <li><a href="curriculum.html">커리큘럼</a></li>
     <li><a href="interview.html">졸업생 인터뷰</a></li>
     <li><a href="press.html">언론보도</a></li>
-    <li><a href="exam/index.html" style="color:#D8B45C;font-weight:600;">📝 중간고사 대비</a></li>
+    <!-- <li><a href="exam/index.html" style="color:#D8B45C;font-weight:600;">📝 중간고사 대비</a></li> -->
     <li><a href="consult.html" style="color:var(--gold);font-weight:600;">상담신청</a></li>
     <li><a href="apex.html" style="color:var(--apex-gold,#C9A84C)!important;border:1px solid rgba(201,168,76,0.35);border-radius:6px;padding:5px 12px;">✦ Apex관</a></li>
   </ul>
@@ -330,7 +330,7 @@
     <a href="curriculum.html" >커리큘럼</a>
     <a href="interview.html" >졸업생 인터뷰</a>
     <a href="press.html" >언론보도</a>
-    <a href="exam/index.html" style="color:#D8B45C;font-weight:600;">📝 중간고사 대비</a>
+    <!-- <a href="exam/index.html" style="color:#D8B45C;font-weight:600;">📝 중간고사 대비</a> -->
     <a href="consult.html" style="color:var(--gold);font-weight:600;">상담신청</a>
     <a href="apex.html" style="color:#C9A84C;font-weight:600;">✦ Apex관</a>
   </div>
@@ -351,8 +351,8 @@
       중등수학 · 고등수학 · 수리논술 전문
     </p>
 
-    <!-- 중간고사 후 셀프체크 메인 배너 -->
-    <a href="self-check.html" style="
+    <!-- 중간고사 후 셀프체크 메인 배너 (2026-10-31까지 노출, 11/1 00:00 KST부터 자동 숨김) -->
+    <a href="self-check.html" class="timed-banner" data-show-until="2026-11-01T00:00:00+09:00" style="
       display:flex; align-items:center; justify-content:space-between;
       width:100%; max-width:720px;
       margin: 0 0 20px;
@@ -428,7 +428,18 @@
       </div>
     </a>
 
-    <!-- 중간고사 대비 메인 배너 -->
+    <script>
+      /* data-show-until 시각(한국시간)이 지나면 배너 자동 숨김 */
+      (function(){
+        var now = Date.now();
+        document.querySelectorAll('.timed-banner[data-show-until]').forEach(function(el){
+          var until = Date.parse(el.getAttribute('data-show-until'));
+          if (!isNaN(until) && now >= until) el.remove();
+        });
+      })();
+    </script>
+
+    <!-- 중간고사 대비 메인 배너 — 중간고사 종료로 숨김 (기말고사 버전으로 재사용 예정)
     <a href="exam/index.html" style="
       display:flex; align-items:center; justify-content:space-between;
       width:100%; max-width:720px;
@@ -499,7 +510,7 @@
           바로가기 →
         </div>
       </div>
-    </a>
+    </a> -->
 
     <!-- Apex관 메인 배너 -->
     <a href="apex.html" style="
