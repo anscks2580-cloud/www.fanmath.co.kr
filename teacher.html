@@ -27,6 +27,36 @@
   transform:scaleX(0); transition:transform 0.2s;
 }
 .teacher-tab.active { color:var(--gold); }
+/* ── 📚 기출문제 ── */
+.px-toolbar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+.px-toolbar select, .px-toolbar input { padding:10px 13px; background:rgba(255,255,255,0.05); border:1px solid var(--border-soft); border-radius:8px; color:var(--off-white); font-size:14px; font-family:inherit; outline:none; min-width:0; }
+.px-toolbar select { flex:1 1 240px; } .px-toolbar input { flex:1 1 200px; }
+.px-toolbar select option { background:#1A1230; }
+.px-toolbar select:focus, .px-toolbar input:focus { border-color:rgba(240,192,64,0.5); }
+.px-chip-label { font-size:11px; color:var(--muted); font-weight:600; letter-spacing:1px; margin:4px 0 6px; }
+.px-chips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+.px-chip { padding:6px 14px; border-radius:99px; border:1px solid var(--border-soft); background:transparent; color:var(--muted); font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; transition:all 0.15s; }
+.px-chip:hover { color:var(--off-white); }
+.px-chip.on { border-color:var(--gold); color:var(--gold); background:rgba(240,192,64,0.08); }
+.px-chip .n { opacity:0.6; font-weight:500; margin-left:4px; }
+.px-group { margin-top:20px; }
+.px-group-h { font-size:13.5px; font-weight:700; color:var(--off-white); margin-bottom:8px; display:flex; gap:8px; align-items:baseline; }
+.px-group-h small { color:var(--muted); font-weight:500; font-size:12px; }
+.px-files { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:6px; }
+.px-file { display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:8px; background:rgba(255,255,255,0.03); border:1px solid var(--border-soft); color:var(--off-white); font-size:13px; font-family:inherit; cursor:pointer; text-align:left; min-width:0; transition:border-color 0.15s, color 0.15s; }
+.px-file:hover { border-color:rgba(240,192,64,0.45); color:var(--gold); }
+.px-file span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.px-empty { color:var(--muted); font-size:13px; padding:24px 0; text-align:center; }
+.px-meta { font-size:12px; color:var(--muted); margin-bottom:6px; }
+/* ── 📘 시중교재 ── */
+.tb-book { border:1px solid var(--border-soft); border-radius:10px; background:rgba(255,255,255,0.025); margin-bottom:8px; }
+.tb-book > summary { list-style:none; cursor:pointer; padding:12px 14px; display:flex; align-items:center; gap:10px; font-size:14px; font-weight:600; color:var(--off-white); }
+.tb-book > summary::-webkit-details-marker { display:none; }
+.tb-book > summary::after { content:'›'; margin-left:auto; color:var(--muted); transition:transform 0.15s; font-size:18px; line-height:1; }
+.tb-book[open] > summary::after { transform:rotate(90deg); }
+.tb-book > summary small { color:var(--muted); font-weight:500; font-size:12px; }
+.tb-book .px-files { padding:0 14px 14px; }
+.tb-one { width:100%; }
 /* ── 📅 일정 / 오늘 할 일 ── */
 .cal-layout { display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:20px; align-items:start; }
 @media (max-width:900px){ .cal-layout { grid-template-columns:1fr; } }
@@ -328,6 +358,8 @@ select option:disabled { color:#9B94B3; }
     <button class="teacher-tab" onclick="switchTab('progress',this)">반별 진도</button>
     <button class="teacher-tab" onclick="switchTab('clinic',this);initClinicTab()">토요클리닉</button>
     <button class="teacher-tab" onclick="switchTab('videos',this);loadTeacherVideos()">강의 목록</button>
+    <button class="teacher-tab" onclick="switchTab('pastexams',this);initPastExamsTab()">기출문제</button>
+    <button class="teacher-tab" onclick="switchTab('textbooks',this);initTextbooksTab()">시중교재</button>
     <button class="teacher-tab" onclick="switchTab('watchstatus',this);initTeacherWatchStatus()">학생 시청현황</button>
     <button class="teacher-tab" onclick="switchTab('manual',this)">전임강사 매뉴얼</button>
   </div>
@@ -859,6 +891,41 @@ select option:disabled { color:#9B94B3; }
   </div>
 
   <!-- ══ 탭: 전임강사 매뉴얼 ══ -->
+  <!-- ══ 📚 기출문제 ══ -->
+  <div class="tab-panel" id="tab-pastexams">
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;">
+        <span>📚 기출문제</span>
+        <button class="btn btn-outline btn-sm" onclick="initPastExamsTab(true)">새로고침</button>
+      </div>
+      <div class="px-toolbar">
+        <select id="pxExamSel" onchange="pxSelectExam(this.value)"></select>
+        <input type="search" id="pxSearch" placeholder="학교 이름으로 찾기 (예: 백영고)" oninput="pxSetQuery(this.value)">
+      </div>
+      <div class="px-chip-label">학년</div>
+      <div class="px-chips" id="pxGradeChips"></div>
+      <div class="px-chip-label">지역</div>
+      <div class="px-chips" id="pxRegionChips"></div>
+      <div id="pxList"><div class="px-empty">불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <!-- ══ 📘 시중교재 ══ -->
+  <div class="tab-panel" id="tab-textbooks">
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;">
+        <span>📘 시중교재</span>
+        <button class="btn btn-outline btn-sm" onclick="initTextbooksTab(true)">새로고침</button>
+      </div>
+      <div class="px-toolbar">
+        <input type="search" id="tbSearch" placeholder="교재 이름으로 찾기 (예: 쎈, 블랙라벨)" oninput="tbSetQuery(this.value)">
+      </div>
+      <div class="px-chip-label">학년</div>
+      <div class="px-chips" id="tbGradeChips"></div>
+      <div id="tbList"><div class="px-empty">불러오는 중...</div></div>
+    </div>
+  </div>
+
   <div class="tab-panel" id="tab-manual">
     <div class="mn-layout" id="mnLayout">
       <aside class="mn-toc" id="mnToc" aria-label="매뉴얼 목차">
@@ -2941,6 +3008,218 @@ window.closeTodayPopup = function (hideToday = false) {
   document.getElementById('calTodayModal').style.display = 'none';
   if (hideToday && currentTeacher) {
     try { localStorage.setItem('swc_today_popup_' + currentTeacher.uid, calTodayStr()); } catch (e) {}
+  }
+};
+
+// ══════════════════════════════════════
+// 📘 시중교재 — Firebase Storage 경로: textbooks/학년/교재명/(하위폴더/)파일.pdf
+// (업로드·삭제는 admin.html "시중교재" 탭, 선생님은 열람만)
+// ══════════════════════════════════════
+let tbFiles = null;   // [{ grade, book, sub, name, path }]
+const tbState = { grade: 'all', q: '' };
+
+window.initTextbooksTab = async function (force = false) {
+  const list = document.getElementById('tbList');
+  if (tbFiles && !force) { tbRender(); return; }
+  list.innerHTML = '<div class="px-empty">불러오는 중...</div>';
+  const files = [];
+  async function walk(r, parts) {
+    const res = await listAll(r);
+    res.items.forEach(it => {
+      if (!/\.pdf$/i.test(it.name)) return;
+      files.push({ grade: parts[0] || '기타', book: parts[1] || '기타', sub: parts.slice(2).join(' / '), name: it.name, path: it.fullPath });
+    });
+    await Promise.all(res.prefixes.map(p => walk(p, [...parts, p.name])));
+  }
+  try { await walk(ref(storage, 'textbooks'), []); }
+  catch (e) {
+    tbFiles = null;
+    list.innerHTML = `<div class="px-empty">목록을 불러오지 못했습니다 (${pxEsc(e.code || e.message)})</div>`;
+    return;
+  }
+  tbFiles = files;
+  tbRender();
+};
+window.tbSetGrade = function (g) { tbState.grade = g; tbRender(); };
+window.tbSetQuery = function (q) { tbState.q = q.trim().toLowerCase(); tbRender(); };
+
+function tbRender() {
+  const list = document.getElementById('tbList');
+  if (!tbFiles) return;
+  if (!tbFiles.length) {
+    document.getElementById('tbGradeChips').innerHTML = '';
+    list.innerHTML = '<div class="px-empty">아직 올라온 교재가 없습니다.</div>';
+    return;
+  }
+  // 학년별 교재 수
+  const booksByGrade = {};
+  tbFiles.forEach(f => { (booksByGrade[f.grade] = booksByGrade[f.grade] || new Set()).add(f.book); });
+  const grades = Object.keys(booksByGrade).sort(pxOrderSort(PX_GRADE_ORDER));
+  if (tbState.grade !== 'all' && !booksByGrade[tbState.grade]) tbState.grade = 'all';
+  const totalBooks = grades.reduce((s, g) => s + booksByGrade[g].size, 0);
+  const chip = (label, active, onclick, n) =>
+    `<button class="px-chip${active ? ' on' : ''}" onclick="${onclick}">${pxEsc(label)}<span class="n">${n}</span></button>`;
+  document.getElementById('tbGradeChips').innerHTML =
+    chip('전체', tbState.grade === 'all', "tbSetGrade('all')", totalBooks) +
+    grades.map(g => chip(g, tbState.grade === g, `tbSetGrade('${pxEsc(g)}')`, booksByGrade[g].size)).join('');
+
+  let shown = tbState.grade === 'all' ? tbFiles : tbFiles.filter(f => f.grade === tbState.grade);
+  if (tbState.q) shown = shown.filter(f => (f.book + ' ' + f.sub + ' ' + f.name).toLowerCase().includes(tbState.q));
+  if (!shown.length) { list.innerHTML = `<div class="px-empty">${tbState.q ? '검색 결과가 없습니다.' : '해당하는 교재가 없습니다.'}</div>`; return; }
+
+  const byGrade = {};
+  shown.forEach(f => { ((byGrade[f.grade] = byGrade[f.grade] || {})[f.book] = byGrade[f.grade][f.book] || []).push(f); });
+  const open = !!tbState.q;
+  list.innerHTML = Object.keys(byGrade).sort(pxOrderSort(PX_GRADE_ORDER)).map(g => {
+    const books = Object.keys(byGrade[g]).sort((a, b) => a.localeCompare(b, 'ko', { numeric: true }));
+    return `<div class="px-group"><div class="px-group-h">${pxEsc(g)}<small>교재 ${books.length}종</small></div>` +
+      books.map(b => {
+        const fs = byGrade[g][b].sort((x, y) => (x.sub + '/' + x.name).localeCompare(y.sub + '/' + y.name, 'ko', { numeric: true }));
+        const btn = f => `<button class="px-file${fs.length === 1 ? ' tb-one' : ''}" data-path="${pxEsc(f.path)}" onclick="pxOpen(this.dataset.path)" title="${pxEsc((f.sub ? f.sub + ' / ' : '') + f.name)}">📄<span>${f.sub ? pxEsc(f.sub) + ' · ' : ''}${pxEsc(f.name.replace(/\.pdf$/i, ''))}</span></button>`;
+        return `<details class="tb-book"${open ? ' open' : ''}><summary>📘 ${pxEsc(b)} <small>${fs.length}개 파일</small></summary>
+          <div class="px-files">${fs.map(btn).join('')}</div></details>`;
+      }).join('') + '</div>';
+  }).join('');
+}
+
+// ══════════════════════════════════════
+// 📚 기출문제 — Firebase Storage 경로: pastExams/시험명/학년/지역/파일.pdf
+// (업로드·삭제는 admin.html "기출문제" 탭, 선생님은 열람만)
+// ══════════════════════════════════════
+const PX_GRADE_ORDER  = ['중1','중2','중3','고1','고2','고3'];
+const PX_REGION_ORDER = ['군포','안양','의왕','과천'];
+function pxOrderSort(order) {
+  return (a, b) => {
+    const ia = order.indexOf(a), ib = order.indexOf(b);
+    if (ia !== -1 || ib !== -1) return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    return a.localeCompare(b, 'ko');
+  };
+}
+// 시험명 최신순: "2025년 2학기 기말고사" → 연도·학기·중간/기말 순으로 비교
+function pxExamScore(name) {
+  const m = String(name).match(/(\d{4})\s*년?\s*(\d)\s*학기\s*(중간|기말)?/);
+  if (!m) return 0;
+  return (+m[1]) * 100 + (+m[2]) * 10 + (m[3] === '기말' ? 2 : m[3] === '중간' ? 1 : 0);
+}
+function pxEsc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+let pxExams = null;          // 시험명 목록
+const pxCache = {};          // 시험명 → [{ grade, region, name, path }]
+const pxState = { exam: '', grade: 'all', region: 'all', q: '' };
+
+window.initPastExamsTab = async function (force = false) {
+  const sel  = document.getElementById('pxExamSel');
+  const list = document.getElementById('pxList');
+  if (pxExams && !force) { pxRender(); return; }
+  if (force) Object.keys(pxCache).forEach(k => delete pxCache[k]);
+  list.innerHTML = '<div class="px-empty">불러오는 중...</div>';
+  try {
+    const res = await listAll(ref(storage, 'pastExams'));
+    pxExams = res.prefixes.map(p => p.name)
+      .sort((a, b) => (pxExamScore(b) - pxExamScore(a)) || b.localeCompare(a, 'ko'));
+  } catch (e) {
+    pxExams = null;
+    list.innerHTML = `<div class="px-empty">목록을 불러오지 못했습니다 (${pxEsc(e.code || e.message)})</div>`;
+    return;
+  }
+  if (!pxExams.length) {
+    sel.innerHTML = '';
+    document.getElementById('pxGradeChips').innerHTML = '';
+    document.getElementById('pxRegionChips').innerHTML = '';
+    list.innerHTML = '<div class="px-empty">아직 올라온 기출문제가 없습니다.</div>';
+    return;
+  }
+  if (!pxExams.includes(pxState.exam)) pxState.exam = pxExams[0];
+  sel.innerHTML = pxExams.map(n => `<option value="${pxEsc(n)}">${pxEsc(n)}</option>`).join('');
+  sel.value = pxState.exam;
+  await pxLoadExam(pxState.exam);
+};
+
+async function pxLoadExam(exam) {
+  const list = document.getElementById('pxList');
+  if (!pxCache[exam]) {
+    list.innerHTML = '<div class="px-empty">불러오는 중...</div>';
+    const files = [];
+    async function walk(r, parts) {
+      const res = await listAll(r);
+      res.items.forEach(it => {
+        if (!/\.pdf$/i.test(it.name)) return;
+        files.push({ grade: parts[0] || '기타', region: parts[1] || '기타', name: it.name, path: it.fullPath });
+      });
+      await Promise.all(res.prefixes.map(p => walk(p, [...parts, p.name])));
+    }
+    try { await walk(ref(storage, 'pastExams/' + exam), []); }
+    catch (e) {
+      list.innerHTML = `<div class="px-empty">불러오지 못했습니다 (${pxEsc(e.code || e.message)})</div>`;
+      return;
+    }
+    files.sort((a, b) => a.name.localeCompare(b.name, 'ko', { numeric: true }));
+    pxCache[exam] = files;
+  }
+  if (pxState.exam === exam) pxRender();
+}
+
+window.pxSelectExam = function (exam) {
+  pxState.exam = exam; pxState.grade = 'all'; pxState.region = 'all';
+  pxLoadExam(exam);
+};
+window.pxSetGrade  = function (g) { pxState.grade = g; pxState.region = 'all'; pxRender(); };
+window.pxSetRegion = function (r) { pxState.region = r; pxRender(); };
+window.pxSetQuery  = function (q) { pxState.q = q.trim().toLowerCase(); pxRender(); };
+
+function pxRender() {
+  const files = pxCache[pxState.exam];
+  const list  = document.getElementById('pxList');
+  if (!files) return;
+  const count = (arr, key) => arr.reduce((m, f) => (m[f[key]] = (m[f[key]] || 0) + 1, m), {});
+  const chip = (label, active, onclick, n) =>
+    `<button class="px-chip${active ? ' on' : ''}" onclick="${onclick}">${pxEsc(label)}${n != null ? `<span class="n">${n}</span>` : ''}</button>`;
+
+  const gCount = count(files, 'grade');
+  const grades = Object.keys(gCount).sort(pxOrderSort(PX_GRADE_ORDER));
+  if (pxState.grade !== 'all' && !gCount[pxState.grade]) pxState.grade = 'all';
+  document.getElementById('pxGradeChips').innerHTML =
+    chip('전체', pxState.grade === 'all', "pxSetGrade('all')", files.length) +
+    grades.map(g => chip(g, pxState.grade === g, `pxSetGrade('${pxEsc(g)}')`, gCount[g])).join('');
+
+  const inGrade = pxState.grade === 'all' ? files : files.filter(f => f.grade === pxState.grade);
+  const rCount  = count(inGrade, 'region');
+  const regions = Object.keys(rCount).sort(pxOrderSort(PX_REGION_ORDER));
+  if (pxState.region !== 'all' && !rCount[pxState.region]) pxState.region = 'all';
+  document.getElementById('pxRegionChips').innerHTML =
+    chip('전체', pxState.region === 'all', "pxSetRegion('all')", inGrade.length) +
+    regions.map(r => chip(r, pxState.region === r, `pxSetRegion('${pxEsc(r)}')`, rCount[r])).join('');
+
+  let shown = pxState.region === 'all' ? inGrade : inGrade.filter(f => f.region === pxState.region);
+  if (pxState.q) shown = shown.filter(f => f.name.toLowerCase().includes(pxState.q));
+  if (!shown.length) {
+    list.innerHTML = `<div class="px-empty">${pxState.q ? '검색 결과가 없습니다.' : '해당하는 기출문제가 없습니다.'}</div>`;
+    return;
+  }
+  const groups = {};
+  shown.forEach(f => { const k = f.grade + '\u0000' + f.region; (groups[k] = groups[k] || []).push(f); });
+  const keys = Object.keys(groups).sort((a, b) => {
+    const [ga, ra] = a.split('\u0000'), [gb, rb] = b.split('\u0000');
+    return pxOrderSort(PX_GRADE_ORDER)(ga, gb) || pxOrderSort(PX_REGION_ORDER)(ra, rb);
+  });
+  list.innerHTML = `<div class="px-meta">총 ${shown.length}개 · 누르면 새 창에서 열립니다</div>` + keys.map(k => {
+    const [g, r] = k.split('\u0000');
+    return `<div class="px-group"><div class="px-group-h">${pxEsc(g)} · ${pxEsc(r)}<small>${groups[k].length}개</small></div>
+      <div class="px-files">${groups[k].map(f =>
+        `<button class="px-file" data-path="${pxEsc(f.path)}" onclick="pxOpen(this.dataset.path)" title="${pxEsc(f.name)}">📄<span>${pxEsc(f.name.replace(/\.pdf$/i, ''))}</span></button>`
+      ).join('')}</div></div>`;
+  }).join('');
+}
+
+window.pxOpen = async function (path) {
+  const w = window.open('', '_blank');
+  try {
+    const url = await getDownloadURL(ref(storage, path));
+    if (w) w.location.href = url; else location.href = url;
+  } catch (e) {
+    if (w) w.close();
+    alert('파일을 열지 못했습니다 (' + (e.code || e.message) + ')');
   }
 };
 

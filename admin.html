@@ -830,6 +830,8 @@ body.ck-lock { overflow:hidden; }
     <button class="admin-tab" onclick="switchTab('apexvideo',this);initApexVideoTab()">🎬 에이펙스 영상</button>
     <button class="admin-tab" onclick="switchTab('promo',this);initPromoTab()">📺 홍보영상</button>
     <button class="admin-tab" onclick="switchTab('exammaterials',this);initExamMaterialsTab()">📝 중간고사 자료</button>
+    <button class="admin-tab" onclick="switchTab('pastexams',this);initPastExamAdminTab()">📚 기출문제</button>
+    <button class="admin-tab" onclick="switchTab('textbooks',this);initTextbookAdminTab()">📘 시중교재</button>
     <button class="admin-tab" onclick="switchTab('consult',this);initConsultTab()">📥 상담 신청</button>
     <button class="admin-tab" onclick="switchTab('consultdeck',this);initConsultDeckTab()">🎞 상담자료 관리</button>
     <button class="admin-tab" onclick="switchTab('notice',this);initNoticeTab()">📢 공지사항</button>
@@ -1361,6 +1363,87 @@ body.ck-lock { overflow:hidden; }
   </div>
 
   <!-- 상담 신청 관리 (상담 기록: 상담신청서 + 학부모·학생 학습 성향 설문 + 진행 상태) -->
+  <!-- ══ 📚 기출문제 (선생님 포털 열람용 · Storage pastExams/시험명/학년/지역/파일.pdf) ══ -->
+  <div class="tab-panel" id="tab-pastexams">
+    <div class="card">
+      <h3>📁 폴더 통째로 올리기</h3>
+      <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:14px;">
+        마이박스와 같은 구조의 폴더를 고르면 학년·지역이 자동으로 분류됩니다.<br>
+        <span style="color:var(--off-white);">시험명 폴더</span> › <span style="color:var(--off-white);">학년 폴더</span> (중1~고2) › <span style="color:var(--off-white);">지역 폴더</span> (군포·안양·의왕·과천) › PDF<br>
+        예: <span style="color:var(--off-white);">2025년 2학기 기말고사</span> 폴더를 선택 · 여러 시험이 담긴 상위 폴더를 골라도 됩니다.
+      </div>
+      <label class="btn btn-secondary" style="display:inline-block;">폴더 선택
+        <input type="file" id="pxa-folder" webkitdirectory directory multiple style="display:none;" onchange="pxaOnFolder(this)">
+      </label>
+      <div id="pxa-preview" style="margin-top:16px;"></div>
+      <div class="msg" id="pxa-folder-msg"></div>
+    </div>
+
+    <div class="card">
+      <h3>+ 파일 개별 추가</h3>
+      <div class="form-row">
+        <div class="form-group"><label>시험</label><select id="pxa-m-exam" onchange="pxaToggleNewExam()"></select></div>
+        <div class="form-group" id="pxa-m-newwrap" style="display:none;"><label>새 시험명</label><input type="text" id="pxa-m-new" placeholder="예: 2026년 1학기 중간고사"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>학년</label><select id="pxa-m-grade"></select></div>
+        <div class="form-group"><label>지역</label><select id="pxa-m-region"></select></div>
+      </div>
+      <input type="file" id="pxa-m-files" accept=".pdf,application/pdf" multiple style="margin-bottom:12px;color:var(--muted);font-size:13px;">
+      <div><button class="btn btn-primary" id="pxa-m-btn" onclick="pxaManualUpload()">업로드</button></div>
+      <div class="msg" id="pxa-m-msg"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <span>📚 올라간 기출문제</span>
+        <button class="btn btn-secondary btn-sm" onclick="pxaLoadList()">새로고침</button>
+      </h3>
+      <div id="pxa-list"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <!-- ══ 📘 시중교재 (선생님 포털 열람용 · Storage textbooks/학년/교재명/파일.pdf) ══ -->
+  <div class="tab-panel" id="tab-textbooks">
+    <div class="card">
+      <h3>📁 폴더 통째로 올리기</h3>
+      <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:14px;">
+        마이박스에서 받은 폴더를 그대로 고르면 학년·교재가 자동으로 분류됩니다.<br>
+        <span style="color:var(--off-white);">(시중교재 폴더)</span> › <span style="color:var(--off-white);">학년 폴더</span> › <span style="color:var(--off-white);">교재 폴더</span> › PDF (교재 폴더 안의 하위 폴더도 그대로 유지)<br>
+        전체 폴더를 골라도 되고, 학년 폴더 하나만 골라도 됩니다. 용량이 커서 끝날 때까지 이 창을 닫지 마세요.
+      </div>
+      <label class="btn btn-secondary" style="display:inline-block;">폴더 선택
+        <input type="file" id="tba-folder" webkitdirectory directory multiple style="display:none;" onchange="tbaOnFolder(this)">
+      </label>
+      <div id="tba-preview" style="margin-top:16px;"></div>
+      <div id="tba-progress" style="display:none;margin-top:14px;">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;"><span id="tba-progress-text">업로드 중...</span><span id="tba-progress-pct">0%</span></div>
+        <div style="background:rgba(255,255,255,0.08);border-radius:99px;height:6px;"><div id="tba-progress-bar" style="background:var(--gold);height:6px;border-radius:99px;width:0;transition:width 0.2s;"></div></div>
+      </div>
+      <div class="msg" id="tba-folder-msg"></div>
+    </div>
+
+    <div class="card">
+      <h3>+ 파일 개별 추가</h3>
+      <div class="form-row">
+        <div class="form-group"><label>학년</label><input type="text" id="tba-m-grade" list="tba-grade-list" placeholder="예: 고1"></div>
+        <div class="form-group"><label>교재명</label><input type="text" id="tba-m-book" list="tba-book-list" placeholder="예: 쎈 공통수학1"></div>
+      </div>
+      <datalist id="tba-grade-list"></datalist><datalist id="tba-book-list"></datalist>
+      <input type="file" id="tba-m-files" accept=".pdf,application/pdf" multiple style="margin-bottom:12px;color:var(--muted);font-size:13px;">
+      <div><button class="btn btn-primary" id="tba-m-btn" onclick="tbaManualUpload()">업로드</button></div>
+      <div class="msg" id="tba-m-msg"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <span>📘 올라간 교재</span>
+        <button class="btn btn-secondary btn-sm" onclick="tbaLoadList()">새로고침</button>
+      </h3>
+      <div id="tba-list"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
+    </div>
+  </div>
+
   <div class="tab-panel" id="tab-consult">
     <div class="card">
       <h3>📥 상담 신청 · 상담 기록</h3>
@@ -2745,7 +2828,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updatePassword, EmailAuthProvider, reauthenticateWithCredential, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { initializeApp as initializeSecondaryApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, deleteDoc, updateDoc, query, where, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getStorage, ref, getDownloadURL, listAll, uploadBytes, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { getStorage, ref, getDownloadURL, listAll, uploadBytes, uploadBytesResumable, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 
 
@@ -11630,6 +11713,516 @@ window.deleteScheduleEvent = async function (id) {
     await loadScheduleEvents();
   } catch (err) { alert('삭제 실패: ' + err.message); }
 };
+// ══════════════════════════════════════════
+// 📚 기출문제 — Storage 경로: pastExams/시험명/학년/지역/파일.pdf
+// 선생님 포털(teacher.html "기출문제" 탭)에서 열람. 업로드·삭제는 관리자만 (storage.rules)
+// ══════════════════════════════════════════
+const PXA_GRADES  = ['중1','중2','중3','고1','고2','고3'];
+const PXA_REGIONS = ['군포','안양','의왕','과천'];
+const PXA_MAX_MB  = 50;
+let pxaQueue = [];      // 폴더 선택으로 준비된 업로드 목록
+let pxaData  = {};      // 시험명 → [{ grade, region, name, path }]
+let pxaBusy  = false;
+
+function pxaEsc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+function pxaOrder(order) {
+  return (a, b) => {
+    const ia = order.indexOf(a), ib = order.indexOf(b);
+    if (ia !== -1 || ib !== -1) return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    return a.localeCompare(b, 'ko');
+  };
+}
+function pxaExamScore(name) {
+  const m = String(name).match(/(\d{4})\s*년?\s*(\d)\s*학기\s*(중간|기말)?/);
+  if (!m) return 0;
+  return (+m[1]) * 100 + (+m[2]) * 10 + (m[3] === '기말' ? 2 : m[3] === '중간' ? 1 : 0);
+}
+// 저장 경로에 쓰면 곤란한 문자만 바꿔줌 (한글·공백은 그대로)
+function pxaClean(s) { return String(s).normalize('NFC').trim().replace(/[#\[\]\*\?\/\\]/g, '_'); }
+function pxaMsg(id, text, type) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!text) { el.style.display = 'none'; return; }
+  el.className = 'msg ' + (type || 'success');
+  el.innerHTML = text;
+  el.style.display = 'block';
+}
+
+window.initPastExamAdminTab = async () => {
+  const g = document.getElementById('pxa-m-grade'), r = document.getElementById('pxa-m-region');
+  if (g && !g.options.length) g.innerHTML = PXA_GRADES.map(v => `<option>${v}</option>`).join('');
+  if (r && !r.options.length) r.innerHTML = PXA_REGIONS.map(v => `<option>${v}</option>`).join('');
+  await pxaLoadList();
+};
+
+function pxaFillExamSelect() {
+  const sel = document.getElementById('pxa-m-exam');
+  if (!sel) return;
+  const prev = sel.value;
+  const exams = Object.keys(pxaData).sort((a, b) => (pxaExamScore(b) - pxaExamScore(a)) || b.localeCompare(a, 'ko'));
+  sel.innerHTML = exams.map(e => `<option value="${pxaEsc(e)}">${pxaEsc(e)}</option>`).join('') +
+    '<option value="__new__">+ 새 시험 만들기</option>';
+  sel.value = exams.includes(prev) ? prev : (exams[0] || '__new__');
+  pxaToggleNewExam();
+}
+window.pxaToggleNewExam = () => {
+  const isNew = document.getElementById('pxa-m-exam').value === '__new__';
+  document.getElementById('pxa-m-newwrap').style.display = isNew ? '' : 'none';
+};
+
+// ── 폴더 선택 → 경로에서 시험명/학년/지역 자동 분류 ──
+window.pxaOnFolder = (input) => {
+  const ok = [], bad = [];
+  [...input.files].forEach(f => {
+    const rel = (f.webkitRelativePath || f.name).normalize('NFC');
+    const parts = rel.split('/');
+    const base = parts[parts.length - 1];
+    if (base.startsWith('.') || /^(thumbs\.db|desktop\.ini)$/i.test(base)) return;
+    if (!/\.pdf$/i.test(base)) { bad.push(rel + ' — PDF가 아님'); return; }
+    if (parts.length < 4) { bad.push(rel + ' — 학년/지역 폴더 안에 있지 않음'); return; }
+    if (f.size > PXA_MAX_MB * 1024 * 1024) { bad.push(rel + ` — ${PXA_MAX_MB}MB 초과`); return; }
+    const n = parts.length;
+    ok.push({ file: f, exam: parts[n - 4], grade: parts[n - 3], region: parts[n - 2], name: base });
+  });
+  pxaQueue = ok;
+  pxaMsg('pxa-folder-msg', '');
+  pxaRenderPreview(bad);
+};
+
+function pxaRenderPreview(bad = []) {
+  const box = document.getElementById('pxa-preview');
+  if (!pxaQueue.length) {
+    box.innerHTML = bad.length
+      ? `<div style="color:#ff9090;font-size:13px;margin-bottom:8px;">올릴 수 있는 PDF가 없습니다.</div>${pxaBadList(bad)}`
+      : '<div style="color:var(--muted);font-size:13px;">선택한 폴더에 PDF가 없습니다.</div>';
+    return;
+  }
+  const exams = [...new Set(pxaQueue.map(x => x.exam))];
+  const tables = exams.map(exam => {
+    const items = pxaQueue.filter(x => x.exam === exam);
+    const grades  = [...new Set(items.map(x => x.grade))].sort(pxaOrder(PXA_GRADES));
+    const regions = [...new Set(items.map(x => x.region))].sort(pxaOrder(PXA_REGIONS));
+    const exists = pxaData[pxaClean(exam)] ? ` <span style="color:#ffb35c;font-size:12px;font-weight:500;">· 이미 있는 시험 — 같은 이름 파일은 덮어씀</span>` : '';
+    const th = 'padding:6px 10px;border-bottom:1px solid var(--border-soft);font-weight:600;color:var(--muted);text-align:center;';
+    const td = 'padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.05);text-align:center;';
+    return `<div style="margin-bottom:14px;">
+      <div style="font-size:14px;font-weight:700;color:var(--off-white);margin-bottom:8px;">${pxaEsc(exam)} <span style="color:var(--gold);">${items.length}개</span>${exists}</div>
+      <div style="overflow-x:auto;"><table style="border-collapse:collapse;font-size:13px;min-width:320px;">
+        <tr><th style="${th}text-align:left;">학년</th>${regions.map(r => `<th style="${th}">${pxaEsc(r)}</th>`).join('')}</tr>
+        ${grades.map(g => `<tr><td style="${td}text-align:left;font-weight:600;color:var(--off-white);">${pxaEsc(g)}</td>${regions.map(r => {
+          const c = items.filter(x => x.grade === g && x.region === r).length;
+          return `<td style="${td}color:${c ? 'var(--off-white)' : 'var(--muted)'};">${c || '-'}</td>`;
+        }).join('')}</tr>`).join('')}
+      </table></div></div>`;
+  }).join('');
+  const rename = exams.length === 1
+    ? `<div class="form-group" style="max-width:420px;margin-bottom:12px;"><label>시험명 (필요하면 수정)</label><input type="text" id="pxa-exam-name" value="${pxaEsc(exams[0])}"></div>`
+    : '';
+  box.innerHTML = tables + (bad.length ? pxaBadList(bad) : '') + rename +
+    `<div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-primary" id="pxa-folder-btn" onclick="pxaUploadFolder()">${pxaQueue.length}개 업로드</button>
+      <button class="btn btn-secondary" onclick="pxaCancelFolder()">취소</button>
+    </div>`;
+}
+function pxaBadList(bad) {
+  return `<details style="margin:4px 0 14px;font-size:12.5px;color:#ffb35c;"><summary style="cursor:pointer;">제외된 파일 ${bad.length}개</summary>
+    <div style="margin-top:6px;line-height:1.7;color:var(--muted);">${bad.slice(0, 200).map(pxaEsc).join('<br>')}</div></details>`;
+}
+window.pxaCancelFolder = () => {
+  pxaQueue = [];
+  document.getElementById('pxa-folder').value = '';
+  document.getElementById('pxa-preview').innerHTML = '';
+  pxaMsg('pxa-folder-msg', '');
+};
+
+// ── 공통 업로드 (동시에 4개씩) ──
+async function pxaUpload(items, msgId, btn) {
+  if (pxaBusy) { alert('다른 업로드가 진행 중입니다.'); return false; }
+  pxaBusy = true;
+  const btnText = btn ? btn.textContent : '';
+  if (btn) btn.disabled = true;
+  let done = 0, i = 0;
+  const failed = [];
+  const tick = () => pxaMsg(msgId, `업로드 중... ${done + failed.length} / ${items.length}`, 'success');
+  tick();
+  async function worker() {
+    while (i < items.length) {
+      const it = items[i++];
+      const path = `pastExams/${pxaClean(it.exam)}/${pxaClean(it.grade)}/${pxaClean(it.region)}/${pxaClean(it.name)}`;
+      try {
+        await uploadBytes(ref(storage, path), it.file, { contentType: 'application/pdf' });
+        done++;
+      } catch (e) { failed.push(`${it.grade}/${it.region}/${it.name} (${e.code || e.message})`); }
+      tick();
+    }
+  }
+  await Promise.all([worker(), worker(), worker(), worker()]);
+  pxaBusy = false;
+  if (btn) { btn.disabled = false; btn.textContent = btnText; }
+  if (failed.length) {
+    pxaMsg(msgId, `${done}개 완료 · <b>${failed.length}개 실패</b><br>${failed.slice(0, 30).map(pxaEsc).join('<br>')}`, 'error');
+  } else {
+    pxaMsg(msgId, `✓ ${done}개 업로드 완료 — 선생님 포털 "기출문제" 탭에 바로 보입니다.`, 'success');
+  }
+  await pxaLoadList();
+  return !failed.length;
+}
+
+window.pxaUploadFolder = async () => {
+  if (!pxaQueue.length) return;
+  const nameEl = document.getElementById('pxa-exam-name');
+  let items = pxaQueue;
+  if (nameEl) {
+    const nm = nameEl.value.trim();
+    if (!nm) { alert('시험명을 입력해주세요.'); nameEl.focus(); return; }
+    items = pxaQueue.map(x => ({ ...x, exam: nm }));
+  }
+  const ok = await pxaUpload(items, 'pxa-folder-msg', document.getElementById('pxa-folder-btn'));
+  if (ok) {
+    pxaQueue = [];
+    document.getElementById('pxa-folder').value = '';
+    document.getElementById('pxa-preview').innerHTML = '';
+  }
+};
+
+window.pxaManualUpload = async () => {
+  const sel = document.getElementById('pxa-m-exam').value;
+  const exam = sel === '__new__' ? document.getElementById('pxa-m-new').value.trim() : sel;
+  const grade = document.getElementById('pxa-m-grade').value;
+  const region = document.getElementById('pxa-m-region').value;
+  const input = document.getElementById('pxa-m-files');
+  const files = [...input.files];
+  if (!exam) { alert('시험명을 입력해주세요.'); return; }
+  if (!files.length) { alert('PDF 파일을 선택해주세요.'); return; }
+  const notPdf = files.filter(f => !/\.pdf$/i.test(f.name));
+  if (notPdf.length) { alert('PDF 파일만 올릴 수 있습니다: ' + notPdf.map(f => f.name).join(', ')); return; }
+  const big = files.filter(f => f.size > PXA_MAX_MB * 1024 * 1024);
+  if (big.length) { alert(`${PXA_MAX_MB}MB를 넘는 파일이 있습니다: ` + big.map(f => f.name).join(', ')); return; }
+  const items = files.map(f => ({ file: f, exam, grade, region, name: f.name.normalize('NFC') }));
+  const ok = await pxaUpload(items, 'pxa-m-msg', document.getElementById('pxa-m-btn'));
+  if (ok) { input.value = ''; document.getElementById('pxa-m-new').value = ''; document.getElementById('pxa-m-exam').value = pxaClean(exam); pxaToggleNewExam(); }
+};
+
+// ── 올라간 목록 ──
+window.pxaLoadList = async () => {
+  const box = document.getElementById('pxa-list');
+  if (!box) return;
+  box.innerHTML = '<div style="color:var(--muted);font-size:13px;">불러오는 중...</div>';
+  const data = {};
+  try {
+    const root = await listAll(ref(storage, 'pastExams'));
+    await Promise.all(root.prefixes.map(async ex => {
+      const files = [];
+      async function walk(r, parts) {
+        const res = await listAll(r);
+        res.items.forEach(it => files.push({ grade: parts[0] || '기타', region: parts[1] || '기타', name: it.name, path: it.fullPath }));
+        await Promise.all(res.prefixes.map(p => walk(p, [...parts, p.name])));
+      }
+      await walk(ex, []);
+      data[ex.name] = files;
+    }));
+  } catch (e) {
+    box.innerHTML = `<div style="color:#ff9090;font-size:13px;">불러오지 못했습니다 (${pxaEsc(e.code || e.message)})</div>`;
+    return;
+  }
+  pxaData = data;
+  pxaFillExamSelect();
+  const exams = Object.keys(data).sort((a, b) => (pxaExamScore(b) - pxaExamScore(a)) || b.localeCompare(a, 'ko'));
+  if (!exams.length) { box.innerHTML = '<div style="color:var(--muted);font-size:13px;">아직 올라간 기출문제가 없습니다.</div>'; return; }
+  box.innerHTML = exams.map(exam => {
+    const files = data[exam];
+    const byGrade = {};
+    files.forEach(f => { ((byGrade[f.grade] = byGrade[f.grade] || {})[f.region] = byGrade[f.grade][f.region] || []).push(f); });
+    const grades = Object.keys(byGrade).sort(pxaOrder(PXA_GRADES));
+    const summary = grades.map(g => `${pxaEsc(g)} ${Object.values(byGrade[g]).reduce((s, a) => s + a.length, 0)}`).join(' · ');
+    return `<details style="border:1px solid var(--border-soft);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:rgba(255,255,255,0.02);">
+      <summary style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;">
+        <span><b style="color:var(--off-white);font-size:14px;">${pxaEsc(exam)}</b>
+          <span style="color:var(--gold);font-size:13px;margin-left:6px;">${files.length}개</span>
+          <span style="color:var(--muted);font-size:12px;margin-left:8px;">${summary}</span></span>
+        <button class="btn btn-danger btn-sm" data-exam="${pxaEsc(exam)}" onclick="event.preventDefault();pxaDeleteExam(this.dataset.exam)">시험 전체 삭제</button>
+      </summary>
+      <div style="margin-top:12px;">${grades.map(g => Object.keys(byGrade[g]).sort(pxaOrder(PXA_REGIONS)).map(r => `
+        <div style="margin-bottom:10px;">
+          <div style="font-size:12.5px;font-weight:700;color:var(--off-white);margin-bottom:4px;">${pxaEsc(g)} · ${pxaEsc(r)} <span style="color:var(--muted);font-weight:500;">${byGrade[g][r].length}개</span></div>
+          ${byGrade[g][r].sort((a, b) => a.name.localeCompare(b.name, 'ko', { numeric: true })).map(f => `
+            <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;font-size:13px;">
+              <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--off-white);">📄 ${pxaEsc(f.name)}</span>
+              <button class="btn btn-secondary btn-sm" data-path="${pxaEsc(f.path)}" onclick="pxaOpenFile(this.dataset.path)">열기</button>
+              <button class="btn btn-danger btn-sm" data-path="${pxaEsc(f.path)}" onclick="pxaDeleteFile(this.dataset.path)">삭제</button>
+            </div>`).join('')}
+        </div>`).join('')).join('')}</div>
+    </details>`;
+  }).join('');
+};
+
+window.pxaOpenFile = async (path) => {
+  const w = window.open('', '_blank');
+  try { const url = await getDownloadURL(ref(storage, path)); if (w) w.location.href = url; else location.href = url; }
+  catch (e) { if (w) w.close(); alert('파일을 열지 못했습니다 (' + (e.code || e.message) + ')'); }
+};
+
+window.pxaDeleteFile = async (path) => {
+  const name = path.split('/').slice(-3).join(' / ');
+  if (!confirm(`"${name}" 파일을 삭제할까요?\n되돌릴 수 없습니다.`)) return;
+  try { await deleteObject(ref(storage, path)); await pxaLoadList(); }
+  catch (e) { alert('삭제 실패: ' + (e.code || e.message)); }
+};
+
+window.pxaDeleteExam = async (exam) => {
+  const files = pxaData[exam] || [];
+  if (!confirm(`"${exam}" 기출문제 ${files.length}개를 모두 삭제할까요?\n되돌릴 수 없습니다.`)) return;
+  const typed = prompt(`확인을 위해 시험명을 그대로 입력해주세요.\n${exam}`);
+  if (typed === null) return;
+  if (typed.trim() !== exam) { alert('시험명이 일치하지 않아 취소했습니다.'); return; }
+  let i = 0; const failed = [];
+  async function worker() {
+    while (i < files.length) {
+      const f = files[i++];
+      try { await deleteObject(ref(storage, f.path)); } catch (e) { failed.push(f.name); }
+    }
+  }
+  await Promise.all([worker(), worker(), worker(), worker()]);
+  if (failed.length) alert(`${files.length - failed.length}개 삭제 · ${failed.length}개 실패:\n` + failed.slice(0, 20).join('\n'));
+  await pxaLoadList();
+};
+
+// ══════════════════════════════════════════
+// 📘 시중교재 — Storage 경로: textbooks/학년/교재명/(하위폴더/)파일.pdf
+// 선생님 포털(teacher.html "시중교재" 탭)에서 열람. 업로드·삭제는 관리자만 (storage.rules)
+// ══════════════════════════════════════════
+const TBA_MAX_MB = 500;
+const TBA_GRADE_RE = /^(초|중|고)\s*[1-6]|^(초등|중등|고등|공통|N수|재수)/;
+let tbaQueue = [];   // { file, grade, book, sub(배열), name }
+let tbaFiles = [];   // 올라간 파일 [{ grade, book, sub, name, path }]
+let tbaBusy = false;
+
+function tbaFmtSize(b) {
+  if (b >= 1024 ** 3) return (b / 1024 ** 3).toFixed(2) + 'GB';
+  if (b >= 1024 ** 2) return (b / 1024 ** 2).toFixed(1) + 'MB';
+  return Math.max(1, Math.round(b / 1024)) + 'KB';
+}
+function tbaPath(it) {
+  return ['textbooks', it.grade, it.book, ...(it.sub || []), it.name].map(pxaClean).join('/');
+}
+
+window.initTextbookAdminTab = async () => { await tbaLoadList(); };
+
+// ── 폴더 선택 → 학년 폴더를 찾아서 그 아래를 교재로 분류 ──
+window.tbaOnFolder = (input) => {
+  const ok = [], bad = [];
+  [...input.files].forEach(f => {
+    const rel = (f.webkitRelativePath || f.name).normalize('NFC');
+    const parts = rel.split('/');
+    const name = parts.pop();
+    const dirs = parts;
+    if (name.startsWith('.') || /^(thumbs\.db|desktop\.ini)$/i.test(name)) return;
+    if (!/\.pdf$/i.test(name)) { bad.push(rel + ' — PDF가 아님'); return; }
+    if (f.size > TBA_MAX_MB * 1024 * 1024) { bad.push(rel + ` — ${TBA_MAX_MB}MB 초과`); return; }
+    let k = dirs.findIndex(d => TBA_GRADE_RE.test(d.trim()));
+    if (k === -1) k = dirs.length >= 3 ? 1 : (dirs.length === 2 ? 0 : -1); // 학년 이름이 특이한 경우: 맨 위가 전체 폴더라고 보고 그 아래를 학년으로
+    if (k === -1 || dirs.length < k + 2) { bad.push(rel + ' — 학년/교재 폴더 안에 있지 않음'); return; }
+    ok.push({ file: f, grade: dirs[k].trim(), book: dirs[k + 1].trim(), sub: dirs.slice(k + 2), name });
+  });
+  tbaQueue = ok;
+  pxaMsg('tba-folder-msg', '');
+  tbaRenderPreview(bad);
+};
+
+function tbaRenderPreview(bad = []) {
+  const box = document.getElementById('tba-preview');
+  if (!tbaQueue.length) {
+    box.innerHTML = bad.length
+      ? `<div style="color:#ff9090;font-size:13px;margin-bottom:8px;">올릴 수 있는 PDF가 없습니다.</div>${pxaBadList(bad)}`
+      : '<div style="color:var(--muted);font-size:13px;">선택한 폴더에 PDF가 없습니다.</div>';
+    return;
+  }
+  const existing = new Set(tbaFiles.map(f => f.path));
+  const dup = tbaQueue.filter(it => existing.has(tbaPath(it))).length;
+  const total = tbaQueue.reduce((s, x) => s + x.file.size, 0);
+  const grades = [...new Set(tbaQueue.map(x => x.grade))].sort(pxaOrder(PXA_GRADES));
+  const rows = grades.map(g => {
+    const items = tbaQueue.filter(x => x.grade === g);
+    const books = [...new Set(items.map(x => x.book))].sort((a, b) => a.localeCompare(b, 'ko', { numeric: true }));
+    return `<details style="margin-bottom:6px;"><summary style="cursor:pointer;font-size:13.5px;color:var(--off-white);">
+        <b>${pxaEsc(g)}</b> <span style="color:var(--muted);">· 교재 ${books.length}종 · 파일 ${items.length}개 · ${tbaFmtSize(items.reduce((s, x) => s + x.file.size, 0))}</span></summary>
+      <div style="margin:6px 0 4px 14px;font-size:12.5px;color:var(--muted);line-height:1.8;">${books.map(b => {
+        const n = items.filter(x => x.book === b).length;
+        return `📘 ${pxaEsc(b)} <span style="opacity:.7;">(${n})</span>`;
+      }).join('<br>')}</div></details>`;
+  }).join('');
+  box.innerHTML = `<div style="font-size:14px;font-weight:700;color:var(--off-white);margin-bottom:10px;">
+      총 <span style="color:var(--gold);">${tbaQueue.length}개</span> · ${tbaFmtSize(total)}</div>
+    ${rows}${bad.length ? pxaBadList(bad) : ''}
+    ${dup ? `<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--off-white);margin:10px 0;cursor:pointer;">
+      <input type="checkbox" id="tba-skip-dup" checked> 이미 올라간 파일 ${dup}개는 건너뛰기 (해제하면 덮어씀)</label>` : ''}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;">
+      <button class="btn btn-primary" id="tba-folder-btn" onclick="tbaUploadFolder()">업로드 시작</button>
+      <button class="btn btn-secondary" onclick="tbaCancelFolder()">취소</button>
+    </div>`;
+}
+window.tbaCancelFolder = () => {
+  if (tbaBusy) return;
+  tbaQueue = [];
+  document.getElementById('tba-folder').value = '';
+  document.getElementById('tba-preview').innerHTML = '';
+  pxaMsg('tba-folder-msg', '');
+};
+
+// ── 큰 파일용 업로드 (진행률 표시, 동시에 3개) ──
+async function tbaUpload(items, msgId, btn) {
+  if (tbaBusy) { alert('다른 업로드가 진행 중입니다.'); return false; }
+  tbaBusy = true;
+  const btnText = btn ? btn.textContent : '';
+  if (btn) btn.disabled = true;
+  const wrap = document.getElementById('tba-progress');
+  const showBar = msgId === 'tba-folder-msg';
+  if (showBar) wrap.style.display = '';
+  const totalBytes = items.reduce((s, x) => s + x.file.size, 0) || 1;
+  const sent = new Array(items.length).fill(0);
+  let done = 0, i = 0;
+  const failed = [];
+  const leave = e => { e.preventDefault(); e.returnValue = ''; };
+  window.addEventListener('beforeunload', leave);
+  const paint = () => {
+    const bytes = sent.reduce((s, v) => s + v, 0);
+    const pct = Math.min(100, Math.floor(bytes / totalBytes * 100));
+    if (showBar) {
+      document.getElementById('tba-progress-bar').style.width = pct + '%';
+      document.getElementById('tba-progress-pct').textContent = pct + '%';
+      document.getElementById('tba-progress-text').textContent =
+        `${done + failed.length} / ${items.length}개 · ${tbaFmtSize(bytes)} / ${tbaFmtSize(totalBytes)}`;
+    } else {
+      pxaMsg(msgId, `업로드 중... ${pct}% (${done + failed.length} / ${items.length})`, 'success');
+    }
+  };
+  paint();
+  async function worker() {
+    while (i < items.length) {
+      const idx = i++, it = items[idx];
+      try {
+        await new Promise((resolve, reject) => {
+          const task = uploadBytesResumable(ref(storage, tbaPath(it)), it.file, { contentType: 'application/pdf' });
+          task.on('state_changed', s => { sent[idx] = s.bytesTransferred; paint(); }, reject, resolve);
+        });
+        sent[idx] = it.file.size; done++;
+      } catch (e) {
+        sent[idx] = it.file.size;
+        failed.push(`${it.grade}/${it.book}/${it.name} (${e.code || e.message})`);
+      }
+      paint();
+    }
+  }
+  await Promise.all([worker(), worker(), worker()]);
+  window.removeEventListener('beforeunload', leave);
+  tbaBusy = false;
+  if (btn) { btn.disabled = false; btn.textContent = btnText; }
+  if (showBar) setTimeout(() => { wrap.style.display = 'none'; }, 1500);
+  if (failed.length) {
+    pxaMsg(msgId, `${done}개 완료 · <b>${failed.length}개 실패</b> — 같은 폴더를 다시 고르면 실패한 것만 이어서 올릴 수 있습니다.<br>${failed.slice(0, 30).map(pxaEsc).join('<br>')}`, 'error');
+  } else {
+    pxaMsg(msgId, `✓ ${done}개 업로드 완료 — 선생님 포털 "시중교재" 탭에 바로 보입니다.`, 'success');
+  }
+  await tbaLoadList();
+  return !failed.length;
+}
+
+window.tbaUploadFolder = async () => {
+  if (!tbaQueue.length) return;
+  const skip = document.getElementById('tba-skip-dup');
+  let items = tbaQueue;
+  if (skip && skip.checked) {
+    const existing = new Set(tbaFiles.map(f => f.path));
+    items = tbaQueue.filter(it => !existing.has(tbaPath(it)));
+  }
+  if (!items.length) { pxaMsg('tba-folder-msg', '새로 올릴 파일이 없습니다 (모두 이미 올라가 있음).', 'success'); return; }
+  const ok = await tbaUpload(items, 'tba-folder-msg', document.getElementById('tba-folder-btn'));
+  if (ok) {
+    tbaQueue = [];
+    document.getElementById('tba-folder').value = '';
+    document.getElementById('tba-preview').innerHTML = '';
+  }
+};
+
+window.tbaManualUpload = async () => {
+  const grade = document.getElementById('tba-m-grade').value.trim();
+  const book = document.getElementById('tba-m-book').value.trim();
+  const input = document.getElementById('tba-m-files');
+  const files = [...input.files];
+  if (!grade || !book) { alert('학년과 교재명을 입력해주세요.'); return; }
+  if (!files.length) { alert('PDF 파일을 선택해주세요.'); return; }
+  const notPdf = files.filter(f => !/\.pdf$/i.test(f.name));
+  if (notPdf.length) { alert('PDF 파일만 올릴 수 있습니다: ' + notPdf.map(f => f.name).join(', ')); return; }
+  const big = files.filter(f => f.size > TBA_MAX_MB * 1024 * 1024);
+  if (big.length) { alert(`${TBA_MAX_MB}MB를 넘는 파일이 있습니다: ` + big.map(f => f.name).join(', ')); return; }
+  const items = files.map(f => ({ file: f, grade, book, sub: [], name: f.name.normalize('NFC') }));
+  const ok = await tbaUpload(items, 'tba-m-msg', document.getElementById('tba-m-btn'));
+  if (ok) input.value = '';
+};
+
+// ── 올라간 목록 ──
+window.tbaLoadList = async () => {
+  const box = document.getElementById('tba-list');
+  if (!box) return;
+  box.innerHTML = '<div style="color:var(--muted);font-size:13px;">불러오는 중...</div>';
+  const files = [];
+  async function walk(r, parts) {
+    const res = await listAll(r);
+    res.items.forEach(it => files.push({ grade: parts[0] || '기타', book: parts[1] || '기타', sub: parts.slice(2).join(' / '), name: it.name, path: it.fullPath }));
+    await Promise.all(res.prefixes.map(p => walk(p, [...parts, p.name])));
+  }
+  try { await walk(ref(storage, 'textbooks'), []); }
+  catch (e) { box.innerHTML = `<div style="color:#ff9090;font-size:13px;">불러오지 못했습니다 (${pxaEsc(e.code || e.message)})</div>`; return; }
+  tbaFiles = files;
+  const byGrade = {};
+  files.forEach(f => { ((byGrade[f.grade] = byGrade[f.grade] || {})[f.book] = byGrade[f.grade][f.book] || []).push(f); });
+  const grades = Object.keys(byGrade).sort(pxaOrder(PXA_GRADES));
+  document.getElementById('tba-grade-list').innerHTML = [...new Set([...PXA_GRADES, ...grades])].map(g => `<option value="${pxaEsc(g)}">`).join('');
+  document.getElementById('tba-book-list').innerHTML = [...new Set(files.map(f => f.book))].map(b => `<option value="${pxaEsc(b)}">`).join('');
+  if (tbaQueue.length) tbaRenderPreview();
+  if (!files.length) { box.innerHTML = '<div style="color:var(--muted);font-size:13px;">아직 올라간 교재가 없습니다.</div>'; return; }
+  box.innerHTML = grades.map(g => {
+    const books = Object.keys(byGrade[g]).sort((a, b) => a.localeCompare(b, 'ko', { numeric: true }));
+    return `<div style="margin-bottom:16px;">
+      <div style="font-size:14px;font-weight:700;color:var(--off-white);margin-bottom:8px;">${pxaEsc(g)} <span style="color:var(--muted);font-weight:500;font-size:12.5px;">교재 ${books.length}종</span></div>
+      ${books.map(b => {
+        const fs = byGrade[g][b].sort((x, y) => (x.sub + '/' + x.name).localeCompare(y.sub + '/' + y.name, 'ko', { numeric: true }));
+        return `<details style="border:1px solid var(--border-soft);border-radius:10px;padding:10px 14px;margin-bottom:8px;background:rgba(255,255,255,0.02);">
+          <summary style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;">
+            <span style="color:var(--off-white);font-size:13.5px;font-weight:600;">📘 ${pxaEsc(b)} <span style="color:var(--muted);font-weight:500;font-size:12px;">${fs.length}개 파일</span></span>
+            <button class="btn btn-danger btn-sm" data-grade="${pxaEsc(g)}" data-book="${pxaEsc(b)}" onclick="event.preventDefault();tbaDeleteBook(this.dataset.grade,this.dataset.book)">교재 삭제</button>
+          </summary>
+          <div style="margin-top:8px;">${fs.map(f => `
+            <div style="display:flex;align-items:center;gap:8px;padding:5px 4px;font-size:13px;">
+              <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--off-white);">📄 ${f.sub ? pxaEsc(f.sub) + ' / ' : ''}${pxaEsc(f.name)}</span>
+              <button class="btn btn-secondary btn-sm" data-path="${pxaEsc(f.path)}" onclick="pxaOpenFile(this.dataset.path)">열기</button>
+              <button class="btn btn-danger btn-sm" data-path="${pxaEsc(f.path)}" onclick="tbaDeleteFile(this.dataset.path)">삭제</button>
+            </div>`).join('')}</div>
+        </details>`;
+      }).join('')}</div>`;
+  }).join('');
+};
+
+window.tbaDeleteFile = async (path) => {
+  if (!confirm(`"${path.replace(/^textbooks\//, '')}" 파일을 삭제할까요?\n되돌릴 수 없습니다.`)) return;
+  try { await deleteObject(ref(storage, path)); await tbaLoadList(); }
+  catch (e) { alert('삭제 실패: ' + (e.code || e.message)); }
+};
+
+window.tbaDeleteBook = async (grade, book) => {
+  const files = tbaFiles.filter(f => f.grade === grade && f.book === book);
+  if (!confirm(`${grade} "${book}" 교재 파일 ${files.length}개를 모두 삭제할까요?\n되돌릴 수 없습니다.`)) return;
+  let i = 0; const failed = [];
+  async function worker() {
+    while (i < files.length) { const f = files[i++]; try { await deleteObject(ref(storage, f.path)); } catch (e) { failed.push(f.name); } }
+  }
+  await Promise.all([worker(), worker(), worker(), worker()]);
+  if (failed.length) alert(`${files.length - failed.length}개 삭제 · ${failed.length}개 실패:\n` + failed.slice(0, 20).join('\n'));
+  await tbaLoadList();
+};
+
 </script>
 <script>
 /* ══════════════════════════════════════════════════════════════
@@ -11690,6 +12283,10 @@ window.deleteScheduleEvent = async function (id) {
       keywords:['영상','홍보','홍보영상','프로모션','마케팅','동영상'] },
     { id:'exammaterials',label:'중간고사 자료',  icon:'', category:'content', tabId:'exammaterials',init:'initExamMaterialsTab',
       keywords:['중간고사','시험','내신','시험자료','기출','pdf','자료','기말'] },
+    { id:'pastexams',    label:'기출문제',       icon:'', category:'content', tabId:'pastexams',    init:'initPastExamAdminTab',
+      keywords:['기출','기출문제','시험지','내신','중간고사','기말고사','학교시험','pdf','마이박스','군포','안양','의왕','과천','선생님 자료'] },
+    { id:'textbooks',    label:'시중교재',       icon:'', category:'content', tabId:'textbooks',    init:'initTextbookAdminTab',
+      keywords:['시중교재','교재','문제집','교재pdf','쎈','개념원리','블랙라벨','pdf','마이박스','선생님 자료'] },
 
     // ④ 운영·소통
     { id:'records',      label:'기록 조회',      icon:'', category:'ops',     tabId:'records',      init:'initRecordsTab',
