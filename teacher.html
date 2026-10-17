@@ -46,6 +46,7 @@
 .px-file { display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:8px; background:rgba(255,255,255,0.03); border:1px solid var(--border-soft); color:var(--off-white); font-size:13px; font-family:inherit; cursor:pointer; text-align:left; min-width:0; transition:border-color 0.15s, color 0.15s; }
 .px-file:hover { border-color:rgba(240,192,64,0.45); color:var(--gold); }
 .px-file span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.px-rows { border:1px solid var(--border-soft); border-radius:10px; background:rgba(255,255,255,0.025); padding:4px 10px; }
 .px-empty { color:var(--muted); font-size:13px; padding:24px 0; text-align:center; }
 .px-meta { font-size:12px; color:var(--muted); margin-bottom:6px; }
 /* ── 📘 시중교재 ── */
@@ -3283,12 +3284,15 @@ function pxRender() {
     const [ga, ra] = a.split('\u0000'), [gb, rb] = b.split('\u0000');
     return pxOrderSort(PX_GRADE_ORDER)(ga, gb) || pxOrderSort(PX_REGION_ORDER)(ra, rb);
   });
-  list.innerHTML = `<div class="px-meta">총 ${shown.length}개 · 누르면 새 창에서 열립니다</div>` + keys.map(k => {
+  list.innerHTML = `<div class="px-meta">총 ${shown.length}개</div>` + keys.map(k => {
     const [g, r] = k.split('\u0000');
     return `<div class="px-group"><div class="px-group-h">${pxEsc(g)} · ${pxEsc(r)}<small>${groups[k].length}개</small></div>
-      <div class="px-files">${groups[k].map(f =>
-        `<button class="px-file" data-path="${pxEsc(f.path)}" onclick="pxOpen(this.dataset.path)" title="${pxEsc(f.name)}">📄<span>${pxEsc(f.name.replace(/\.pdf$/i, ''))}</span></button>`
-      ).join('')}</div></div>`;
+      <div class="px-rows">${groups[k].map(f => `<div class="tb-row">
+        <span class="tb-name" title="${pxEsc(f.name)}">📄 ${pxEsc(f.name.replace(/\.pdf$/i, ''))}</span>
+        <span class="tb-acts">
+          <button class="tb-btn" data-path="${pxEsc(f.path)}" onclick="pxOpen(this.dataset.path)">미리보기</button>
+          <button class="tb-btn dl" data-path="${pxEsc(f.path)}" onclick="tbDownload(this)">다운로드</button>
+        </span></div>`).join('')}</div></div>`;
   }).join('');
 }
 
