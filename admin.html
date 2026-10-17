@@ -9092,7 +9092,7 @@ window.closeConsultRecord = function() {
 // ══════ 상담 결과 이미지 (카카오톡 전달용) ══════
 // 학부모(·학생) 설문 결과만 세로형 PNG 한 장으로 만들어 관리부에서 학부모님께 전달
 // 개인정보(학교·학년·연락처·성적 등 상담신청서 인적사항)와 내부용 정보(방문 경로·진행 상태·문항별 응답)는 넣지 않습니다.
-const CI = { blob: null, name: '' };
+const CI = { blob: null, name: '', visit: null };
 function ciLoadLib() {
   if (window.html2canvas) return Promise.resolve();
   return new Promise((res, rej) => {
@@ -9202,7 +9202,7 @@ async function ciLoadRecord(cid) {
 window.saveConsultImage = async function(cid) {
   const modal = document.getElementById('consultImgModal');
   const prev = document.getElementById('ciPrev');
-  CI.blob = null;
+  CI.blob = null; CI.visit = null;
   ['ciSave', 'ciCopy', 'ciPrint', 'ciShare'].forEach((id) => { document.getElementById(id).disabled = true; });
   prev.innerHTML = '<div class="ci-wait">이미지를 만드는 중…</div>';
   modal.classList.add('open');
@@ -9223,6 +9223,7 @@ window.saveConsultImage = async function(cid) {
     CI.blob = await new Promise((r) => canvas.toBlob(r, 'image/png'));
     if (!CI.blob) throw new Error('이미지를 만들지 못했습니다.');
     const ymd = (d.createdAt?.toDate ? d.createdAt.toDate() : new Date()).toISOString().slice(0, 10).replace(/-/g, '');
+    CI.visit = { paths: d.visitPath || [], etc: consultVisitEtc(d) };   // 프린트 전용(반배정 칸) — 이미지에는 넣지 않음
     CI.name = `상담결과_${String(d.studentName || '학생').replace(/[\\/:*?"<>|\s]/g, '')}_${ymd}.png`;
     prev.innerHTML = '';
     const img = new Image();
@@ -9286,7 +9287,7 @@ window.ciPrint = async function() {
     // 이미지 비율 → 반배정 칸을 아래에 둘지 옆에 둘지 결정 (이미지가 더 크게 나오는 쪽)
     const nat = await new Promise((res) => { const t = new Image(); t.onload = () => res({ w: t.naturalWidth, h: t.naturalHeight }); t.onerror = () => res({ w: 720, h: 1000 }); t.src = url; });
     const r = nat.h / nat.w;
-    const PW = 194, PH = 279, GAP = 4, MIN_BELOW = 74, MIN_SIDE = 62;   // A4(여백 8mm) 안쪽 크기, mm
+    const PW = 194, PH = 279, GAP = 4, MIN_BELOW = 92, MIN_SIDE = 62;   // A4(여백 8mm) 안쪽 크기, mm
     const belowH = Math.min(PW * r, PH - MIN_BELOW - GAP), belowW = belowH / r;
     const sideH = Math.min(PH, (PW - MIN_SIDE - GAP) * r), sideW = sideH / r;
     const side = sideW > belowW + 0.5;
@@ -9299,6 +9300,9 @@ window.ciPrint = async function() {
     document.body.appendChild(fr);
     const title = CI.name.replace(/\.png$/i, '');
     const box = '<i class="cb"></i>';
+    const boxOn = '<i class="cb on"></i>';
+    const vs = CI.visit || { paths: [], etc: '' };
+    const visitRow = `<div class="f vp"><span>방문 경로</span><b>${CONSULT_VISIT_PATHS.map((v) => `<label>${vs.paths.includes(v) ? boxOn : box}${escapeConsultHtml(v)}</label>`).join('')}<label>${vs.etc ? boxOn : box}기타${vs.etc ? ': ' + escapeConsultHtml(vs.etc) : ''}</label></b></div>`;
     const w = fr.contentWindow, d = w.document;
     d.open();
     d.write(`<!doctype html><html><head><meta charset="utf-8"><title>${escapeConsultHtml(title)}</title>
@@ -9319,7 +9323,12 @@ window.ciPrint = async function() {
       .ba-f > div.f { grid-column:1 / -1; }
       .ba-f span { font-size:9.5pt; font-weight:700; color:#5a5470; white-space:nowrap; }
       .ba-f b { font-size:9.5pt; font-weight:600; color:#1E1736; display:flex; flex-wrap:wrap; gap:1.5mm 4mm; align-items:center; }
-      .cb { display:inline-block; width:3.4mm; height:3.4mm; border:1.2px solid #1E1736; border-radius:.6mm; margin-right:1.2mm; vertical-align:-0.5mm; }
+      .cb { display:inline-block; width:3.4mm; height:3.4mm; border:1.2px solid #1E1736; border-radius:.6mm; margin-right:1.2mm; vertical-align:-0.5mm; position:relative; }
+      .cb.on { background:#1E1736; }
+      .cb.on::after { content:'✓'; position:absolute; left:.35mm; top:-1.1mm; font-size:8pt; font-weight:900; color:#fff; }
+      .ba-f > div.vp { align-items:flex-start; }
+      .ba-f > div.vp b { font-size:8.8pt; gap:1.6mm 3.2mm; }
+      .ba-f label { white-space:nowrap; }
       .ba-m { flex:1; display:flex; flex-direction:column; margin-top:2.6mm; min-height:12mm; }
       .ba-m span { font-size:9.5pt; font-weight:700; color:#5a5470; }
       .ba-m div { flex:1; background:repeating-linear-gradient(to bottom, transparent 0, transparent calc(8mm - 1px), rgba(30,23,54,.22) calc(8mm - 1px), rgba(30,23,54,.22) 8mm); }
@@ -9329,6 +9338,7 @@ window.ciPrint = async function() {
       <div class="ba">
         <div class="ba-h"><i></i>반배정<em>원장님 작성</em></div>
         <div class="ba-f">
+          ${visitRow}
           <div><span>배정 반</span></div>
           <div><span>담당 선생님</span></div>
           <div class="f"><span>수업 요일</span><b><label>${box}월·수·금</label><label>${box}화·목</label><label>${box}기타</label></b></div>
@@ -10138,6 +10148,14 @@ const CONSULT_NOTICE_TEXT = {
   '중등': '송우찬 수학학원 중등부 프로그램은 완전한 복습을 목표로 탄탄한 현행수업과 1년 기초 선행 수업을 병행하고 있습니다. 중학교 3학년 2학기(11월 초)까지 중등부 과정을 모두 수료하면 중등수학에 대한 탄탄한 복습과 고등학교 1년 과정의 선행이 완료됩니다.',
   '고등': '송우찬 수학학원 고등부 프로그램은 개념을 탄탄하게 정립하기 위한 반복, 복습, 심화의 세가지 목표를 가지고 교육과정을 구성하였습니다. 고등부 전체 진도는 2학년 2학기 기말고사가 마무리 되며, 2학년 겨울방학부터 수능대비 수업이 진행됩니다.'
 };
+// 방문 경로 선택지 (상담신청서 consult-visit.html·consult.html과 같은 목록 유지)
+const CONSULT_VISIT_PATHS = ['인터넷(홈페이지)', '인터넷(블로그)', '인터넷(네이버카페)', '인터넷(당근마켓)', '주변권유', '우연히 찾아옴'];
+// 목록에 없는 값(예전 선택지로 접수된 기록)은 '기타' 칸에 함께 표시
+function consultVisitEtc(d) {
+  const extra = (d.visitPath || []).filter((v) => !CONSULT_VISIT_PATHS.includes(v));
+  if (d.visitPathEtc) extra.push(d.visitPathEtc);
+  return extra.join(', ');
+}
 const CONSULT_ACCENT = { '초등': '#a78bda', '중등': '#f0b13c', '고등': '#7cb8dd' };
 
 window.printConsultSheet = function(docId) {
@@ -10145,7 +10163,8 @@ window.printConsultSheet = function(docId) {
   if (!d) return;
   const dateStr = d.createdAt?.toDate ? formatConsultDate(d.createdAt.toDate()) : '-';
   const level = d.level || '초등';
-  const visitPaths = ['인터넷 검색', '광고', '지나가다 보고', '주변 권유', '우연히 찾아옴'];
+  const visitPaths = CONSULT_VISIT_PATHS;
+  const visitEtc = consultVisitEtc(d);
   const areaOpts = ['수와 연산', '문자와 식', '함수', '기하', '확률과 통계'];
 
   let progressHtml = '';
@@ -10192,9 +10211,9 @@ window.printConsultSheet = function(docId) {
       </div>
       <div class="ps-section">
         <div class="ps-sec-title">방문 경로</div>
-        <div class="ps-check-list">
+        <div class="ps-check-list" style="padding-left:11px;">
           ${visitPaths.map(p => `<span class="ps-check-item">${consultCheckbox((d.visitPath||[]).includes(p))}${p}</span>`).join('')}
-          <span class="ps-check-item">${consultCheckbox(!!d.visitPathEtc)}기타: ${escapeConsultHtml(d.visitPathEtc || '')}</span>
+          <span class="ps-check-item">${consultCheckbox(!!visitEtc)}기타: ${escapeConsultHtml(visitEtc)}</span>
         </div>
       </div>
       <div class="ps-section">
