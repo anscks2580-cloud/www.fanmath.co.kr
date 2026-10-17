@@ -49,14 +49,28 @@
 .px-empty { color:var(--muted); font-size:13px; padding:24px 0; text-align:center; }
 .px-meta { font-size:12px; color:var(--muted); margin-bottom:6px; }
 /* ── 📘 시중교재 ── */
-.tb-book { border:1px solid var(--border-soft); border-radius:10px; background:rgba(255,255,255,0.025); margin-bottom:8px; }
-.tb-book > summary { list-style:none; cursor:pointer; padding:12px 14px; display:flex; align-items:center; gap:10px; font-size:14px; font-weight:600; color:var(--off-white); }
+.tb-sub-chips { margin-top:-2px; }
+.tb-book { border:1px solid var(--border-soft); border-radius:10px; background:rgba(255,255,255,0.025); margin-bottom:8px; overflow:hidden; }
+.tb-book > summary { list-style:none; cursor:pointer; padding:13px 16px; display:flex; align-items:center; gap:10px; font-size:14.5px; font-weight:600; color:var(--off-white); }
 .tb-book > summary::-webkit-details-marker { display:none; }
 .tb-book > summary::after { content:'›'; margin-left:auto; color:var(--muted); transition:transform 0.15s; font-size:18px; line-height:1; }
+.tb-book[open] > summary { border-bottom:1px solid var(--border-soft); }
 .tb-book[open] > summary::after { transform:rotate(90deg); }
 .tb-book > summary small { color:var(--muted); font-weight:500; font-size:12px; }
-.tb-book .px-files { padding:0 14px 14px; }
-.tb-one { width:100%; }
+.tb-book > summary .tb-path { color:var(--muted); font-weight:500; font-size:12px; }
+.tb-body { padding:6px 10px 10px; }
+.tb-subh { font-size:11.5px; font-weight:700; color:var(--gold); letter-spacing:0.5px; margin:10px 6px 4px; }
+.tb-row { display:flex; align-items:center; gap:10px; padding:8px 6px; border-radius:8px; }
+.tb-row + .tb-row { border-top:1px solid rgba(255,255,255,0.04); }
+.tb-row:hover { background:rgba(255,255,255,0.03); }
+.tb-name { flex:1; min-width:0; font-size:13.5px; color:var(--off-white); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tb-acts { display:flex; gap:6px; flex-shrink:0; }
+.tb-btn { padding:6px 12px; border-radius:7px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; border:1px solid var(--border-soft); background:transparent; color:var(--off-white); white-space:nowrap; transition:all 0.15s; }
+.tb-btn:hover { border-color:var(--gold); color:var(--gold); }
+.tb-btn.dl { background:rgba(240,192,64,0.12); border-color:rgba(240,192,64,0.4); color:var(--gold); }
+.tb-btn.dl:hover { background:rgba(240,192,64,0.22); }
+.tb-btn:disabled { opacity:0.55; cursor:wait; }
+@media (max-width:560px) { .tb-btn { padding:6px 9px; } .tb-name { font-size:13px; } }
 /* ── 📅 일정 / 오늘 할 일 ── */
 .cal-layout { display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:20px; align-items:start; }
 @media (max-width:900px){ .cal-layout { grid-template-columns:1fr; } }
@@ -918,10 +932,10 @@ select option:disabled { color:#9B94B3; }
         <button class="btn btn-outline btn-sm" onclick="initTextbooksTab(true)">새로고침</button>
       </div>
       <div class="px-toolbar">
-        <input type="search" id="tbSearch" placeholder="교재 이름으로 찾기 (예: 쎈, 블랙라벨)" oninput="tbSetQuery(this.value)">
+        <input type="search" id="tbSearch" placeholder="교재·파일 이름으로 찾기 (예: 쎈, 블랙라벨, 해설)" oninput="tbSetQuery(this.value)">
       </div>
-      <div class="px-chip-label">학년</div>
-      <div class="px-chips" id="tbGradeChips"></div>
+      <div class="px-chips" id="tbLevelChips"></div>
+      <div class="px-chips tb-sub-chips" id="tbGradeChips"></div>
       <div id="tbList"><div class="px-empty">불러오는 중...</div></div>
     </div>
   </div>
@@ -3012,26 +3026,36 @@ window.closeTodayPopup = function (hideToday = false) {
 };
 
 // ══════════════════════════════════════
-// 📘 시중교재 — Firebase Storage 경로: textbooks/학년/교재명/(하위폴더/)파일.pdf
+// 📘 시중교재 — Firebase Storage 경로: textbooks/학교급/(학년/)교재/(하위폴더/)파일.pdf
+//   예) textbooks/중등/중1/쎈/파일.pdf · textbooks/고등/쎈/22개정/파일.pdf
+// 학교급(초등·중등·고등) → 학년(있으면) → 교재 순으로 좁혀서 보고, 파일마다 미리보기·다운로드
 // (업로드·삭제는 admin.html "시중교재" 탭, 선생님은 열람만)
 // ══════════════════════════════════════
-let tbFiles = null;   // [{ grade, book, sub, name, path }]
-const tbState = { grade: 'all', q: '' };
+const TB_LEVEL_ORDER = ['초등', '중등', '고등'];
+const TB_GRADE_RE = /^(초|중|고)\s*[1-6]/;
+let tbFiles = null;   // [{ level, grade, book, sub, name, path }]
+const tbState = { level: '', grade: '', q: '' };
+
+function tbParse(fullPath) {
+  const parts = fullPath.split('/').slice(1);   // 'textbooks' 제거
+  const name = parts.pop();
+  const level = parts[0] || '기타';
+  let grade = '', rest = parts.slice(1);
+  if (rest.length && TB_GRADE_RE.test(rest[0])) { grade = rest[0]; rest = rest.slice(1); }
+  return { level, grade, book: rest[0] || '(분류 없음)', sub: rest.slice(1).join(' / '), name, path: fullPath };
+}
 
 window.initTextbooksTab = async function (force = false) {
   const list = document.getElementById('tbList');
   if (tbFiles && !force) { tbRender(); return; }
   list.innerHTML = '<div class="px-empty">불러오는 중...</div>';
   const files = [];
-  async function walk(r, parts) {
+  async function walk(r) {
     const res = await listAll(r);
-    res.items.forEach(it => {
-      if (!/\.pdf$/i.test(it.name)) return;
-      files.push({ grade: parts[0] || '기타', book: parts[1] || '기타', sub: parts.slice(2).join(' / '), name: it.name, path: it.fullPath });
-    });
-    await Promise.all(res.prefixes.map(p => walk(p, [...parts, p.name])));
+    res.items.forEach(it => { if (/\.pdf$/i.test(it.name)) files.push(tbParse(it.fullPath)); });
+    await Promise.all(res.prefixes.map(walk));
   }
-  try { await walk(ref(storage, 'textbooks'), []); }
+  try { await walk(ref(storage, 'textbooks')); }
   catch (e) {
     tbFiles = null;
     list.innerHTML = `<div class="px-empty">목록을 불러오지 못했습니다 (${pxEsc(e.code || e.message)})</div>`;
@@ -3040,47 +3064,103 @@ window.initTextbooksTab = async function (force = false) {
   tbFiles = files;
   tbRender();
 };
+window.tbSetLevel = function (lv) { tbState.level = lv; tbState.grade = ''; tbRender(); };
 window.tbSetGrade = function (g) { tbState.grade = g; tbRender(); };
 window.tbSetQuery = function (q) { tbState.q = q.trim().toLowerCase(); tbRender(); };
 
+function tbSortName(a, b) { return a.localeCompare(b, 'ko', { numeric: true }); }
+
 function tbRender() {
   const list = document.getElementById('tbList');
+  const lvBox = document.getElementById('tbLevelChips');
+  const gBox = document.getElementById('tbGradeChips');
   if (!tbFiles) return;
-  if (!tbFiles.length) {
-    document.getElementById('tbGradeChips').innerHTML = '';
-    list.innerHTML = '<div class="px-empty">아직 올라온 교재가 없습니다.</div>';
-    return;
-  }
-  // 학년별 교재 수
-  const booksByGrade = {};
-  tbFiles.forEach(f => { (booksByGrade[f.grade] = booksByGrade[f.grade] || new Set()).add(f.book); });
-  const grades = Object.keys(booksByGrade).sort(pxOrderSort(PX_GRADE_ORDER));
-  if (tbState.grade !== 'all' && !booksByGrade[tbState.grade]) tbState.grade = 'all';
-  const totalBooks = grades.reduce((s, g) => s + booksByGrade[g].size, 0);
+  if (!tbFiles.length) { lvBox.innerHTML = gBox.innerHTML = ''; list.innerHTML = '<div class="px-empty">아직 올라온 교재가 없습니다.</div>'; return; }
+
+  const bookKey = f => f.level + '\u0000' + f.grade + '\u0000' + f.book;
+  const countBooks = arr => new Set(arr.map(bookKey)).size;
   const chip = (label, active, onclick, n) =>
     `<button class="px-chip${active ? ' on' : ''}" onclick="${onclick}">${pxEsc(label)}<span class="n">${n}</span></button>`;
-  document.getElementById('tbGradeChips').innerHTML =
-    chip('전체', tbState.grade === 'all', "tbSetGrade('all')", totalBooks) +
-    grades.map(g => chip(g, tbState.grade === g, `tbSetGrade('${pxEsc(g)}')`, booksByGrade[g].size)).join('');
 
-  let shown = tbState.grade === 'all' ? tbFiles : tbFiles.filter(f => f.grade === tbState.grade);
-  if (tbState.q) shown = shown.filter(f => (f.book + ' ' + f.sub + ' ' + f.name).toLowerCase().includes(tbState.q));
-  if (!shown.length) { list.innerHTML = `<div class="px-empty">${tbState.q ? '검색 결과가 없습니다.' : '해당하는 교재가 없습니다.'}</div>`; return; }
+  // ① 학교급
+  const levels = [...new Set(tbFiles.map(f => f.level))].sort(pxOrderSort(TB_LEVEL_ORDER));
+  if (!levels.includes(tbState.level)) tbState.level = levels.includes('중등') ? '중등' : levels[0];
+  lvBox.innerHTML = levels.map(lv => chip(lv, tbState.level === lv, `tbSetLevel('${pxEsc(lv)}')`, countBooks(tbFiles.filter(f => f.level === lv)))).join('');
 
-  const byGrade = {};
-  shown.forEach(f => { ((byGrade[f.grade] = byGrade[f.grade] || {})[f.book] = byGrade[f.grade][f.book] || []).push(f); });
-  const open = !!tbState.q;
-  list.innerHTML = Object.keys(byGrade).sort(pxOrderSort(PX_GRADE_ORDER)).map(g => {
-    const books = Object.keys(byGrade[g]).sort((a, b) => a.localeCompare(b, 'ko', { numeric: true }));
-    return `<div class="px-group"><div class="px-group-h">${pxEsc(g)}<small>교재 ${books.length}종</small></div>` +
-      books.map(b => {
-        const fs = byGrade[g][b].sort((x, y) => (x.sub + '/' + x.name).localeCompare(y.sub + '/' + y.name, 'ko', { numeric: true }));
-        const btn = f => `<button class="px-file${fs.length === 1 ? ' tb-one' : ''}" data-path="${pxEsc(f.path)}" onclick="pxOpen(this.dataset.path)" title="${pxEsc((f.sub ? f.sub + ' / ' : '') + f.name)}">📄<span>${f.sub ? pxEsc(f.sub) + ' · ' : ''}${pxEsc(f.name.replace(/\.pdf$/i, ''))}</span></button>`;
-        return `<details class="tb-book"${open ? ' open' : ''}><summary>📘 ${pxEsc(b)} <small>${fs.length}개 파일</small></summary>
-          <div class="px-files">${fs.map(btn).join('')}</div></details>`;
-      }).join('') + '</div>';
+  // ② 학년 (학교급 아래에 학년 폴더가 있는 경우만)
+  const inLevel = tbFiles.filter(f => f.level === tbState.level);
+  const grades = [...new Set(inLevel.map(f => f.grade).filter(Boolean))].sort(pxOrderSort(PX_GRADE_ORDER.concat(['초1','초2','초3','초4','초5','초6'])));
+  if (grades.length) {
+    if (!grades.includes(tbState.grade)) tbState.grade = grades[0];
+    gBox.style.display = '';
+    gBox.innerHTML = grades.map(g => chip(g, tbState.grade === g, `tbSetGrade('${pxEsc(g)}')`, countBooks(inLevel.filter(f => f.grade === g)))).join('');
+  } else { tbState.grade = ''; gBox.style.display = 'none'; gBox.innerHTML = ''; }
+
+  // ③ 교재 목록 (검색 중이면 전체에서 찾기)
+  const q = tbState.q;
+  let shown, searching = !!q;
+  if (searching) {
+    shown = tbFiles.filter(f => (f.book + ' ' + f.sub + ' ' + f.name).toLowerCase().includes(q));
+    lvBox.style.opacity = gBox.style.opacity = '0.45';
+  } else {
+    shown = inLevel.filter(f => !grades.length || f.grade === tbState.grade);
+    lvBox.style.opacity = gBox.style.opacity = '';
+  }
+  if (!shown.length) { list.innerHTML = `<div class="px-empty">${searching ? '검색 결과가 없습니다.' : '교재가 없습니다.'}</div>`; return; }
+
+  const books = {};
+  shown.forEach(f => { (books[bookKey(f)] = books[bookKey(f)] || []).push(f); });
+  const keys = Object.keys(books).sort((a, b) => {
+    const [la, ga, ba] = a.split('\u0000'), [lb, gb, bb] = b.split('\u0000');
+    return pxOrderSort(TB_LEVEL_ORDER)(la, lb) || pxOrderSort(PX_GRADE_ORDER)(ga, gb) || tbSortName(ba, bb);
+  });
+  const head = searching
+    ? `<div class="px-meta">검색 결과 · 교재 ${keys.length}종 · 파일 ${shown.length}개</div>`
+    : `<div class="px-meta">${pxEsc(tbState.level)}${tbState.grade ? ' · ' + pxEsc(tbState.grade) : ''} · 교재 ${keys.length}종 · 교재를 누르면 파일이 펼쳐집니다</div>`;
+  list.innerHTML = head + keys.map(k => {
+    const fs = books[k];
+    const f0 = fs[0];
+    const subs = {};
+    fs.forEach(f => { (subs[f.sub] = subs[f.sub] || []).push(f); });
+    const subKeys = Object.keys(subs).sort(tbSortName);
+    const row = f => `<div class="tb-row">
+        <span class="tb-name" title="${pxEsc(f.name)}">📄 ${pxEsc(f.name.replace(/\.pdf$/i, ''))}</span>
+        <span class="tb-acts">
+          <button class="tb-btn" data-path="${pxEsc(f.path)}" onclick="pxOpen(this.dataset.path)">미리보기</button>
+          <button class="tb-btn dl" data-path="${pxEsc(f.path)}" onclick="tbDownload(this)">다운로드</button>
+        </span></div>`;
+    const body = subKeys.map(s => (s ? `<div class="tb-subh">${pxEsc(s)}</div>` : '') +
+      subs[s].sort((a, b) => tbSortName(a.name, b.name)).map(row).join('')).join('');
+    const where = searching ? `<span class="tb-path">${pxEsc(f0.level)}${f0.grade ? ' · ' + pxEsc(f0.grade) : ''}</span>` : '';
+    return `<details class="tb-book"${searching ? ' open' : ''}><summary>📘 ${pxEsc(f0.book)} <small>${fs.length}개</small>${where}</summary>
+      <div class="tb-body">${body}</div></details>`;
   }).join('');
 }
+
+// 다운로드: 파일을 받아서 원래 파일명으로 저장.
+// 브라우저가 직접 받기를 막으면 버튼이 "눌러서 열기"로 바뀌고, 한 번 더 누르면 새 창에서 열려 저장할 수 있음
+window.tbDownload = async function (btn) {
+  if (btn.dataset.url) { window.open(btn.dataset.url, '_blank'); return; }
+  const path = btn.dataset.path;
+  const name = path.split('/').pop();
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = '받는 중...';
+  let url = '';
+  try {
+    url = await getDownloadURL(ref(storage, path));
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+    btn.textContent = label;
+  } catch (e) {
+    if (url) { btn.dataset.url = url; btn.textContent = '눌러서 열기'; }
+    else { btn.textContent = label; alert('파일을 받지 못했습니다 (' + (e.code || e.message) + ')'); }
+  } finally { btn.disabled = false; }
+};
 
 // ══════════════════════════════════════
 // 📚 기출문제 — Firebase Storage 경로: pastExams/시험명/학년/지역/파일.pdf

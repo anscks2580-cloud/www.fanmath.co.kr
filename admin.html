@@ -1259,9 +1259,9 @@ body.ck-lock { overflow:hidden; }
     <div class="card">
       <h3>📁 폴더 통째로 올리기</h3>
       <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:14px;">
-        마이박스에서 받은 폴더를 그대로 고르면 학년·교재가 자동으로 분류됩니다.<br>
-        <span style="color:var(--off-white);">(시중교재 폴더)</span> › <span style="color:var(--off-white);">학년 폴더</span> › <span style="color:var(--off-white);">교재 폴더</span> › PDF (교재 폴더 안의 하위 폴더도 그대로 유지)<br>
-        전체 폴더를 골라도 되고, 학년 폴더 하나만 골라도 됩니다. 용량이 커서 끝날 때까지 이 창을 닫지 마세요.
+        마이박스에서 받은 폴더를 그대로 고르면 폴더 구조 그대로 올라갑니다.<br>
+        <span style="color:var(--off-white);">(시중교재 폴더)</span> › <span style="color:var(--off-white);">학교급</span> (초등·중등·고등) › <span style="color:var(--off-white);">학년</span> (있으면) › <span style="color:var(--off-white);">교재</span> › (하위 폴더) › PDF<br>
+        전체 폴더를 골라도 되고 "중등" 같은 학교급 폴더 하나만 골라도 됩니다. 용량이 커서 끝날 때까지 이 창을 닫지 마세요.
       </div>
       <label class="btn btn-secondary" style="display:inline-block;">폴더 선택
         <input type="file" id="tba-folder" webkitdirectory directory multiple style="display:none;" onchange="tbaOnFolder(this)">
@@ -1276,11 +1276,8 @@ body.ck-lock { overflow:hidden; }
 
     <div class="card">
       <h3>+ 파일 개별 추가</h3>
-      <div class="form-row">
-        <div class="form-group"><label>학년</label><input type="text" id="tba-m-grade" list="tba-grade-list" placeholder="예: 고1"></div>
-        <div class="form-group"><label>교재명</label><input type="text" id="tba-m-book" list="tba-book-list" placeholder="예: 쎈 공통수학1"></div>
-      </div>
-      <datalist id="tba-grade-list"></datalist><datalist id="tba-book-list"></datalist>
+      <div class="form-group" style="margin-bottom:12px;"><label>폴더 경로</label><input type="text" id="tba-m-dir" list="tba-dir-list" placeholder="예: 중등/중1/쎈 · 고등/쎈/22개정"></div>
+      <datalist id="tba-dir-list"></datalist>
       <input type="file" id="tba-m-files" accept=".pdf,application/pdf" multiple style="margin-bottom:12px;color:var(--muted);font-size:13px;">
       <div><button class="btn btn-primary" id="tba-m-btn" onclick="tbaManualUpload()">업로드</button></div>
       <div class="msg" id="tba-m-msg"></div>
@@ -11078,13 +11075,16 @@ window.pxaDeleteExam = async (exam) => {
 };
 
 // ══════════════════════════════════════════
-// 📘 시중교재 — Storage 경로: textbooks/학년/교재명/(하위폴더/)파일.pdf
-// 선생님 포털(teacher.html "시중교재" 탭)에서 열람. 업로드·삭제는 관리자만 (storage.rules)
+// 📘 시중교재 — Storage 경로: textbooks/학교급/(학년/)교재/(하위폴더/)파일.pdf
+//   예) textbooks/중등/중1/쎈/파일.pdf · textbooks/고등/쎈/22개정/파일.pdf
+// 선택한 폴더 구조를 그대로 보존해서 올림. 선생님 포털(teacher.html "시중교재" 탭)에서
+// 학교급 → 학년 → 교재 순으로 보여줌. 업로드·삭제는 관리자만 (storage.rules)
 // ══════════════════════════════════════════
 const TBA_MAX_MB = 500;
-const TBA_GRADE_RE = /^(초|중|고)\s*[1-6]|^(초등|중등|고등|공통|N수|재수)/;
-let tbaQueue = [];   // { file, grade, book, sub(배열), name }
-let tbaFiles = [];   // 올라간 파일 [{ grade, book, sub, name, path }]
+const TBA_LEVELS = ['초등', '중등', '고등'];
+const TBA_GRADE_RE = /^(초|중|고)\s*[1-6]/;
+let tbaQueue = [];   // { file, dir:[폴더...], name }
+let tbaFiles = [];   // 올라간 파일 [{ level, grade, book, sub, name, path }]
 let tbaBusy = false;
 
 function tbaFmtSize(b) {
@@ -11092,27 +11092,39 @@ function tbaFmtSize(b) {
   if (b >= 1024 ** 2) return (b / 1024 ** 2).toFixed(1) + 'MB';
   return Math.max(1, Math.round(b / 1024)) + 'KB';
 }
-function tbaPath(it) {
-  return ['textbooks', it.grade, it.book, ...(it.sub || []), it.name].map(pxaClean).join('/');
+function tbaPath(it) { return ['textbooks', ...it.dir, it.name].map(pxaClean).join('/'); }
+// 저장 경로 → 학교급/학년/교재/하위폴더로 해석 (teacher.html과 같은 규칙)
+function tbaParse(fullPath) {
+  const parts = fullPath.split('/').slice(1);
+  const name = parts.pop();
+  const level = parts[0] || '기타';
+  let grade = '', rest = parts.slice(1);
+  if (rest.length && TBA_GRADE_RE.test(rest[0])) { grade = rest[0]; rest = rest.slice(1); }
+  return { level, grade, book: rest[0] || '(분류 없음)', sub: rest.slice(1).join(' / '), name, path: fullPath };
+}
+const tbaBookKey = f => [f.level, f.grade, f.book].join('\u0000');
+function tbaBookLabel(f) { return [f.level, f.grade, f.book].filter(Boolean).join(' › '); }
+function tbaSortFiles(a, b) {
+  return pxaOrder(TBA_LEVELS)(a.level, b.level) || pxaOrder(PXA_GRADES)(a.grade, b.grade) ||
+    a.book.localeCompare(b.book, 'ko', { numeric: true }) || (a.sub + '/' + a.name).localeCompare(b.sub + '/' + b.name, 'ko', { numeric: true });
 }
 
 window.initTextbookAdminTab = async () => { await tbaLoadList(); };
 
-// ── 폴더 선택 → 학년 폴더를 찾아서 그 아래를 교재로 분류 ──
+// ── 폴더 선택 → 폴더 구조 그대로 (맨 위 선택 폴더 이름은 학교급(초등·중등·고등)일 때만 남김) ──
 window.tbaOnFolder = (input) => {
   const ok = [], bad = [];
   [...input.files].forEach(f => {
     const rel = (f.webkitRelativePath || f.name).normalize('NFC');
-    const parts = rel.split('/');
+    const parts = rel.split('/').map(s => s.trim());
     const name = parts.pop();
-    const dirs = parts;
     if (name.startsWith('.') || /^(thumbs\.db|desktop\.ini)$/i.test(name)) return;
     if (!/\.pdf$/i.test(name)) { bad.push(rel + ' — PDF가 아님'); return; }
     if (f.size > TBA_MAX_MB * 1024 * 1024) { bad.push(rel + ` — ${TBA_MAX_MB}MB 초과`); return; }
-    let k = dirs.findIndex(d => TBA_GRADE_RE.test(d.trim()));
-    if (k === -1) k = dirs.length >= 3 ? 1 : (dirs.length === 2 ? 0 : -1); // 학년 이름이 특이한 경우: 맨 위가 전체 폴더라고 보고 그 아래를 학년으로
-    if (k === -1 || dirs.length < k + 2) { bad.push(rel + ' — 학년/교재 폴더 안에 있지 않음'); return; }
-    ok.push({ file: f, grade: dirs[k].trim(), book: dirs[k + 1].trim(), sub: dirs.slice(k + 2), name });
+    let dir = parts;
+    if (dir.length && !TBA_LEVELS.includes(dir[0])) dir = dir.slice(1);   // "시중교재" 같은 최상위 폴더는 빼기
+    if (dir.length < 2) { bad.push(rel + ' — 학교급/교재 폴더 안에 있지 않음'); return; }
+    ok.push({ file: f, dir, name });
   });
   tbaQueue = ok;
   pxaMsg('tba-folder-msg', '');
@@ -11130,16 +11142,17 @@ function tbaRenderPreview(bad = []) {
   const existing = new Set(tbaFiles.map(f => f.path));
   const dup = tbaQueue.filter(it => existing.has(tbaPath(it))).length;
   const total = tbaQueue.reduce((s, x) => s + x.file.size, 0);
-  const grades = [...new Set(tbaQueue.map(x => x.grade))].sort(pxaOrder(PXA_GRADES));
-  const rows = grades.map(g => {
-    const items = tbaQueue.filter(x => x.grade === g);
+  const parsed = tbaQueue.map(it => ({ ...tbaParse(tbaPath(it)), size: it.file.size }));
+  const groups = {};
+  parsed.forEach(p => { const g = [p.level, p.grade].filter(Boolean).join(' › '); (groups[g] = groups[g] || []).push(p); });
+  const gkeys = Object.keys(groups).sort((a, b) => tbaSortFiles(groups[a][0], groups[b][0]));
+  const rows = gkeys.map(g => {
+    const items = groups[g];
     const books = [...new Set(items.map(x => x.book))].sort((a, b) => a.localeCompare(b, 'ko', { numeric: true }));
     return `<details style="margin-bottom:6px;"><summary style="cursor:pointer;font-size:13.5px;color:var(--off-white);">
-        <b>${pxaEsc(g)}</b> <span style="color:var(--muted);">· 교재 ${books.length}종 · 파일 ${items.length}개 · ${tbaFmtSize(items.reduce((s, x) => s + x.file.size, 0))}</span></summary>
-      <div style="margin:6px 0 4px 14px;font-size:12.5px;color:var(--muted);line-height:1.8;">${books.map(b => {
-        const n = items.filter(x => x.book === b).length;
-        return `📘 ${pxaEsc(b)} <span style="opacity:.7;">(${n})</span>`;
-      }).join('<br>')}</div></details>`;
+        <b>${pxaEsc(g)}</b> <span style="color:var(--muted);">· 교재 ${books.length}종 · 파일 ${items.length}개 · ${tbaFmtSize(items.reduce((s, x) => s + x.size, 0))}</span></summary>
+      <div style="margin:6px 0 4px 14px;font-size:12.5px;color:var(--muted);line-height:1.8;">${books.map(b =>
+        `📘 ${pxaEsc(b)} <span style="opacity:.7;">(${items.filter(x => x.book === b).length})</span>`).join('<br>')}</div></details>`;
   }).join('');
   box.innerHTML = `<div style="font-size:14px;font-weight:700;color:var(--off-white);margin-bottom:10px;">
       총 <span style="color:var(--gold);">${tbaQueue.length}개</span> · ${tbaFmtSize(total)}</div>
@@ -11198,7 +11211,7 @@ async function tbaUpload(items, msgId, btn) {
         sent[idx] = it.file.size; done++;
       } catch (e) {
         sent[idx] = it.file.size;
-        failed.push(`${it.grade}/${it.book}/${it.name} (${e.code || e.message})`);
+        failed.push(`${it.dir.join('/')}/${it.name} (${e.code || e.message})`);
       }
       paint();
     }
@@ -11235,57 +11248,63 @@ window.tbaUploadFolder = async () => {
 };
 
 window.tbaManualUpload = async () => {
-  const grade = document.getElementById('tba-m-grade').value.trim();
-  const book = document.getElementById('tba-m-book').value.trim();
+  const dirText = document.getElementById('tba-m-dir').value.trim();
+  const dir = dirText.split(/\s*[\/›>]\s*/).map(s => s.trim()).filter(Boolean);
   const input = document.getElementById('tba-m-files');
   const files = [...input.files];
-  if (!grade || !book) { alert('학년과 교재명을 입력해주세요.'); return; }
+  if (dir.length < 2) { alert('폴더 경로를 "학교급/학년/교재" 또는 "고등/교재" 형태로 입력해주세요.\n예: 중등/중1/쎈'); return; }
+  if (!TBA_LEVELS.includes(dir[0]) && !confirm(`첫 폴더가 "${dir[0]}"입니다. 보통 초등·중등·고등 중 하나로 시작합니다. 그대로 올릴까요?`)) return;
   if (!files.length) { alert('PDF 파일을 선택해주세요.'); return; }
   const notPdf = files.filter(f => !/\.pdf$/i.test(f.name));
   if (notPdf.length) { alert('PDF 파일만 올릴 수 있습니다: ' + notPdf.map(f => f.name).join(', ')); return; }
   const big = files.filter(f => f.size > TBA_MAX_MB * 1024 * 1024);
   if (big.length) { alert(`${TBA_MAX_MB}MB를 넘는 파일이 있습니다: ` + big.map(f => f.name).join(', ')); return; }
-  const items = files.map(f => ({ file: f, grade, book, sub: [], name: f.name.normalize('NFC') }));
+  const items = files.map(f => ({ file: f, dir, name: f.name.normalize('NFC') }));
   const ok = await tbaUpload(items, 'tba-m-msg', document.getElementById('tba-m-btn'));
   if (ok) input.value = '';
 };
 
-// ── 올라간 목록 ──
+// ── 올라간 목록: 학교급 › 학년 › 교재 ──
 window.tbaLoadList = async () => {
   const box = document.getElementById('tba-list');
   if (!box) return;
   box.innerHTML = '<div style="color:var(--muted);font-size:13px;">불러오는 중...</div>';
   const files = [];
-  async function walk(r, parts) {
+  async function walk(r) {
     const res = await listAll(r);
-    res.items.forEach(it => files.push({ grade: parts[0] || '기타', book: parts[1] || '기타', sub: parts.slice(2).join(' / '), name: it.name, path: it.fullPath }));
-    await Promise.all(res.prefixes.map(p => walk(p, [...parts, p.name])));
+    res.items.forEach(it => files.push(tbaParse(it.fullPath)));
+    await Promise.all(res.prefixes.map(walk));
   }
-  try { await walk(ref(storage, 'textbooks'), []); }
+  try { await walk(ref(storage, 'textbooks')); }
   catch (e) { box.innerHTML = `<div style="color:#ff9090;font-size:13px;">불러오지 못했습니다 (${pxaEsc(e.code || e.message)})</div>`; return; }
+  files.sort(tbaSortFiles);
   tbaFiles = files;
-  const byGrade = {};
-  files.forEach(f => { ((byGrade[f.grade] = byGrade[f.grade] || {})[f.book] = byGrade[f.grade][f.book] || []).push(f); });
-  const grades = Object.keys(byGrade).sort(pxaOrder(PXA_GRADES));
-  document.getElementById('tba-grade-list').innerHTML = [...new Set([...PXA_GRADES, ...grades])].map(g => `<option value="${pxaEsc(g)}">`).join('');
-  document.getElementById('tba-book-list').innerHTML = [...new Set(files.map(f => f.book))].map(b => `<option value="${pxaEsc(b)}">`).join('');
+  // 개별 추가용 경로 자동완성: 지금 있는 교재 폴더들
+  const dirs = [...new Set(files.map(f => f.path.split('/').slice(1, -1).join('/')))];
+  document.getElementById('tba-dir-list').innerHTML = dirs.map(d => `<option value="${pxaEsc(d)}">`).join('');
   if (tbaQueue.length) tbaRenderPreview();
   if (!files.length) { box.innerHTML = '<div style="color:var(--muted);font-size:13px;">아직 올라간 교재가 없습니다.</div>'; return; }
-  box.innerHTML = grades.map(g => {
-    const books = Object.keys(byGrade[g]).sort((a, b) => a.localeCompare(b, 'ko', { numeric: true }));
+
+  const groups = {};   // "중등 › 중1" → { 교재키: [파일] }
+  files.forEach(f => {
+    const g = [f.level, f.grade].filter(Boolean).join(' › ');
+    ((groups[g] = groups[g] || {})[tbaBookKey(f)] = groups[g][tbaBookKey(f)] || []).push(f);
+  });
+  box.innerHTML = Object.keys(groups).map(g => {
+    const books = Object.keys(groups[g]);
     return `<div style="margin-bottom:16px;">
       <div style="font-size:14px;font-weight:700;color:var(--off-white);margin-bottom:8px;">${pxaEsc(g)} <span style="color:var(--muted);font-weight:500;font-size:12.5px;">교재 ${books.length}종</span></div>
-      ${books.map(b => {
-        const fs = byGrade[g][b].sort((x, y) => (x.sub + '/' + x.name).localeCompare(y.sub + '/' + y.name, 'ko', { numeric: true }));
+      ${books.map(k => {
+        const fs = groups[g][k], f0 = fs[0];
         return `<details style="border:1px solid var(--border-soft);border-radius:10px;padding:10px 14px;margin-bottom:8px;background:rgba(255,255,255,0.02);">
           <summary style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;">
-            <span style="color:var(--off-white);font-size:13.5px;font-weight:600;">📘 ${pxaEsc(b)} <span style="color:var(--muted);font-weight:500;font-size:12px;">${fs.length}개 파일</span></span>
-            <button class="btn btn-danger btn-sm" data-grade="${pxaEsc(g)}" data-book="${pxaEsc(b)}" onclick="event.preventDefault();tbaDeleteBook(this.dataset.grade,this.dataset.book)">교재 삭제</button>
+            <span style="color:var(--off-white);font-size:13.5px;font-weight:600;">📘 ${pxaEsc(f0.book)} <span style="color:var(--muted);font-weight:500;font-size:12px;">${fs.length}개 파일</span></span>
+            <button class="btn btn-danger btn-sm" data-key="${pxaEsc(k)}" onclick="event.preventDefault();tbaDeleteBook(this.dataset.key)">교재 삭제</button>
           </summary>
           <div style="margin-top:8px;">${fs.map(f => `
             <div style="display:flex;align-items:center;gap:8px;padding:5px 4px;font-size:13px;">
               <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--off-white);">📄 ${f.sub ? pxaEsc(f.sub) + ' / ' : ''}${pxaEsc(f.name)}</span>
-              <button class="btn btn-secondary btn-sm" data-path="${pxaEsc(f.path)}" onclick="pxaOpenFile(this.dataset.path)">열기</button>
+              <button class="btn btn-secondary btn-sm" data-path="${pxaEsc(f.path)}" onclick="pxaOpenFile(this.dataset.path)">미리보기</button>
               <button class="btn btn-danger btn-sm" data-path="${pxaEsc(f.path)}" onclick="tbaDeleteFile(this.dataset.path)">삭제</button>
             </div>`).join('')}</div>
         </details>`;
@@ -11299,9 +11318,10 @@ window.tbaDeleteFile = async (path) => {
   catch (e) { alert('삭제 실패: ' + (e.code || e.message)); }
 };
 
-window.tbaDeleteBook = async (grade, book) => {
-  const files = tbaFiles.filter(f => f.grade === grade && f.book === book);
-  if (!confirm(`${grade} "${book}" 교재 파일 ${files.length}개를 모두 삭제할까요?\n되돌릴 수 없습니다.`)) return;
+window.tbaDeleteBook = async (key) => {
+  const files = tbaFiles.filter(f => tbaBookKey(f) === key);
+  if (!files.length) return;
+  if (!confirm(`${tbaBookLabel(files[0])} 교재 파일 ${files.length}개를 모두 삭제할까요?\n되돌릴 수 없습니다.`)) return;
   let i = 0; const failed = [];
   async function worker() {
     while (i < files.length) { const f = files[i++]; try { await deleteObject(ref(storage, f.path)); } catch (e) { failed.push(f.name); } }
