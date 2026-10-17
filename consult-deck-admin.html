@@ -136,7 +136,7 @@ input[type=number]{width:140px}
   <div class="brand"><img src="swc-logo.svg" alt="" onerror="this.style.display='none'">상담자료 관리<a href="admin.html">← 관리자 페이지</a></div>
   <div class="decks" id="decks">
     <button class="deck-tab on" data-deck="middle">중등 프로그램</button>
-    <button class="deck-tab" disabled>고등 프로그램<small>준비 중</small></button>
+    <button class="deck-tab" data-deck="high">고등 프로그램</button>
     <button class="deck-tab" disabled>기타 상담자료<small>준비 중</small></button>
   </div>
   <div class="acts">
@@ -208,6 +208,22 @@ const NAMES = {
   'online-site-c': ['온라인 학습관 화면', '홈페이지 첫 화면 캡처'],
   'care-payment': ['온라인 결제 방법 안내', '카톡친구맺기 대신'],
 };
+/* 고등 상담자료 화면 이름 (원본 고등부 PDF · 2026 고등부 pptx 표기) */
+const NAMES_HIGH = {
+  'intro': ['표지', 'PDF 1p · pptx 1p'], 'contents': ['목차 (Contents)', '섹션 목록에서 자동 생성'],
+  'upgrade-system': ['2026 업그레이드 · 완전학습 시스템', 'pptx 3p'],
+  'triplets-intro': ['세쌍둥이 소개', 'PDF 3p'], 'triplets-process': ['1+2 완벽 학습 프로세스', 'pptx 4p'],
+  'review-intro': ['완전한 복습 그리고 심화', 'PDF 4p'], 'review-3pass': ['빈틈없는 3회독 프로세스', 'pptx 5p'],
+  'note-intro': ['노트정리 · 오답정리', 'PDF 5p'], 'note-feedback': ['1:1 오답 첨삭 시스템', 'pptx 6p'],
+  'daily-intro': ['데일리테스트 소개', 'PDF 6p 헤드라인·시험지'], 'daily-review': ['복습의 완성', 'PDF 6p 본문'], 'daily-process': ['데일리테스트 3단계 밀착 관리', 'pptx 7p'],
+  'clinic-why': ['맞춤식 수업의 의미', 'PDF 7p 헤드라인·본문1'], 'clinic-flow': ['개인별 클리닉 진행', 'PDF 7p 시험지·본문2'], 'clinic-3d': ['입체 클리닉', 'pptx 8p'],
+  'mock-why': ['실전 연습의 중요성', 'PDF 8p 헤드라인·본문1'], 'mock-timeline': ['파이널 모의테스트 일정 (2회)', 'PDF 8p 본문2 · pptx 9p'], 'mock-points': ['실전 훈련 포인트 + 실시 공고', 'pptx 9p · PDF 8p 공고'],
+  'exam-intro': ['내신대비 3가지', 'PDF 9p'], 'exam-core': ['성적을 완성하는 자체 교재', 'pptx 10p'],
+  'online-site': ['온라인 학습관 화면', 'PDF 10p'], 'online-programs': ['온라인 강의 3종', 'PDF 10p 강의·주석'], 'online-youtube': ['판수학연구소 유튜브', 'pptx 11p'],
+  'care-attendance': ['출결관리 시스템', 'PDF 11p 1번 · pptx 12p'], 'care-kakao': ['카카오톡 플러스친구', 'PDF 11p 2번'], 'care-friend': ['카톡친구맺기', 'PDF 11p 친구맺기 이미지'],
+  'report-sms': ['학업성취도 안내문자 (매월 1일)', 'PDF 11p 3번'], 'care-payment': ['수강료 결제 · 지역화폐', 'pptx 12p'],
+  'thanks': ['감사합니다', 'PDF 12p · pptx 13p'],
+};
 const AUD_LABEL = { consult: '상담 화면 전용', share: '학부모 링크 전용' };
 
 /* ── 필드 스키마: t = text | area | list | obj | img | num | bool ── */
@@ -263,9 +279,21 @@ const SCHEMA = {
     F('cardTitle', '카드 제목', 'area'), F('cardText', '카드 내용', 'area'), F('cardHours', '운영 시간')],
   'care-payment': [F('title', '화면 제목'), F('lead', '안내 문구'), F('steps', '단계', 'obj', { item: '단계', fields: [F('label', '단계명'), F('text', '설명', 'area')] }),
     F('cardTitle', '카드 제목', 'area'), F('cardItems', '카드 항목 (결제 수단 등)', 'list'), F('cardFoot', '카드 아래 문구')],
-  'thanks': [F('text', '문구')],
+  'thanks': [F('text', '문구'), F('sub', '아래 작은 문구 (비우면 표시 안 함)', 'area')],
+  // ── 고등부 화면 ──
+  'hs-system': [F('title', '화면 제목 (섹션 첫 화면이면 섹션 제목 옆에 작게)'), F('kicker', '작은 머리말'), F('lead', '큰 문구', 'area'), F('leadSub', '큰 문구 아래 설명', 'area'),
+    F('stepsTitle', '단계 위 작은 제목'), F('steps', '단계 카드 (다음 버튼 한 번에 하나씩)', 'obj', { item: '단계', fields: [F('tag', '번호·꼬리표'), F('title', '제목'), F('desc', '설명', 'area')] }),
+    F('joins', '카드 사이 기호 (비우면 화살표, 예: + =)', 'list', { short: true }),
+    F('pointsTitle', '강점 위 작은 제목'), F('points', '강점', 'obj', { item: '강점', fields: [F('tag', '번호·꼬리표'), F('title', '제목'), F('desc', '설명', 'area')] }),
+    F('photos', '사진 (강점 오른쪽)', 'obj', { item: '사진', fields: [F('image', '사진', 'img'), F('caption', '사진 설명')] }),
+    F('quote', '마무리 문구', 'area'), F('linkLabel', '버튼 글자'), F('linkUrl', '버튼 주소 (비우면 버튼 없음)')],
+  'hs-story': [F('title', '화면 제목 (섹션 첫 화면이면 섹션 제목 옆에 작게)'), F('headline', '헤드라인', 'area'),
+    F('images', '사진', 'obj', { item: '사진', fields: [F('image', '사진', 'img'), F('caption', '사진 설명')] }),
+    F('keywords', '사진 옆 동그라미 단어 (비우면 표시 안 함)', 'list', { short: true }),
+    F('subtitle', '본문 위 소제목'), F('paragraphs', '본문 (한 칸 = 다음 버튼 한 번)', 'list'),
+    F('cards', '색 상자 (한 칸 = 다음 버튼 한 번)', 'obj', { item: '상자', fields: [F('title', '제목'), F('desc', '내용', 'area')] })],
 };
-const META_FIELDS = [F('meta.brand', '학원명'), F('meta.docTitle', '표지 큰 제목'), F('meta.programTitle', '프로그램명'), F('meta.slogan', '슬로건'), F('meta.tagline', '영문 태그라인')];
+const META_FIELDS = [F('meta.brand', '학원명'), F('meta.docTitle', '표지 큰 제목'), F('meta.programTitle', '프로그램명'), F('meta.lead', '프로그램명 아래 한 줄 (비우면 표시 안 함)'), F('meta.slogan', '슬로건'), F('meta.tagline', '영문 태그라인')];
 const CONTACT_FIELDS = [F('contact.phone', '전화번호 {{phone}}'), F('contact.kakaoId', '카카오톡 ID {{kakaoId}}'), F('contact.hoursWeekday', '평일 상담시간 {{hoursWeekday}}'), F('contact.hoursSat', '토요일 상담시간 {{hoursSat}}')];
 
 /* ── 상태 ── */
@@ -288,7 +316,21 @@ const ICON = {
   eyeOff: '<svg viewBox="0 0 24 24"><path d="M3 3l18 18M10.6 5.1A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a17 17 0 0 1-3.2 4M6.6 6.6C3.8 8.4 2 12 2 12s3.6 7 10 7c1.6 0 3-.4 4.3-1"/></svg>',
   x: '<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg>', plus: '<svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>',
 };
-function sceneTitle(sc) { const n = NAMES[sc.id] || NAMES[sc.type] || [sc.id, '']; return n; }
+function sceneTitle(sc) {
+  if (DECK === 'high') return NAMES_HIGH[sc.id] || NAMES_HIGH[sc.type] || [sc.id, ''];
+  return NAMES[sc.id] || NAMES[sc.type] || [sc.id, ''];
+}
+/* 상단 중등/고등 탭: 해당 상담자료 편집 화면으로 이동 */
+$$('.deck-tab[data-deck]').forEach(b => {
+  b.classList.toggle('on', b.dataset.deck === DECK);
+  b.onclick = () => {
+    if (b.dataset.deck === DECK) return;
+    if (window.CDA?.S?.deck && JSON.stringify(window.CDA.S.deck) !== window.CDA.S.savedJSON && window.CDA.S.savedJSON !== '__unsaved__'
+        && !confirm('저장하지 않은 변경이 있습니다. 다른 상담자료로 이동할까요?')) return;
+    location.search = '?deck=' + b.dataset.deck;
+  };
+});
+document.title = (DECK === 'high' ? '고등' : DECK === 'middle' ? '중등' : '') + ' 상담자료 관리 · 송우찬수학학원';
 function renderTree() {
   const d = S.deck, sel = S.sel;
   const visSecs = d.sections.filter(s => s.visible !== false);

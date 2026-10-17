@@ -1383,8 +1383,23 @@ body.ck-lock { overflow:hidden; }
           <p class="cdk-share-note">이 링크를 카카오톡으로 보내면 어머님들이 <b style="color:var(--off-white);">로그인 없이 휴대폰으로 상담자료만</b> 볼 수 있습니다. 링크로는 관리자 페이지·상담 기록 등 다른 화면이나 데이터에 들어갈 수 없습니다.<br>
             편집에서 저장하면 이미 보낸 링크에도 자동으로 반영되고, 링크 주소는 바뀌지 않습니다. [공유 중지]를 누르면 지금까지 보낸 링크는 열리지 않습니다.</p>
         </div>
-        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border-soft);border-radius:10px;opacity:0.55;">
-          <div style="flex:1;"><div style="font-size:15px;font-weight:700;">고등 프로그램</div><div style="font-size:12px;color:var(--muted);margin-top:3px;">준비 중</div></div>
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;margin-top:10px;background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);border-radius:10px;">
+          <div style="flex:1;min-width:180px;"><div style="font-size:15px;font-weight:700;">고등 프로그램</div><div id="cdk-high-status" style="font-size:12px;color:var(--muted);margin-top:3px;">확인 중...</div></div>
+          <button class="btn btn-primary" onclick="window.open('consult-deck.html?deck=high','_blank')">▶ 상담자료 열기</button>
+          <button class="btn btn-secondary" onclick="window.open('consult-deck-admin.html?deck=high','_blank')">✏️ 편집</button>
+        </div>
+        <div class="cdk-share" id="cdk-high-share">
+          <div class="cdk-share-top"><b>🔗 고등 상담자료 · 학부모 공유 링크</b><span class="cdk-share-st" id="cdk-high-share-st">확인 중...</span></div>
+          <div class="cdk-share-row">
+            <input type="text" id="cdk-high-share-url" readonly placeholder="아직 만든 링크가 없습니다" onclick="this.select()">
+            <button class="btn btn-secondary btn-sm" data-cdk-on="high" disabled onclick="cdkShareCopy('high')">복사</button>
+          </div>
+          <div class="cdk-share-acts">
+            <button class="btn btn-primary btn-sm" id="cdk-high-share-make" onclick="cdkShare('high')">🔗 공유 링크 만들기</button>
+            <button class="btn btn-secondary btn-sm" data-cdk-on="high" disabled onclick="cdkSharePreview('high')">📱 휴대폰 화면으로 보기</button>
+            <button class="btn btn-secondary btn-sm" data-cdk-on="high" disabled onclick="cdkShareStop('high')">공유 중지</button>
+          </div>
+          <p class="cdk-share-note">문자·카톡에는 짧은 주소 <b style="color:var(--gold);">www.fanmath.co.kr/h</b> 로 보내도 같은 화면이 열립니다. 편집에서 저장하면 이미 보낸 링크에도 자동으로 반영되고, [공유 중지]를 누르면 지금까지 보낸 링크는 열리지 않습니다.</p>
         </div>
         <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border-soft);border-radius:10px;opacity:0.55;">
           <div style="flex:1;"><div style="font-size:15px;font-weight:700;">기타 상담자료</div><div style="font-size:12px;color:var(--muted);margin-top:3px;">준비 중</div></div>
@@ -2929,17 +2944,19 @@ window.doLogout = async () => { await signOut(auth); };
 
 // ── 상담자료 관리 탭: 마지막 저장 정보 표시 ──
 window.initConsultDeckTab = async () => {
-  const el = document.getElementById('cdk-middle-status');
-  if (!el) return;
-  cdkShareLoad('middle');
-  try {
-    const snap = await getDoc(doc(db, 'consultDecks', 'middle'));
-    if (!snap.exists()) { el.textContent = '기본 내용(PDF 원본) 사용 중 · 아직 편집해서 저장한 적 없음'; return; }
-    const d = snap.data();
-    const t = d.updatedAt && d.updatedAt.toDate ? d.updatedAt.toDate().toLocaleString('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }) : '';
-    const hidden = (d.scenes || []).filter(x => x.visible === false).length;
-    el.textContent = '마지막 저장 ' + (t || '-') + (d.updatedBy ? ' · ' + d.updatedBy : '') + (hidden ? ' · 숨긴 화면 ' + hidden + '개' : '');
-  } catch (e) { el.textContent = '저장 정보를 불러오지 못했습니다 (' + (e.code || e.message) + ')'; }
+  await Promise.all(['middle', 'high'].map(async (deckId) => {
+    const el = document.getElementById(`cdk-${deckId}-status`);
+    if (!el) return;
+    cdkShareLoad(deckId);
+    try {
+      const snap = await getDoc(doc(db, 'consultDecks', deckId));
+      if (!snap.exists()) { el.textContent = '기본 내용(PDF 원본) 사용 중 · 아직 편집해서 저장한 적 없음'; return; }
+      const d = snap.data();
+      const t = d.updatedAt && d.updatedAt.toDate ? d.updatedAt.toDate().toLocaleString('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }) : '';
+      const hidden = (d.scenes || []).filter(x => x.visible === false).length;
+      el.textContent = '마지막 저장 ' + (t || '-') + (d.updatedBy ? ' · ' + d.updatedBy : '') + (hidden ? ' · 숨긴 화면 ' + hidden + '개' : '');
+    } catch (e) { el.textContent = '저장 정보를 불러오지 못했습니다 (' + (e.code || e.message) + ')'; }
+  }));
 };
 
 // ── 상담자료 학부모 공유 링크 (consultConfig/deckShare_{무작위 토큰}) ──
@@ -9440,7 +9457,7 @@ function consultRecordHtml(cid, d, prof, profErr, CF) {
         <button class="btn btn-primary btn-sm" onclick="startConsultSurvey('${cid}','student')">학생 설문 시작</button>
         ${pDone ? '' : `<button class="btn btn-secondary btn-sm" onclick="startConsultSurvey('${cid}','parent')">학부모 설문 진행</button>`}
         <button class="btn btn-primary btn-sm" onclick="saveConsultImage('${cid}')">📷 결과 이미지 (카톡 전달용)</button>
-        <button class="btn btn-secondary btn-sm" onclick="window.open('consult-deck.html?deck=middle','_blank')">상담자료 열기</button>
+        <button class="btn btn-secondary btn-sm" onclick="window.open('consult-deck.html?deck=${/고/.test(d.level || '') ? 'high' : 'middle'}','_blank')">${/고/.test(d.level || '') ? '고등' : '중등'} 상담자료 열기</button>
       </div>
     </div>
     <div class="cr-sec"><h4>상담 진행</h4><div class="cr-steps">${steps}</div></div>
