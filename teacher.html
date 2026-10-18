@@ -373,7 +373,7 @@ select option:disabled { color:#9B94B3; }
 <body>
 
 <!-- ══════════ 로그인 화면 ══════════ -->
-<div id="loginScreen">
+<div id="loginScreen" style="display:none">
   <div class="login-card">
     <div class="login-card-title">선생님 포털</div>
     <div class="login-card-sub">송우찬수학학원 교직원 전용</div>
@@ -1180,7 +1180,8 @@ onAuthStateChanged(auth, async user => {
   }
 });
 
-function showLogin()  { document.getElementById('loginScreen').style.display='flex';  document.getElementById('portalScreen').style.display='none'; }
+// 로그인은 통합 로그인 페이지(login.html)에서 — 로그인 안 된 상태로 들어오면 그쪽으로 이동
+function showLogin()  { document.getElementById('portalScreen').style.display='none'; location.replace('login.html'); }
 function showPortal() {
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('portalScreen').style.display='block';

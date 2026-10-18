@@ -117,13 +117,13 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
       <span>송우찬수학학원</span>
     </div>
     <div class="login-title">로그인</div>
-    <div class="login-sub">학생 로그인</div>
+    <div class="login-sub">학생 · 선생님 · 관리자 공통 로그인</div>
 
     <!-- 학생 폼 -->
     <div class="tab-form active" id="form-student">
       <div class="form-group">
         <label>아이디</label>
-        <input type="text" id="s-name" placeholder="" autocomplete="username">
+        <input type="text" id="s-name" placeholder="이름 (관리자는 이메일)" autocomplete="username">
       </div>
       <div class="form-group" style="margin-bottom:6px;">
         <label>비밀번호</label>
@@ -143,11 +143,11 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
         <div class="pw-change-body" id="pw-change-body">
           <div style="font-size:12px;color:var(--gold);font-weight:600;margin-bottom:12px;padding-top:4px;">🔑 비밀번호 변경</div>
           <div class="form-group">
-            <label>아이디 (이름)</label>
-            <input type="text" id="pc-name" placeholder="이름 입력" autocomplete="off">
+            <label>아이디</label>
+            <input type="text" id="pc-name" placeholder="이름 (관리자는 이메일)" autocomplete="off">
           </div>
           <div class="form-group">
-            <label>현재 비밀번호 (전화번호)</label>
+            <label>현재 비밀번호</label>
             <input type="password" id="pc-cur" placeholder="현재 비밀번호" autocomplete="new-password">
           </div>
           <div class="form-group">
@@ -174,7 +174,7 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, reauthenticateWithCredential, EmailAuthProvider, updatePassword, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signInWithEmailAndPassword, reauthenticateWithCredential, EmailAuthProvider, updatePassword, setPersistence, browserSessionPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
@@ -197,32 +197,58 @@ if (savedId) {
   document.getElementById('s-name').value = savedId;
 }
 
-// 학생 로그인
+// 통합 로그인 — 아이디에 따라 학생/선생님/조교/관리자 페이지로 자동 이동
+//  · 이메일(@ 포함)로 입력하면 그대로, 이름으로 입력하면 이름@songmath.kr 로 로그인
+//  · 로그인 후 계정 종류 확인: 관리자 → admin.html, 조교 → ta.html, 선생님 → teacher.html, 학생 → videos.html
+//  · 학생은 브라우저를 닫으면 로그아웃(기존 방식), 선생님·관리자는 로그인 유지(기존 각 페이지 방식)
 window.loginStudent = async function() {
-  const name = document.getElementById('s-name').value.trim();
-  const pw = document.getElementById('s-pw').value.trim().replace(/-/g,'');
+  const id = document.getElementById('s-name').value.trim();
+  const pwRaw = document.getElementById('s-pw').value.trim();
   const btn = document.getElementById('s-btn');
   const err = document.getElementById('s-err');
 
-  if (!name || !pw) { showErr('s-err','아이디와 비밀번호를 입력해주세요.'); return; }
+  if (!id || !pwRaw) { showErr('s-err','아이디와 비밀번호를 입력해주세요.'); return; }
 
   btn.disabled = true; btn.textContent = '로그인 중...';
   err.style.display = 'none';
 
   localStorage.removeItem('swc_saved_id');
 
+  const email = id.includes('@') ? id : id + '@songmath.kr';
+  // 학생 비밀번호(전화번호)는 '-' 없이 저장됨 → 입력한 그대로 먼저 시도하고, 실패하면 '-' 뺀 값으로 한 번 더
+  const pwList = [pwRaw];
+  if (pwRaw.includes('-')) pwList.push(pwRaw.replace(/-/g, ''));
+
   try {
     await setPersistence(auth, browserSessionPersistence);
-    const cred = await signInWithEmailAndPassword(auth, name + '@songmath.kr', pw);
-    // students 컬렉션에 있는지 확인
-    const studentDoc = await getDoc(doc(db, 'students', cred.user.uid));
-    if (!studentDoc.exists()) {
-      showErr('s-err','학생 계정이 아닙니다. 원장님께 문의해주세요.');
-      await auth.signOut();
-      btn.disabled = false; btn.textContent = '로그인';
+    let cred = null, lastErr = null;
+    for (const pw of pwList) {
+      try { cred = await signInWithEmailAndPassword(auth, email, pw); break; }
+      catch (e) { lastErr = e; }
+    }
+    if (!cred) throw lastErr;
+    const uid = cred.user.uid;
+
+    const adminDoc = await getDoc(doc(db, 'admins', uid));
+    if (adminDoc.exists()) {
+      await setPersistence(auth, browserLocalPersistence);
+      window.location.href = 'admin.html';
       return;
     }
-    window.location.href = 'videos.html';
+    const teacherDoc = await getDoc(doc(db, 'teachers', uid));
+    if (teacherDoc.exists()) {
+      await setPersistence(auth, browserLocalPersistence);
+      window.location.href = teacherDoc.data().role === 'ta' ? 'ta.html' : 'teacher.html';
+      return;
+    }
+    const studentDoc = await getDoc(doc(db, 'students', uid));
+    if (studentDoc.exists()) {
+      window.location.href = 'videos.html';
+      return;
+    }
+    showErr('s-err','등록되지 않은 계정입니다. 원장님께 문의해주세요.');
+    await auth.signOut();
+    btn.disabled = false; btn.textContent = '로그인';
   } catch(e) {
     showErr('s-err','아이디 또는 비밀번호가 올바르지 않습니다.');
     btn.disabled = false; btn.textContent = '로그인';
@@ -262,7 +288,7 @@ window.changePassword = async function() {
 
   try {
     // 1) 현재 비밀번호로 재인증
-    const email = name + '@songmath.kr';
+    const email = name.includes('@') ? name : name + '@songmath.kr';
     const cred = await signInWithEmailAndPassword(auth, email, curPw);
     const credential = EmailAuthProvider.credential(email, curPw);
     await reauthenticateWithCredential(cred.user, credential);
