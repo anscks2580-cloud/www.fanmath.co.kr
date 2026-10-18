@@ -11423,7 +11423,12 @@ const auErr = (e) => ((e && e.message) || String(e)).replace(/^FirebaseError:\s*
 async function auLoadFolders(force) {
   if (au.loading || (au.folders && !force)) return;
   au.loading = true;
-  try { au.folders = (await auApi('folders')).folders || []; auFillFolders(); }
+  try {
+    let r;
+    try { r = await auApi('folders'); }
+    catch (e1) { await new Promise((ok) => setTimeout(ok, 1500)); r = await auApi('folders'); } // 서버가 막 깨어날 때 한 번 더 시도
+    au.folders = r.folders || []; auFillFolders();
+  }
   catch (e) { document.getElementById('auFolder').innerHTML = `<option value="">폴더 목록 실패: ${auEsc(auErr(e))}</option>`; }
   finally { au.loading = false; }
 }
