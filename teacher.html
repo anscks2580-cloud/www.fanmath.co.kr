@@ -6,6 +6,7 @@
 <title>선생님 포털 | 송우찬수학학원</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.1.0/dist/tus.min.js"></script>
 <style>
 /* ── 레이아웃 ── */
 .teacher-wrap { max-width:960px; margin:0 auto; padding:100px 24px 96px; }
@@ -321,6 +322,52 @@ select option:disabled { color:#9B94B3; }
   .mn-results, .mn-toc-drop { max-height:60vh; }
 }
 @media(prefers-reduced-motion:reduce) { .mn-search { transition:none; } }
+/* ── 🎬 내 보충강의실 (영상 업로드·관리) ── */
+.mr-quota { border:1px solid var(--border-soft); border-radius:12px; padding:16px 18px; background:rgba(255,255,255,0.025); margin-bottom:18px; }
+.mr-quota-top { display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
+.mr-quota-top b { font-size:15px; color:var(--off-white); }
+.mr-quota-top span { font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
+.mr-bar { height:14px; border-radius:99px; background:rgba(255,255,255,0.07); overflow:hidden; }
+.mr-bar-fill { height:100%; width:0; border-radius:99px; background:var(--gold); transition:width 0.4s ease, background 0.3s; }
+.mr-bar-fill.warn { background:#ffb35c; }
+.mr-bar-fill.full { background:#ff7a7a; }
+.mr-quota-note { font-size:11.5px; color:var(--muted); margin-top:8px; line-height:1.6; }
+.mr-drop { border:1.5px dashed rgba(240,192,64,0.45); border-radius:12px; padding:26px 16px; text-align:center; cursor:pointer; transition:background 0.15s, border-color 0.15s; color:var(--muted); font-size:13px; line-height:1.7; }
+.mr-drop:hover, .mr-drop.over { background:rgba(240,192,64,0.06); border-color:var(--gold); color:var(--off-white); }
+.mr-drop b { color:var(--gold); font-size:14.5px; }
+.mr-queue { margin-top:14px; display:flex; flex-direction:column; gap:8px; }
+.mr-q { border:1px solid var(--border-soft); border-radius:10px; padding:10px 12px; background:rgba(255,255,255,0.03); }
+.mr-q-row { display:flex; gap:8px; align-items:center; }
+.mr-q-row input { flex:1; min-width:0; padding:8px 11px; background:rgba(255,255,255,0.05); border:1px solid var(--border-soft); border-radius:7px; color:var(--off-white); font-size:13.5px; font-family:inherit; outline:none; }
+.mr-q-row input:focus { border-color:rgba(240,192,64,0.5); }
+.mr-q-meta { font-size:11.5px; color:var(--muted); margin-top:6px; display:flex; justify-content:space-between; gap:8px; font-variant-numeric:tabular-nums; }
+.mr-q-meta .err { color:#ff9090; }
+.mr-q-meta .ok { color:#5fd98a; }
+.mr-q-prog { height:6px; border-radius:99px; background:rgba(255,255,255,0.07); overflow:hidden; margin-top:7px; }
+.mr-q-prog div { height:100%; width:0; background:var(--gold); transition:width 0.3s; }
+.mr-x { background:none; border:1px solid var(--border-soft); color:var(--muted); border-radius:7px; padding:6px 10px; font-size:12px; cursor:pointer; font-family:inherit; white-space:nowrap; }
+.mr-x:hover { color:#ff9090; border-color:rgba(255,80,80,0.4); }
+.mr-list { display:flex; flex-direction:column; gap:6px; }
+.mr-item { display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--border-soft); border-radius:10px; background:rgba(255,255,255,0.025); }
+.mr-num { width:26px; text-align:center; font-size:12px; font-weight:700; color:var(--gold); flex-shrink:0; font-variant-numeric:tabular-nums; }
+.mr-thumb { width:92px; aspect-ratio:16/9; border-radius:6px; background:#000 center/cover no-repeat; flex-shrink:0; cursor:pointer; position:relative; }
+.mr-thumb::after { content:'▶'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; opacity:0.75; }
+.mr-info { flex:1; min-width:0; }
+.mr-title { font-size:13.5px; font-weight:600; color:var(--off-white); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.mr-title-edit { width:100%; padding:6px 9px; background:rgba(255,255,255,0.06); border:1px solid rgba(240,192,64,0.5); border-radius:6px; color:var(--off-white); font-size:13.5px; font-family:inherit; outline:none; }
+.mr-sub { font-size:11.5px; color:var(--muted); margin-top:3px; display:flex; gap:8px; flex-wrap:wrap; }
+.mr-sub .proc { color:#ffb35c; }
+.mr-acts { display:flex; gap:4px; flex-shrink:0; }
+.mr-ib { width:32px; height:32px; border-radius:7px; border:1px solid var(--border-soft); background:transparent; color:var(--off-white); cursor:pointer; font-size:13px; font-family:inherit; display:inline-flex; align-items:center; justify-content:center; }
+.mr-ib:hover:not(:disabled) { border-color:var(--gold); color:var(--gold); }
+.mr-ib.del:hover:not(:disabled) { border-color:rgba(255,80,80,0.5); color:#ff9090; }
+.mr-ib:disabled { opacity:0.3; cursor:default; }
+.mr-empty { color:var(--muted); font-size:13px; padding:22px 0; text-align:center; }
+@media (max-width:600px) {
+  .mr-thumb { width:64px; }
+  .mr-item { flex-wrap:wrap; }
+  .mr-acts { width:100%; justify-content:flex-end; }
+}
 </style>
 </head>
 <body>
@@ -373,6 +420,7 @@ select option:disabled { color:#9B94B3; }
     <button class="teacher-tab" onclick="switchTab('progress',this)">반별 진도</button>
     <button class="teacher-tab" onclick="switchTab('clinic',this);initClinicTab()">토요클리닉</button>
     <button class="teacher-tab" onclick="switchTab('videos',this);loadTeacherVideos()">강의 목록</button>
+    <button class="teacher-tab" onclick="switchTab('myroom',this);mrLoad()">🎬 내 보충강의실</button>
     <button class="teacher-tab" onclick="switchTab('pastexams',this);initPastExamsTab()">기출문제</button>
     <button class="teacher-tab" onclick="switchTab('textbooks',this);initTextbooksTab()">시중교재</button>
     <button class="teacher-tab" onclick="switchTab('watchstatus',this);initTeacherWatchStatus()">학생 시청현황</button>
@@ -901,6 +949,55 @@ select option:disabled { color:#9B94B3; }
             style="position:absolute;inset:0;width:100%;height:100%;" allowfullscreen></iframe>
         </div>
         <div id="videoModalTitle" style="margin-top:12px;font-size:15px;font-weight:600;color:#fff;text-align:center;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 🎬 내 보충강의실 (선생님 본인 폴더 영상 업로드·관리) ══ -->
+  <div class="tab-panel" id="tab-myroom">
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;">
+        <span>🎬 내 보충강의실 <small id="mrFolder" style="color:var(--muted);font-weight:500;font-size:12px;margin-left:6px;"></small></span>
+        <button class="btn btn-outline btn-sm" style="white-space:nowrap;" onclick="mrLoad(true)">새로고침</button>
+      </div>
+
+      <div class="mr-quota">
+        <div class="mr-quota-top">
+          <b>사용 용량</b>
+          <span id="mrQuotaText">불러오는 중...</span>
+        </div>
+        <div class="mr-bar"><div class="mr-bar-fill" id="mrBarFill"></div></div>
+        <div class="mr-quota-note">선생님별 30GB까지 올릴 수 있어요. 홈페이지에서 올린 영상 기준이며, 용량이 차면 기존 영상을 삭제한 뒤 다시 올릴 수 있습니다.</div>
+      </div>
+
+      <div class="mr-drop" id="mrDrop" onclick="document.getElementById('mrFile').click()">
+        <b>＋ 영상 파일 선택</b><br>
+        여기를 누르거나 파일을 끌어다 놓으세요 · 여러 개 한 번에 가능<br>
+        <span style="font-size:11.5px;">올린 영상은 담당 학생들 보충강의실에 바로 표시됩니다 (변환에 몇 분 걸릴 수 있어요)</span>
+      </div>
+      <input type="file" id="mrFile" accept="video/*" multiple style="display:none" onchange="mrAddFiles(this.files);this.value='';">
+      <div class="mr-queue" id="mrQueue"></div>
+      <div class="btn-row" id="mrQueueActs" style="display:none;margin-top:12px;justify-content:flex-end;">
+        <button class="btn btn-outline btn-sm" onclick="mrClearQueue()">목록 비우기</button>
+        <button class="btn btn-gold btn-sm" id="mrStartBtn" onclick="mrStartUploads()">업로드 시작</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;">
+        <span>📂 올린 영상 <small id="mrCount" style="color:var(--muted);font-weight:500;font-size:12px;margin-left:6px;"></small></span>
+        <span style="font-size:11.5px;color:var(--muted);font-weight:500;">▲▼ 순서 · ✏️ 이름 · 🗑 삭제</span>
+      </div>
+      <div class="mr-list" id="mrList"><div class="mr-empty">불러오는 중...</div></div>
+    </div>
+
+    <div id="mrModal" onclick="if(event.target===this)mrClosePlayer()" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;">
+      <div style="position:relative;width:90%;max-width:900px;">
+        <button onclick="mrClosePlayer()" style="position:absolute;top:-40px;right:0;background:none;border:none;color:#fff;font-size:28px;cursor:pointer;line-height:1;">✕</button>
+        <div style="padding-top:56.25%;position:relative;background:#000;border-radius:10px;overflow:hidden;">
+          <iframe id="mrFrame" src="" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" style="position:absolute;inset:0;width:100%;height:100%;" allowfullscreen></iframe>
+        </div>
+        <div id="mrModalTitle" style="margin-top:12px;font-size:15px;font-weight:600;color:#fff;text-align:center;"></div>
       </div>
     </div>
   </div>
@@ -3929,5 +4026,296 @@ window.pxOpen = async function (path) {
 })();
 </script>
 
+
+<!-- ══════════ 🎬 내 보충강의실: Vimeo 직접 업로드·관리 ══════════ -->
+<script type="module">
+import { getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
+
+const app = getApp();
+const auth = getAuth(app);
+const callTV = httpsCallable(getFunctions(app, 'asia-northeast3'), 'teacherVideo', { timeout: 120000 });
+const api = async (action, data = {}) => (await callTV({ action, ...data })).data;
+
+let mr = { info: null, loading: false, loadedFor: null, queue: [], uploading: false, saveTimer: null };
+const GB = 1024 ** 3;
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function fmtSize(b) {
+  if (!b) return '';
+  if (b >= GB) return (b / GB).toFixed(2) + 'GB';
+  return Math.max(1, Math.round(b / 1024 / 1024)) + 'MB';
+}
+function errMsg(e) {
+  const m = (e && e.message) || String(e);
+  return m.replace(/^FirebaseError:\s*/, '');
+}
+
+onAuthStateChanged(auth, (u) => { if (!u) { mr.info = null; mr.loadedFor = null; } });
+
+// ── 목록 + 용량 불러오기 ──
+window.mrLoad = async function (force) {
+  const u = auth.currentUser;
+  if (!u) return;
+  if (!force && mr.info && mr.loadedFor === u.uid) { mrRender(); return; }
+  if (mr.loading) return;
+  mr.loading = true;
+  if (!mr.info) $('mrList').innerHTML = '<div class="mr-empty">불러오는 중...</div>';
+  try {
+    mr.info = await api('info');
+    mr.loadedFor = u.uid;
+    mrRender();
+  } catch (e) {
+    $('mrList').innerHTML = `<div class="mr-empty" style="color:#ff9090;">불러오기 실패: ${esc(errMsg(e))}</div>`;
+    $('mrQuotaText').textContent = '-';
+  } finally { mr.loading = false; }
+};
+
+function sortedVideos() {
+  return [...(mr.info?.videos || [])].sort((a, b) => {
+    const oa = a.order != null ? Number(a.order) : 99999, ob = b.order != null ? Number(b.order) : 99999;
+    return oa - ob || String(a.createdAt).localeCompare(String(b.createdAt));
+  });
+}
+
+function mrRenderQuota() {
+  const info = mr.info;
+  if (!info) return;
+  const pending = mr.queue.filter((q) => q.state === 'wait').reduce((s, q) => s + q.file.size, 0);
+  const used = info.usedBytes, quota = info.quotaBytes;
+  const pct = Math.min(100, (used / quota) * 100);
+  const fill = $('mrBarFill');
+  fill.style.width = pct.toFixed(1) + '%';
+  fill.classList.toggle('warn', pct >= 80 && pct < 95);
+  fill.classList.toggle('full', pct >= 95);
+  $('mrQuotaText').innerHTML = `${(used / GB).toFixed(1)}GB / ${(quota / GB).toFixed(0)}GB 사용 · 남은 용량 <b style="font-size:13px;color:var(--gold);">${Math.max(0, (quota - used) / GB).toFixed(1)}GB</b>`
+    + (pending ? ` · 업로드 대기 ${fmtSize(pending)}${used + pending > quota ? ' <span style="color:#ff9090;">(용량 초과)</span>' : ''}` : '');
+}
+
+function mrRender() {
+  const info = mr.info;
+  if (!info) return;
+  $('mrFolder').textContent = info.folderName;
+  mrRenderQuota();
+  const list = sortedVideos();
+  $('mrCount').textContent = list.length ? `${list.length}개` : '';
+  if (!list.length) {
+    $('mrList').innerHTML = '<div class="mr-empty">아직 올린 영상이 없어요. 위에서 영상 파일을 선택해 올려보세요.</div>';
+    return;
+  }
+  $('mrList').innerHTML = list.map((v, i) => {
+    const proc = v.transcode && v.transcode !== 'complete' && v.transcode !== 'available';
+    return `
+    <div class="mr-item" data-id="${esc(v.id)}">
+      <div class="mr-num">${i + 1}</div>
+      <div class="mr-thumb" style="background-image:url('https://vumbnail.com/${esc(v.vimeoId)}.jpg')" onclick="mrPlay('${esc(v.id)}')" title="미리보기"></div>
+      <div class="mr-info">
+        <div class="mr-title" id="mrT-${esc(v.id)}">${esc(v.title)}</div>
+        <div class="mr-sub">
+          ${v.date ? `<span>${esc(v.date)}</span>` : ''}
+          ${v.sizeBytes ? `<span>${fmtSize(v.sizeBytes)}</span>` : (v.uploadedBy ? '' : '<span>관리자 등록</span>')}
+          ${proc ? '<span class="proc">⏳ 변환 중 (잠시 후 재생 가능)</span>' : ''}
+        </div>
+      </div>
+      <div class="mr-acts">
+        <button class="mr-ib" title="위로" ${i === 0 ? 'disabled' : ''} onclick="mrMove('${esc(v.id)}',-1)">▲</button>
+        <button class="mr-ib" title="아래로" ${i === list.length - 1 ? 'disabled' : ''} onclick="mrMove('${esc(v.id)}',1)">▼</button>
+        <button class="mr-ib" title="이름 변경" onclick="mrRename('${esc(v.id)}')">✏️</button>
+        <button class="mr-ib del" title="삭제" onclick="mrRemove('${esc(v.id)}')">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── 미리보기 ──
+window.mrPlay = function (id) {
+  const v = (mr.info?.videos || []).find((x) => x.id === id);
+  if (!v) return;
+  $('mrFrame').src = `https://player.vimeo.com/video/${encodeURIComponent(v.vimeoId)}?autoplay=1`;
+  $('mrModalTitle').textContent = v.title;
+  $('mrModal').style.display = 'flex';
+};
+window.mrClosePlayer = function () { $('mrFrame').src = ''; $('mrModal').style.display = 'none'; };
+
+// ── 순서 변경 (▲▼ 누르면 바로 반영, 0.8초 모아서 저장) ──
+window.mrMove = function (id, dir) {
+  const list = sortedVideos();
+  const i = list.findIndex((v) => v.id === id), j = i + dir;
+  if (i < 0 || j < 0 || j >= list.length) return;
+  [list[i], list[j]] = [list[j], list[i]];
+  list.forEach((v, k) => { v.order = k + 1; });
+  mr.info.videos = list;
+  mrRender();
+  clearTimeout(mr.saveTimer);
+  mr.saveTimer = setTimeout(async () => {
+    try { await api('reorder', { ids: sortedVideos().map((v) => v.id) }); }
+    catch (e) { alert('순서 저장 실패: ' + errMsg(e)); mrLoad(true); }
+  }, 800);
+};
+
+// ── 이름 변경 ──
+window.mrRename = function (id) {
+  const v = (mr.info?.videos || []).find((x) => x.id === id);
+  const box = $('mrT-' + id);
+  if (!v || !box || box.querySelector('input')) return;
+  box.innerHTML = `<input class="mr-title-edit" maxlength="120" value="${esc(v.title)}">`;
+  const inp = box.querySelector('input');
+  inp.focus(); inp.select();
+  let done = false;
+  const finish = async (save) => {
+    if (done) return; done = true;
+    const t = inp.value.replace(/\s+/g, ' ').trim();
+    if (!save || !t || t === v.title) { mrRender(); return; }
+    box.textContent = t + ' (저장 중...)';
+    try { await api('rename', { id, title: t }); v.title = t; }
+    catch (e) { alert('이름 변경 실패: ' + errMsg(e)); }
+    mrRender();
+  };
+  inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') finish(true); if (e.key === 'Escape') finish(false); });
+  inp.addEventListener('blur', () => finish(true));
+};
+
+// ── 삭제 ──
+window.mrRemove = async function (id) {
+  const v = (mr.info?.videos || []).find((x) => x.id === id);
+  if (!v) return;
+  if (!confirm(`"${v.title}" 영상을 삭제할까요?\n\n비메오 원본까지 지워지고, 학생 화면에서도 사라집니다. 되돌릴 수 없어요.`)) return;
+  const row = document.querySelector(`.mr-item[data-id="${CSS.escape(id)}"]`);
+  if (row) row.style.opacity = '0.4';
+  try {
+    await api('remove', { id });
+    mr.info.videos = mr.info.videos.filter((x) => x.id !== id);
+    mr.info.usedBytes = Math.max(0, mr.info.usedBytes - (v.sizeBytes || 0));
+    mrRender();
+  } catch (e) {
+    if (row) row.style.opacity = '';
+    alert('삭제 실패: ' + errMsg(e));
+  }
+};
+
+// ── 업로드 대기열 ──
+function stripExt(n) { return n.replace(/\.[^.]+$/, '').replace(/[_]+/g, ' ').trim(); }
+window.mrAddFiles = function (files) {
+  [...files].forEach((f) => {
+    if (!f.type.startsWith('video/') && !/\.(mp4|mov|m4v|avi|mkv|wmv|webm)$/i.test(f.name)) return;
+    mr.queue.push({ key: Math.random().toString(36).slice(2), file: f, title: stripExt(f.name), state: 'wait', pct: 0, msg: '' });
+  });
+  mrRenderQueue();
+};
+window.mrClearQueue = function () {
+  if (mr.uploading) return;
+  mr.queue = mr.queue.filter((q) => q.state === 'up');
+  mrRenderQueue();
+};
+window.mrRemoveQ = function (key) {
+  const q = mr.queue.find((x) => x.key === key);
+  if (!q) return;
+  if (q.state === 'up') {
+    if (!confirm('업로드를 취소할까요?')) return;
+    q.cancelled = true;
+    try { q.tus && q.tus.abort(true); } catch (e) {}
+    if (q.vimeoId) api('cancel', { vimeoId: q.vimeoId }).catch(() => {});
+  }
+  mr.queue = mr.queue.filter((x) => x.key !== key);
+  mrRenderQueue();
+};
+window.mrSetQTitle = function (key, val) { const q = mr.queue.find((x) => x.key === key); if (q) q.title = val; };
+
+function mrRenderQueue() {
+  const box = $('mrQueue');
+  box.innerHTML = mr.queue.map((q) => `
+    <div class="mr-q">
+      <div class="mr-q-row">
+        <input value="${esc(q.title)}" placeholder="영상 제목" maxlength="120" ${q.state !== 'wait' && q.state !== 'err' ? 'disabled' : ''} oninput="mrSetQTitle('${q.key}',this.value)">
+        ${q.state === 'done' ? '' : `<button class="mr-x" onclick="mrRemoveQ('${q.key}')">${q.state === 'up' ? '취소' : '빼기'}</button>`}
+      </div>
+      <div class="mr-q-meta">
+        <span>${esc(q.file.name)} · ${fmtSize(q.file.size)}</span>
+        <span id="mrQm-${q.key}" class="${q.state === 'err' ? 'err' : q.state === 'done' ? 'ok' : ''}">${esc(q.msg || (q.state === 'wait' ? '대기' : ''))}</span>
+      </div>
+      ${q.state === 'up' || q.state === 'done' ? `<div class="mr-q-prog"><div id="mrQp-${q.key}" style="width:${q.pct}%"></div></div>` : ''}
+    </div>`).join('');
+  const hasWait = mr.queue.some((q) => q.state === 'wait' || q.state === 'err');
+  $('mrQueueActs').style.display = mr.queue.length ? 'flex' : 'none';
+  $('mrStartBtn').disabled = mr.uploading || !hasWait;
+  $('mrStartBtn').textContent = mr.uploading ? '업로드 중...' : '업로드 시작';
+  mrRenderQuota();
+}
+
+function setQProgress(q) {
+  const p = $('mrQp-' + q.key), m = $('mrQm-' + q.key);
+  if (p) p.style.width = q.pct + '%';
+  if (m) m.textContent = q.msg;
+}
+
+function tusUpload(q, uploadLink) {
+  return new Promise((resolve, reject) => {
+    const up = new window.tus.Upload(q.file, {
+      uploadUrl: uploadLink,
+      chunkSize: 64 * 1024 * 1024,
+      retryDelays: [0, 2000, 5000, 10000, 20000, 30000],
+      metadata: { filename: q.file.name, filetype: q.file.type },
+      onProgress: (sent, total) => {
+        q.pct = Math.round((sent / total) * 100);
+        q.msg = `업로드 중 ${q.pct}% (${fmtSize(sent)} / ${fmtSize(total)})`;
+        setQProgress(q);
+      },
+      onSuccess: () => resolve(),
+      onError: (err) => reject(err),
+    });
+    q.tus = up;
+    up.start();
+  });
+}
+
+window.mrStartUploads = async function () {
+  if (mr.uploading) return;
+  if (!window.tus) { alert('업로드 도구를 불러오지 못했어요. 페이지를 새로고침해 주세요.'); return; }
+  mr.uploading = true;
+  mrRenderQueue();
+  for (const q of mr.queue) {
+    if (q.state !== 'wait' && q.state !== 'err') continue;
+    if (q.cancelled) continue;
+    const title = (q.title || '').replace(/\s+/g, ' ').trim();
+    if (!title) { q.state = 'err'; q.msg = '제목을 입력해주세요'; mrRenderQueue(); continue; }
+    q.title = title; q.state = 'up'; q.pct = 0; q.msg = '업로드 준비 중...';
+    mrRenderQueue();
+    try {
+      const r = await api('createUpload', { title, size: q.file.size });
+      q.vimeoId = r.vimeoId;
+      if (mr.info) mr.info.usedBytes += q.file.size;
+      mrRenderQuota();
+      await tusUpload(q, r.uploadLink);
+      if (q.cancelled) continue;
+      q.msg = '마무리 중...'; setQProgress(q);
+      await api('finalize', { vimeoId: q.vimeoId });
+      q.state = 'done'; q.pct = 100; q.msg = '✓ 완료 — 학생 화면에 등록됐어요';
+    } catch (e) {
+      if (q.cancelled) continue;
+      if (q.vimeoId) { api('cancel', { vimeoId: q.vimeoId }).catch(() => {}); if (mr.info) mr.info.usedBytes -= q.file.size; q.vimeoId = null; }
+      q.state = 'err'; q.msg = '실패: ' + errMsg(e);
+    }
+    mrRenderQueue();
+  }
+  mr.uploading = false;
+  mrRenderQueue();
+  await mrLoad(true);
+  // 완료된 항목은 5초 뒤 대기열에서 정리
+  setTimeout(() => { mr.queue = mr.queue.filter((q) => q.state !== 'done'); mrRenderQueue(); }, 5000);
+};
+
+// 업로드 중 페이지 닫기 방지
+window.addEventListener('beforeunload', (e) => { if (mr.uploading) { e.preventDefault(); e.returnValue = ''; } });
+
+// 끌어다 놓기
+(function () {
+  const d = $('mrDrop');
+  if (!d) return;
+  ['dragenter', 'dragover'].forEach((t) => d.addEventListener(t, (e) => { e.preventDefault(); d.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach((t) => d.addEventListener(t, (e) => { e.preventDefault(); d.classList.remove('over'); }));
+  d.addEventListener('drop', (e) => { if (e.dataTransfer?.files?.length) mrAddFiles(e.dataTransfer.files); });
+})();
+</script>
 </body>
 </html>
