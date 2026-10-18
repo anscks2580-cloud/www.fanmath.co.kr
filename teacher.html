@@ -322,7 +322,7 @@ select option:disabled { color:#9B94B3; }
   .mn-results, .mn-toc-drop { max-height:60vh; }
 }
 @media(prefers-reduced-motion:reduce) { .mn-search { transition:none; } }
-/* ── 🎬 내 보충강의실 (영상 업로드·관리) ── */
+/* ── 보충강의실 영상 업로드·관리 ── */
 .mr-quota { border:1px solid var(--border-soft); border-radius:12px; padding:16px 18px; background:rgba(255,255,255,0.025); margin-bottom:18px; }
 .mr-quota-top { display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
 .mr-quota-top b { font-size:15px; color:var(--off-white); }
@@ -358,7 +358,7 @@ select option:disabled { color:#9B94B3; }
 .mr-sub { font-size:11.5px; color:var(--muted); margin-top:3px; display:flex; gap:8px; flex-wrap:wrap; }
 .mr-sub .proc { color:#ffb35c; }
 .mr-acts { display:flex; gap:4px; flex-shrink:0; }
-.mr-ib { width:32px; height:32px; border-radius:7px; border:1px solid var(--border-soft); background:transparent; color:var(--off-white); cursor:pointer; font-size:13px; font-family:inherit; display:inline-flex; align-items:center; justify-content:center; }
+.mr-ib { min-width:32px; padding:0 8px; height:32px; white-space:nowrap; font-size:12px; border-radius:7px; border:1px solid var(--border-soft); background:transparent; color:var(--off-white); cursor:pointer; font-size:13px; font-family:inherit; display:inline-flex; align-items:center; justify-content:center; }
 .mr-ib:hover:not(:disabled) { border-color:var(--gold); color:var(--gold); }
 .mr-ib.del:hover:not(:disabled) { border-color:rgba(255,80,80,0.5); color:#ff9090; }
 .mr-ib:disabled { opacity:0.3; cursor:default; }
@@ -420,7 +420,7 @@ select option:disabled { color:#9B94B3; }
     <button class="teacher-tab" onclick="switchTab('progress',this)">반별 진도</button>
     <button class="teacher-tab" onclick="switchTab('clinic',this);initClinicTab()">토요클리닉</button>
     <button class="teacher-tab" onclick="switchTab('videos',this);loadTeacherVideos()">강의 목록</button>
-    <button class="teacher-tab" onclick="switchTab('myroom',this);mrLoad()">🎬 내 보충강의실</button>
+    <button class="teacher-tab" onclick="switchTab('myroom',this);mrLoad()">보충강의실 영상 업로드</button>
     <button class="teacher-tab" onclick="switchTab('pastexams',this);initPastExamsTab()">기출문제</button>
     <button class="teacher-tab" onclick="switchTab('textbooks',this);initTextbooksTab()">시중교재</button>
     <button class="teacher-tab" onclick="switchTab('watchstatus',this);initTeacherWatchStatus()">학생 시청현황</button>
@@ -953,11 +953,11 @@ select option:disabled { color:#9B94B3; }
     </div>
   </div>
 
-  <!-- ══ 🎬 내 보충강의실 (선생님 본인 폴더 영상 업로드·관리) ══ -->
+  <!-- ══ 보충강의실 영상 업로드 (선생님 본인 폴더 영상 업로드·관리) ══ -->
   <div class="tab-panel" id="tab-myroom">
     <div class="card">
       <div class="card-title" style="justify-content:space-between;">
-        <span>🎬 내 보충강의실 <small id="mrFolder" style="color:var(--muted);font-weight:500;font-size:12px;margin-left:6px;"></small></span>
+        <span>보충강의실 영상 업로드 <small id="mrFolder" style="color:var(--muted);font-weight:500;font-size:12px;margin-left:6px;"></small></span>
         <button class="btn btn-outline btn-sm" style="white-space:nowrap;" onclick="mrLoad(true)">새로고침</button>
       </div>
 
@@ -971,7 +971,7 @@ select option:disabled { color:#9B94B3; }
       </div>
 
       <div class="mr-drop" id="mrDrop" onclick="document.getElementById('mrFile').click()">
-        <b>＋ 영상 파일 선택</b><br>
+        <b>영상 파일 선택</b><br>
         여기를 누르거나 파일을 끌어다 놓으세요 · 여러 개 한 번에 가능<br>
         <span style="font-size:11.5px;">올린 영상은 담당 학생들 보충강의실에 바로 표시됩니다 (변환에 몇 분 걸릴 수 있어요)</span>
       </div>
@@ -985,8 +985,8 @@ select option:disabled { color:#9B94B3; }
 
     <div class="card">
       <div class="card-title" style="justify-content:space-between;">
-        <span>📂 올린 영상 <small id="mrCount" style="color:var(--muted);font-weight:500;font-size:12px;margin-left:6px;"></small></span>
-        <span style="font-size:11.5px;color:var(--muted);font-weight:500;">▲▼ 순서 · ✏️ 이름 · 🗑 삭제</span>
+        <span>올린 영상 <small id="mrCount" style="color:var(--muted);font-weight:500;font-size:12px;margin-left:6px;"></small></span>
+        <span style="font-size:11.5px;color:var(--muted);font-weight:500;">▲▼ 순서 변경 · 이름 변경 · 삭제</span>
       </div>
       <div class="mr-list" id="mrList"><div class="mr-empty">불러오는 중...</div></div>
     </div>
@@ -4027,7 +4027,7 @@ window.pxOpen = async function (path) {
 </script>
 
 
-<!-- ══════════ 🎬 내 보충강의실: Vimeo 직접 업로드·관리 ══════════ -->
+<!-- ══════════ 보충강의실 영상 업로드: Vimeo 직접 업로드·관리 ══════════ -->
 <script type="module">
 import { getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -4115,14 +4115,14 @@ function mrRender() {
         <div class="mr-sub">
           ${v.date ? `<span>${esc(v.date)}</span>` : ''}
           ${v.sizeBytes ? `<span>${fmtSize(v.sizeBytes)}</span>` : (v.uploadedBy ? '' : '<span>관리자 등록</span>')}
-          ${proc ? '<span class="proc">⏳ 변환 중 (잠시 후 재생 가능)</span>' : ''}
+          ${proc ? '<span class="proc">변환 중 (잠시 후 재생 가능)</span>' : ''}
         </div>
       </div>
       <div class="mr-acts">
         <button class="mr-ib" title="위로" ${i === 0 ? 'disabled' : ''} onclick="mrMove('${esc(v.id)}',-1)">▲</button>
         <button class="mr-ib" title="아래로" ${i === list.length - 1 ? 'disabled' : ''} onclick="mrMove('${esc(v.id)}',1)">▼</button>
-        <button class="mr-ib" title="이름 변경" onclick="mrRename('${esc(v.id)}')">✏️</button>
-        <button class="mr-ib del" title="삭제" onclick="mrRemove('${esc(v.id)}')">🗑</button>
+        <button class="mr-ib" title="이름 변경" onclick="mrRename('${esc(v.id)}')">이름</button>
+        <button class="mr-ib del" title="삭제" onclick="mrRemove('${esc(v.id)}')">삭제</button>
       </div>
     </div>`;
   }).join('');
@@ -4290,7 +4290,7 @@ window.mrStartUploads = async function () {
       if (q.cancelled) continue;
       q.msg = '마무리 중...'; setQProgress(q);
       await api('finalize', { vimeoId: q.vimeoId });
-      q.state = 'done'; q.pct = 100; q.msg = '✓ 완료 — 학생 화면에 등록됐어요';
+      q.state = 'done'; q.pct = 100; q.msg = '완료 — 학생 화면에 등록됐어요';
     } catch (e) {
       if (q.cancelled) continue;
       if (q.vimeoId) { api('cancel', { vimeoId: q.vimeoId }).catch(() => {}); if (mr.info) mr.info.usedBytes -= q.file.size; q.vimeoId = null; }
