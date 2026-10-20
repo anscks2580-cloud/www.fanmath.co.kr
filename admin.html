@@ -2710,6 +2710,27 @@ body.ck-lock { overflow:hidden; }
     </div>
 
     <div class="card">
+      <h3>🧹 Vimeo 정리 (홈페이지 미반영 영상 삭제)</h3>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7;">
+        Vimeo 계정 전체 영상 중 홈페이지에 등록되지 않은 영상(강의·홍보영상·에이펙스·상담 샘플강의 어디에도 없는 영상)을 찾아
+        Vimeo에서 <b style="color:#ff9090;">일괄 삭제</b>합니다. 삭제한 영상은 복구할 수 없으니 목록을 꼭 확인하세요.
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+        <button class="btn btn-secondary" onclick="scanVimeoOrphans()">🔍 미반영 영상 찾기</button>
+        <span id="orphanStatus" style="font-size:13px;color:var(--muted);"></span>
+      </div>
+      <div id="orphanPreview" style="margin-top:16px;display:none;">
+        <div style="font-size:12px;color:var(--gold);margin-bottom:10px;" id="orphanPreviewTitle"></div>
+        <div id="orphanPreviewList" style="max-height:320px;overflow-y:auto;"></div>
+        <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn btn-danger" onclick="deleteVimeoOrphans()">🗑 선택한 영상 Vimeo에서 삭제</button>
+          <button class="btn btn-secondary" onclick="document.getElementById('orphanPreview').style.display='none'">취소</button>
+        </div>
+      </div>
+      <div class="msg" id="orphanMsg" style="white-space:pre-line;"></div>
+    </div>
+
+    <div class="card">
       <h3>📹 전체 강의 목록 (<span id="videoCount">0</span>개)</h3>
       <!-- 카테고리 필터 -->
       <div id="videoFilterBtns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;">
@@ -4989,6 +5010,162 @@ window.syncVimeo = async () => {
   } catch(e) {
     statusEl.textContent = '';
     showMsg('syncMsg', '오류: ' + e.message, 'error');
+  }
+};
+
+// ── Vimeo 정리: 홈페이지 미반영 영상 찾기 & 일괄 삭제 ──
+let orphanCandidates = [];
+
+// 홈페이지에서 쓰고 있는 Vimeo ID 전부 수집
+async function collectUsedVimeoIds() {
+  const used = new Set();
+  const add = (v) => { if (v) used.add(String(v).replace(/\D/g, '')); };
+  // 1) 강의 영상
+  const vs = await getDocs(collection(db, 'videos'));
+  vs.forEach(d => add(d.data().vimeoId || d.id));
+  // 2) 홍보영상
+  try { const ps = await getDocs(collection(db, 'promoVideos')); ps.forEach(d => add(d.data().vimeoId)); } catch(e) {}
+  // 3) 에이펙스 영상
+  try { const as = await getDocs(collection(db, 'apexVideos')); as.forEach(d => add(d.data().vimeoId)); } catch(e) {}
+  // 4) 상담 화면 영상 설정 / 샘플 강의
+  try {
+    const cv = await getDoc(doc(db, 'consultConfig', 'video'));
+    if (cv.exists()) add(cv.data().vimeoId);
+    const lg = await getDoc(doc(db, 'consultConfig', 'lounge'));
+    if (lg.exists()) (lg.data().videos || []).forEach(v => add(v.vimeoId));
+  } catch(e) {}
+  used.delete('');
+  return used;
+}
+
+// 계정 전체 영상 + 폴더 정보 (폴더명 표시용)
+async function fetchAllAccountVideosWithFolder() {
+  let videos = [];
+  let url = 'https://api.vimeo.com/me/videos?fields=uri,name,created_time,duration,parent_folder.name&per_page=100&page=1';
+  while (url) {
+    const res = await fetch(url, { headers: { Authorization: `bearer ${VIMEO_TOKEN}` } });
+    if (!res.ok) throw new Error('Vimeo 영상 목록을 불러오지 못했습니다 (' + res.status + ')');
+    const data = await res.json();
+    videos = videos.concat(data.data || []);
+    url = data.paging?.next ? `https://api.vimeo.com${data.paging.next}` : null;
+  }
+  return videos;
+}
+
+window.scanVimeoOrphans = async () => {
+  const statusEl  = document.getElementById('orphanStatus');
+  const previewEl = document.getElementById('orphanPreview');
+  previewEl.style.display = 'none';
+  orphanCandidates = [];
+  document.getElementById('orphanMsg').textContent = '';
+
+  try {
+    statusEl.textContent = '⏳ 홈페이지 등록 영상 확인 중...';
+    const used = await collectUsedVimeoIds();
+
+    statusEl.textContent = '⏳ Vimeo 전체 영상 불러오는 중...';
+    const all = await fetchAllAccountVideosWithFolder();
+
+    for (const v of all) {
+      const vimeoId = v.uri.replace('/videos/', '');
+      if (used.has(vimeoId)) continue;
+      const date = v.created_time ? v.created_time.slice(0,10).replace(/-/g,'.') : '';
+      const mins = v.duration ? Math.round(v.duration / 60) + '분' : '';
+      orphanCandidates.push({ vimeoId, title: v.name || '(제목 없음)', folder: v.parent_folder?.name || '', date, mins });
+    }
+
+    if (!orphanCandidates.length) {
+      statusEl.textContent = `✅ 홈페이지에 반영되지 않은 영상이 없습니다. (Vimeo ${all.length}개 · 홈페이지 ${used.size}개)`;
+      return;
+    }
+    statusEl.textContent = `Vimeo ${all.length}개 중 홈페이지 등록 ${used.size}개 · 미반영 ${orphanCandidates.length}개`;
+    renderOrphanPreview();
+  } catch(e) {
+    statusEl.textContent = '';
+    showMsg('orphanMsg', '오류: ' + e.message, 'error');
+  }
+};
+
+function renderOrphanPreview() {
+  const previewEl = document.getElementById('orphanPreview');
+  const titleEl   = document.getElementById('orphanPreviewTitle');
+  const listEl    = document.getElementById('orphanPreviewList');
+
+  titleEl.innerHTML = `미반영 영상 <b>${orphanCandidates.length}개</b>
+    <span style="margin-left:10px;">
+      <a href="#" onclick="event.preventDefault();document.querySelectorAll('.orphan-check').forEach(c=>c.checked=true);">전체선택</a>
+      <span style="color:var(--muted);">/</span>
+      <a href="#" onclick="event.preventDefault();document.querySelectorAll('.orphan-check').forEach(c=>c.checked=false);">전체해제</a>
+    </span>`;
+
+  // 폴더별 그룹핑 (폴더 없음은 맨 위)
+  const groups = {};
+  orphanCandidates.forEach((v, i) => {
+    const key = v.folder || '__root__';
+    (groups[key] = groups[key] || []).push({ ...v, idx: i });
+  });
+  const keys = Object.keys(groups).sort((a, b) => a === '__root__' ? -1 : b === '__root__' ? 1 : a.localeCompare(b));
+
+  listEl.innerHTML = keys.map(key => {
+    const items = groups[key];
+    const label = key === '__root__' ? '폴더 없음' : key;
+    return `
+    <div style="margin-bottom:14px;">
+      <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:1px;
+        padding:5px 0;border-bottom:1px solid rgba(240,192,64,0.2);margin-bottom:4px;">
+        ${label} <span style="font-weight:400;color:var(--muted);">${items.length}개</span>
+      </div>
+      ${items.map(v => `
+        <div style="display:flex;align-items:center;gap:10px;padding:6px 4px;
+          border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;">
+          <input id="orphan-check-${v.idx}" class="orphan-check" type="checkbox" checked
+            style="flex-shrink:0;width:16px;height:16px;accent-color:#ff9090;">
+          <a href="https://vimeo.com/${v.vimeoId}" target="_blank" rel="noopener"
+            style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--off-white);text-decoration:none;">
+            ${(v.title||'').replace(/</g,'&lt;')}</a>
+          <span style="font-size:11px;color:var(--muted);flex-shrink:0;">${v.mins}</span>
+          <span style="font-size:11px;color:var(--muted);flex-shrink:0;">${v.date}</span>
+          <span style="font-size:11px;color:var(--muted);flex-shrink:0;">${v.vimeoId}</span>
+        </div>`).join('')}
+    </div>`;
+  }).join('');
+
+  previewEl.style.display = 'block';
+}
+
+window.deleteVimeoOrphans = async () => {
+  const picked = orphanCandidates.filter((v, i) => document.getElementById(`orphan-check-${i}`)?.checked);
+  if (!picked.length) { showMsg('orphanMsg', '삭제할 영상을 선택해주세요.', 'error'); return; }
+  if (!confirm(`선택한 ${picked.length}개 영상을 Vimeo에서 삭제합니다.\n삭제 후에는 복구할 수 없습니다. 계속할까요?`)) return;
+  if (!confirm(`정말 삭제할까요? (${picked.length}개)`)) return;
+
+  const statusEl = document.getElementById('orphanStatus');
+  let ok = 0, fail = [];
+  for (let i = 0; i < picked.length; i++) {
+    const v = picked[i];
+    statusEl.textContent = `⏳ 삭제 중... (${i+1}/${picked.length}) ${v.title}`;
+    try {
+      const res = await fetch(`https://api.vimeo.com/videos/${v.vimeoId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `bearer ${VIMEO_TOKEN}` }
+      });
+      if (res.status === 204 || res.ok) ok++;
+      else if (res.status === 403) { fail.push(`${v.title} (권한 없음 — Vimeo 토큰에 delete 권한 필요)`); }
+      else fail.push(`${v.title} (${res.status})`);
+    } catch(e) { fail.push(`${v.title} (${e.message})`); }
+  }
+
+  // 삭제된 건 목록에서 제거
+  const failTitles = new Set(fail.map(f => f.replace(/ \(.*\)$/, '')));
+  orphanCandidates = orphanCandidates.filter(v => !picked.includes(v) || failTitles.has(v.title));
+  if (orphanCandidates.length) renderOrphanPreview();
+  else document.getElementById('orphanPreview').style.display = 'none';
+
+  statusEl.textContent = '';
+  if (fail.length) {
+    showMsg('orphanMsg', `${ok}개 삭제 완료 · ${fail.length}개 실패\n` + fail.join('\n'), 'error');
+  } else {
+    showMsg('orphanMsg', `✅ ${ok}개 영상을 Vimeo에서 삭제했습니다.`, 'success');
   }
 };
 
