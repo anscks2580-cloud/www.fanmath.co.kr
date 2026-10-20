@@ -130,6 +130,37 @@
 .cal-badge { display:none; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:#ff6b6b; color:#fff; font-size:11px; font-weight:700; margin-left:4px; }
 @media (max-width:600px){ .cal-cell { min-height:62px; padding:4px; } .cal-chip, .cal-deadline, .cal-hol { display:none; } }
 .teacher-tab.active::after { transform:scaleX(1); }
+
+/* ── 메뉴: 그룹(알약) + 하위 탭 ── */
+.tnav { margin-bottom:26px; }
+.tnav-groups { display:flex; gap:6px; flex-wrap:wrap; padding-bottom:12px; border-bottom:1px solid var(--border-soft); }
+.tnav-group {
+  padding:9px 16px; border-radius:22px; border:1px solid var(--border-soft); background:rgba(255,255,255,0.04);
+  color:var(--muted); font-size:13.5px; font-weight:600; font-family:inherit; cursor:pointer;
+  display:inline-flex; gap:7px; align-items:center; transition:all .15s;
+}
+.tnav-group:hover { color:var(--off-white); border-color:rgba(240,192,64,0.35); }
+.tnav-group.active { background:rgba(240,192,64,0.14); border-color:var(--gold); color:var(--gold); }
+.tnav-group .ct { font-size:11px; opacity:.75; font-weight:500; }
+.tnav-subs { display:flex; gap:2px; flex-wrap:wrap; margin-top:10px; }
+.tnav-subs[hidden] { display:none; }
+.tnav-sub {
+  padding:8px 14px; border:none; background:none; border-radius:8px; color:var(--muted);
+  font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; transition:all .15s;
+}
+.tnav-sub:hover { color:var(--off-white); background:rgba(255,255,255,0.05); }
+.tnav-sub.active { color:var(--gold); background:rgba(240,192,64,0.10); }
+.tnav-sub[hidden] { display:none; }
+.tnav-crumb { font-size:12px; color:var(--muted); margin-top:10px; }
+.tnav-crumb b { color:var(--off-white); }
+#tnavLegacy { display:none !important; }
+@media(max-width:600px) {
+  .tnav-groups { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; padding-bottom:10px; }
+  .tnav-groups::-webkit-scrollbar { display:none; }
+  .tnav-group { white-space:nowrap; padding:8px 13px; font-size:13px; flex-shrink:0; }
+  .tnav-sub { padding:7px 11px; font-size:12.5px; }
+  .teacher-header .btn, .teacher-header .badge-name { white-space:nowrap; }
+}
 .tab-panel { display:none; }
 .tab-panel.active { display:block; }
 
@@ -401,7 +432,7 @@ select option:disabled { color:#9B94B3; }
   <div class="teacher-header">
     <div class="teacher-header-left">
       <h1>선생님 포털</h1>
-      <p>주간성취도 · 월말보고서 · 누적테스트 입력</p>
+      <p>일정 · 보고서 · 영상 · 자료실 · 매뉴얼</p>
     </div>
     <div style="display:flex; gap:10px; align-items:center;">
       <button class="btn btn-outline btn-sm" onclick="openTodayPopup()" style="display:inline-flex;align-items:center;">📋 오늘 할 일<span class="cal-badge" id="calTodayBadge"></span></button>
@@ -411,8 +442,12 @@ select option:disabled { color:#9B94B3; }
     </div>
   </div>
 
-  <!-- 탭 -->
-  <div class="teacher-tabs">
+  <!-- 메뉴: 그룹(알약) + 하위 탭. 실제 전환은 아래 숨긴 기존 버튼을 클릭해 switchTab + 초기화 함수를 그대로 실행 -->
+  <div class="tnav">
+    <div class="tnav-groups" id="tnavGroups"></div>
+    <div class="tnav-subs" id="tnavSubs" hidden></div>
+  </div>
+  <div class="teacher-tabs" id="tnavLegacy" hidden>
     <button class="teacher-tab active" onclick="switchTab('calendar',this);refreshTeacherCalendar()">📅 일정</button>
     <button class="teacher-tab" onclick="switchTab('weekly',this)">주간성취도</button>
     <button class="teacher-tab" onclick="switchTab('monthly',this)">월말보고서</button>
@@ -1241,6 +1276,8 @@ async function loadStudents() {
 
   // 내 담당 학생만 필터
   myStudents = studentsCache.filter(s => s.teacherUid === currentTeacher.uid);
+  // 메뉴 갱신: 중등 담당 학생이 없으면 '주간성취도' 탭을 숨김 (주간성취도는 중등부만 작성)
+  if (typeof window.tnavRefresh === 'function') window.tnavRefresh({ weekly: myStudents.some(isWeeklyTarget) });
 
   renderWeeklyStudentSelect();
   // 테스트/월말은 내 담당 전체
@@ -4316,6 +4353,108 @@ window.addEventListener('beforeunload', (e) => { if (mr.uploading) { e.preventDe
   ['dragenter', 'dragover'].forEach((t) => d.addEventListener(t, (e) => { e.preventDefault(); d.classList.add('over'); }));
   ['dragleave', 'drop'].forEach((t) => d.addEventListener(t, (e) => { e.preventDefault(); d.classList.remove('over'); }));
   d.addEventListener('drop', (e) => { if (e.dataTransfer?.files?.length) mrAddFiles(e.dataTransfer.files); });
+})();
+</script>
+
+<!-- ══════════ 메뉴 (그룹 + 하위 탭) — 기존 탭 버튼(#tnavLegacy)을 눌러 전환하므로 switchTab·초기화 함수는 그대로 ══════════ -->
+<script type="module">
+(function () {
+  const GROUPS = [
+    { id: 'home',    label: '홈',     icon: '📅', items: [{ id: 'calendar', label: '일정 · 오늘 할 일' }] },
+    { id: 'reports', label: '보고서', icon: '📝', items: [
+      { id: 'weekly',   label: '주간성취도', middleOnly: true },
+      { id: 'monthly',  label: '월말보고서' },
+      { id: 'tests',    label: '누적테스트' },
+      { id: 'progress', label: '반별 진도' },
+      { id: 'clinic',   label: '토요클리닉' },
+    ] },
+    { id: 'video',   label: '영상',   icon: '🎬', items: [
+      { id: 'videos',      label: '강의 목록' },
+      { id: 'myroom',      label: '보충강의실 업로드' },
+      { id: 'watchstatus', label: '학생 시청현황' },
+    ] },
+    { id: 'library', label: '자료실', icon: '📚', items: [
+      { id: 'pastexams', label: '기출문제' },
+      { id: 'textbooks', label: '시중교재' },
+    ] },
+    { id: 'manual',  label: '매뉴얼', icon: '📖', items: [{ id: 'manual', label: '전임강사 매뉴얼' }] },
+  ];
+  const $ = (id) => document.getElementById(id);
+  const legacy = $('tnavLegacy'), groupsEl = $('tnavGroups'), subsEl = $('tnavSubs');
+  if (!legacy || !groupsEl || !subsEl || typeof window.switchTab !== 'function') return;
+
+  const itemById = {}, groupOf = {};
+  GROUPS.forEach((g) => g.items.forEach((m) => { itemById[m.id] = m; groupOf[m.id] = g; }));
+  // 등록 안 된 기존 버튼은 '자료실' 뒤에 임시 그룹으로 (누락 방지)
+  legacy.querySelectorAll('.teacher-tab').forEach((b) => {
+    const mt = (b.getAttribute('onclick') || '').match(/switchTab\('([^']+)'/);
+    if (!mt || itemById[mt[1]]) return;
+    const m = { id: mt[1], label: b.textContent.trim() };
+    const g = { id: 'etc', label: '기타', icon: '📎', items: [m] };
+    GROUPS.splice(GROUPS.length - 1, 0, g); itemById[m.id] = m; groupOf[m.id] = g;
+  });
+
+  let current = 'calendar';
+  let weeklyAllowed = true;
+  const legacyBtn = (id) => legacy.querySelector('.teacher-tab[onclick*="\'' + id + '\'"]');
+  const visible = (m) => !(m.middleOnly && !weeklyAllowed);
+
+  function render() {
+    groupsEl.innerHTML = '';
+    GROUPS.forEach((g) => {
+      const items = g.items.filter(visible);
+      if (!items.length) return;
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'tnav-group' + (groupOf[current] === g ? ' active' : '');
+      b.innerHTML = '<span>' + g.icon + '</span><span>' + g.label + '</span>' + (items.length > 1 ? '<span class="ct">' + items.length + '</span>' : '');
+      b.addEventListener('click', () => {
+        // 그룹을 누르면 그 그룹의 첫 메뉴(또는 마지막에 열었던 메뉴)로
+        const last = g.items.find((m) => m.id === lastIn[g.id] && visible(m));
+        open((last || items[0]).id);
+      });
+      groupsEl.appendChild(b);
+    });
+    const g = groupOf[current];
+    const items = g ? g.items.filter(visible) : [];
+    if (!g || items.length <= 1) { subsEl.hidden = true; subsEl.innerHTML = ''; return; }
+    subsEl.hidden = false;
+    subsEl.innerHTML = '';
+    items.forEach((m) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'tnav-sub' + (m.id === current ? ' active' : '');
+      b.textContent = m.label;
+      b.addEventListener('click', () => open(m.id));
+      subsEl.appendChild(b);
+    });
+  }
+  const lastIn = {};
+  function open(id) {
+    const btn = legacyBtn(id); if (!btn) return;
+    btn.click();
+    window.scrollTo({ top: 0 });
+  }
+  const orig = window.switchTab;
+  window.switchTab = function (id, btn) {
+    orig(id, btn || legacyBtn(id));
+    current = id;
+    const g = groupOf[id]; if (g) lastIn[g.id] = id;
+    render();
+    try { history.replaceState(null, '', '#' + id); } catch (e) {}
+  };
+  window.teacherOpenMenu = open;
+  let hashOpened = false;
+  window.tnavRefresh = function (opt) {
+    if (opt && typeof opt.weekly === 'boolean') weeklyAllowed = opt.weekly;
+    if (!weeklyAllowed && current === 'weekly') { open('calendar'); return; }
+    render();
+    // 새로고침해도 보던 메뉴 유지 (주소의 #메뉴) — 담당 학생 로드 뒤 한 번만
+    if (!hashOpened) {
+      hashOpened = true;
+      const want = (location.hash || '').replace('#', '');
+      if (want && want !== 'calendar' && itemById[want] && visible(itemById[want])) open(want);
+    }
+  };
+  render();
 })();
 </script>
 </body>
