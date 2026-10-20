@@ -4016,8 +4016,9 @@ function renderVideos() {
               <input type="checkbox" class="video-check" data-id="${v.id}" data-group="${groupId}"
                 onchange="updateCheckedCount()"
                 style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--gold);">
-              <span title="영상 고유 코드" style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:11px;flex-shrink:0;min-width:92px;
-                color:${v.code ? 'var(--gold)' : 'var(--muted)'};">${v.code || '코드 없음'}</span>
+              <span title="${v.code ? '클릭하면 복사됩니다' : '영상 고유 코드'}" ${v.code ? `onclick="copyText('${v.code}', this)"` : ''}
+                style="font-family:'SF Mono',Menlo,Consolas,monospace;font-size:11px;flex-shrink:0;min-width:92px;
+                color:${v.code ? 'var(--gold)' : 'var(--muted)'};${v.code ? 'cursor:pointer;' : ''}">${v.code || '코드 없음'}</span>
               <input id="order-${v.id}" type="number" min="1" value="${v.order != null ? v.order : ''}"
                 placeholder="순서"
                 style="width:52px;padding:4px 6px;background:#1A1230;border:1px solid rgba(255,255,255,0.15);
@@ -5125,7 +5126,8 @@ function renderOrphanPreview() {
             ${(v.title||'').replace(/</g,'&lt;')}</a>
           <span style="font-size:11px;color:var(--muted);flex-shrink:0;">${v.mins}</span>
           <span style="font-size:11px;color:var(--muted);flex-shrink:0;">${v.date}</span>
-          <span style="font-size:11px;color:var(--muted);flex-shrink:0;">${v.vimeoId}</span>
+          <span onclick="copyText('${v.vimeoId}', this)" title="클릭하면 복사됩니다"
+            style="font-size:11px;color:var(--muted);flex-shrink:0;cursor:pointer;font-family:'SF Mono',Menlo,Consolas,monospace;">${v.vimeoId}</span>
         </div>`).join('')}
     </div>`;
   }).join('');
@@ -5323,6 +5325,34 @@ window.deleteVideo = async (id) => {
   await deleteDoc(doc(db, 'videos', id));
   await loadVideos();
 };
+
+// ── 클릭 복사 ──
+window.copyText = async (text, el) => {
+  const t = String(text ?? '').trim();
+  if (!t) return;
+  try {
+    if (navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(t);
+    else {
+      const ta = document.createElement('textarea');
+      ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+    }
+    copyToast(`복사됨: ${t}`);
+    if (el) { const prev = el.style.color; el.style.color = '#7fe0a0'; setTimeout(() => el.style.color = prev, 800); }
+  } catch(e) { copyToast('복사 실패: ' + e.message); }
+};
+function copyToast(msg) {
+  let t = document.getElementById('copyToast');
+  if (!t) {
+    t = document.createElement('div'); t.id = 'copyToast';
+    t.style.cssText = 'position:fixed;left:50%;bottom:32px;transform:translateX(-50%);background:#1A1230;color:var(--gold);'
+      + 'border:1px solid var(--gold);padding:8px 16px;border-radius:8px;font-size:12px;z-index:9999;'
+      + 'box-shadow:0 4px 16px rgba(0,0,0,0.4);transition:opacity .2s;pointer-events:none;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg; t.style.opacity = '1';
+  clearTimeout(t._tm); t._tm = setTimeout(() => t.style.opacity = '0', 1500);
+}
 
 function showMsg(id, msg, type) {
   const el = document.getElementById(id);
@@ -8744,7 +8774,7 @@ async function loadApexVideos() {
       <div class="student-item">
         <div class="student-name">${v.title}</div>
         <span class="student-meta" style="color:var(--gold);font-size:12px;">${v.category || ''}</span>
-        <span class="student-meta" style="font-size:11px;">Vimeo: ${v.vimeoId}</span>
+        <span class="student-meta" onclick="copyText('${v.vimeoId}', this)" title="클릭하면 복사됩니다" style="font-size:11px;cursor:pointer;">Vimeo: ${v.vimeoId}</span>
         <span class="student-meta" style="font-size:11px;color:var(--muted);">${v.description || ''}</span>
         <button class="btn btn-danger btn-sm" onclick="deleteApexVideo('${v.id}','${(v.title||'').replace(/'/g,"\\'")}')">삭제</button>
       </div>`).join('');
@@ -8866,7 +8896,7 @@ async function loadPromoVideos() {
     el.innerHTML = list.map((v, i) => `
       <div class="student-item">
         <div class="student-name">${i+1}. ${v.title}</div>
-        <span class="student-meta" style="font-size:11px;">Vimeo: ${v.vimeoId}</span>
+        <span class="student-meta" onclick="copyText('${v.vimeoId}', this)" title="클릭하면 복사됩니다" style="font-size:11px;cursor:pointer;">Vimeo: ${v.vimeoId}</span>
         <label style="font-size:12px;color:var(--muted);display:flex;align-items:center;gap:4px;cursor:pointer;">
           <input type="checkbox" ${v.active !== false ? 'checked' : ''} onchange="togglePromoActive('${v.id}', this.checked)"> 재생목록에 포함
         </label>
