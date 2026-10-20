@@ -1,106 +1,5 @@
-/* ═══════════════════════════════════════════════════════════
-   관리자 페이지 레이아웃 — 왼쪽 사이드바 + 본문
-   (admin.html 전용. 공통 색상·글꼴은 style.css)
-   ═══════════════════════════════════════════════════════════ */
-:root {
-  --ad-side-w: 236px;
-  --ad-top-h: 64px;
-  --ad-side-bg: rgba(20,13,40,0.98);
-}
-
-/* ── 상단 바 (style.css의 nav 고정 스타일을 이어받음) ── */
-nav.ad-top {
-  padding:0 20px 0 16px; gap:14px; justify-content:flex-start;
-}
-.ad-menu-btn {
-  display:none; width:38px; height:38px; border-radius:9px; border:1px solid var(--border-soft);
-  background:rgba(255,255,255,0.05); color:var(--off-white); font-size:18px; cursor:pointer; flex-shrink:0;
-}
-.ad-brand {
-  display:inline-flex; align-items:center; gap:9px; text-decoration:none; color:var(--off-white); flex-shrink:0;
-  width:calc(var(--ad-side-w) - 16px);
-}
-.ad-brand img { height:30px; width:30px; object-fit:contain; }
-.ad-brand span { font-size:13px; font-weight:600; white-space:nowrap; }
-.ad-top-title { font-size:15px; font-weight:700; color:var(--gold); flex:1; min-width:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.ad-top-right { display:flex; gap:8px; align-items:center; flex-shrink:0; }
-.ad-top-right #adminName { font-size:12.5px; color:var(--muted); white-space:nowrap; }
-
-/* ── 사이드바 ── */
-.ad-side {
-  position:fixed; top:var(--ad-top-h); left:0; bottom:0; width:var(--ad-side-w); z-index:90;
-  background:var(--ad-side-bg); border-right:1px solid var(--border-soft);
-  display:flex; flex-direction:column; overflow:hidden;
-}
-.ad-search { padding:14px 14px 8px; position:relative; }
-.ad-search input {
-  width:100%; padding:9px 12px 9px 34px; border-radius:9px; font-size:13px; font-family:inherit; outline:none;
-  background:rgba(255,255,255,0.06); border:1px solid var(--border-soft); color:var(--off-white);
-  transition:border-color .2s;
-}
-.ad-search input:focus { border-color:rgba(240,192,64,0.5); }
-.ad-search input::-webkit-search-cancel-button { filter:invert(0.7); }
-.ad-search::before {
-  content:'🔍'; position:absolute; left:25px; top:23px; font-size:12px; opacity:.6; pointer-events:none;
-}
-.ad-results { padding:0 10px 8px; }
-.ad-results[hidden] { display:none; }
-.ad-result {
-  display:flex; align-items:center; justify-content:space-between; gap:8px;
-  padding:9px 10px; border-radius:8px; cursor:pointer; font-size:13px; color:var(--off-white);
-}
-.ad-result small { display:block; font-size:11px; color:var(--muted); }
-.ad-result mark { background:none; color:var(--gold); }
-.ad-result.active, .ad-result:hover { background:rgba(240,192,64,0.12); }
-.ad-result-empty { padding:10px 12px; font-size:12.5px; color:var(--muted); }
-
-.ad-groups[hidden] { display:block; visibility:hidden; }
-.ad-groups { flex:1; overflow-y:auto; padding:4px 10px 16px; scrollbar-width:thin; }
-.ad-groups::-webkit-scrollbar { width:6px; }
-.ad-groups::-webkit-scrollbar-thumb { background:rgba(255,255,255,0.12); border-radius:3px; }
-.ad-group { margin-bottom:2px; }
-.ad-group[hidden] { display:none; }
-.ad-group-btn {
-  width:100%; display:flex; align-items:center; gap:10px; padding:10px 10px; border:none; border-radius:9px;
-  background:none; color:var(--off-white); font-size:13.5px; font-weight:600; font-family:inherit; cursor:pointer; text-align:left;
-  transition:background .15s;
-}
-.ad-group-btn:hover { background:rgba(255,255,255,0.05); }
-.ad-group-btn .ic { width:22px; text-align:center; font-size:15px; flex-shrink:0; }
-.ad-group-btn .lb { flex:1; }
-.ad-group-btn .ct { font-size:11px; color:var(--muted); font-weight:500; }
-.ad-group-btn .ar { font-size:10px; color:var(--muted); transition:transform .2s; }
-.ad-group.open .ad-group-btn .ar { transform:rotate(90deg); }
-.ad-group.has-active .ad-group-btn { color:var(--gold); }
-.ad-group.single .ad-group-btn .ar { display:none; }
-.ad-items { display:none; padding:2px 0 6px 8px; }
-.ad-group.open .ad-items { display:block; }
-.ad-sub { font-size:10.5px; color:var(--muted); letter-spacing:.5px; padding:8px 0 3px 26px; }
-.ad-item {
-  width:100%; display:flex; align-items:center; gap:8px; padding:8px 10px 8px 26px; border:none; border-radius:8px;
-  background:none; color:var(--muted); font-size:13px; font-family:inherit; cursor:pointer; text-align:left;
-  position:relative; transition:color .15s, background .15s;
-}
-.ad-item:hover { color:var(--off-white); background:rgba(255,255,255,0.05); }
-.ad-item.active { color:var(--gold); background:rgba(240,192,64,0.10); font-weight:600; }
-.ad-item.active::before { content:''; position:absolute; left:12px; top:50%; width:5px; height:5px; border-radius:50%; background:var(--gold); transform:translateY(-50%); }
-.ad-item .badge { margin-left:auto; font-size:10.5px; padding:1px 7px; border-radius:10px; background:rgba(255,80,80,0.18); color:#ff9c9c; font-weight:600; }
-.ad-side-foot { padding:10px 14px; border-top:1px solid var(--border-soft); font-size:11.5px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; gap:8px; }
-.ad-side-foot .role { padding:2px 8px; border-radius:10px; background:rgba(240,192,64,0.12); color:var(--gold); font-weight:600; }
-.ad-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:89; }
-
-/* ── 본문 ── */
-.ad-main { margin-left:var(--ad-side-w); padding:calc(var(--ad-top-h) + 26px) 32px 96px; min-height:100vh; }
-.ad-main > .tab-panel, .ad-main > .ad-crumb { max-width:1100px; margin-left:auto; margin-right:auto; }
-.ad-crumb { font-size:12.5px; color:var(--muted); margin-bottom:16px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-.ad-crumb b { color:var(--off-white); font-weight:600; }
-.ad-crumb .now { color:var(--gold); font-weight:700; }
-.ad-crumb .sep { opacity:.5; }
-.ad-crumb .desc { margin-left:6px; opacity:.8; }
-#legacyTabs { display:none !important; }
-.tab-panel { display:none; }
-.tab-panel.active { display:block; }
-
+/* 관리자 페이지 스타일. 상단 바·사이드바 레이아웃은 portal.css(선생님 페이지와 공용) */
+/* ── 관리자 전용: 홈(오늘) 대시보드 · 관리자 계정 역할 ── */
 /* ── 홈(오늘) 대시보드 ── */
 .hm-head { display:flex; justify-content:space-between; align-items:flex-end; gap:16px; flex-wrap:wrap; margin-bottom:22px; }
 .hm-date { font-size:12.5px; color:var(--muted); margin-bottom:4px; }
@@ -160,24 +59,9 @@ nav.ad-top {
 .adm-groups label { display:flex; align-items:center; gap:7px; cursor:pointer; font-size:13px; color:var(--off-white); text-transform:none; letter-spacing:0; }
 .adm-groups input { accent-color:var(--gold); }
 
-/* ── 반응형 ── */
 @media (max-width:1023px) {
-  :root { --ad-top-h:56px; }
-  .ad-menu-btn { display:inline-flex; align-items:center; justify-content:center; }
-  .ad-brand { width:auto; }
-  .ad-brand span { display:none; }
-  .ad-top-right #adminName { display:none; }
-  .ad-side { transform:translateX(-100%); transition:transform .22s ease; width:min(300px, 86vw); box-shadow:0 0 40px rgba(0,0,0,0.5); }
-  body.ad-side-open .ad-side { transform:none; }
-  body.ad-side-open .ad-backdrop { display:block; }
-  body.ad-side-open { overflow:hidden; }
-  .ad-main { margin-left:0; padding:calc(var(--ad-top-h) + 18px) 16px 80px; }
   .hm-grid { grid-template-columns:1fr; }
   .hm-title { font-size:21px; }
-}
-@media (max-width:768px) {
-  nav.ad-top { height:56px; padding:0 12px; }
-  .ad-top-right .btn { padding:6px 10px; }
 }
 
 /* ═══ 이하: 각 메뉴 화면 스타일 (원본 admin.html에서 그대로 옮김) ═══ */
