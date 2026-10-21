@@ -676,3 +676,26 @@ body.ck-lock { overflow:hidden; }
 .au-prog div { height:100%; width:0; background:var(--gold); transition:width 0.3s; }
 .au-x { background:none; border:1px solid rgba(255,255,255,0.15); color:var(--muted); border-radius:6px; padding:5px 10px; font-size:12px; cursor:pointer; font-family:inherit; white-space:nowrap; }
 .au-x:hover { color:#ff9090; border-color:rgba(255,80,80,0.4); }
+
+/* ══ 설명회 신청 (admin/js/seminar.js) ══ */
+.form-group textarea { width:100%; padding:10px 12px; border-radius:8px; background:rgba(255,255,255,0.06); border:1px solid var(--border-soft); color:var(--off-white); font-size:13px; font-family:inherit; line-height:1.5; resize:vertical; }
+.form-group textarea:focus { outline:none; border-color:rgba(240,192,64,0.5); }
+.sm-switch { position:relative; width:46px; height:26px; border-radius:100px; border:none; cursor:pointer; background:rgba(255,255,255,0.15); transition:background .15s; flex-shrink:0; }
+.sm-switch::after { content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; transition:left .15s; }
+.sm-switch.on { background:#4caf50; }
+.sm-switch.on::after { left:23px; }
+.sm-stats { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px; }
+.sm-stat { background:rgba(255,255,255,0.04); border:1px solid var(--border-soft); border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:2px; }
+.sm-stat .n { font-size:22px; font-weight:800; color:var(--gold); line-height:1.1; }
+.sm-stat .k { font-size:11.5px; color:var(--muted); }
+@media (max-width:720px) { .sm-stats { grid-template-columns:repeat(2,1fr); } }
+.sm-table-wrap { overflow-x:auto; }
+.sm-table { min-width:900px; }
+.sm-table tr.attended td { background:rgba(111,207,115,0.05); }
+.sm-branch { display:inline-block; font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:100px; white-space:nowrap; }
+.sm-branch.sb { background:rgba(111,207,115,0.12); color:#8fd9a8; }
+.sm-branch.pc { background:rgba(240,192,64,0.12); color:var(--gold); }
+.sm-check { display:inline-flex; align-items:center; gap:6px; font-size:12px; cursor:pointer; white-space:nowrap; }
+.sm-check input { accent-color:#4caf50; width:15px; height:15px; cursor:pointer; }
+.sm-memo { cursor:pointer; min-width:120px; max-width:260px; font-size:12px; line-height:1.4; }
+.sm-memo:hover { color:var(--gold); }

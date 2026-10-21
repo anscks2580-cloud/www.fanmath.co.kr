@@ -97,6 +97,7 @@
     <button class="admin-tab" onclick="switchTab('textbooks',this);initTextbookAdminTab()">📘 시중교재</button>
     <button class="admin-tab" onclick="switchTab('consult',this);initConsultTab()">📥 상담 신청</button>
     <button class="admin-tab" onclick="switchTab('consultdeck',this);initConsultDeckTab()">🎞 상담자료 관리</button>
+    <button class="admin-tab" onclick="switchTab('seminar',this);initSeminarTab()">🎓 설명회 신청</button>
     <button class="admin-tab" onclick="switchTab('notice',this);initNoticeTab()">📢 공지사항</button>
     <button class="admin-tab" onclick="switchTab('schedule',this);initScheduleTab()">📅 학원 일정</button>
     <button class="admin-tab" onclick="switchTab('homepopup',this);initHomePopupTab()">🪟 홈페이지 팝업</button>
@@ -719,6 +720,61 @@
   </div>
 
   <!-- 홈페이지 팝업 관리 -->
+  <!-- ══ 설명회 신청 (seminar.html) ══ -->
+  <div class="tab-panel" id="tab-seminar">
+    <div class="card">
+      <h3>🎓 설명회 안내 설정</h3>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
+        홈페이지 설명회 참석 신청 페이지(<b style="color:var(--off-white);">seminar.html</b>)에 보이는 내용입니다. 저장하면 신청 페이지와 첫 화면 배너에 바로 반영되고, 접수를 끄면 신청 페이지에 마감 안내가 표시되며 첫 화면 배너도 사라집니다.
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);border-radius:10px;">
+        <button class="sm-switch on" id="sm-open" type="button" onclick="toggleSeminarOpen()" title="접수 받기 / 마감"></button>
+        <span id="sm-open-label" style="font-size:13px;font-weight:600;">홈페이지에서 신청 받는 중</span>
+        <span style="flex:1;"></span>
+        <a class="btn btn-secondary btn-sm" href="seminar.html" target="_blank" rel="noopener">신청 페이지 열기 ↗</a>
+        <button class="btn btn-secondary btn-sm" type="button" onclick="copySeminarLink()">🔗 주소 복사</button>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>설명회 제목</label><input type="text" id="sm-title" placeholder="예: 예비고1 설명회"></div>
+        <div class="form-group"><label>안내 문구 (신청 페이지 상단)</label><textarea id="sm-intro" rows="2" placeholder="예: 아래 일정 중 참석하실 설명회를 선택하고 정보를 남겨 주세요."></textarea></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>산본관 일시</label><input type="text" id="sm-sb-when" placeholder="예: 10월 30일(금) 오후 7시"></div>
+        <div class="form-group"><label>산본관 장소</label><input type="text" id="sm-sb-place" placeholder="예: 군포시 산본로 390 5층"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>평촌관 일시</label><input type="text" id="sm-pc-when" placeholder="예: 10월 31일(토) 오후 7시"></div>
+        <div class="form-group"><label>평촌관 장소</label><input type="text" id="sm-pc-place" placeholder="예: 안양시 동안구 평촌대로 117 맵시프라자 4층"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>마감 안내 문구 (접수를 끈 뒤 신청 페이지에 표시)</label><input type="text" id="sm-closed-msg" placeholder="예: 궁금하신 점은 학원으로 전화 문의해 주세요."></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-primary" id="sm-save-btn" onclick="saveSeminarConfig()">설정 저장</button>
+        <span style="font-size:11.5px;color:var(--muted);">첫 화면 배너의 날짜는 11월 1일 0시에 자동으로 사라집니다. 다음 설명회를 열 때 배너 문구·날짜는 Claude에게 요청해 주세요.</span>
+      </div>
+      <div id="smConfigMsg" class="msg"></div>
+    </div>
+
+    <div class="card">
+      <h3>📋 참석 신청자</h3>
+      <div class="sm-stats" id="smStats"></div>
+      <div class="cf-toolbar">
+        <input type="search" id="smSearch" placeholder="학부모 · 학생 이름 · 연락처 검색" oninput="setSeminarFilter()">
+        <select id="smBranchFilter" onchange="setSeminarFilter()">
+          <option value="all">전체</option>
+          <option value="산본관">산본관</option>
+          <option value="평촌관">평촌관</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="initSeminarTab()">새로고침</button>
+        <button class="btn btn-primary btn-sm" onclick="exportSeminarExcel()">📥 엑셀 다운로드</button>
+        <span class="cf-count" id="smCount"></span>
+      </div>
+      <div style="font-size:11.5px;color:var(--muted);margin-bottom:10px;">참석 체크는 설명회 당일 접수대에서 바로 표시하면 되고, 메모 칸을 누르면 상담 희망·동반 인원 같은 내용을 적어둘 수 있습니다. 엑셀은 전체 · 산본관 · 평촌관 시트로 나뉘어 내려받습니다.</div>
+      <div id="smList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
+    </div>
+  </div>
+
   <div class="tab-panel" id="tab-homepopup">
     <div class="card">
       <h3 id="hp-form-title">🪟 홈페이지 팝업 등록</h3>
@@ -2077,6 +2133,7 @@
 <script defer src="admin/js/consult.js"></script>
 <script defer src="admin/js/homepopup.js"></script>
 <script defer src="admin/js/consult-qr.js"></script>
+<script defer src="admin/js/seminar.js"></script>
 <script defer src="admin/js/videocode.js"></script>
 <script defer src="admin/js/schedule.js"></script>
 <script defer src="admin/js/pastexams.js"></script>

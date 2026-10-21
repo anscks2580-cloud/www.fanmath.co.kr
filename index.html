@@ -349,6 +349,86 @@
       중등수학 · 고등수학 · 수리논술 전문
     </p>
 
+    <!-- 설명회 참석 신청 메인 배너 (11/1 00:00 KST부터 자동 숨김 · 관리자 '설명회 신청'에서 접수를 끄면 즉시 숨김) -->
+    <a href="seminar.html" id="seminarBanner" class="timed-banner" data-show-until="2026-11-01T00:00:00+09:00" style="
+      display:flex; align-items:center; justify-content:space-between;
+      width:100%; max-width:720px;
+      margin: 0 0 20px;
+      padding: 0;
+      border-radius: 18px;
+      text-decoration: none;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 0 0 1px rgba(240,192,64,0.7), 0 8px 40px rgba(240,192,64,0.22);
+      animation: seminarPulse 3s ease-in-out infinite;
+    ">
+      <style>
+        @keyframes seminarPulse {
+          0%,100% { box-shadow: 0 0 0 1px rgba(240,192,64,0.7), 0 8px 40px rgba(240,192,64,0.22); }
+          50%      { box-shadow: 0 0 0 2px rgba(240,192,64,1), 0 8px 48px rgba(240,192,64,0.4); }
+        }
+        .seminar-banner-inner {
+          display: flex; align-items: center; justify-content: space-between;
+          width: 100%; gap: 20px;
+          padding: 22px 28px;
+          background: linear-gradient(120deg, rgba(58,42,96,0.98) 0%, rgba(42,30,85,0.98) 50%, rgba(58,42,96,0.98) 100%);
+          position: relative; overflow: hidden;
+        }
+        .seminar-banner-inner::before {
+          content: '';
+          position: absolute; inset: 0;
+          background: linear-gradient(100deg, rgba(240,192,64,0.14) 0%, rgba(107,90,158,0.1) 100%);
+          pointer-events: none;
+        }
+        .seminar-banner-inner::after {
+          content: '';
+          position: absolute; top: 0; left: 0; right: 0; height: 1px;
+          background: linear-gradient(90deg, transparent, rgba(240,192,64,0.9), transparent);
+        }
+        .seminar-badge {
+          position: absolute; top: -1px; right: 24px; z-index: 2;
+          background: #F0C040; color: #251C40;
+          font-size: 10px; font-weight: 800; letter-spacing: 1px;
+          padding: 3px 10px; border-radius: 0 0 8px 8px;
+        }
+        .seminar-sessions { display:flex; flex-wrap:wrap; gap:4px 14px; font-size:12.5px; color:rgba(240,237,248,0.75); line-height:1.6; }
+        .seminar-sessions b { color:#F0C040; font-weight:700; }
+        .seminar-enter-btn {
+          display: flex; align-items: center; gap: 6px;
+          background: #F0C040; color: #251C40;
+          font-size: 13px; font-weight: 800;
+          padding: 10px 20px; border-radius: 10px;
+          white-space: nowrap; flex-shrink: 0;
+          letter-spacing: -0.3px;
+          transition: opacity 0.2s;
+        }
+        a:hover .seminar-enter-btn { opacity: 0.85; }
+        @media (max-width: 480px) {
+          .seminar-banner-inner { padding: 20px 18px; gap: 12px; flex-wrap: wrap; }
+          .seminar-enter-btn { padding: 9px 14px; font-size: 12px; width:100%; justify-content:center; }
+        }
+      </style>
+      <div class="seminar-badge">설명회</div>
+      <div class="seminar-banner-inner">
+        <div style="display:flex;align-items:center;gap:16px;position:relative;">
+          <span style="font-size:34px;line-height:1;flex-shrink:0;">🎓</span>
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap;">
+              <span id="seminarBannerTitle" style="font-size:15px;font-weight:800;color:#F0EDF8;letter-spacing:-0.3px;">예비고1 설명회 참석 신청</span>
+              <span style="font-size:11px;color:rgba(240,192,64,0.85);letter-spacing:1px;">Seminar</span>
+            </div>
+            <div class="seminar-sessions" id="seminarBannerSessions">
+              <span><b>산본관</b> 10월 30일(금) 오후 7시</span>
+              <span><b>평촌관</b> 10월 31일(토) 오후 7시</span>
+            </div>
+          </div>
+        </div>
+        <div class="seminar-enter-btn" style="position:relative;">
+          참석 신청하기 →
+        </div>
+      </div>
+    </a>
+
     <!-- 중간고사 후 셀프체크 메인 배너 (2026-10-31까지 노출, 11/1 00:00 KST부터 자동 숨김) -->
     <a href="self-check.html" class="timed-banner" data-show-until="2026-11-01T00:00:00+09:00" style="
       display:flex; align-items:center; justify-content:space-between;
@@ -692,6 +772,25 @@ window.closeNoticePopup = function() {
   }
   document.getElementById('noticePopup').classList.add('hidden');
 };
+
+// 설명회 배너 — 관리자 '설명회 신청' 설정(seminarConfig/current) 반영
+async function syncSeminarBanner() {
+  const el = document.getElementById('seminarBanner');
+  if (!el) return;
+  try {
+    const snap = await getDoc(doc(db, 'seminarConfig', 'current'));
+    if (!snap.exists()) return;
+    const c = snap.data();
+    if (c.open === false) { el.remove(); return; }
+    if (c.title) document.getElementById('seminarBannerTitle').textContent = c.title + ' 참석 신청';
+    const sessions = Array.isArray(c.sessions) ? c.sessions.filter(x => x && x.branch && x.when) : [];
+    if (sessions.length) {
+      document.getElementById('seminarBannerSessions').innerHTML = sessions
+        .map(x => `<span><b>${noticeEsc(x.branch)}</b> ${noticeEsc(x.when)}</span>`).join('');
+    }
+  } catch (e) { console.warn('설명회 배너 설정 조회 실패', e); }
+}
+syncSeminarBanner();
 
 async function loadNoticePopups() {
   try {
