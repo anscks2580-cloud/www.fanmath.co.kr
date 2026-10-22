@@ -60,6 +60,10 @@
   .demo { position:fixed; top:10px; right:10px; background:#C8541F; color:#fff; font-size:11px; padding:4px 10px; border-radius:999px; z-index:9; }
   .empty { text-align:center; color:var(--muted); padding:40px 0; font-size:14px; }
   @media (max-width:520px) { .tiles { grid-template-columns:repeat(2,1fr); } .two { grid-template-columns:1fr; } .bar { grid-template-columns:minmax(80px,42%) 1fr 40px; } }
+  body.embed { background:transparent; }
+  body.embed .wrap { padding:0 0 8px; max-width:none; }
+  body.embed .head { border-radius:12px; padding:16px 18px; }
+  body.embed .foot { display:none; }
   @media print { body { background:#fff; } .wrap { max-width:none; padding:0; } .card { break-inside:avoid; } .demo { display:none; } }
 </style>
 </head>
@@ -71,6 +75,9 @@ import { buildStudentReport, draftComment, CRITERIA } from './report-calc.js';
 const $app = document.getElementById('app');
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const params = new URLSearchParams(location.search);
+if (params.get('embed')) document.body.classList.add('embed');
+function reportHeight() { try { const h = document.documentElement.scrollHeight; window.parent.postMessage({ type: 'reportHeight', id: params.get('id') || 'demo', h }, '*'); } catch (e) {} }
+new ResizeObserver(() => reportHeight()).observe(document.body);
 
 // ── 샘플 데이터 (실제 10/22 중3 시험지 유형 기준, 오답은 가상) ──
 function demoReport() {
@@ -164,6 +171,7 @@ function render(rep) {
     <p class="foot">* 등급은 보고서 기간에 푼 일일테스트 정답률로 산정합니다. 1등급 90% 이상 · 2등급 80% 이상 · 3등급 70% 이상 · 4등급 50% 이상 · 5등급 50% 미만.<br>
     * 난이도는 문항별 전국 정답률을 기준으로 하(1)~최상(5)으로 나눈 학원 자체 기준입니다. 잘하는 유형은 정답률 ${CRITERIA.strongPct}% 이상, 보완할 유형은 ${CRITERIA.weakPct}% 미만입니다.<br>
     * 송우찬수학학원 평촌관 · 문의 031-386-8899</p>`;
+  setTimeout(reportHeight, 50);
 }
 
 if (params.get('demo')) {

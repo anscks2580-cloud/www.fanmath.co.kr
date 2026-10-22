@@ -66,6 +66,9 @@
   .cm-form textarea:focus { border-color:var(--accent); }
   .cm-form button { background:var(--accent); color:#fff; border:none; border-radius:10px; padding:0 14px; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; }
   .item-wrap { border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:8px; }
+  .item-wrap.latest { border-color:var(--accent); box-shadow:0 4px 18px rgba(91,63,166,.12); }
+  .rep-frame { width:100%; border:none; display:block; border-radius:12px; background:transparent; margin-top:10px; min-height:200px; }
+  .rep-tag { font-size:10.5px; padding:2px 8px; border-radius:999px; background:var(--accent); color:#fff; font-weight:700; margin-left:6px; vertical-align:middle; }
   .item-wrap .item { border:none; padding:0; margin:0; }
   .foot { font-size:11px; color:var(--muted); text-align:center; margin-top:16px; }
 </style>
@@ -83,6 +86,10 @@ const auth = getAuth(app), db = getFirestore(app);
 const $app = document.getElementById('app');
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let cur = 'homework', child = null, weekly = [], monthly = [], comments = [], homework = [], me = null;
+const openReports = new Set();   // 펼쳐진 보고서 id (최신 달은 자동)
+const frameHeights = {};
+window.addEventListener('message', (e) => { if (e.data && e.data.type === 'reportHeight' && e.data.id) { frameHeights[e.data.id] = e.data.h; const f = document.getElementById('rf-' + e.data.id); if (f) f.style.height = (e.data.h + 4) + 'px'; } });
+window.pToggleReport = (id) => { if (openReports.has(id)) openReports.delete(id); else openReports.add(id); render(); };
 // viewer: 'parent'(학부모 본인) | 'student'(학생 계정) | 'teacher'(선생님·관리자가 ?student=학생uid 로 열어봄 — 답글 작성용)
 let viewer = { role: 'parent', name: '' };
 const params = new URLSearchParams(location.search);
@@ -235,14 +242,15 @@ function render() {
           <div class="t"><span>${d.getMonth() + 1}월 ${d.getDate()}일 (${dow})${isToday ? ' <span class="pill" style="font-size:11px;">오늘</span>' : ''}</span><small>${esc(h.teacherName || '')} 선생님 · ${esc(h.classGroup || '')}</small></div>
           <div style="font-size:14.5px;color:var(--ink);margin-top:6px;white-space:pre-wrap;">${esc(h.content)}</div>
         </div>`; }).join('') : '<div class="empty">아직 등록된 숙제가 없습니다.</div>'}</div>` : ''}
-    ${cur === 'monthly' ? `<div class="card"><h2>월간 학습보고서</h2>${monthly.length ? monthly.map((r) => `
-        <div class="item-wrap">
-        <a class="item" href="report.html?id=${encodeURIComponent(r.id)}">
-          <div><div class="t">${r.month.replace('-', '년 ')}월 보고서</div><div class="s">일일테스트 ${r.summary?.tests ?? 0}회 · ${r.summary?.total ?? 0}문항 · ${r.summary?.gradeBand ?? '-'}등급</div></div>
-          <div class="r"><div class="pct">${r.summary?.pct ?? '-'}%</div><div class="go">보기 ›</div></div>
+    ${cur === 'monthly' ? `<div class="card"><h2>월간 학습보고서</h2>${monthly.length ? monthly.map((r, i) => { const open = i === 0 || openReports.has(r.id); return `
+        <div class="item-wrap ${i === 0 ? 'latest' : ''}">
+        <a class="item" href="#" onclick="${i === 0 ? 'return false;' : `pToggleReport('${r.id}');return false;`}">
+          <div><div class="t">${r.month.replace('-', '년 ')}월 보고서${i === 0 ? '<span class="rep-tag">최신</span>' : ''}</div><div class="s">일일테스트 ${r.summary?.tests ?? 0}회 · ${r.summary?.total ?? 0}문항 · ${r.summary?.gradeBand ?? '-'}등급</div></div>
+          <div class="r"><div class="pct">${r.summary?.pct ?? '-'}%</div><div class="go">${i === 0 ? '' : open ? '접기 ▲' : '보기 ▼'}</div></div>
         </a>
+        ${open ? `<iframe class="rep-frame" id="rf-${r.id}" src="report.html?id=${encodeURIComponent(r.id)}&embed=1" style="height:${(frameHeights[r.id] || 900) + 4}px" title="보고서"></iframe>` : ''}
         ${threadHtml('monthly', r.id, r.teacherUid, r.teacherName, `${r.month.replace('-', '년 ')}월 보고서`)}
-        </div>`).join('') : '<div class="empty">아직 공개된 보고서가 없습니다.<br><small>매달 초에 지난달 보고서가 올라옵니다.</small></div>'}</div>`
+        </div>`; }).join('') : '<div class="empty">아직 공개된 보고서가 없습니다.<br><small>매달 초에 지난달 보고서가 올라옵니다.</small></div>'}</div>`
     : cur === 'weekly' ? `<div class="card"><h2>주간 성취도</h2>${weekly.length ? weekly.map((w) => { const rl = w.ratingsLabel || {}, rt = w.ratings || {}; return `
         <div class="wk">
           <div class="t"><span>${esc(w.weekLabel || w.weekKey)}</span><small>${esc(w.teacherName || '')} 선생님</small></div>
