@@ -322,5 +322,6 @@ async function srAutoCleanup() {
     }
   } catch (e) { console.warn('자동 정리 건너뜀:', e.message); }
 }
-// 관리자로 로그인된 뒤 한 번 실행
-onAuthStateChanged(auth, (u) => { if (u) setTimeout(() => { if (window.currentAdmin) srAutoCleanup(); }, 6000); });
+// 자동 정리는 기본 꺼둠 (용량 비용이 월 수백 원 수준이라 보관이 이득). 켜려면 SR_AUTO_PURGE = true
+const SR_AUTO_PURGE = false;
+onAuthStateChanged(auth, (u) => { if (u && SR_AUTO_PURGE) setTimeout(() => { if (window.currentAdmin) srAutoCleanup(); }, 6000); });
