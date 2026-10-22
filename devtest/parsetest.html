@@ -4,7 +4,7 @@
 const out=document.getElementById('out');
 window.onerror=(m,s,l,c,e)=>{out.textContent+='\nERROR '+m;};
 let pdfjsLibPromise=null;
-function loadPdfjs(){ if(!pdfjsLibPromise){ pdfjsLibPromise=import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.mjs').then(lib=>{lib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.mjs';return lib;}); } return pdfjsLibPromise; }
+function loadPdfjs(){ if(!pdfjsLibPromise){ pdfjsLibPromise=import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs').then(lib=>{lib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';return lib;}); } return pdfjsLibPromise; }
 async function dtParsePdf(file) {
   const pdfjs = await loadPdfjs();
   const data = new Uint8Array(await file.arrayBuffer());
