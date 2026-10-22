@@ -83,7 +83,7 @@ export function buildStudentReport({ student, month, tests, results, classResult
       const type = it?.type || '';
       const natRate = it?.natRate ?? null;
       const diff = diffOf(natRate);
-      const unit = type ? unitOf(type, t.range) : (t.range || '기타');
+      const unit = type ? unitOf(type, t.range || t.title) : (t.range || t.title || '기타'); // 유형 없는 시험지는 범위 → 제목 순으로
       acc.total++; if (ok) acc.correct++; acc.diffSum += diff;
       bump(weeks, weekIndex(t.date), ok, { week: weekIndex(t.date) });
       bump(units, unit, ok, { name: unit });
@@ -96,8 +96,16 @@ export function buildStudentReport({ student, month, tests, results, classResult
   const fin = (bag, sortFn) => Object.values(bag).map((b) => ({ ...b, pct: pctOf(b.correct, b.total) })).sort(sortFn);
   const typeList = fin(types, (a, b) => b.total - a.total);
   const eligible = typeList.filter((x) => x.total >= CRITERIA.minItems);
-  const strong = eligible.filter((x) => x.pct >= CRITERIA.strongPct).sort((a, b) => b.pct - a.pct || b.total - a.total).slice(0, CRITERIA.topN);
-  const weak = eligible.filter((x) => x.pct < CRITERIA.weakPct).sort((a, b) => a.pct - b.pct || b.total - a.total).slice(0, CRITERIA.topN);
+  let strong = eligible.filter((x) => x.pct >= CRITERIA.strongPct).sort((a, b) => b.pct - a.pct || b.total - a.total).slice(0, CRITERIA.topN);
+  let weak = eligible.filter((x) => x.pct < CRITERIA.weakPct).sort((a, b) => a.pct - b.pct || b.total - a.total).slice(0, CRITERIA.topN);
+  // 유형 단위로 판정할 게 없으면(유형당 1문항뿐이거나 유형 없는 시험지) 단원 단위로 대신
+  const unitList = fin(units, (a, b) => b.total - a.total).filter((u) => u.total >= 3);
+  let basis = 'type';
+  if (!strong.length && !weak.length && unitList.length) {
+    basis = 'unit';
+    strong = unitList.filter((x) => x.pct >= CRITERIA.strongPct).sort((a, b) => b.pct - a.pct || b.total - a.total).slice(0, CRITERIA.topN);
+    weak = unitList.filter((x) => x.pct < CRITERIA.weakPct).sort((a, b) => a.pct - b.pct || b.total - a.total).slice(0, CRITERIA.topN);
+  }
   const pct = pctOf(acc.correct, acc.total);
 
   // 반 평균 (같은 반 학생들의 전체 정답률 평균)
@@ -128,7 +136,7 @@ export function buildStudentReport({ student, month, tests, results, classResult
     units: fin(units, (a, b) => b.total - a.total),
     types: typeList,
     diffs: fin(diffs, (a, b) => a.diff - b.diff),
-    strong, weak,
+    strong, weak, strongWeakBasis: basis,
     comment: '',
     // Firestore는 배열 안의 배열을 못 넣으므로 문자열로 보관
     criteria: { gradeBands: CRITERIA.gradeBands.map((b) => b.join(':')).join(','), diffBands: CRITERIA.diffBands.map((b) => b.join(':')).join(',') },

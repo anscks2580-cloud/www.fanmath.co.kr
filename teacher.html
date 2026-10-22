@@ -4717,7 +4717,7 @@ async function dtParsePdf(file) {
         out.title = t1.text.replace(/일일\s*TEST\s*/i, '').trim();
         const g = out.title.match(/\((초[4-6]|중[1-3])\)/); if (g) out.grade = g[1];
         const i1 = lines.indexOf(t1);
-        const t2 = lines[i1 + 1]; if (t2 && !/문제\s*\|/.test(t2.text)) out.range = t2.text;
+        const t2 = lines[i1 + 1]; if (t2 && !/^\d+\s*문제/.test(t2.text) && !/^이름/.test(t2.text)) out.range = t2.text; // "35문제 | 출제자" 줄은 범위가 아님
       }
       const c = lines.find((l) => /(\d+)\s*문제/.test(l.text)); if (c) out.count = parseInt(c.text.match(/(\d+)\s*문제/)[1], 10);
     }

@@ -143,10 +143,10 @@ function render(rep) {
     </div>
 
     <div class="card">
-      <h2>유형 진단 <small>${CRITERIA.minItems}문항 이상 푼 유형 기준</small></h2>
+      <h2>${rep.strongWeakBasis === 'unit' ? '단원 진단' : '유형 진단'} <small>${rep.strongWeakBasis === 'unit' ? '3문항 이상 푼 단원 기준' : CRITERIA.minItems + '문항 이상 푼 유형 기준'}</small></h2>
       <div class="two">
-        <div class="list good"><h3>✔ 잘하는 유형</h3>${rep.strong.length ? `<ul>${rep.strong.map((t) => `<li><span>${esc(t.name)}</span><b>${t.pct}%</b></li>`).join('')}</ul>` : '<div class="none">아직 없음</div>'}</div>
-        <div class="list warn"><h3>! 보완할 유형</h3>${rep.weak.length ? `<ul>${rep.weak.map((t) => `<li><span>${esc(t.name)}</span><b>${t.pct}%</b></li>`).join('')}</ul>` : '<div class="none">정답률 ' + CRITERIA.weakPct + '% 미만 유형 없음 👍</div>'}</div>
+        <div class="list good"><h3>✔ 잘하는 ${rep.strongWeakBasis === 'unit' ? '단원' : '유형'}</h3>${rep.strong.length ? `<ul>${rep.strong.map((t) => `<li><span>${esc(t.name)}</span><b>${t.pct}%</b></li>`).join('')}</ul>` : '<div class="none">아직 없음</div>'}</div>
+        <div class="list warn"><h3>! 보완할 ${rep.strongWeakBasis === 'unit' ? '단원' : '유형'}</h3>${rep.weak.length ? `<ul>${rep.weak.map((t) => `<li><span>${esc(t.name)}</span><b>${t.pct}%</b></li>`).join('')}</ul>` : '<div class="none">정답률 ' + CRITERIA.weakPct + '% 미만 유형 없음 👍</div>'}</div>
       </div>
     </div>
 
