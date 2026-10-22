@@ -82,8 +82,8 @@ export function buildStudentReport({ student, month, tests, results, classResult
       const it = itemMap[n];
       const type = it?.type || '';
       const natRate = it?.natRate ?? null;
-      const diff = diffOf(natRate);
-      const unit = type ? unitOf(type, t.range || t.title) : (t.range || t.title || '기타'); // 유형 없는 시험지는 범위 → 제목 순으로
+      const diff = it?.diff ? Number(it.diff) : diffOf(natRate);                 // Claude가 붙인 난이도가 있으면 그걸 우선
+      const unit = it?.unit ? it.unit : type ? unitOf(type, t.range || t.title) : (t.range || t.title || '기타'); // 단원도 마찬가지, 없으면 유형명→범위→제목
       acc.total++; if (ok) acc.correct++; acc.diffSum += diff;
       bump(weeks, weekIndex(t.date), ok, { week: weekIndex(t.date) });
       bump(units, unit, ok, { name: unit });

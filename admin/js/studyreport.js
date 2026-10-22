@@ -53,12 +53,12 @@ async function srFetchMonth(month) {
 }
 
 // ── ① 생성 ──
-window.srGenerate = async function () {
+window.srGenerate = async function (silent = false) {
   const month = document.getElementById('srMonth').value;
   const teacherUid = document.getElementById('srTeacher').value;
   if (!month) { srMsg('보고 월을 골라주세요.', 'error'); return; }
   if (!srCalc) { srMsg('집계 모듈이 준비되지 않았습니다. 새로고침 후 다시 시도해 주세요.', 'error'); return; }
-  if (!confirm(`${month} 보고서를 생성할까요?\n이미 있는 초안은 숫자가 다시 계산됩니다. (검수 완료된 의견은 유지)`)) return;
+  if (!silent && !confirm(`${month} 보고서를 생성할까요?\n이미 있는 초안은 숫자가 다시 계산됩니다. (검수 완료된 의견은 유지)`)) return;
   srMsg('집계 중...', 'success');
   try {
     const { tests, results, students } = await srFetchMonth(month);
@@ -160,17 +160,29 @@ window.srUnpublish = async function (id) {
 };
 
 // ── ② 내보내기: Claude에게 줄 파일 (숫자 요약 + 자동 의견) ──
-window.srExport = function () {
+window.srExport = async function () {
   const month = document.getElementById('srMonth').value;
   if (!srRows.length) { srMsg('먼저 조회해서 목록을 띄워주세요.', 'error'); return; }
+  // 그 달 시험지 원본: 유형이 없는 시험지는 Claude가 PDF를 보고 문항별 단원·유형·난이도를 채워 ③으로 되돌림
+  let tests = [];
+  try {
+    const [from, to] = srMonthRange(month);
+    const tSnap = await getDocs(query(collection(db, 'dailyTests'), where('date', '>=', from), where('date', '<=', to)));
+    tSnap.forEach((d) => { const t = d.data(); tests.push({ id: d.id, date: t.date, title: t.title, fileName: t.fileName, grade: t.grade, classGroup: t.classGroup, teacherName: t.teacherName, range: t.range || '', questionCount: t.questionCount, itemsParsed: !!t.itemsParsed, items: t.items || [] }); });
+    tests.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+  } catch (e) { /* 시험지 없이도 내보냄 */ }
+  const needs = tests.filter((t) => !t.itemsParsed).map((t) => `${t.date} ${t.fileName || t.title}`);
   const out = srRows.map((r) => ({
     id: r.id, month: r.month, studentName: r.studentName, grade: r.grade, classGroup: r.classGroup, teacherName: r.teacherName, status: r.status,
     summary: r.summary, weekly: r.weekly, units: r.units, strong: r.strong, weak: r.weak, diffs: r.diffs, tests: r.tests,
     comment: r.comment,
   }));
-  const blob = new Blob([JSON.stringify({ month, exportedAt: new Date().toISOString(), reports: out }, null, 2)], { type: 'application/json' });
+  const blob = new Blob([JSON.stringify({ month, exportedAt: new Date().toISOString(),
+    note: 'tests[].items 가 비어 있는 시험지(itemsParsed=false)는 PDF를 보고 items=[{n,type,unit,diff(1~5),natRate?}] 를 채워서 ③ 가져오기로 올리면 다시 집계됩니다.',
+    testsNeedingClassification: needs, tests, reports: out }, null, 2)], { type: 'application/json' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `학습보고서_${month}.json`; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  srMsg(needs.length ? `내보냈습니다. 유형 분류가 필요한 시험지 ${needs.length}장 — 이 파일과 해당 PDF를 Claude에게 주세요.` : '내보냈습니다. 모든 시험지에 유형이 있어 분류 작업은 필요 없습니다.', 'success');
 };
 
 // ── ③ 가져오기: { reports:[{id, comment}] } 형태면 의견만 반영 ──
@@ -178,6 +190,18 @@ window.srImport = async function (file) {
   if (!file) return;
   try {
     const data = JSON.parse(await file.text());
+    // 1) 시험지 문항별 유형(items) 반영 → 숫자가 바뀌므로 자동 재집계
+    let nt = 0;
+    for (const t of (Array.isArray(data) ? [] : (data.tests || []))) {
+      if (!t.id || !Array.isArray(t.items) || !t.items.length) continue;
+      const items = t.items.map((it) => ({ n: Number(it.n), type: String(it.type || ''), unit: it.unit ? String(it.unit) : undefined, diff: it.diff != null ? Number(it.diff) : undefined, natRate: it.natRate != null ? Number(it.natRate) : null }))
+        .map((it) => Object.fromEntries(Object.entries(it).filter(([, v]) => v !== undefined)));
+      const patch = { items, itemsParsed: true, itemsSource: 'claude', itemsImportedAt: new Date().toISOString() };
+      if (t.range) patch.range = String(t.range);
+      await updateDoc(doc(db, 'dailyTests', t.id), patch);
+      nt++;
+    }
+    // 2) 선생님 의견 반영
     const list = Array.isArray(data) ? data : (data.reports || []);
     let n = 0;
     for (const r of list) {
@@ -185,7 +209,8 @@ window.srImport = async function (file) {
       await updateDoc(doc(db, 'studentReports', r.id), { comment: r.comment.trim(), commentImportedAt: new Date().toISOString() });
       n++;
     }
-    srMsg(`✅ ${n}명의 선생님 의견을 반영했습니다.`, 'success');
+    if (nt) { srMsg(`✅ 시험지 ${nt}장에 유형을 반영했습니다. 다시 집계합니다...`, 'success'); await srGenerate(true); }
+    srMsg(`✅ 반영 완료 — 시험지 유형 ${nt}장 · 선생님 의견 ${n}명`, 'success');
     srLoad();
   } catch (e) {
     srMsg('가져오기 오류: ' + e.message, 'error');
