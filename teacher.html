@@ -428,6 +428,7 @@ select option:disabled { color:#9B94B3; }
     <button class="teacher-tab" onclick="switchTab('monthly',this)">월말보고서</button>
     <button class="teacher-tab" onclick="switchTab('tests',this)">누적테스트</button>
     <button class="teacher-tab" onclick="switchTab('dailytest',this);dtInit()">일일테스트</button>
+    <button class="teacher-tab" onclick="switchTab('reportreview',this);rvInit()">보고서 검수</button>
     <button class="teacher-tab" onclick="switchTab('progress',this)">반별 진도</button>
     <button class="teacher-tab" onclick="switchTab('clinic',this);initClinicTab()">토요클리닉</button>
     <button class="teacher-tab" onclick="switchTab('videos',this);loadTeacherVideos()">강의 목록</button>
@@ -857,6 +858,55 @@ select option:disabled { color:#9B94B3; }
         </span>
       </div>
       <div class="dt-list" id="dtTestList"><div class="empty-state"><div class="icon">📭</div>등록된 시험지가 없습니다.</div></div>
+    </div>
+  </div>
+
+  <!-- ══ 보고서 검수: 관리자가 생성한 월간 학습보고서 초안을 담당 선생님이 확인·의견 수정·확정 ══ -->
+  <div class="tab-panel" id="tab-reportreview">
+    <style>
+      .rv-layout { display:grid; grid-template-columns:300px 1fr; gap:14px; }
+      @media (max-width:900px) { .rv-layout { grid-template-columns:1fr; } }
+      .rv-list { display:flex; flex-direction:column; gap:6px; max-height:70vh; overflow:auto; }
+      .rv-item { display:flex; align-items:center; gap:8px; padding:9px 12px; border-radius:10px; border:1px solid var(--border-soft); background:rgba(255,255,255,0.03); cursor:pointer; }
+      .rv-item:hover { border-color:rgba(240,192,64,0.4); }
+      .rv-item.active { border-color:var(--gold); background:rgba(240,192,64,0.08); }
+      .rv-item .nm { font-weight:600; color:var(--off-white); flex:1; font-size:13.5px; }
+      .rv-item .nm small { color:var(--muted); font-weight:400; margin-left:4px; }
+      .rv-item .pc { font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
+      .rv-st { font-size:10.5px; padding:2px 7px; border-radius:999px; white-space:nowrap; }
+      .rv-st.draft { background:rgba(255,179,92,0.15); color:#ffc883; }
+      .rv-st.reviewed { background:rgba(95,217,138,0.15); color:#7fe0a3; }
+      .rv-st.sent { background:rgba(122,184,255,0.15); color:#9ccaff; }
+      .rv-frame { width:100%; height:62vh; border:1px solid var(--border-soft); border-radius:12px; background:#F6F5FA; }
+      .rv-comment { width:100%; min-height:130px; padding:12px; border-radius:10px; border:1px solid rgba(240,192,64,0.35); background:rgba(255,255,255,0.04); color:var(--off-white); font-size:14px; line-height:1.7; font-family:inherit; resize:vertical; outline:none; }
+    </style>
+    <div class="card">
+      <div class="card-title" style="flex-wrap:wrap;">🧾 월간 학습보고서 검수
+        <input type="month" id="rvMonth" onchange="rvLoad()" style="color-scheme:dark;margin-left:8px;padding:5px 8px;background:rgba(255,255,255,0.06);border:1px solid rgba(240,192,64,0.35);border-radius:6px;color:var(--gold);font-size:13px;font-family:inherit;font-weight:600;">
+        <span style="font-size:12px;color:var(--muted);font-weight:400;" id="rvStat"></span>
+        <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="rvLoad()">새로고침</button>
+      </div>
+      <div class="alert ok" id="rv-ok"></div>
+      <div class="alert err" id="rv-err"></div>
+      <div class="rv-layout">
+        <div class="rv-list" id="rvList"><div class="empty-state"><div class="icon">📭</div>이 달 보고서가 아직 없습니다.<br><small>관리자가 생성하면 여기에 뜹니다.</small></div></div>
+        <div id="rvDetail" style="display:none;">
+          <iframe class="rv-frame" id="rvFrame" title="보고서 미리보기"></iframe>
+          <div style="margin-top:12px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+              <span style="font-size:12px;color:var(--muted);letter-spacing:1px;">선생님 의견</span>
+              <span style="font-size:11px;color:var(--muted);">— 자동 초안입니다. 학생에게 맞게 고쳐주세요</span>
+              <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="rvRestoreAuto()">자동 초안으로 되돌리기</button>
+            </div>
+            <textarea class="rv-comment" id="rvComment"></textarea>
+          </div>
+          <div class="btn-row" style="margin-top:10px;">
+            <button class="btn btn-gold" onclick="rvSave(true)">✅ 검수 완료 (저장)</button>
+            <button class="btn btn-outline" onclick="rvSave(false)">임시 저장</button>
+            <a class="btn btn-outline" id="rvOpen" href="#" target="_blank" style="margin-left:auto;text-decoration:none;">새 창에서 보기</a>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -4829,6 +4879,70 @@ window.dtDeleteTest = async function () {
 };
 </script>
 
+<!-- ══════════ 보고서 검수: studentReports(내 담당) 목록 · 미리보기 · 의견 수정 · 검수 완료 ══════════ -->
+<script type="module">
+import { getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDocs, updateDoc, collection, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+const db = getFirestore(getApp());
+const auth = getAuth(getApp());
+const $ = (id) => document.getElementById(id);
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let rvRows = [], rvCur = null, rvUid = null;
+onAuthStateChanged(auth, (u) => { rvUid = u ? u.uid : null; });
+function note(id, msg, type) { const el = $(id); el.textContent = msg; el.className = `alert ${type}`; el.style.display = 'block'; setTimeout(() => { el.style.display = 'none'; }, 4000); }
+
+window.rvInit = function () {
+  if (!$('rvMonth').value) { const d = new Date(); d.setDate(0); $('rvMonth').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; }
+  rvLoad();
+};
+window.rvLoad = async function () {
+  const month = $('rvMonth').value; if (!month || !rvUid) return;
+  const el = $('rvList');
+  try {
+    const snap = await getDocs(query(collection(db, 'studentReports'), where('month', '==', month), where('teacherUid', '==', rvUid)));
+    rvRows = []; snap.forEach((d) => rvRows.push({ id: d.id, ...d.data() }));
+    rvRows.sort((a, b) => (a.classGroup || '').localeCompare(b.classGroup || '', 'ko') || (a.studentName || '').localeCompare(b.studentName || '', 'ko'));
+    const done = rvRows.filter((r) => r.status !== 'draft').length;
+    $('rvStat').textContent = rvRows.length ? `${rvRows.length}명 중 ${done}명 검수 완료` : '';
+    if (!rvRows.length) { el.innerHTML = '<div class="empty-state"><div class="icon">📭</div>이 달 보고서가 아직 없습니다.<br><small>관리자가 생성하면 여기에 뜹니다.</small></div>'; $('rvDetail').style.display = 'none'; return; }
+    const stLabel = { draft: '초안', reviewed: '검수 완료', sent: '발송됨' };
+    el.innerHTML = rvRows.map((r) => `
+      <div class="rv-item ${rvCur && rvCur.id === r.id ? 'active' : ''}" onclick="rvOpenReport('${r.id}')">
+        <span class="nm">${esc(r.studentName)}<small>${esc(r.classGroup || r.grade || '')}</small></span>
+        <span class="pc">${r.summary?.pct ?? '-'}%</span>
+        <span class="rv-st ${r.status}">${stLabel[r.status] || r.status}</span>
+      </div>`).join('');
+  } catch (e) {
+    el.innerHTML = `<div class="empty-state" style="color:#ff9090;">오류: ${esc(e.message)}<br>Firestore 인덱스가 필요할 수 있습니다.</div>`;
+  }
+};
+window.rvOpenReport = function (id) {
+  rvCur = rvRows.find((r) => r.id === id); if (!rvCur) return;
+  document.querySelectorAll('.rv-item').forEach((b) => b.classList.toggle('active', b.getAttribute('onclick').includes(`'${id}'`)));
+  $('rvDetail').style.display = 'block';
+  $('rvFrame').src = `report.html?id=${encodeURIComponent(id)}&t=${Date.now()}`;
+  $('rvOpen').href = `report.html?id=${encodeURIComponent(id)}`;
+  $('rvComment').value = rvCur.comment || '';
+  if (window.innerWidth < 900) $('rvDetail').scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+window.rvRestoreAuto = function () { if (rvCur?.commentAuto) $('rvComment').value = rvCur.commentAuto; };
+window.rvSave = async function (done) {
+  if (!rvCur) return;
+  const comment = $('rvComment').value.trim();
+  if (done && !comment) { note('rv-err', '의견을 적어주세요.', 'err'); return; }
+  try {
+    const patch = { comment, reviewedAt: new Date().toISOString() };
+    if (done && rvCur.status !== 'sent') patch.status = 'reviewed';
+    await updateDoc(doc(db, 'studentReports', rvCur.id), patch);
+    Object.assign(rvCur, patch);
+    note('rv-ok', done ? `✅ ${rvCur.studentName} 학생 보고서 검수 완료` : '임시 저장되었습니다.', 'ok');
+    $('rvFrame').src = `report.html?id=${encodeURIComponent(rvCur.id)}&t=${Date.now()}`;
+    rvLoad();
+  } catch (e) { note('rv-err', '저장 오류: ' + e.message, 'err'); }
+};
+</script>
+
 <!-- ══════════ 사이드바 메뉴 — 숨긴 기존 탭 버튼(#tnavLegacy)을 눌러 전환하므로 switchTab·초기화 함수는 그대로 ══════════ -->
 <script type="module">
 (function () {
@@ -4837,6 +4951,7 @@ window.dtDeleteTest = async function () {
     { id: 'reports', label: '보고서', icon: '📝', items: [
       { id: 'weekly',   label: '주간성취도', desc: '중등부 · 금요일까지', middleOnly: true },
       { id: 'dailytest', label: '일일테스트', desc: '초·중등 · 시험지 등록 · 오답 입력', middleOnly: true },
+      { id: 'reportreview', label: '보고서 검수', desc: '월간 학습보고서 의견 확인 · 확정', middleOnly: true },
       { id: 'monthly',  label: '월말보고서', desc: '다음 달 3일까지' },
       { id: 'tests',    label: '누적테스트', desc: '테스트 결과 입력 · 조회' },
       { id: 'progress', label: '반별 진도',  desc: '지난주 진도 · 금요일까지' },

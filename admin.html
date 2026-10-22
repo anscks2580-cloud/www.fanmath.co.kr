@@ -85,6 +85,7 @@
     <button class="admin-tab" onclick="switchTab('weekly',this);initWeeklyTab()">📊 주간성취도</button>
     <button class="admin-tab" onclick="switchTab('progress',this);initProgressTab()">📍 반별진도</button>
     <button class="admin-tab" onclick="switchTab('monthly',this);initMonthlyTab()">📝 월말보고서</button>
+    <button class="admin-tab" onclick="switchTab('studyreport',this);initStudyReportTab()">📈 학습보고서 생성</button>
     <button class="admin-tab" onclick="switchTab('satclinic',this);initSatClinicTab()">🏥 토요클리닉</button>
     <button class="admin-tab" onclick="switchTab('dailyreport',this);initDailyReportTab()">📋 관리부 마감</button>
     <button class="admin-tab" onclick="switchTab('weeklylog',this);initWeeklyLogTab()">📅 주간업무일지</button>
@@ -1286,6 +1287,55 @@
     <div id="monthlyAdminResult"></div>
   </div>
 
+  <!-- 학습보고서 생성 (일일테스트 → 학생별 월간 학습보고서) -->
+  <div class="tab-panel" id="tab-studyreport">
+    <style>
+      .sr-table { width:100%; border-collapse:collapse; font-size:13px; }
+      .sr-table th { font-size:11px; color:var(--muted); letter-spacing:1px; padding:8px 10px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1); }
+      .sr-table td { padding:8px 10px; border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:middle; }
+      .sr-table td.r, .sr-table th.r { text-align:right; font-variant-numeric:tabular-nums; }
+      .sr-st { font-size:10.5px; padding:2px 8px; border-radius:999px; white-space:nowrap; }
+      .sr-st.draft { background:rgba(255,179,92,0.15); color:#ffc883; }
+      .sr-st.reviewed { background:rgba(95,217,138,0.15); color:#7fe0a3; }
+      .sr-st.sent { background:rgba(122,184,255,0.15); color:#9ccaff; }
+      .sr-st.none { background:rgba(255,255,255,0.06); color:var(--muted); }
+      .sr-link { font-size:12px; color:var(--gold); text-decoration:none; border:1px solid rgba(240,192,64,0.4); padding:3px 9px; border-radius:6px; white-space:nowrap; }
+      .sr-stat { display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; color:var(--muted); margin:10px 0; }
+      .sr-stat b { color:var(--off-white); }
+    </style>
+    <div class="card">
+      <h3>📈 학습보고서 생성 <span style="font-size:12px;color:var(--muted);font-weight:400;">— 선생님들이 입력한 일일테스트 오답을 한 달 단위로 모아 학생별 보고서를 만듭니다 (초·중등)</span></h3>
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px;">
+        <div class="form-group">
+          <label>보고 월</label>
+          <input type="month" id="srMonth" style="color-scheme:dark;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+        </div>
+        <div class="form-group">
+          <label>선생님</label>
+          <select id="srTeacher" style="padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;"><option value="">전체</option></select>
+        </div>
+        <button class="btn btn-primary" onclick="srGenerate()">① 집계해서 보고서 초안 만들기</button>
+        <button class="btn btn-secondary" onclick="srLoad()">🔍 현황 조회</button>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-secondary" onclick="srExport()">② 내보내기 (JSON)</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('srImportFile').click()">③ 가져오기 (JSON · 의견 반영)</button>
+        <input type="file" id="srImportFile" accept=".json" style="display:none;" onchange="srImport(this.files[0]);this.value=''">
+        <span style="font-size:12px;color:var(--muted);">② 내보낸 파일을 Claude에게 주면 선생님 의견을 다듬어 돌려줍니다 → ③으로 올리면 반영 · 생성 즉시 선생님 페이지 "보고서 검수"에 초안이 뜨므로 이 단계는 선택입니다</span>
+      </div>
+      <div class="msg" id="srMsg"></div>
+    </div>
+    <div class="card">
+      <div class="sr-stat" id="srStat"></div>
+      <div style="overflow:auto;">
+        <table class="sr-table">
+          <thead><tr><th>학생</th><th>반</th><th>선생님</th><th class="r">테스트</th><th class="r">문항</th><th class="r">정답률</th><th class="r">등급</th><th>상태</th><th></th></tr></thead>
+          <tbody id="srBody"><tr><td colspan="9" style="color:var(--muted);padding:20px;text-align:center;">월을 고르고 조회하거나 생성하세요.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- 토요클리닉 -->
   <div class="tab-panel" id="tab-satclinic">
 
@@ -2119,6 +2169,7 @@
 <script defer src="admin/js/clinicroom.js"></script>
 <script defer src="admin/js/tamaterials.js"></script>
 <script defer src="admin/js/reports.js"></script>
+<script defer src="admin/js/studyreport.js"></script>
 <script defer src="admin/js/satclinic.js"></script>
 <script defer src="admin/js/dailyreport.js"></script>
 <script defer src="admin/js/attendance.js"></script>
