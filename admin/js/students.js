@@ -283,8 +283,12 @@ window.saveEditStudent = async function() {
     await updateDoc(doc(db, 'students', uid), {
       name, phone, grade, branch, teacherUid, teacherName, days, classGroup, assignedTags
     });
-    // 3) 학부모 전화번호 → 학부모 계정 생성/변경
+    // 3) 학부모 계정: 이름이 바뀌면 학부모 아이디(이름.p)도 같이 변경
     let parentNote = '';
+    if (nameChanged && s.parentUid && typeof window.renameParentAccount === 'function') {
+      try { const r = await renameParentAccount({ ...s, id: uid }, s.name, name); if (r === 'renamed') parentNote += ' · 학부모 아이디 변경됨'; else if (r === 'recreated') parentNote += ' · 학부모 계정 새 이름으로 재생성(비밀번호는 학부모 번호)'; }
+      catch (e) { parentNote += ' · ⚠️ ' + e.message; }
+    }
     const parentPhone = (document.getElementById('edit-parentphone')?.value || '').replace(/[^0-9]/g, '');
     if (parentPhone && typeof window.linkParentAccount === 'function') {
       try {

@@ -52,6 +52,30 @@ window.linkParentAccount = async function (student, parentPhoneRaw) {
   return 'created';
 };
 
+// ── 학생 이름(=학부모 아이디)이 바뀌면 학부모 계정 이메일도 따라 바꿈 ──
+// 비밀번호(학부모 번호)로 로그인할 수 있으면 이메일만 변경, 안 되면(학부모가 비번을 바꿨으면) 안내만
+window.renameParentAccount = async function (student, oldName, newName) {
+  if (!student.parentUid || !student.parentPhone || oldName === newName) return 'none';
+  const oldEmail = `${oldName}.p@songmath.kr`, newEmail = `${newName}.p@songmath.kr`;
+  let user;
+  try { user = (await signInWithEmailAndPassword(secondaryAuth, oldEmail, pDigits(student.parentPhone))).user; }
+  catch (e) { throw new Error(`학부모 계정 아이디를 바꾸지 못했습니다 (학부모가 비밀번호를 바꾼 것 같습니다). 학부모는 당분간 '${oldName}' 으로 로그인해야 합니다.`); }
+  try {
+    await updateEmail(user, newEmail);
+  } catch (e) {
+    // 이메일 변경이 막힌 설정이면: 기존 계정 삭제 후 새 이름으로 재생성 (비밀번호는 학부모 번호로 초기화)
+    try { await deleteUser(user); } catch (e2) { await signOut(secondaryAuth); throw new Error('학부모 계정 아이디 변경 실패: ' + (e.code || e.message)); }
+    await signOut(secondaryAuth);
+    await updateDoc(doc(db, 'students', student.id), { parentUid: '' });
+    await deleteDoc(doc(db, 'parents', student.parentUid));
+    await linkParentAccount({ ...student, id: student.id, name: newName, parentUid: '' }, student.parentPhone);
+    return 'recreated';
+  }
+  await signOut(secondaryAuth);
+  await updateDoc(doc(db, 'parents', student.parentUid), { studentName: newName, updatedAt: new Date().toISOString() });
+  return 'renamed';
+};
+
 // ── 탭 ──
 window.initParentsTab = async function () {
   if (!studentsCache.length) await loadStudents();

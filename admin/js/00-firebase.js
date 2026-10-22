@@ -5,7 +5,7 @@
    - 이 파일 다음에 오는 <script defer> 파일들은 문서 순서대로 실행됩니다.
    ═══════════════════════════════════════════════════════════ */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updatePassword, EmailAuthProvider, reauthenticateWithCredential, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updatePassword, updateEmail, deleteUser, EmailAuthProvider, reauthenticateWithCredential, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { initializeApp as initializeSecondaryApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, deleteDoc, updateDoc, query, where, orderBy, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, getDownloadURL, listAll, uploadBytes, uploadBytesResumable, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
@@ -33,6 +33,6 @@ const secondaryAuth = getAuth(secondaryApp);
 
 // 일반 스크립트에서 쓰도록 전역으로 노출
 Object.assign(window, {
-  initializeApp, getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updatePassword, EmailAuthProvider, reauthenticateWithCredential, signInWithEmailAndPassword, initializeSecondaryApp, getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, deleteDoc, updateDoc, query, where, orderBy, Timestamp, getStorage, ref, getDownloadURL, listAll, uploadBytes, uploadBytesResumable, deleteObject, getFunctions, httpsCallable,
+  initializeApp, getAuth, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, onAuthStateChanged, updatePassword, updateEmail, deleteUser, EmailAuthProvider, reauthenticateWithCredential, signInWithEmailAndPassword, initializeSecondaryApp, getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc, deleteDoc, updateDoc, query, where, orderBy, Timestamp, getStorage, ref, getDownloadURL, listAll, uploadBytes, uploadBytesResumable, deleteObject, getFunctions, httpsCallable,
   firebaseConfig, app, auth, db, storage, functionsInstance, secondaryApp, secondaryAuth,
 });
