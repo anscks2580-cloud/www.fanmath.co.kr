@@ -102,7 +102,7 @@ onAuthStateChanged(auth, async (user) => {
         // 선생님·관리자가 특정 학생의 학부모 화면을 열어 답글 작성
         const t = await getDoc(doc(db, 'teachers', user.uid));
         const a = t.exists() ? null : await getDoc(doc(db, 'admins', user.uid));
-        if (t.exists() || (a && a.exists())) { studentId = params.get('student'); viewer = { role: 'teacher', name: (t.exists() ? t.data().name : a.data().name) || '' }; }
+        if (t.exists() || (a && a.exists())) { studentId = params.get('student'); viewer = { role: 'teacher', name: (t.exists() ? t.data().name : a.data().name) || '', isTeacher: t.exists() }; }
       }
     }
     if (!studentId) { $app.innerHTML = '<div class="empty">학부모 계정이 아닙니다. 학원에 문의해 주세요.</div>'; return; }
@@ -111,7 +111,10 @@ onAuthStateChanged(auth, async (user) => {
     const [ws, ms, cs, hs] = await Promise.all([
       getDocs(query(collection(db, 'weeklyReports'), where('studentId', '==', studentId))),
       getDocs(query(collection(db, 'studentReports'), where('studentId', '==', studentId), where('status', '==', 'sent'))),
-      getDocs(query(collection(db, 'reportComments'), where('studentId', '==', studentId))),
+      // 선생님은 규칙상 본인 담당 댓글만 읽을 수 있으므로 조건을 좁혀서 조회 (관리자는 전체)
+      getDocs(viewer.role === 'teacher' && viewer.isTeacher
+        ? query(collection(db, 'reportComments'), where('studentId', '==', studentId), where('teacherUid', '==', user.uid))
+        : query(collection(db, 'reportComments'), where('studentId', '==', studentId))),
       getDocs(query(collection(db, 'homeworkLogs'), where('studentIds', 'array-contains', studentId))),
     ]);
     homework = []; hs.forEach((d) => homework.push({ id: d.id, ...d.data() }));
