@@ -37,6 +37,15 @@
   .pill.lo { background:var(--warn-soft); color:var(--warn); } .pill.hi { background:var(--good-soft); color:var(--good); }
   .memo { font-size:13.5px; color:var(--ink-2); background:var(--gold-soft); border-left:3px solid var(--gold); padding:8px 12px; border-radius:8px; margin-top:6px; white-space:pre-wrap; }
   .empty { text-align:center; color:var(--muted); padding:36px 0; font-size:14px; }
+  .noti { background:#C8541F; color:#fff; border-radius:14px; padding:14px 16px; margin-bottom:12px; box-shadow:0 8px 24px rgba(200,84,31,0.3); animation:notiIn .4s ease; }
+  @keyframes notiIn { from { transform:translateY(-8px); opacity:0; } to { transform:none; opacity:1; } }
+  .noti h3 { font-size:15px; font-weight:800; display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .noti h3 .dot { width:10px; height:10px; border-radius:50%; background:#fff; animation:pulse 1.2s infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+  .noti button { display:flex; width:100%; align-items:center; gap:8px; background:rgba(255,255,255,.15); border:none; color:#fff; border-radius:10px; padding:9px 12px; margin-top:6px; font-family:inherit; font-size:13px; cursor:pointer; text-align:left; }
+  .noti button:hover { background:rgba(255,255,255,.25); }
+  .noti button b { white-space:nowrap; }
+  .noti button span { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; opacity:.9; }
   .cm-btn { font-size:12px; color:var(--accent); font-weight:700; background:none; border:none; font-family:inherit; cursor:pointer; padding:6px 0 0; display:flex; align-items:center; gap:6px; }
   .cm-new { background:var(--warn); color:#fff; font-size:10px; padding:1px 7px; border-radius:999px; }
   .cm-box { margin-top:8px; border-top:1px dashed var(--line); padding-top:8px; }
@@ -66,6 +75,9 @@ const auth = getAuth(app), db = getFirestore(app);
 const $app = document.getElementById('app');
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let cur = 'homework', child = null, weekly = [], monthly = [], comments = [], homework = [], me = null;
+// viewer: 'parent'(학부모 본인) | 'student'(학생 계정) | 'teacher'(선생님·관리자가 ?student=학생uid 로 열어봄 — 답글 작성용)
+let viewer = { role: 'parent', name: '' };
+const params = new URLSearchParams(location.search);
 const openThreads = new Set();
 
 onAuthStateChanged(auth, async (user) => {
@@ -74,8 +86,17 @@ onAuthStateChanged(auth, async (user) => {
   try {
     const p = await getDoc(doc(db, 'parents', user.uid));
     let studentId;
-    if (p.exists()) studentId = p.data().studentId;
-    else { const s = await getDoc(doc(db, 'students', user.uid)); if (s.exists()) studentId = user.uid; } // 학생 계정으로도 열람 가능
+    if (p.exists()) { studentId = p.data().studentId; viewer = { role: 'parent', name: '' }; }
+    else {
+      const s = await getDoc(doc(db, 'students', user.uid));
+      if (s.exists()) { studentId = user.uid; viewer = { role: 'student', name: s.data().name || '' }; } // 학생 계정으로도 열람 가능
+      else if (params.get('student')) {
+        // 선생님·관리자가 특정 학생의 학부모 화면을 열어 답글 작성
+        const t = await getDoc(doc(db, 'teachers', user.uid));
+        const a = t.exists() ? null : await getDoc(doc(db, 'admins', user.uid));
+        if (t.exists() || (a && a.exists())) { studentId = params.get('student'); viewer = { role: 'teacher', name: (t.exists() ? t.data().name : a.data().name) || '' }; }
+      }
+    }
     if (!studentId) { $app.innerHTML = '<div class="empty">학부모 계정이 아닙니다. 학원에 문의해 주세요.</div>'; return; }
     const sd = await getDoc(doc(db, 'students', studentId));
     child = { id: studentId, ...(sd.exists() ? sd.data() : {}) };
@@ -99,16 +120,19 @@ onAuthStateChanged(auth, async (user) => {
 
 window.pTab = (t) => { cur = t; render(); };
 const threadOf = (type, id) => comments.filter((c) => c.targetType === type && c.targetId === id);
-const unreadOf = (type, id) => threadOf(type, id).filter((c) => c.authorRole === 'teacher' && !c.readByParent).length;
+const isTeacherView = () => viewer.role === 'teacher';
+// 안 읽은 글: 학부모 화면에선 선생님 답글, 선생님 화면에선 학부모 댓글
+const unreadOf = (type, id) => threadOf(type, id).filter((c) => isTeacherView() ? (c.authorRole === 'parent' && !c.readByTeacher) : (c.authorRole === 'teacher' && !c.readByParent)).length;
 window.pToggle = async (key) => {
   if (openThreads.has(key)) openThreads.delete(key); else openThreads.add(key);
   render();
-  // 열면 선생님 답글 읽음 처리
+  // 열면 상대방 글 읽음 처리
   if (openThreads.has(key)) {
     const [type, id] = key.split('|');
-    const unread = threadOf(type, id).filter((c) => c.authorRole === 'teacher' && !c.readByParent);
-    for (const c of unread) { try { await updateDoc(doc(db, 'reportComments', c.id), { readByParent: true }); c.readByParent = true; } catch (e) {} }
-    if (unread.length) render();
+    const field = isTeacherView() ? 'readByTeacher' : 'readByParent';
+    const unread = threadOf(type, id).filter((c) => isTeacherView() ? (c.authorRole === 'parent' && !c.readByTeacher) : (c.authorRole === 'teacher' && !c.readByParent));
+    for (const c of unread) { try { await updateDoc(doc(db, 'reportComments', c.id), { [field]: true }); c[field] = true; } catch (e) {} }
+    if (unread.length) { render(); try { window.parent.postMessage({ type: 'pcRead' }, '*'); } catch (e) {} }
   }
 };
 window.pSend = async (type, id, teacherUid, teacherName, label) => {
@@ -117,40 +141,64 @@ window.pSend = async (type, id, teacherUid, teacherName, label) => {
   if (!text) return;
   ta.disabled = true;
   try {
+    const asTeacher = isTeacherView();
     const data = {
       targetType: type, targetId: id, targetLabel: label,
       studentId: child.id, studentName: child.name || '',
-      teacherUid: teacherUid || child.teacherUid || '', teacherName: teacherName || child.teacherName || '',
-      authorRole: 'parent', authorUid: me.uid, authorName: `${child.name} 학부모`,
-      text, readByTeacher: false, readByParent: true, createdAt: serverTimestamp(),
+      teacherUid: asTeacher ? me.uid : (teacherUid || child.teacherUid || ''), teacherName: asTeacher ? viewer.name : (teacherName || child.teacherName || ''),
+      authorRole: asTeacher ? 'teacher' : 'parent', authorUid: me.uid, authorName: asTeacher ? `${viewer.name} 선생님` : `${child.name} 학부모`,
+      text, readByTeacher: asTeacher, readByParent: !asTeacher, createdAt: serverTimestamp(),
     };
     const ref = await addDoc(collection(db, 'reportComments'), data);
     comments.push({ id: ref.id, ...data, createdAt: { seconds: Date.now() / 1000 } });
+    if (asTeacher) { // 답글 달면 그 대화의 학부모 댓글은 읽음 처리
+      for (const c of threadOf(type, id).filter((c) => c.authorRole === 'parent' && !c.readByTeacher)) { try { await updateDoc(doc(db, 'reportComments', c.id), { readByTeacher: true }); c.readByTeacher = true; } catch (e) {} }
+      try { window.parent.postMessage({ type: 'pcRead' }, '*'); } catch (e) {}
+    }
     render();
   } catch (e) { alert('댓글을 보내지 못했습니다: ' + e.message); ta.disabled = false; }
 };
+// 들어오자마자 보이는 알림: 안 읽은 상대방 글을 대화별로 모아 맨 위에
+function notiHtml() {
+  const unread = comments.filter((c) => isTeacherView() ? (c.authorRole === 'parent' && !c.readByTeacher) : (c.authorRole === 'teacher' && !c.readByParent));
+  if (!unread.length) return '';
+  const groups = {};
+  unread.forEach((c) => { const k = `${c.targetType}|${c.targetId}`; (groups[k] = groups[k] || { c, n: 0 }).n++; });
+  return `<div class="noti">
+    <h3><span class="dot"></span>${isTeacherView() ? `학부모 댓글 ${unread.length}개가 답글을 기다려요` : `선생님 답글 ${unread.length}개가 도착했어요`}</h3>
+    ${Object.entries(groups).map(([k, g]) => `<button onclick="pGoThread('${k}')"><b>${esc(g.c.targetLabel || '')}</b><span>${esc(g.c.authorName || '')}: ${esc(g.c.text)}</span><b>›</b></button>`).join('')}
+  </div>`;
+}
+window.pGoThread = async (key) => {
+  const [type] = key.split('|');
+  cur = type === 'weekly' ? 'weekly' : type === 'monthly' ? 'monthly' : cur;
+  if (!openThreads.has(key)) await pToggle(key); else render();
+  setTimeout(() => { const el = document.getElementById(`th-${key.replace(/[^a-zA-Z0-9]/g, '_')}`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 50);
+};
 function threadHtml(type, id, teacherUid, teacherName, label) {
   const key = `${type}|${id}`, th = threadOf(type, id), unread = unreadOf(type, id), open = openThreads.has(key);
-  return `
-    <button class="cm-btn" onclick="pToggle('${key}')">💬 댓글 ${th.length ? th.length + '개' : '남기기'} ${unread ? `<span class="cm-new">새 답글 ${unread}</span>` : ''} <span style="opacity:.6">${open ? '▲' : '▼'}</span></button>
+  return `<div id="th-${key.replace(/[^a-zA-Z0-9]/g, '_')}"></div>
+    <button class="cm-btn" onclick="pToggle('${key}')">💬 댓글 ${th.length ? th.length + '개' : '남기기'} ${unread ? `<span class="cm-new">${isTeacherView() ? '새 댓글' : '새 답글'} ${unread}</span>` : ''} <span style="opacity:.6">${open ? '▲' : '▼'}</span></button>
     ${open ? `<div class="cm-box">
       ${th.map((c) => `<div class="cm ${c.authorRole}"><div class="who">${esc(c.authorName || (c.authorRole === 'teacher' ? '선생님' : '학부모'))} · ${c.createdAt?.seconds ? new Date(c.createdAt.seconds * 1000).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }) : ''}</div>${esc(c.text)}</div>`).join('')}
-      <div class="cm-form"><textarea id="cm-ta-${type}-${id}" placeholder="선생님께 궁금한 점이나 전하실 말씀을 남겨주세요"></textarea><button onclick="pSend('${type}','${id}','${esc(teacherUid || '')}','${esc(teacherName || '')}','${esc(label)}')">보내기</button></div>
+      <div class="cm-form"><textarea id="cm-ta-${type}-${id}" placeholder="${isTeacherView() ? '학부모님께 답글을 남겨주세요' : '선생님께 궁금한 점이나 전하실 말씀을 남겨주세요'}"></textarea><button onclick="pSend('${type}','${id}','${esc(teacherUid || '')}','${esc(teacherName || '')}','${esc(label)}')">보내기</button></div>
     </div>` : ''}`;
 }
 window.pLogout = async () => { await signOut(auth); location.replace('login.html'); };
 
+const tabDot = (type) => comments.some((c) => c.targetType === type && (isTeacherView() ? (c.authorRole === 'parent' && !c.readByTeacher) : (c.authorRole === 'teacher' && !c.readByParent))) ? ' <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#C8541F;vertical-align:middle;margin-left:2px;"></span>' : '';
 function render() {
   const lvl = (v) => v >= 4 ? 'hi' : v <= 2 ? 'lo' : '';
   $app.innerHTML = `
     <div class="head">
-      <div><div class="brand">SONGMATH · 학부모</div><h1>${esc(child.name)} 학생</h1><div class="sub">${esc(child.grade || '')}${child.classGroup ? ' · ' + esc(child.classGroup) : ''}${child.teacherName ? ' · ' + esc(child.teacherName) + ' 선생님' : ''}</div></div>
-      <button onclick="pLogout()">로그아웃</button>
+      <div><div class="brand">SONGMATH · 학부모${isTeacherView() ? ` <span style="background:#C8541F;color:#fff;padding:1px 8px;border-radius:999px;font-size:10px;letter-spacing:0;">선생님 보기 · ${esc(viewer.name)}</span>` : ''}</div><h1>${esc(child.name)} 학생</h1><div class="sub">${esc(child.grade || '')}${child.classGroup ? ' · ' + esc(child.classGroup) : ''}${child.teacherName ? ' · ' + esc(child.teacherName) + ' 선생님' : ''}</div></div>
+      ${isTeacherView() ? '' : '<button onclick="pLogout()">로그아웃</button>'}
     </div>
+    ${notiHtml()}
     <div class="tabs">
       <button class="tab ${cur === 'homework' ? 'active' : ''}" onclick="pTab('homework')">숙제</button>
-      <button class="tab ${cur === 'weekly' ? 'active' : ''}" onclick="pTab('weekly')">주간 성취도</button>
-      <button class="tab ${cur === 'monthly' ? 'active' : ''}" onclick="pTab('monthly')">월간 보고서</button>
+      <button class="tab ${cur === 'weekly' ? 'active' : ''}" onclick="pTab('weekly')">주간 성취도${tabDot('weekly')}</button>
+      <button class="tab ${cur === 'monthly' ? 'active' : ''}" onclick="pTab('monthly')">월간 보고서${tabDot('monthly')}</button>
     </div>
     ${cur === 'homework' ? `<div class="card"><h2>숙제</h2>${homework.length ? homework.slice(0, 60).map((h) => { const d = new Date(h.date + 'T00:00:00'); const dow = ['일','월','화','수','목','금','토'][d.getDay()]; const isToday = h.date === new Date().toISOString().slice(0, 10); return `
         <div class="wk" style="${isToday ? 'border-color:var(--accent);' : ''}">

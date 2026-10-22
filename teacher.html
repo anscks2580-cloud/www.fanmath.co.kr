@@ -949,7 +949,14 @@ select option:disabled { color:#9B94B3; }
       </div>
       <div class="alert ok" id="pc-ok"></div>
       <div class="alert err" id="pc-err"></div>
-      <div id="pcList"><div class="empty-state"><div class="icon">💬</div>아직 학부모 댓글이 없습니다.</div></div>
+      <div class="rv-layout">
+        <div class="rv-list" id="pcList"><div class="empty-state"><div class="icon">💬</div>아직 학부모 댓글이 없습니다.</div></div>
+        <div id="pcDetail" style="display:none;">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">학부모가 보는 화면 그대로입니다. 댓글을 펼쳐서 바로 답글을 달아주세요.</div>
+          <iframe class="rv-frame" id="pcFrame" title="학부모 화면" style="height:72vh;"></iframe>
+          <div style="display:flex;gap:8px;margin-top:8px;"><a class="btn btn-outline btn-sm" id="pcOpen" href="#" target="_blank" style="text-decoration:none;">새 창에서 보기</a></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -5068,29 +5075,23 @@ function pcRender() {
   if (pcMode === 'unread') th = th.filter((x) => x.unread);
   if (!th.length) { el.innerHTML = `<div class="empty-state"><div class="icon">💬</div>${pcMode === 'unread' ? '답글이 필요한 댓글이 없습니다.' : '아직 학부모 댓글이 없습니다.'}</div>`; return; }
   el.innerHTML = th.map((x) => `
-    <div class="pc-thread ${x.unread ? 'unread' : ''}" id="pct-${x.key.replace(/[^a-zA-Z0-9]/g, '_')}">
-      <div class="pc-head"><span class="nm">${esc(x.c.studentName)}</span><span class="lb">${esc(x.c.targetLabel || x.c.targetType)}</span>${x.unread ? `<span class="nw">새 댓글 ${x.unread}</span>` : ''}
-        <span style="margin-left:auto;font-size:11px;color:var(--muted);">${x.c.targetType === 'monthly' ? `<a href="report.html?id=${encodeURIComponent(x.c.targetId)}" target="_blank" style="color:var(--gold);">보고서 보기</a>` : ''}</span></div>
-      ${x.items.map((c) => `<div class="pc-msg ${c.authorRole}"><div class="who">${esc(c.authorName || '')} · ${c.createdAt?.seconds ? new Date(c.createdAt.seconds * 1000).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}</div>${esc(c.text)}</div>`).join('')}
-      <div class="pc-form"><textarea id="pc-ta-${x.key.replace(/[^a-zA-Z0-9]/g, '_')}" placeholder="학부모님께 답글"></textarea><button class="btn btn-gold btn-sm" onclick="pcReply('${x.key}')">답글</button></div>
+    <div class="rv-item ${pcCurStudent === x.c.studentId ? 'active' : ''}" onclick="pcOpenStudent('${x.c.studentId}')" style="flex-wrap:wrap;">
+      <span class="nm">${esc(x.c.studentName)}<small>${esc(x.c.targetLabel || '')}</small></span>
+      ${x.unread ? `<span class="rv-st draft">새 댓글 ${x.unread}</span>` : `<span class="rv-st reviewed">답글 완료</span>`}
+      <div style="width:100%;font-size:12px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(x.last.authorRole === 'parent' ? '학부모: ' : '나: ')}${esc(x.last.text)}</div>
     </div>`).join('');
 }
-window.pcReply = async function (key) {
-  const th = pcThreads().find((x) => x.key === key); if (!th || !pcMe) return;
-  const ta = $(`pc-ta-${key.replace(/[^a-zA-Z0-9]/g, '_')}`); const text = (ta?.value || '').trim();
-  if (!text) { note('pc-err', '답글 내용을 적어주세요.', 'err'); return; }
-  try {
-    const c0 = th.c;
-    const data = { targetType: c0.targetType, targetId: c0.targetId, targetLabel: c0.targetLabel || '', studentId: c0.studentId, studentName: c0.studentName || '',
-      teacherUid: pcMe.uid, teacherName: pcMe.name, authorRole: 'teacher', authorUid: pcMe.uid, authorName: `${pcMe.name} 선생님`,
-      text, readByTeacher: true, readByParent: false, createdAt: serverTimestamp() };
-    await addDoc(collection(db, 'reportComments'), data);
-    // 이 대화의 학부모 댓글 읽음 처리
-    for (const c of th.items.filter((c) => c.authorRole === 'parent' && !c.readByTeacher)) await updateDoc(doc(db, 'reportComments', c.id), { readByTeacher: true });
-    note('pc-ok', '답글을 보냈습니다.', 'ok');
-    await pcLoad();
-  } catch (e) { note('pc-err', '답글 오류: ' + e.message, 'err'); }
+let pcCurStudent = null;
+window.pcOpenStudent = function (sid) {
+  pcCurStudent = sid;
+  $('pcDetail').style.display = 'block';
+  $('pcFrame').src = `parent.html?student=${encodeURIComponent(sid)}&t=${Date.now()}`;
+  $('pcOpen').href = `parent.html?student=${encodeURIComponent(sid)}`;
+  pcRender();
+  if (window.innerWidth < 900) $('pcDetail').scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
+// 학부모 화면(iframe)에서 답글·읽음 처리가 일어나면 목록·배지 갱신
+window.addEventListener('message', (e) => { if (e.data && e.data.type === 'pcRead') pcLoad(); });
 </script>
 
 <!-- ══════════ 사이드바 메뉴 — 숨긴 기존 탭 버튼(#tnavLegacy)을 눌러 전환하므로 switchTab·초기화 함수는 그대로 ══════════ -->
