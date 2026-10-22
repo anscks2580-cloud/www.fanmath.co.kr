@@ -6,6 +6,8 @@
    - 학부모 페이지 "숙제" 탭에서 자기 아이가 포함된 기록만 날짜순으로 보임
    ═══════════════════════════════════════════════════════════ */
 const hlEsc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const hlClsKey = (c) => { const m = String(c || '').match(/^(초|중|고)\s*(\d)/); return m ? ({ 초: 0, 중: 1, 고: 2 }[m[1]] * 10 + parseInt(m[2], 10)) : 99; };
+const hlClsCmp = (a, b) => hlClsKey(a) - hlClsKey(b) || String(a || '').localeCompare(String(b || ''), 'ko');
 const hlToday = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 let hlSel = { teacherUid: '', cls: '' };
 let hlRows = [];       // 선택한 날짜의 기록
@@ -36,7 +38,7 @@ function hlClassesOf(teacherUid) {
   const pool = teacherUid ? studentsCache.filter((s) => s.teacherUid === teacherUid) : studentsCache;
   const m = new Map();
   pool.forEach((s) => { const c = String(s.classGroup || '').trim() || '(반 미배정)'; m.set(c, (m.get(c) || 0) + 1); });
-  return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0], 'ko'));
+  return [...m.entries()].sort((a, b) => hlClsCmp(a[0], b[0]));
 }
 function hlRenderClasses() {
   const el = document.getElementById('hlClasses');
@@ -100,7 +102,7 @@ window.hlLoad = async function () {
   try {
     const snap = await getDocs(query(collection(db, 'homeworkLogs'), where('date', '==', date)));
     hlRows = []; snap.forEach((d) => hlRows.push({ id: d.id, ...d.data() }));
-    hlRows.sort((a, b) => (a.teacherName || '').localeCompare(b.teacherName || '', 'ko') || (a.classGroup || '').localeCompare(b.classGroup || '', 'ko'));
+    hlRows.sort((a, b) => (a.teacherName || '').localeCompare(b.teacherName || '', 'ko') || hlClsCmp(a.classGroup, b.classGroup));
     const d = new Date(date + 'T00:00:00');
     document.getElementById('hlTableTitle').textContent = `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 ${['일', '월', '화', '수', '목', '금', '토'][d.getDay()]}요일 · ${hlRows.length}건`;
     if (!hlRows.length) { el.innerHTML = '<tr><td colspan="5" style="color:var(--muted);padding:20px;text-align:center;">이 날짜에 입력된 숙제가 없습니다.</td></tr>'; return; }
@@ -148,4 +150,95 @@ window.hlCopyPrev = async function () {
   }
   showMsg('hlMsg', `✅ ${rows.length}건 복사했습니다. 내용을 고쳐주세요.`, 'success');
   hlLoad();
+};
+
+// ══ 마감용 이미지: 입력된 숙제를 사진 표와 같은 모양으로 그려서 PNG 저장/복사 ══
+function hlDrawImage() {
+  const date = document.getElementById('hlDate').value;
+  const d = new Date(date + 'T00:00:00');
+  const title = `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 ${['일', '월', '화', '수', '목', '금', '토'][d.getDay()]}요일`;
+  const S = 2; // 선명하게 2배
+  const W = 500, colW = [70, 80, 90, 260];       // 담당 · 반 · 학생 · 내용
+  const rowH = 22, titleH = 32, headH = 24, pad = 4;
+  const font = (b, px) => `${b ? 'bold ' : ''}${px}px "Malgun Gothic","Apple SD Gothic Neo",sans-serif`;
+  const bands = ['#FFF2CC', '#DDEBF7', '#E2EFDA', '#FCE4D6', '#EDEDED', '#D9E1F2'];
+  const rows = hlRows.slice();
+  rows.sort((a, b) => (a.teacherName || '').localeCompare(b.teacherName || '', 'ko') || hlClsCmp(a.classGroup, b.classGroup));
+  // 선생님별 묶음 → 반별 묶음(학생 1명 = 1줄, 내용은 반 단위 병합)
+  const groups = [];
+  rows.forEach((r) => { let g = groups.find((x) => x.teacher === r.teacherName); if (!g) { g = { teacher: r.teacherName, classes: [] }; groups.push(g); } g.classes.push(r); });
+  const totalRows = rows.reduce((a, r) => a + Math.max(1, (r.studentNames || []).length), 0);
+  const H = titleH + headH + totalRows * rowH + 2;
+  const canvas = document.getElementById('hlCanvas');
+  canvas.width = W * S; canvas.height = H * S;
+  const ctx = canvas.getContext('2d'); ctx.scale(S, S);
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = 'middle';
+  const x0 = 1, xs = [x0]; colW.forEach((w) => xs.push(xs[xs.length - 1] + w));
+  const cell = (x, y, w, h, bg, text, bold, size = 12, align = 'center') => {
+    if (bg) { ctx.fillStyle = bg; ctx.fillRect(x, y, w, h); }
+    ctx.strokeStyle = '#999'; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, w, h);
+    if (text == null) return;
+    ctx.fillStyle = '#111'; ctx.font = font(bold, size); ctx.textAlign = align;
+    const lines = String(text).split('\n');
+    const lh = size + 4; const y0 = y + h / 2 - (lines.length - 1) * lh / 2;
+    lines.forEach((ln, i) => {
+      let t = ln; while (ctx.measureText(t).width > w - pad * 2 && t.length > 1) t = t.slice(0, -1);
+      ctx.fillText(t, align === 'center' ? x + w / 2 : x + pad, y0 + i * lh);
+    });
+  };
+  // 제목
+  cell(x0, 1, W - 2, titleH, '#FFF2CC', title, true, 14);
+  let y = 1 + titleH;
+  ['담당', '반', '학생', '내용'].forEach((h, i) => cell(xs[i], y, colW[i], headH, '#FFD966', h, true, 12));
+  y += headH;
+  groups.forEach((g, gi) => {
+    const gTop = y;
+    const gRows = g.classes.reduce((a, r) => a + Math.max(1, (r.studentNames || []).length), 0);
+    g.classes.forEach((r) => {
+      const names = (r.studentNames || []).length ? r.studentNames : ['-'];
+      const cTop = y;
+      names.forEach((n) => { cell(xs[2], y, colW[2], rowH, null, n, false, 12); y += rowH; });
+      cell(xs[1], cTop, colW[1], y - cTop, null, r.classGroup, false, 12);
+      // 내용: 길면 줄바꿈
+      ctx.font = font(false, 12);
+      const words = String(r.content || '').replace(/\r/g, '').split(/\n/).flatMap((line) => {
+        const out = []; let cur = '';
+        for (const ch of line) { if (ctx.measureText(cur + ch).width > colW[3] - pad * 2) { out.push(cur); cur = ch; } else cur += ch; }
+        out.push(cur); return out;
+      });
+      cell(xs[3], cTop, colW[3], y - cTop, null, words.join('\n'), false, 12);
+    });
+    cell(xs[0], gTop, colW[0], y - gTop, bands[gi % bands.length], (g.teacher || '') + 'T', true, 12);
+    // 선생님 띠 배경을 반·학생·내용 칸에도 연하게
+    ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle = bands[gi % bands.length]; ctx.fillRect(xs[1], gTop, W - 2 - colW[0], gRows * rowH); ctx.restore();
+    // 다시 글자/테두리가 가려지지 않게 테두리만 재도색
+    ctx.strokeStyle = '#999'; ctx.strokeRect(xs[1] + 0.5, gTop + 0.5, W - 2 - colW[0], gRows * rowH);
+  });
+  ctx.strokeStyle = '#666'; ctx.lineWidth = 1.5; ctx.strokeRect(x0 + 0.5, 1.5, W - 2, H - 2);
+  return canvas;
+}
+window.hlPreviewImage = function () {
+  if (!hlRows.length) { showMsg('hlMsg', '이 날짜에 입력된 숙제가 없습니다.', 'error'); return; }
+  hlDrawImage();
+  document.getElementById('hlCanvasWrap').style.display = 'block';
+  document.getElementById('hlCanvas').scrollIntoView({ behavior: 'smooth', block: 'center' });
+};
+window.hlDownloadImage = function () {
+  if (!hlRows.length) { showMsg('hlMsg', '이 날짜에 입력된 숙제가 없습니다.', 'error'); return; }
+  const canvas = hlDrawImage();
+  document.getElementById('hlCanvasWrap').style.display = 'block';
+  const a = document.createElement('a');
+  a.download = `숙제_${document.getElementById('hlDate').value}.png`;
+  a.href = canvas.toDataURL('image/png'); a.click();
+};
+window.hlCopyImage = async function () {
+  if (!hlRows.length) { showMsg('hlMsg', '이 날짜에 입력된 숙제가 없습니다.', 'error'); return; }
+  const canvas = hlDrawImage();
+  document.getElementById('hlCanvasWrap').style.display = 'block';
+  try {
+    const blob = await new Promise((r) => canvas.toBlob(r, 'image/png'));
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+    showMsg('hlMsg', '✅ 이미지를 복사했습니다. 카톡에 붙여넣기(Ctrl+V) 하세요.', 'success');
+  } catch (e) { showMsg('hlMsg', '복사가 안 되는 브라우저입니다. "이미지 저장"을 써주세요.', 'error'); }
 };

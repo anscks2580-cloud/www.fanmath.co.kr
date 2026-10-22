@@ -1364,7 +1364,13 @@
       <div class="msg" id="hlMsg"></div>
     </div>
     <div class="card">
-      <h3 id="hlTableTitle">입력된 숙제</h3>
+      <h3 id="hlTableTitle" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">입력된 숙제</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        <button class="btn btn-primary btn-sm" onclick="hlCopyImage()">📋 이미지 복사 (카톡 붙여넣기)</button>
+        <button class="btn btn-secondary btn-sm" onclick="hlDownloadImage()">💾 이미지 저장</button>
+        <button class="btn btn-secondary btn-sm" onclick="hlPreviewImage()">👁 미리보기</button>
+      </div>
+      <div id="hlCanvasWrap" style="display:none;margin-bottom:14px;"><canvas id="hlCanvas" style="max-width:100%;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:#fff;"></canvas></div>
       <div style="overflow:auto;">
         <table class="hl-table">
           <thead><tr><th style="width:90px;">담당</th><th style="width:110px;">반</th><th style="width:220px;">학생</th><th>내용</th><th style="width:110px;"></th></tr></thead>
