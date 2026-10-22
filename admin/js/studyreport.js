@@ -190,24 +190,35 @@ window.srExport = async function () {
 window.srDownloadPdfZip = async function () {
   const month = document.getElementById('srMonth').value; if (!month) return;
   if (typeof JSZip === 'undefined') { srMsg('ZIP 모듈이 없습니다. 새로고침 후 다시 시도해 주세요.', 'error'); return; }
+  const getBlob = (url) => new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest(); xhr.responseType = 'blob';
+    xhr.onload = () => xhr.status === 200 ? resolve(xhr.response) : reject(new Error('status ' + xhr.status));
+    xhr.onerror = () => reject(new Error('네트워크 오류')); xhr.open('GET', url); xhr.send();
+  });
   try {
     const [from, to] = srMonthRange(month);
     const tSnap = await getDocs(query(collection(db, 'dailyTests'), where('date', '>=', from), where('date', '<=', to)));
     const tests = []; tSnap.forEach((d) => tests.push({ id: d.id, ...d.data() }));
     if (!tests.length) { srMsg('이 달에 등록된 시험지가 없습니다.', 'error'); return; }
-    const zip = new JSZip(); let n = 0;
+    const zip = new JSZip(); let n = 0; const fail = [];
     const safe = (x) => String(x || '').replace(/[\\/:*?"<>|]/g, '_');
     for (const t of tests) {
-      if (!t.downloadURL) continue;
-      srMsg(`PDF 받는 중... (${n + 1}/${tests.length})`, 'success');
-      const blob = await (await fetch(t.downloadURL)).blob();
-      zip.file(`${t.date}_${safe(t.classGroup || t.grade)}_${t.id}_${safe(t.fileName || t.title || '시험지')}${/\.pdf$/i.test(t.fileName || '') ? '' : '.pdf'}`, blob);
-      n++;
+      srMsg(`PDF 받는 중... (${n + fail.length + 1}/${tests.length})`, 'success');
+      try {
+        let url = t.downloadURL;
+        if (!url && t.filePath) url = await getDownloadURL(ref(storage, t.filePath));
+        if (!url) throw new Error('파일 주소 없음');
+        const blob = await getBlob(url);
+        zip.file(`${t.date}_${safe(t.classGroup || t.grade)}_${t.id}_${safe((t.fileName || t.title || '시험지').replace(/\.pdf$/i, ''))}.pdf`, blob);
+        n++;
+      } catch (e) { fail.push(`${t.date} ${t.title || ''}: ${e.message}`); }
     }
+    if (!n) { srMsg('받은 PDF가 없습니다. ' + fail.join(' / '), 'error'); return; }
     const out = await zip.generateAsync({ type: 'blob' });
-    const a = document.createElement('a'); a.href = URL.createObjectURL(out); a.download = `일일테스트_${month}.zip`; a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
-    srMsg(`✅ 시험지 ${n}장을 ZIP으로 받았습니다. 파일명의 날짜_반_ID 가 JSON의 tests[].id 와 맞습니다.`, 'success');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(out); a.download = `일일테스트_${month}.zip`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+    srMsg(`✅ 시험지 ${n}장을 ZIP으로 받았습니다.${fail.length ? ' 실패 ' + fail.length + '장: ' + fail.join(' / ') : ''} 파일명의 날짜_반_ID 가 JSON의 tests[].id 와 맞습니다.`, fail.length ? 'error' : 'success');
   } catch (e) { srMsg('ZIP 오류: ' + e.message, 'error'); }
 };
 
