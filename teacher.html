@@ -427,6 +427,7 @@ select option:disabled { color:#9B94B3; }
     <button class="teacher-tab" onclick="switchTab('weekly',this)">주간성취도</button>
     <button class="teacher-tab" onclick="switchTab('monthly',this)">월말보고서</button>
     <button class="teacher-tab" onclick="switchTab('tests',this)">누적테스트</button>
+    <button class="teacher-tab" onclick="switchTab('dailytest',this);dtInit()">일일테스트</button>
     <button class="teacher-tab" onclick="switchTab('progress',this)">반별 진도</button>
     <button class="teacher-tab" onclick="switchTab('clinic',this);initClinicTab()">토요클리닉</button>
     <button class="teacher-tab" onclick="switchTab('videos',this);loadTeacherVideos()">강의 목록</button>
@@ -756,6 +757,140 @@ select option:disabled { color:#9B94B3; }
             <tr><td colspan="7" class="empty-state" style="padding:30px 10px;">테스트 기록을 불러오는 중...</td></tr>
           </tbody>
         </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 일일테스트: 시험지 등록 · 오답 입력 (초·중등 월말보고서 원본 데이터) ══ -->
+  <div class="tab-panel" id="tab-dailytest">
+    <style>
+      .dt-top { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+      .dt-list { display:flex; flex-direction:column; gap:6px; }
+      .dt-row { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; border:1px solid var(--border-soft); background:rgba(255,255,255,0.03); cursor:pointer; }
+      .dt-row:hover { border-color:rgba(240,192,64,0.4); }
+      .dt-row.active { border-color:var(--gold); background:rgba(240,192,64,0.08); }
+      .dt-row .dt-date { font-size:12px; color:var(--muted); min-width:84px; }
+      .dt-row .dt-title { font-size:13.5px; font-weight:600; color:var(--off-white); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      .dt-row .dt-meta { font-size:11.5px; color:var(--muted); white-space:nowrap; }
+      .dt-tag { font-size:10.5px; padding:2px 7px; border-radius:6px; background:rgba(255,255,255,0.07); color:var(--muted); white-space:nowrap; }
+      .dt-tag.ok { background:rgba(95,217,138,0.12); color:#7fe0a3; }
+      .dt-tag.warn { background:rgba(255,179,92,0.12); color:#ffc883; }
+      .dt-grid { width:100%; border-collapse:separate; border-spacing:0; font-size:13px; }
+      .dt-grid th { font-size:11px; color:var(--muted); letter-spacing:1px; padding:8px 8px; text-align:left; border-bottom:1px solid var(--border-soft); position:sticky; top:0; background:var(--bg-card); z-index:1; }
+      .dt-grid td { padding:8px 8px; border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:middle; }
+      .dt-grid tr.absent td { opacity:0.45; }
+      .dt-name { white-space:nowrap; font-weight:600; color:var(--off-white); }
+      .dt-name small { color:var(--muted); font-weight:400; margin-left:4px; }
+      .dt-chips { display:flex; flex-wrap:wrap; gap:4px; }
+      .dt-chip { width:30px; height:26px; border-radius:6px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.03); color:var(--muted); font-size:11.5px; font-family:inherit; cursor:pointer; padding:0; line-height:1; }
+      .dt-chip:hover { border-color:rgba(255,120,120,0.6); color:#ff9a9a; }
+      .dt-chip.wrong { background:rgba(255,80,80,0.18); border-color:rgba(255,80,80,0.6); color:#ff9a9a; font-weight:700; }
+      .dt-score { font-size:12px; white-space:nowrap; min-width:64px; text-align:right; }
+      .dt-abs { font-size:11px; padding:3px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.15); background:transparent; color:var(--muted); cursor:pointer; font-family:inherit; white-space:nowrap; }
+      .dt-abs.on { border-color:rgba(255,179,92,0.6); color:#ffc883; background:rgba(255,179,92,0.1); }
+      .dt-items { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:4px 14px; font-size:12px; color:var(--muted); max-height:220px; overflow:auto; padding:6px 0; }
+      .dt-items b { color:var(--off-white); font-weight:600; margin-right:6px; }
+      @media (max-width:640px) { .dt-row .dt-date { min-width:0; } .dt-chip { width:28px; } }
+    </style>
+
+    <!-- 1. 시험지 등록 -->
+    <div class="card">
+      <div class="card-title">📄 시험지 등록 <span style="font-size:12px;color:var(--muted);font-weight:400;">— 매쓰플랫에서 내려받은 PDF를 그대로 올리면 날짜·학년·문항 수가 자동으로 채워집니다</span></div>
+      <div class="alert ok" id="dt-ok"></div>
+      <div class="alert err" id="dt-err"></div>
+
+      <div id="dtDrop" onclick="document.getElementById('dtFileInput').click()"
+        style="border:2px dashed rgba(240,192,64,0.3);border-radius:12px;padding:26px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:14px;">
+        <div style="font-size:30px;margin-bottom:6px;">📝</div>
+        <p style="font-size:14px;color:var(--off-white);margin-bottom:4px;">일일테스트 PDF를 클릭하거나 드래그해서 올려주세요</p>
+        <small style="font-size:12px;color:var(--muted);">.pdf · 최대 20MB · 한 번에 한 장</small>
+        <div id="dtFileName" style="margin-top:10px;font-size:13px;color:var(--gold);display:none;"></div>
+      </div>
+      <input type="file" id="dtFileInput" accept=".pdf" style="display:none;">
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>시험 일자 <span style="color:#ff9090;">*</span></label>
+          <input type="date" id="dt-date" style="color-scheme:dark;">
+        </div>
+        <div class="form-group">
+          <label>학년 <span style="color:#ff9090;">*</span></label>
+          <select id="dt-grade">
+            <option value="">선택...</option>
+            <option>초4</option><option>초5</option><option>초6</option>
+            <option>중1</option><option>중2</option><option>중3</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>문항 수 <span style="color:#ff9090;">*</span></label>
+          <input type="number" id="dt-count" min="1" max="200" placeholder="예: 35">
+        </div>
+        <div class="form-group">
+          <label>시험 제목</label>
+          <input type="text" id="dt-title" placeholder="예: 10월 22일 (중3)">
+        </div>
+        <div class="form-group" style="grid-column:1 / -1;">
+          <label>범위 / 단원</label>
+          <input type="text" id="dt-range" placeholder="예: 원의 현 ~ 원의 접선과 현이 이루는 각">
+        </div>
+      </div>
+      <div id="dtParsedWrap" style="display:none;margin-bottom:10px;">
+        <div style="font-size:12px;color:#7fe0a3;margin-bottom:4px;">✅ 문항별 유형이 자동으로 읽혔습니다 (<span id="dtParsedCount">0</span>문항)</div>
+        <div class="dt-items" id="dtParsedItems"></div>
+      </div>
+      <div id="dtParsedNone" style="display:none;font-size:12px;color:var(--muted);margin-bottom:10px;">ℹ️ 이 PDF에서는 문항별 유형을 읽지 못했습니다. 그대로 등록해도 되고, 월말 정리 때 단원 기준으로 집계됩니다.</div>
+      <div id="dtUploadWrap" style="display:none;margin-bottom:10px;">
+        <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;"><div id="dtUploadBar" style="height:100%;width:0;background:var(--gold);transition:width 0.2s;"></div></div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="dtUploadText">업로드 중...</div>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-gold" id="dtSubmitBtn" onclick="dtSubmitTest()">시험지 등록</button>
+        <button class="btn btn-outline" onclick="dtResetForm()">초기화</button>
+      </div>
+    </div>
+
+    <!-- 2. 오답 입력 -->
+    <div class="card">
+      <div class="card-title" style="flex-wrap:wrap;">✏️ 오답 입력
+        <span style="font-size:12px;color:var(--muted);font-weight:400;">— 시험지를 고른 뒤 학생마다 틀린 번호만 눌러주세요</span>
+      </div>
+      <div class="alert ok" id="dtr-ok"></div>
+      <div class="alert err" id="dtr-err"></div>
+      <div class="dt-top">
+        <span style="font-size:12px;color:var(--muted);">기간:</span>
+        <button class="rating-btn selected" id="dtf-today" onclick="dtFilterTests('today',this)">오늘</button>
+        <button class="rating-btn" id="dtf-week" onclick="dtFilterTests('week',this)">최근 7일</button>
+        <button class="rating-btn" id="dtf-month" onclick="dtFilterTests('month',this)">이번 달</button>
+        <button class="rating-btn" id="dtf-all" onclick="dtFilterTests('all',this)">전체</button>
+        <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="dtLoadTests()">새로고침</button>
+      </div>
+      <div class="dt-list" id="dtTestList"><div class="empty-state"><div class="icon">📭</div>등록된 시험지가 없습니다.</div></div>
+
+      <div id="dtResultWrap" style="display:none;margin-top:18px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+          <span style="font-size:13px;font-weight:600;color:var(--gold);" id="dtResultTitle"></span>
+          <span style="font-size:12px;color:var(--muted);" id="dtResultMeta"></span>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+          <span style="font-size:12px;color:var(--muted);">요일:</span>
+          <button class="rating-btn selected" id="dtd-all" onclick="dtFilterDay('all',this)">전체</button>
+          <button class="rating-btn" id="dtd-mwf" onclick="dtFilterDay('mwf',this)">월수금</button>
+          <button class="rating-btn" id="dtd-tt" onclick="dtFilterDay('tt',this)">화목</button>
+          <button class="rating-btn" id="dtd-tts" onclick="dtFilterDay('tts',this)">화목토</button>
+          <input type="text" id="dtSearch" placeholder="🔍 이름" oninput="dtRenderGrid()"
+            style="margin-left:auto;width:140px;padding:6px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:12px;font-family:inherit;outline:none;">
+        </div>
+        <div style="overflow:auto;max-height:70vh;border:1px solid var(--border-soft);border-radius:10px;">
+          <table class="dt-grid">
+            <thead><tr><th style="width:110px;">학생</th><th>틀린 번호</th><th style="width:70px;text-align:right;">점수</th><th style="width:60px;"></th></tr></thead>
+            <tbody id="dtGridBody"></tbody>
+          </table>
+        </div>
+        <div class="btn-row" style="margin-top:12px;">
+          <button class="btn btn-gold" id="dtSaveBtn" onclick="dtSaveResults()">오답 저장</button>
+          <button class="btn btn-outline" onclick="dtCloseResult()">닫기</button>
+          <button class="btn btn-outline" style="margin-left:auto;color:#ff9090;border-color:rgba(255,80,80,0.3);" onclick="dtDeleteTest()">시험지 삭제</button>
+        </div>
       </div>
     </div>
   </div>
@@ -4331,6 +4466,388 @@ window.addEventListener('beforeunload', (e) => { if (mr.uploading) { e.preventDe
 })();
 </script>
 
+<!-- ══════════ 일일테스트: 시험지 등록(PDF → 문항별 유형 자동 읽기) · 학생별 오답 입력 ══════════
+     저장만 하고 판단은 하지 않음. 월말에 원장이 dailyTests·dailyTestResults를 모아 보고서(studentReports)를 생성. ══════════ -->
+<script type="module">
+import { getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, getDocs, addDoc, collection, query, where, orderBy, deleteDoc, writeBatch, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+const app = getApp();
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+const $ = (id) => document.getElementById(id);
+
+let me = null;               // { uid, name }
+let dtStudents = [];         // 내 담당 초·중등 학생
+let dtFile = null;           // 선택한 PDF
+let dtParsedItems = [];      // [{n, type, natRate}]
+let dtTests = [];            // 내 시험지 목록
+let dtPeriod = 'today';
+let dtDay = 'all';
+let dtCurrent = null;        // 열어둔 시험지
+let dtResults = {};          // studentId -> { wrong:Set, absent:bool }
+let dtInited = false;
+const DAY_GROUP = { all: null, mwf: ['월','수','금'], tt: ['화','목'], tts: ['화','목','토'] };
+const isMiddle = (s) => { const g = String(s?.grade || '').trim(); return !(g.startsWith('고') || /N수|재수|졸업/.test(g)); };
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+function note(id, msg, type) { const el = $(id); el.textContent = msg; el.className = `alert ${type}`; el.style.display = 'block'; setTimeout(() => { el.style.display = 'none'; }, 4500); }
+
+let meResolve;
+const meReady = new Promise((r) => { meResolve = r; });
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { me = null; return; }
+  const t = await getDoc(doc(db, 'teachers', user.uid));
+  if (t.exists()) me = { uid: user.uid, name: t.data().name || '' };
+  meResolve();
+});
+
+// ── 탭 열 때 한 번 초기화 ──
+window.dtInit = async function () {
+  if (!$('dt-date').value) $('dt-date').value = todayStr();
+  if (dtInited) { dtLoadTests(); return; }
+  dtInited = true;
+  await meReady;
+  const drop = $('dtDrop'), input = $('dtFileInput');
+  input.addEventListener('change', (e) => { if (e.target.files[0]) dtSetFile(e.target.files[0]); input.value = ''; });
+  drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.style.borderColor = 'var(--gold)'; });
+  drop.addEventListener('dragleave', () => { drop.style.borderColor = ''; });
+  drop.addEventListener('drop', (e) => { e.preventDefault(); drop.style.borderColor = ''; if (e.dataTransfer.files[0]) dtSetFile(e.dataTransfer.files[0]); });
+  await dtLoadStudents();
+  dtLoadTests();
+};
+
+async function dtLoadStudents() {
+  if (!me) return;
+  const snap = await getDocs(query(collection(db, 'students'), where('teacherUid', '==', me.uid)));
+  dtStudents = [];
+  snap.forEach((d) => { const s = { id: d.id, ...d.data() }; if (isMiddle(s)) dtStudents.push(s); });
+  dtStudents.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
+}
+
+// ── PDF 선택 → 파일명·본문에서 자동 채우기 ──
+async function dtSetFile(file) {
+  if (file.type !== 'application/pdf') { note('dt-err', 'PDF 파일만 올릴 수 있습니다.', 'err'); return; }
+  if (file.size > 20 * 1024 * 1024) { note('dt-err', '20MB 이하 PDF만 올릴 수 있습니다.', 'err'); return; }
+  dtFile = file;
+  $('dtFileName').style.display = 'block';
+  $('dtFileName').textContent = `✅ ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB) — 읽는 중...`;
+  // 파일명: 261022_10월 22일 (중3)_문제지.pdf
+  const m = file.name.match(/^(\d{2})(\d{2})(\d{2})_/);
+  if (m) $('dt-date').value = `20${m[1]}-${m[2]}-${m[3]}`;
+  const g = file.name.match(/\((초[4-6]|중[1-3])\)/);
+  if (g) $('dt-grade').value = g[1];
+  const t = file.name.replace(/^\d{6}_/, '').replace(/_문제지|_정답지|_해설지/g, '').replace(/\.pdf$/i, '');
+  if (!$('dt-title').value) $('dt-title').value = t;
+  dtParsedItems = [];
+  try {
+    const info = await dtParsePdf(file);
+    if (info.title && !$('dt-title').value) $('dt-title').value = info.title;
+    if (info.title) $('dt-title').value = info.title;
+    if (info.range) $('dt-range').value = info.range;
+    if (info.count) $('dt-count').value = info.count;
+    if (info.grade && !$('dt-grade').value) $('dt-grade').value = info.grade;
+    dtParsedItems = info.items;
+    if (info.items.length) {
+      if (!$('dt-count').value) $('dt-count').value = info.items.length;
+      $('dtParsedWrap').style.display = 'block'; $('dtParsedNone').style.display = 'none';
+      $('dtParsedCount').textContent = info.items.length;
+      $('dtParsedItems').innerHTML = info.items.map((it) => `<div><b>${it.n}</b>${esc(it.type)}${it.natRate != null ? ` <span style="opacity:.7">· ${it.natRate}%</span>` : ''}</div>`).join('');
+    } else {
+      $('dtParsedWrap').style.display = 'none'; $('dtParsedNone').style.display = 'block';
+    }
+    $('dtFileName').textContent = `✅ ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`;
+  } catch (e) {
+    console.warn('PDF 읽기 실패', e);
+    $('dtParsedWrap').style.display = 'none'; $('dtParsedNone').style.display = 'block';
+    $('dtFileName').textContent = `✅ ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB) — 본문 자동 읽기 실패, 직접 입력해 주세요`;
+  }
+}
+
+// pdf.js로 글자 좌표를 읽어 "| 유형명 | 정답률 nn%" 줄과 바로 아래 번호를 짝지음 (매쓰플랫 학습지 양식)
+let pdfjsLibPromise = null;
+function loadPdfjs() {
+  if (!pdfjsLibPromise) {
+    pdfjsLibPromise = import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.mjs').then((lib) => {
+      lib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.mjs';
+      return lib;
+    });
+  }
+  return pdfjsLibPromise;
+}
+async function dtParsePdf(file) {
+  const pdfjs = await loadPdfjs();
+  const data = new Uint8Array(await file.arrayBuffer());
+  const pdf = await pdfjs.getDocument({ data }).promise;
+  const out = { title: '', range: '', count: 0, grade: '', items: [] };
+  const seen = new Set();
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const tc = await page.getTextContent();
+    // 같은 줄(y 비슷)끼리 묶고, 2단 편집이라 가로 간격이 크게 벌어지면 다른 열로 나눔
+    const rows = [];
+    tc.items.forEach((it) => {
+      const s = String(it.str || '').replace(/[\u0000-\u001f]/g, ' '); // 매쓰플랫 PDF는 공백이 제어문자로 들어옴
+      if (!s.trim()) return;
+      const x = it.transform[4], y = it.transform[5];
+      let r = rows.find((l) => Math.abs(l.y - y) < 2.5);
+      if (!r) { r = { y, parts: [] }; rows.push(r); }
+      r.parts.push({ x, xe: x + (it.width || 0), s });
+    });
+    const lines = [];
+    rows.forEach((r) => {
+      r.parts.sort((a, b) => a.x - b.x);
+      let seg = null, prevEnd = null;
+      r.parts.forEach((p) => {
+        if (!seg || (prevEnd != null && p.x - prevEnd > 24)) { seg = { y: r.y, x: p.x, parts: [] }; lines.push(seg); }
+        seg.parts.push(p); prevEnd = Math.max(p.xe, p.x);
+      });
+    });
+    lines.forEach((l) => { l.text = l.parts.map((q) => q.s).join(' ').replace(/\s+/g, ' ').trim(); });
+    lines.sort((a, b) => b.y - a.y || a.x - b.x);
+    if (p === 1) {
+      const t1 = lines.find((l) => /일일\s*TEST/i.test(l.text));
+      if (t1) {
+        out.title = t1.text.replace(/일일\s*TEST\s*/i, '').trim();
+        const g = out.title.match(/\((초[4-6]|중[1-3])\)/); if (g) out.grade = g[1];
+        const i1 = lines.indexOf(t1);
+        const t2 = lines[i1 + 1]; if (t2 && !/문제\s*\|/.test(t2.text)) out.range = t2.text;
+      }
+      const c = lines.find((l) => /(\d+)\s*문제/.test(l.text)); if (c) out.count = parseInt(c.text.match(/(\d+)\s*문제/)[1], 10);
+    }
+    if (lines.some((l) => /^빠른정답$/.test(l.text))) break; // 정답 페이지부터는 안 읽음
+    // 유형 라벨: "| 유형명 | 정답률 71%" 또는 "| 유형명 |" (정답률 없는 경우)
+    const nums = lines.filter((l) => /^\d{2}$/.test(l.text));
+    lines.forEach((l) => {
+      let mm = l.text.match(/^\|\s*(.+?)\s*\|\s*정답률\s*(\d+)\s*%/);
+      let natRate = null, type = '';
+      if (mm) { type = mm[1]; natRate = parseInt(mm[2], 10); }
+      else { mm = l.text.match(/^\|\s*(.+?)\s*\|\s*$/); if (mm) type = mm[1]; }
+      if (!type) return;
+      // 라벨 바로 아래(y 작음), 같은 열(x 비슷)에 있는 가장 가까운 번호
+      const cand = nums.filter((n) => n.y < l.y && Math.abs(n.x - l.x) < 40).sort((a, b) => (l.y - a.y) - (l.y - b.y));
+      if (!cand.length) return;
+      const n = parseInt(cand[0].text, 10);
+      if (seen.has(n)) return;
+      seen.add(n);
+      out.items.push({ n, type, natRate });
+    });
+  }
+  out.items.sort((a, b) => a.n - b.n);
+  return out;
+}
+
+window.dtResetForm = function () {
+  dtFile = null; dtParsedItems = [];
+  ['dt-title', 'dt-range', 'dt-count'].forEach((id) => { $(id).value = ''; });
+  $('dt-grade').value = ''; $('dt-date').value = todayStr();
+  $('dtFileName').style.display = 'none'; $('dtParsedWrap').style.display = 'none'; $('dtParsedNone').style.display = 'none';
+};
+
+// ── 시험지 등록 ──
+window.dtSubmitTest = async function () {
+  if (!me) { note('dt-err', '로그인 정보를 확인할 수 없습니다.', 'err'); return; }
+  const date = $('dt-date').value, grade = $('dt-grade').value, count = parseInt($('dt-count').value, 10);
+  const title = $('dt-title').value.trim(), range = $('dt-range').value.trim();
+  if (!date || !grade || !count) { note('dt-err', '시험 일자, 학년, 문항 수는 필수입니다.', 'err'); return; }
+  if (!dtFile) { note('dt-err', '시험지 PDF를 올려주세요.', 'err'); return; }
+  const btn = $('dtSubmitBtn'); btn.disabled = true; btn.textContent = '등록 중...';
+  $('dtUploadWrap').style.display = 'block';
+  try {
+    const path = `dailyTests/${me.uid}/${date}_${Date.now()}.pdf`;
+    const task = uploadBytesResumable(ref(storage, path), dtFile, { contentType: 'application/pdf' });
+    await new Promise((res, rej) => task.on('state_changed', (s) => {
+      const pct = Math.round(s.bytesTransferred / s.totalBytes * 100);
+      $('dtUploadBar').style.width = pct + '%'; $('dtUploadText').textContent = `업로드 중... ${pct}%`;
+    }, rej, res));
+    const downloadURL = await getDownloadURL(task.snapshot.ref);
+    const docRef = await addDoc(collection(db, 'dailyTests'), {
+      teacherUid: me.uid, teacherName: me.name,
+      date, grade, title: title || `${date} (${grade})`, range, questionCount: count,
+      items: dtParsedItems,                 // 매쓰플랫 학습지면 자동, 아니면 빈 배열 (월말 정리 때 채움)
+      itemsParsed: dtParsedItems.length > 0,
+      fileName: dtFile.name, filePath: path, downloadURL, fileSize: dtFile.size,
+      createdAt: serverTimestamp()
+    });
+    note('dt-ok', `✅ ${title || date} 시험지가 등록되었습니다. 아래에서 오답을 입력해 주세요.`, 'ok');
+    dtResetForm();
+    await dtLoadTests();
+    dtOpenTest(docRef.id);
+  } catch (e) {
+    note('dt-err', '등록 오류: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = '시험지 등록';
+    $('dtUploadWrap').style.display = 'none'; $('dtUploadBar').style.width = '0';
+  }
+};
+
+// ── 시험지 목록 ──
+window.dtFilterTests = function (p, btn) {
+  dtPeriod = p;
+  document.querySelectorAll('[id^="dtf-"]').forEach((b) => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  dtRenderTests();
+};
+window.dtLoadTests = async function () {
+  if (!me) return;
+  const el = $('dtTestList');
+  try {
+    const snap = await getDocs(query(collection(db, 'dailyTests'), where('teacherUid', '==', me.uid), orderBy('date', 'desc')));
+    dtTests = [];
+    snap.forEach((d) => dtTests.push({ id: d.id, ...d.data() }));
+    // 시험지별 입력된 학생 수
+    const rs = await getDocs(query(collection(db, 'dailyTestResults'), where('teacherUid', '==', me.uid)));
+    const cnt = {};
+    rs.forEach((d) => { const r = d.data(); if (!r.absent) cnt[r.testId] = (cnt[r.testId] || 0) + 1; });
+    dtTests.forEach((t) => { t.resultCount = cnt[t.id] || 0; });
+    dtRenderTests();
+  } catch (e) {
+    el.innerHTML = `<div class="empty-state" style="color:#ff9090;">오류: ${esc(e.message)}<br>Firestore 인덱스가 필요할 수 있습니다.</div>`;
+  }
+};
+function dtRenderTests() {
+  const el = $('dtTestList');
+  const today = todayStr();
+  const d7 = new Date(); d7.setDate(d7.getDate() - 7);
+  const from7 = `${d7.getFullYear()}-${String(d7.getMonth()+1).padStart(2,'0')}-${String(d7.getDate()).padStart(2,'0')}`;
+  let rows = dtTests;
+  if (dtPeriod === 'today') rows = rows.filter((t) => t.date === today);
+  else if (dtPeriod === 'week') rows = rows.filter((t) => t.date >= from7);
+  else if (dtPeriod === 'month') rows = rows.filter((t) => t.date.slice(0, 7) === today.slice(0, 7));
+  if (!rows.length) { el.innerHTML = `<div class="empty-state"><div class="icon">📭</div>${dtPeriod === 'today' ? '오늘 등록한 시험지가 없습니다. 위에서 먼저 등록해 주세요.' : '해당 기간에 등록된 시험지가 없습니다.'}</div>`; return; }
+  el.innerHTML = rows.map((t) => `
+    <div class="dt-row ${dtCurrent && dtCurrent.id === t.id ? 'active' : ''}" onclick="dtOpenTest('${t.id}')">
+      <span class="dt-date">${esc(t.date)}</span>
+      <span class="dt-title">${esc(t.title)}${t.range ? ` <span style="font-weight:400;color:var(--muted);">· ${esc(t.range)}</span>` : ''}</span>
+      <span class="dt-tag">${esc(t.grade)}</span>
+      <span class="dt-tag">${t.questionCount}문항</span>
+      <span class="dt-tag ${t.itemsParsed ? 'ok' : ''}">${t.itemsParsed ? '유형 자동' : '유형 미지정'}</span>
+      <span class="dt-tag ${t.resultCount ? 'ok' : 'warn'}">${t.resultCount ? `오답 ${t.resultCount}명 입력` : '오답 미입력'}</span>
+    </div>`).join('');
+}
+
+// ── 오답 입력 열기 ──
+window.dtOpenTest = async function (id) {
+  const t = dtTests.find((x) => x.id === id);
+  if (!t) return;
+  dtCurrent = t;
+  dtRenderTests();
+  $('dtResultTitle').textContent = `${t.date} · ${t.title}`;
+  $('dtResultMeta').textContent = `${t.grade} · ${t.questionCount}문항${t.range ? ' · ' + t.range : ''}`;
+  $('dtResultWrap').style.display = 'block';
+  dtResults = {};
+  const snap = await getDocs(query(collection(db, 'dailyTestResults'), where('testId', '==', id)));
+  snap.forEach((d) => { const r = d.data(); dtResults[r.studentId] = { wrong: new Set(r.wrong || []), absent: !!r.absent, saved: true }; });
+  dtRenderGrid();
+  $('dtResultWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+window.dtCloseResult = function () { dtCurrent = null; $('dtResultWrap').style.display = 'none'; dtRenderTests(); };
+window.dtFilterDay = function (d, btn) {
+  dtDay = d;
+  document.querySelectorAll('[id^="dtd-"]').forEach((b) => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  dtRenderGrid();
+};
+function dtVisibleStudents() {
+  if (!dtCurrent) return [];
+  let list = dtStudents.filter((s) => s.grade === dtCurrent.grade);
+  if (!list.length) list = dtStudents.slice(); // 학년 표기가 다르면 전체
+  const days = DAY_GROUP[dtDay];
+  if (days) list = list.filter((s) => days.some((d) => (s.days || []).includes(d)));
+  const q = ($('dtSearch').value || '').trim();
+  if (q) list = list.filter((s) => (s.name || '').includes(q));
+  return list;
+}
+window.dtRenderGrid = function () {
+  if (!dtCurrent) return;
+  const body = $('dtGridBody');
+  const list = dtVisibleStudents();
+  const N = dtCurrent.questionCount;
+  if (!list.length) { body.innerHTML = '<tr><td colspan="4" class="empty-state" style="padding:20px;">해당 조건의 학생이 없습니다.</td></tr>'; return; }
+  body.innerHTML = list.map((s) => {
+    const r = dtResults[s.id] || { wrong: new Set(), absent: false };
+    const chips = Array.from({ length: N }, (_, i) => i + 1).map((n) =>
+      `<button type="button" class="dt-chip ${r.wrong.has(n) ? 'wrong' : ''}" onclick="dtToggle('${s.id}',${n},this)">${n}</button>`).join('');
+    const score = r.absent ? '결시' : `${N - r.wrong.size}/${N} <span style="color:var(--muted)">(${Math.round((N - r.wrong.size) / N * 100)}%)</span>`;
+    return `<tr class="${r.absent ? 'absent' : ''}" id="dtr-${s.id}">
+      <td class="dt-name">${esc(s.name)}<small>${esc(s.grade || '')}</small></td>
+      <td><div class="dt-chips">${chips}</div></td>
+      <td class="dt-score" id="dts-${s.id}">${score}</td>
+      <td><button type="button" class="dt-abs ${r.absent ? 'on' : ''}" onclick="dtAbsent('${s.id}',this)">결시</button></td>
+    </tr>`;
+  }).join('');
+};
+window.dtToggle = function (sid, n, btn) {
+  const r = dtResults[sid] || (dtResults[sid] = { wrong: new Set(), absent: false });
+  if (r.wrong.has(n)) r.wrong.delete(n); else r.wrong.add(n);
+  btn.classList.toggle('wrong', r.wrong.has(n));
+  dtUpdateScore(sid);
+};
+window.dtAbsent = function (sid, btn) {
+  const r = dtResults[sid] || (dtResults[sid] = { wrong: new Set(), absent: false });
+  r.absent = !r.absent;
+  btn.classList.toggle('on', r.absent);
+  $(`dtr-${sid}`).classList.toggle('absent', r.absent);
+  dtUpdateScore(sid);
+};
+function dtUpdateScore(sid) {
+  const r = dtResults[sid], N = dtCurrent.questionCount;
+  $(`dts-${sid}`).innerHTML = r.absent ? '결시' : `${N - r.wrong.size}/${N} <span style="color:var(--muted)">(${Math.round((N - r.wrong.size) / N * 100)}%)</span>`;
+}
+
+// ── 오답 저장: 화면에 보이는 학생 전원 (손 안 댄 학생 = 전부 맞음으로 저장) ──
+window.dtSaveResults = async function () {
+  if (!dtCurrent || !me) return;
+  const list = dtVisibleStudents();
+  if (!list.length) return;
+  const btn = $('dtSaveBtn'); btn.disabled = true; btn.textContent = '저장 중...';
+  try {
+    const N = dtCurrent.questionCount;
+    const batch = writeBatch(db);
+    list.forEach((s) => {
+      const r = dtResults[s.id] || { wrong: new Set(), absent: false };
+      const wrong = Array.from(r.wrong).filter((n) => n >= 1 && n <= N).sort((a, b) => a - b);
+      const score = r.absent ? null : N - wrong.length;
+      batch.set(doc(db, 'dailyTestResults', `${dtCurrent.id}_${s.id}`), {
+        testId: dtCurrent.id, teacherUid: me.uid, teacherName: me.name,
+        studentId: s.id, studentName: s.name || '', studentGrade: s.grade || '',
+        date: dtCurrent.date, grade: dtCurrent.grade, testTitle: dtCurrent.title || '',
+        total: N, wrong, absent: !!r.absent,
+        score, percentage: r.absent ? null : Math.round(score / N * 100),
+        updatedAt: serverTimestamp()
+      }, { merge: true });
+      dtResults[s.id] = { ...r, saved: true };
+    });
+    await batch.commit();
+    note('dtr-ok', `✅ ${list.length}명의 오답이 저장되었습니다.`, 'ok');
+    dtLoadTests();
+  } catch (e) {
+    note('dtr-err', '저장 오류: ' + e.message, 'err');
+  } finally { btn.disabled = false; btn.textContent = '오답 저장'; }
+};
+
+// ── 시험지 삭제 (오답 기록도 함께) ──
+window.dtDeleteTest = async function () {
+  if (!dtCurrent) return;
+  if (!confirm(`'${dtCurrent.title}' 시험지와 입력한 오답 기록을 모두 삭제할까요?`)) return;
+  try {
+    const snap = await getDocs(query(collection(db, 'dailyTestResults'), where('testId', '==', dtCurrent.id)));
+    const batch = writeBatch(db);
+    snap.forEach((d) => batch.delete(d.ref));
+    batch.delete(doc(db, 'dailyTests', dtCurrent.id));
+    await batch.commit();
+    if (dtCurrent.filePath) { try { await deleteObject(ref(storage, dtCurrent.filePath)); } catch (e) { console.warn(e); } }
+    dtCloseResult();
+    dtLoadTests();
+  } catch (e) { note('dtr-err', '삭제 오류: ' + e.message, 'err'); }
+};
+</script>
+
 <!-- ══════════ 사이드바 메뉴 — 숨긴 기존 탭 버튼(#tnavLegacy)을 눌러 전환하므로 switchTab·초기화 함수는 그대로 ══════════ -->
 <script type="module">
 (function () {
@@ -4338,6 +4855,7 @@ window.addEventListener('beforeunload', (e) => { if (mr.uploading) { e.preventDe
     { id: 'home',    label: '홈',     icon: '📅', items: [{ id: 'calendar', label: '일정 · 오늘 할 일', desc: '달력 · 할 일 · 마감' }] },
     { id: 'reports', label: '보고서', icon: '📝', items: [
       { id: 'weekly',   label: '주간성취도', desc: '중등부 · 금요일까지', middleOnly: true },
+      { id: 'dailytest', label: '일일테스트', desc: '초·중등 · 시험지 등록 · 오답 입력', middleOnly: true },
       { id: 'monthly',  label: '월말보고서', desc: '다음 달 3일까지' },
       { id: 'tests',    label: '누적테스트', desc: '테스트 결과 입력 · 조회' },
       { id: 'progress', label: '반별 진도',  desc: '지난주 진도 · 금요일까지' },
