@@ -4566,16 +4566,26 @@ function dtClassList() {
   allStudents.forEach((s) => { const c = clsOf(s); set.set(c, (set.get(c) || 0) + 1); });
   return [...set.entries()].sort((a, b) => (a[0] === NO_CLASS) - (b[0] === NO_CLASS) || a[0].localeCompare(b[0], 'ko'));
 }
+let dtOpenGrade = '';
+const dtGradeOf = (c) => { const m = String(c || '').match(/^(초|중|고)\s*(\d)/); return m ? m[1] + m[2] : '기타'; };
+const dtGradeKey = (g) => { const m = String(g).match(/^(초|중|고)(\d)/); return m ? ({ 초: 0, 중: 1, 고: 2 }[m[1]] * 10 + parseInt(m[2], 10)) : 99; };
 function dtRenderClassBtns() {
   const el = $('dtClassBtns');
   const list = dtClassList();
   if (!list.length) { el.innerHTML = '<span style="font-size:12px;color:#ffc883;">내 담당으로 등록된 초·중등 학생이 없습니다. 관리자 페이지 학생 정보에서 담당 선생님과 반명을 지정해 주세요.</span>'; return; }
-  el.innerHTML = list.map(([c, n]) => `<button class="rating-btn ${dtSel.cls === c ? 'selected' : ''}" data-cls="${esc(c)}" onclick="dtPickClass(this.dataset.cls, this)">${esc(c)} <span style="opacity:.6;font-size:11px;">${n}</span></button>`).join('');
+  // 학년별로 접어두고 누른 학년만 펼침 (학년이 하나뿐이면 바로 펼침)
+  const byGrade = new Map();
+  list.forEach(([c, n]) => { const g = dtGradeOf(c); if (!byGrade.has(g)) byGrade.set(g, []); byGrade.get(g).push([c, n]); });
+  const grades = [...byGrade.keys()].sort((a, b) => dtGradeKey(a) - dtGradeKey(b));
+  if (dtSel.cls) dtOpenGrade = dtGradeOf(dtSel.cls);
+  if (!dtOpenGrade && grades.length === 1) dtOpenGrade = grades[0];
+  el.innerHTML = `<div style="display:flex;gap:6px;flex-wrap:wrap;width:100%;">${grades.map((g) => `<button class="rating-btn ${dtOpenGrade === g ? 'selected' : ''}" style="font-weight:700;" onclick="dtOpenGradeSet('${g}')">${g} <span style="opacity:.6;font-size:11px;">${byGrade.get(g).length}반</span> ${dtOpenGrade === g ? '▴' : '▾'}</button>`).join('')}</div>`
+    + (dtOpenGrade && byGrade.has(dtOpenGrade) ? `<div style="display:flex;gap:6px;flex-wrap:wrap;width:100%;margin-top:8px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.1);">${byGrade.get(dtOpenGrade).map(([c, n]) => `<button class="rating-btn ${dtSel.cls === c ? 'selected' : ''}" data-cls="${esc(c)}" onclick="dtPickClass(this.dataset.cls, this)">${esc(c)} <span style="opacity:.6;font-size:11px;">${n}</span></button>`).join('')}</div>` : '');
 }
+window.dtOpenGradeSet = function (g) { dtOpenGrade = dtOpenGrade === g ? '' : g; if (dtSel.cls && dtGradeOf(dtSel.cls) !== dtOpenGrade) { dtSel.cls = ''; dtRenderGrid(); } dtRenderClassBtns(); };
 window.dtPickClass = function (c, btn) {
   dtSel.cls = c;
-  document.querySelectorAll('#dtClassBtns .rating-btn').forEach((b) => b.classList.remove('selected'));
-  if (btn) btn.classList.add('selected');
+  dtRenderClassBtns();
   // 학년은 그 반 학생의 학년으로 (PDF에서 읽은 값이 없을 때)
   const first = allStudents.find((s) => clsOf(s) === c);
   if (first && !$('dt-grade').value) $('dt-grade').value = first.grade || '';
