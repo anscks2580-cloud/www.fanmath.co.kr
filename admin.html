@@ -1429,6 +1429,12 @@
         ① JSON과 📦 ZIP을 Claude에게 주면 문항별 단원·유형·난이도를 분류하고 학생별 의견까지 써서 파일 하나로 돌려줍니다 → ②로 올리면 그때 보고서가 만들어집니다 → 선생님 검수 → ③ 공개.
         <button class="btn btn-secondary btn-sm" style="margin-left:6px;" onclick="srGenerate()">분류 없이 빠른 집계</button> <span style="font-size:11px;">(매쓰플랫 유형만으로 대략 보고 싶을 때)</span>
       </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);">
+        <span style="font-size:11px;color:var(--muted);letter-spacing:1px;">정리</span>
+        <button class="btn btn-danger btn-sm" onclick="srDeleteMonth()">이 달 보고서 전체 삭제</button>
+        <button class="btn btn-danger btn-sm" onclick="srPurgeMonth()">이 달 시험지 PDF·오답 기록 삭제</button>
+        <span style="font-size:11px;color:var(--muted);">· 보고서가 전부 공개되고 7일이 지나면 시험지 PDF·오답 기록은 자동으로 정리됩니다 (보고서는 남음)</span>
+      </div>
       <div class="msg" id="srMsg"></div>
     </div>
     <div class="card">
@@ -2275,7 +2281,7 @@
 <script defer src="admin/js/clinicroom.js"></script>
 <script defer src="admin/js/tamaterials.js"></script>
 <script defer src="admin/js/reports.js"></script>
-<script defer src="admin/js/studyreport.js?v=1792681350"></script>
+<script defer src="admin/js/studyreport.js?v=1792682435"></script>
 <script defer src="admin/js/parents.js?v=1792681350"></script>
 <script defer src="admin/js/homeworklog.js?v=1792681350"></script>
 <script defer src="admin/js/satclinic.js"></script>

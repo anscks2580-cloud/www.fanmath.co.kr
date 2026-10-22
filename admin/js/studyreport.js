@@ -132,7 +132,7 @@ window.srLoad = async function () {
         <td class="r">${r.summary?.pct ?? '-'}%</td>
         <td class="r">${r.summary?.gradeBand ?? '-'}</td>
         <td><span class="sr-st ${r.status || 'none'}">${stLabel[r.status] || r.status || '-'}</span></td>
-        <td style="white-space:nowrap;"><a class="sr-link" href="report.html?id=${encodeURIComponent(r.id)}" target="_blank">미리보기</a>${r.status === 'sent' ? ` <a class="sr-link" href="#" style="color:#ff9090;border-color:rgba(255,80,80,0.3);" onclick="srUnpublish('${r.id}');return false;">공개 취소</a>` : ''}</td>
+        <td style="white-space:nowrap;"><a class="sr-link" href="report.html?id=${encodeURIComponent(r.id)}" target="_blank">미리보기</a>${r.status === 'sent' ? ` <a class="sr-link" href="#" style="color:#ffc883;border-color:rgba(255,179,92,0.4);" onclick="srUnpublish('${r.id}');return false;">공개 취소</a>` : ''} <a class="sr-link" href="#" style="color:#ff9090;border-color:rgba(255,80,80,0.3);" onclick="srDeleteReport('${r.id}');return false;">삭제</a></td>
       </tr>`).join('');
   } catch (e) {
     body.innerHTML = `<tr><td colspan="9" style="color:#ff9090;padding:20px;text-align:center;">오류: ${srEsc(e.message)}</td></tr>`;
@@ -261,3 +261,66 @@ window.srImport = async function (file) {
     srMsg('가져오기 오류: ' + e.message, 'error');
   }
 };
+
+// ── 보고서 삭제 (한 건 / 그 달 전체) ──
+window.srDeleteReport = async function (id) {
+  const r = srRows.find((x) => x.id === id);
+  if (!confirm(`${r?.studentName || ''} 학생의 ${r?.month || ''} 보고서를 삭제할까요?\n(학부모 화면에서도 사라집니다)`)) return;
+  try { await deleteDoc(doc(db, 'studentReports', id)); srMsg('삭제했습니다.', 'success'); srLoad(); }
+  catch (e) { srMsg('삭제 오류: ' + e.message, 'error'); }
+};
+window.srDeleteMonth = async function () {
+  const month = document.getElementById('srMonth').value;
+  if (!srRows.length) { srMsg('삭제할 보고서가 없습니다. 먼저 조회해 주세요.', 'error'); return; }
+  if (!confirm(`${month} 보고서 ${srRows.length}건을 모두 삭제할까요?\n(학부모 화면에서도 사라집니다. 시험지·오답 기록은 남습니다)`)) return;
+  if (!confirm('정말 삭제합니다. 되돌릴 수 없습니다.')) return;
+  let n = 0;
+  for (const r of srRows) { try { await deleteDoc(doc(db, 'studentReports', r.id)); n++; } catch (e) {} }
+  srMsg(`✅ ${n}건 삭제했습니다.`, 'success'); srLoad();
+};
+
+// ── 원본 정리: 시험지 PDF(Storage) + 시험지 기록 + 오답 기록 삭제. 보고서(studentReports)는 남김 ──
+async function srPurgeMonthRaw(month) {
+  const [from, to] = srMonthRange(month);
+  const tSnap = await getDocs(query(collection(db, 'dailyTests'), where('date', '>=', from), where('date', '<=', to)));
+  const rSnap = await getDocs(query(collection(db, 'dailyTestResults'), where('date', '>=', from), where('date', '<=', to)));
+  let pdf = 0, tests = 0, results = 0;
+  for (const d of tSnap.docs) {
+    const t = d.data();
+    if (t.filePath) { try { await deleteObject(ref(storage, t.filePath)); pdf++; } catch (e) { /* 이미 없음 */ } }
+    await deleteDoc(d.ref); tests++;
+  }
+  for (const d of rSnap.docs) { await deleteDoc(d.ref); results++; }
+  return { pdf, tests, results };
+}
+window.srPurgeMonth = async function () {
+  const month = document.getElementById('srMonth').value; if (!month) return;
+  if (!confirm(`${month} 시험지 PDF·시험지 기록·오답 기록을 모두 삭제할까요?\n보고서는 남습니다. 삭제 후에는 이 달 보고서를 다시 만들 수 없습니다.`)) return;
+  try { const r = await srPurgeMonthRaw(month); srMsg(`✅ 정리 완료 — PDF ${r.pdf}장 · 시험지 ${r.tests}건 · 오답 ${r.results}건 삭제`, 'success'); }
+  catch (e) { srMsg('정리 오류: ' + e.message, 'error'); }
+};
+
+// ── 자동 정리: 그 달 보고서가 전부 공개(sent)되고 마지막 공개로부터 7일이 지나면 원본 삭제 (관리자 페이지 열 때 조용히) ──
+const SR_PURGE_DAYS = 7;
+async function srAutoCleanup() {
+  try {
+    const tSnap = await getDocs(collection(db, 'dailyTests'));
+    if (tSnap.empty) return;
+    const months = [...new Set(tSnap.docs.map((d) => String(d.data().date || '').slice(0, 7)).filter(Boolean))];
+    const now = Date.now();
+    for (const month of months) {
+      const rs = await getDocs(query(collection(db, 'studentReports'), where('month', '==', month)));
+      if (rs.empty) continue;
+      const reps = rs.docs.map((d) => d.data());
+      if (!reps.every((r) => r.status === 'sent')) continue;
+      const last = Math.max(...reps.map((r) => Date.parse(r.sentAt || 0) || 0));
+      if (!last || now - last < SR_PURGE_DAYS * 86400000) continue;
+      const r = await srPurgeMonthRaw(month);
+      console.log(`[학습보고서] ${month} 원본 자동 정리: PDF ${r.pdf} · 시험지 ${r.tests} · 오답 ${r.results}`);
+      const el = document.getElementById('srMsg');
+      if (el) showMsg('srMsg', `🧹 ${month} 보고서 공개 ${SR_PURGE_DAYS}일 경과 — 시험지 PDF ${r.pdf}장·기록 ${r.tests + r.results}건을 자동 정리했습니다.`, 'success');
+    }
+  } catch (e) { console.warn('자동 정리 건너뜀:', e.message); }
+}
+// 관리자로 로그인된 뒤 한 번 실행
+onAuthStateChanged(auth, (u) => { if (u) setTimeout(() => { if (window.currentAdmin) srAutoCleanup(); }, 6000); });
