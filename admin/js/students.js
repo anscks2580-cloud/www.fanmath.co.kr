@@ -79,6 +79,7 @@ window.createStudent = async () => {
   const teacherName = teacherUid ? (teachersCache.find(t => t.id === teacherUid)?.name || '') : '';
   const days = [...document.querySelectorAll('.n-day:checked')].map(c => c.value);
   const classGroup = document.getElementById('n-classgroup').value.trim();
+  const parentPhone = (document.getElementById('n-parentphone')?.value || '').replace(/[^0-9]/g, '');
   if (!name || !phone) { showMsg('createMsg','이름과 전화번호를 입력해주세요.','error'); return; }
 
   try {
@@ -90,9 +91,15 @@ window.createStudent = async () => {
       teacherUid, teacherName, days, classGroup,
       createdAt: new Date().toISOString()
     });
-    showMsg('createMsg', `${name} 학생 등록 완료! (영상 접근 ${assignedTags.length}개 카테고리)`, 'success');
+    let parentNote = '';
+    if (parentPhone && typeof window.linkParentAccount === 'function') {
+      try { await linkParentAccount({ id: cred.user.uid, name }, parentPhone); parentNote = ' · 학부모 계정 생성'; }
+      catch (e) { parentNote = ' · ⚠️ 학부모 계정 실패: ' + e.message; }
+    }
+    showMsg('createMsg', `${name} 학생 등록 완료! (영상 접근 ${assignedTags.length}개 카테고리)${parentNote}`, parentNote.includes('⚠️') ? 'error' : 'success');
     document.getElementById('n-name').value = '';
     document.getElementById('n-phone').value = '';
+    if (document.getElementById('n-parentphone')) document.getElementById('n-parentphone').value = '';
     document.getElementById('n-classgroup').value = '';
     renderTagChecklist('n-tagChecklist', []);
     await loadStudents();
@@ -392,12 +399,13 @@ function parseExcel(file) {
         branch: String(r[3]||'').trim() || '평촌관',
         teacherName, teacherUid: teacher?.id || '',
         days,
+        parentPhone: String(r[6]||'').replace(/[^0-9]/g, ''),
       };
     });
 
     document.getElementById('previewCount').textContent = `총 ${excelData.length}명`;
     document.getElementById('previewTable').innerHTML = `
-      <tr><th>이름</th><th>전화번호</th><th>학년</th><th>관할</th><th>담당선생님</th><th>요일</th><th>강의</th></tr>
+      <tr><th>이름</th><th>전화번호</th><th>학년</th><th>관할</th><th>담당선생님</th><th>요일</th><th>학부모전화</th><th>강의</th></tr>
       ${excelData.map(r => `<tr>
         <td>${r.name}</td>
         <td>${r.phone}</td>
@@ -405,6 +413,7 @@ function parseExcel(file) {
         <td>${r.branch}</td>
         <td style="color:${r.teacherUid?'var(--gold)':'#ff9090'};">${r.teacherName||'-'} ${r.teacherUid?'✅':'⚠️미매칭'}</td>
         <td>${r.days.join('·')||'-'}</td>
+        <td>${r.parentPhone||'-'}</td>
         <td style="color:var(--gold);">${recommendTags(r.grade, r.branch, r.teacherName).length}개</td>
       </tr>`).join('')}`;
     document.getElementById('excelPreview').style.display = 'block';
@@ -446,6 +455,10 @@ window.uploadExcel = async () => {
         assignedTags, createdAt: new Date().toISOString()
       });
       ok++;
+      if (row.parentPhone && typeof window.linkParentAccount === 'function') {
+        try { await linkParentAccount({ id: cred.user.uid, name: row.name }, row.parentPhone); }
+        catch (e) { failList.push(`${row.name} 학부모 계정: ${e.message}`); }
+      }
     } catch(e) {
       if (e.code === 'auth/email-already-in-use') {
         skip++;
@@ -471,12 +484,12 @@ window.uploadExcel = async () => {
 
 window.downloadTemplate = () => {
   const ws = XLSX.utils.aoa_to_sheet([
-    ['이름','전화번호','학년','관할','담당선생님','요일'],
-    ['홍길동','01012345678','고1','평촌관','송문찬','월수금'],
-    ['김철수','01087654321','중3','산본관','송우찬','화목'],
-    ['이영희','01011112222','고2','평촌관','송문찬','월화수목금'],
+    ['이름','전화번호','학년','관할','담당선생님','요일','학부모전화'],
+    ['홍길동','01012345678','고1','평촌관','송문찬','월수금','01099990000'],
+    ['김철수','01087654321','중3','산본관','송우찬','화목','01088880000'],
+    ['이영희','01011112222','고2','평촌관','송문찬','월화수목금',''],
   ]);
-  ws['!cols'] = [{wch:10},{wch:14},{wch:6},{wch:8},{wch:10},{wch:10}];
+  ws['!cols'] = [{wch:10},{wch:14},{wch:6},{wch:8},{wch:10},{wch:10},{wch:14}];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, '학생목록');
   XLSX.writeFile(wb, '학생등록양식_v2.xlsx');
