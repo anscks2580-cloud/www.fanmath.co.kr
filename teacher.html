@@ -4893,7 +4893,7 @@ onAuthStateChanged(auth, (u) => { rvUid = u ? u.uid : null; });
 function note(id, msg, type) { const el = $(id); el.textContent = msg; el.className = `alert ${type}`; el.style.display = 'block'; setTimeout(() => { el.style.display = 'none'; }, 4000); }
 
 window.rvInit = function () {
-  if (!$('rvMonth').value) { const d = new Date(); d.setDate(0); $('rvMonth').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; }
+  if (!$('rvMonth').value) { const d = new Date(); if (d.getDate() <= 5) d.setDate(0); $('rvMonth').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; }
   rvLoad();
 };
 window.rvLoad = async function () {

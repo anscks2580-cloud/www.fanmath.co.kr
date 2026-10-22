@@ -18,9 +18,11 @@ function srMonthRange(month) { const [y, m] = month.split('-').map(Number); cons
 window.initStudyReportTab = async function () {
   if (!srInited) {
     srInited = true;
-    const d = new Date(); d.setDate(0); // 기본값: 지난달
+    // 기본값: 매달 1~5일에는 지난달, 그 뒤로는 이번 달
+    const d = new Date(); if (d.getDate() <= 5) d.setDate(0);
     document.getElementById('srMonth').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-    try { srCalc = await import('../report-calc.js'); } catch (e) { srMsg('집계 모듈(report-calc.js)을 불러오지 못했습니다: ' + e.message, 'error'); }
+    // 동적 import는 문서(admin.html) 기준으로 경로가 잡히므로 사이트 루트의 report-calc.js를 절대 경로로
+    try { srCalc = await import(new URL('report-calc.js', location.href).href); } catch (e) { srMsg('집계 모듈(report-calc.js)을 불러오지 못했습니다: ' + e.message, 'error'); }
     try {
       const ts = await getDocs(collection(db, 'teachers'));
       const sel = document.getElementById('srTeacher');
