@@ -12,6 +12,12 @@ let srInited = false;
 
 const srEsc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const srIsMiddle = (s) => { const g = String(s?.grade || '').trim(); return !(g.startsWith('고') || /N수|재수|졸업/.test(g)); };
+// Firestore는 배열 안의 배열을 못 받으므로, 혹시 남아 있으면 문자열로 바꿔 저장
+function srSanitize(v, inArray) {
+  if (Array.isArray(v)) return inArray ? JSON.stringify(v) : v.map((x) => srSanitize(x, true));
+  if (v && typeof v === 'object') { const o = {}; for (const k in v) if (v[k] !== undefined) o[k] = srSanitize(v[k], false); return o; }
+  return v;
+}
 function srMsg(text, type) { showMsg('srMsg', text, type || 'success'); }
 function srMonthRange(month) { const [y, m] = month.split('-').map(Number); const last = new Date(y, m, 0).getDate(); return [`${month}-01`, `${month}-${String(last).padStart(2, '0')}`]; }
 
@@ -22,7 +28,7 @@ window.initStudyReportTab = async function () {
     const d = new Date(); if (d.getDate() <= 5) d.setDate(0);
     document.getElementById('srMonth').value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
     // 동적 import는 문서(admin.html) 기준으로 경로가 잡히므로 사이트 루트의 report-calc.js를 절대 경로로
-    try { srCalc = await import(new URL('report-calc.js', location.href).href); } catch (e) { srMsg('집계 모듈(report-calc.js)을 불러오지 못했습니다: ' + e.message, 'error'); }
+    try { srCalc = await import(new URL('report-calc.js?v=' + Date.now(), location.href).href); } catch (e) { srMsg('집계 모듈(report-calc.js)을 불러오지 못했습니다: ' + e.message, 'error'); }
     try {
       const ts = await getDocs(collection(db, 'teachers'));
       const sel = document.getElementById('srTeacher');
@@ -87,7 +93,7 @@ window.srGenerate = async function () {
         generatedAt: new Date().toISOString(),
         createdAt: prev?.createdAt || new Date().toISOString(),
       };
-      await setDoc(doc(db, 'studentReports', id), data);
+      await setDoc(doc(db, 'studentReports', id), srSanitize(data));
       made++; if (keepComment) kept++;
     }
     srMsg(`✅ ${month} 보고서 ${made}명 생성 (검수 의견 유지 ${kept}명 · 발송 완료라 건너뜀 ${skipped}명)`, 'success');
