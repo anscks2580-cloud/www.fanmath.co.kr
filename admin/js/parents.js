@@ -93,24 +93,33 @@ window.paLinkOne = async function (uid) {
   } catch (e) { showMsg('paMsg', `${s.name}: ${e.message}`, 'error'); }
 };
 
-// ── 엑셀 일괄 연결: 열 = 이름, 학부모전화 (헤더 이름은 자유, 첫 열 이름 · 둘째 열 번호) ──
+// ── 엑셀 일괄 연결: 1열 이름, 2열 학부모 전화, (3열 학생 전화 — 있으면 동명이인·이름 표기 차이를 학생 번호로 맞춤) ──
 window.paImportExcel = async function (file) {
   if (!file) return;
   const data = await file.arrayBuffer();
   const wb = XLSX.read(data, { type: 'array' });
   const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
-  const items = rows.slice(1).map((r) => ({ name: String(r[0] || '').trim(), phone: pDigits(r[1]) })).filter((x) => x.name && x.phone);
+  const items = rows.slice(1).map((r) => ({ name: String(r[0] || '').trim(), phone: pDigits(r[1]), sphone: pDigits(r[2]) })).filter((x) => x.name && x.phone);
   if (!items.length) { showMsg('paMsg', '읽을 수 있는 행이 없습니다. 1열 이름, 2열 학부모 전화번호로 만들어 주세요.', 'error'); return; }
-  if (!confirm(`${items.length}명의 학부모 번호를 연결할까요?`)) return;
-  let ok = 0; const fail = [];
-  for (const it of items) {
-    const matches = studentsCache.filter((s) => s.name === it.name);
-    if (matches.length !== 1) { fail.push(`${it.name}: ${matches.length ? '동명이인' : '학생 없음'}`); continue; }
-    try { await linkParentAccount(matches[0], it.phone); ok++; }
-    catch (e) { fail.push(`${it.name}: ${e.message}`); }
-    await new Promise((r) => setTimeout(r, 250)); // 계정 생성 속도 제한 완화
+  // 매칭: ① 이름 정확히 1명 ② 학생 전화번호 1명 ③ 괄호 뺀 이름 1명
+  const norm = (n) => String(n || '').replace(/\s+/g, '').replace(/\(.*?\)/g, '');
+  const plan = items.map((it) => {
+    let m = studentsCache.filter((s) => s.name === it.name);
+    if (m.length !== 1 && it.sphone) { const byPhone = studentsCache.filter((s) => pDigits(s.phone) === it.sphone); if (byPhone.length === 1) m = byPhone; }
+    if (m.length !== 1) { const byNorm = studentsCache.filter((s) => norm(s.name) === norm(it.name)); if (byNorm.length === 1) m = byNorm; }
+    return { it, student: m.length === 1 ? m[0] : null, why: m.length > 1 ? '동명이인(학생 번호로도 구분 불가)' : '학생 없음' };
+  });
+  const matched = plan.filter((p) => p.student), unmatched = plan.filter((p) => !p.student);
+  const already = matched.filter((p) => p.student.parentUid && pDigits(p.student.parentPhone) === p.it.phone).length;
+  if (!confirm(`${items.length}행 중 ${matched.length}명 매칭 (이미 연결됨 ${already}명 · 매칭 실패 ${unmatched.length}명)\n\n연결을 진행할까요?${unmatched.length ? '\n\n실패: ' + unmatched.map((p) => p.it.name).join(', ') : ''}`)) return;
+  let ok = 0, skip = 0; const fail = unmatched.map((p) => `${p.it.name}: ${p.why}`);
+  showMsg('paMsg', '연결 중... (계정 생성은 한 명당 1초쯤 걸립니다)', 'success');
+  for (const p of matched) {
+    try { const r = await linkParentAccount(p.student, p.it.phone); if (r === 'unchanged') skip++; else ok++; }
+    catch (e) { fail.push(`${p.it.name}: ${e.message}`); }
+    await new Promise((r) => setTimeout(r, 400)); // 계정 생성 속도 제한 완화
   }
-  showMsg('paMsg', `완료: ${ok}명 연결${fail.length ? ` / 실패 ${fail.length}명 — ${fail.join(', ')}` : ''}`, fail.length ? 'error' : 'success');
+  showMsg('paMsg', `완료: ${ok}명 연결 · ${skip}명 이미 연결됨${fail.length ? ` / 실패 ${fail.length}명 — ${fail.join(', ')}` : ''}`, fail.length ? 'error' : 'success');
   await loadStudents(); renderParentsTab();
 };
 window.paDownloadTemplate = function () {
