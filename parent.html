@@ -46,9 +46,10 @@
   .noti button:hover { background:rgba(255,255,255,.25); }
   .noti button b { white-space:nowrap; }
   .noti button span { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; opacity:.9; }
-  .cm-btn { font-size:12px; color:var(--accent); font-weight:700; background:none; border:none; font-family:inherit; cursor:pointer; padding:6px 0 0; display:flex; align-items:center; gap:6px; }
+  .cm-box { margin-top:10px; background:#F7F5FC; border:1px solid #E3DDF3; border-radius:12px; padding:10px 12px; }
+  .cm-head { display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:800; color:var(--accent); margin-bottom:6px; }
+  .cm-head small { font-weight:500; color:var(--muted); }
   .cm-new { background:var(--warn); color:#fff; font-size:10px; padding:1px 7px; border-radius:999px; }
-  .cm-box { margin-top:8px; border-top:1px dashed var(--line); padding-top:8px; }
   .cm { padding:8px 10px; border-radius:10px; margin-bottom:6px; font-size:13px; line-height:1.55; }
   .cm .txt { white-space:pre-wrap; }
   .cm.parent { background:var(--accent-soft); margin-left:24px; }
@@ -61,10 +62,12 @@
   .cm .eact { display:flex; gap:6px; justify-content:flex-end; margin-top:4px; }
   .cm .eact button { font-family:inherit; font-size:12px; border-radius:8px; padding:5px 10px; cursor:pointer; border:1px solid var(--line); background:#fff; }
   .cm .eact button.ok { background:var(--accent); color:#fff; border-color:var(--accent); }
-  .cm-form { display:flex; gap:6px; margin-top:6px; }
-  .cm-form textarea { flex:1; min-height:40px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; font-family:inherit; font-size:13px; resize:vertical; outline:none; }
-  .cm-form textarea:focus { border-color:var(--accent); }
-  .cm-form button { background:var(--accent); color:#fff; border:none; border-radius:10px; padding:0 14px; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+  .cm-form { display:flex; gap:6px; margin-top:4px; }
+  .cm-form textarea { flex:1; min-height:42px; padding:9px 12px; border:1.5px solid #CFC6EA; background:#fff; border-radius:10px; font-family:inherit; font-size:13.5px; resize:vertical; outline:none; }
+  .cm-form textarea::placeholder { color:#9A92B8; }
+  .cm-form textarea:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(91,63,166,.12); }
+  .cm-form button { background:var(--accent); color:#fff; border:none; border-radius:10px; padding:0 16px; font-family:inherit; font-size:13.5px; font-weight:800; cursor:pointer; white-space:nowrap; }
+  .cm-form button:hover { filter:brightness(1.08); }
   .item-wrap { border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:8px; }
   .item-wrap.latest { border-color:var(--accent); box-shadow:0 4px 18px rgba(91,63,166,.12); }
   .rep-frame { width:100%; border:none; display:block; border-radius:12px; background:transparent; margin-top:10px; min-height:200px; }
@@ -141,6 +144,14 @@ const threadOf = (type, id) => comments.filter((c) => c.targetType === type && c
 const isTeacherView = () => viewer.role === 'teacher';
 // 안 읽은 글: 학부모 화면에선 선생님 답글, 선생님 화면에선 학부모 댓글
 const unreadOf = (type, id) => threadOf(type, id).filter((c) => isTeacherView() ? (c.authorRole === 'parent' && !c.readByTeacher) : (c.authorRole === 'teacher' && !c.readByParent)).length;
+window.pMarkRead = async (key) => {
+  const [type, id] = key.split('|');
+  const field = isTeacherView() ? 'readByTeacher' : 'readByParent';
+  const unread = threadOf(type, id).filter((c) => isTeacherView() ? (c.authorRole === 'parent' && !c.readByTeacher) : (c.authorRole === 'teacher' && !c.readByParent));
+  if (!unread.length) return;
+  for (const c of unread) { try { await updateDoc(doc(db, 'reportComments', c.id), { [field]: true }); c[field] = true; } catch (e) {} }
+  render(); try { window.parent.postMessage({ type: 'pcRead' }, '*'); } catch (e) {}
+};
 window.pToggle = async (key) => {
   if (openThreads.has(key)) openThreads.delete(key); else openThreads.add(key);
   render();
@@ -206,20 +217,20 @@ function notiHtml() {
 window.pGoThread = async (key) => {
   const [type] = key.split('|');
   cur = type === 'weekly' ? 'weekly' : type === 'monthly' ? 'monthly' : cur;
-  if (!openThreads.has(key)) await pToggle(key); else render();
+  await pMarkRead(key); render();
   setTimeout(() => { const el = document.getElementById(`th-${key.replace(/[^a-zA-Z0-9]/g, '_')}`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 50);
 };
 function threadHtml(type, id, teacherUid, teacherName, label) {
-  const key = `${type}|${id}`, th = threadOf(type, id), unread = unreadOf(type, id), open = openThreads.has(key);
-  return `<div id="th-${key.replace(/[^a-zA-Z0-9]/g, '_')}"></div>
-    <button class="cm-btn" onclick="pToggle('${key}')">💬 댓글 ${th.length ? th.length + '개' : '남기기'} ${unread ? `<span class="cm-new">${isTeacherView() ? '새 댓글' : '새 답글'} ${unread}</span>` : ''} <span style="opacity:.6">${open ? '▲' : '▼'}</span></button>
-    ${open ? `<div class="cm-box">
+  const key = `${type}|${id}`, th = threadOf(type, id), unread = unreadOf(type, id);
+  const who = isTeacherView() ? '학부모님께 답글' : '선생님께 한마디';
+  return `<div class="cm-box" id="th-${key.replace(/[^a-zA-Z0-9]/g, '_')}">
+      <div class="cm-head">💬 ${who} ${th.length ? `<small>대화 ${th.length}개</small>` : `<small>${isTeacherView() ? '' : '궁금한 점이나 전하실 말씀을 남겨주세요'}</small>`} ${unread ? `<span class="cm-new">${isTeacherView() ? '새 댓글' : '새 답글'} ${unread}</span>` : ''}</div>
       ${th.map((c) => { const mine = c.authorUid === me.uid; const editing = editingId === c.id; return `<div class="cm ${c.authorRole}" id="cm-${c.id}">
         <div class="who"><span>${esc(c.authorName || (c.authorRole === 'teacher' ? '선생님' : '학부모'))} · ${c.createdAt?.seconds ? new Date(c.createdAt.seconds * 1000).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }) : ''}${c.editedAt ? ' · 수정됨' : ''}</span>
           ${mine && !editing ? `<span class="act"><button onclick="pEdit('${c.id}')">수정</button><button onclick="pDelete('${c.id}')">삭제</button></span>` : ''}</div>
 ${editing ? `<textarea id="cm-edit-${c.id}">${esc(c.text)}</textarea><div class="eact"><button onclick="pEditCancel()">취소</button><button class="ok" onclick="pEditSave('${c.id}')">저장</button></div>` : `<div class="txt">${esc(c.text)}</div>`}</div>`; }).join('')}
-      <div class="cm-form"><textarea id="cm-ta-${type}-${id}" placeholder="${isTeacherView() ? '학부모님께 답글을 남겨주세요' : '선생님께 궁금한 점이나 전하실 말씀을 남겨주세요'}"></textarea><button onclick="pSend('${type}','${id}','${esc(teacherUid || '')}','${esc(teacherName || '')}','${esc(label)}')">보내기</button></div>
-    </div>` : ''}`;
+      <div class="cm-form"><textarea id="cm-ta-${type}-${id}" placeholder="${isTeacherView() ? '답글을 입력하세요' : '예: 요즘 집에서 숙제를 힘들어해요…'}" onfocus="pMarkRead('${key}')"></textarea><button onclick="pSend('${type}','${id}','${esc(teacherUid || '')}','${esc(teacherName || '')}','${esc(label)}')">보내기</button></div>
+    </div>`;
 }
 window.pLogout = async () => { await signOut(auth); location.replace('login.html'); };
 
