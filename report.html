@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>월간 학습 보고서 | 송우찬수학학원</title>
+<link rel="icon" href="swc-logo.svg">
+<style>
+  :root { --ink:#1A1230; --ink-2:#4A4160; --muted:#8B86A0; --line:#E8E5F0; --paper:#F6F5FA; --card:#FFFFFF;
+          --accent:#5B3FA6; --accent-soft:#EEE9F8; --gold:#C49A28; --gold-soft:#FBF3DA; --good:#2E8B57; --good-soft:#E3F3EA; --warn:#C8541F; --warn-soft:#FBE9E0; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif; background:var(--paper); color:var(--ink); line-height:1.5; -webkit-text-size-adjust:100%; }
+  .wrap { max-width:720px; margin:0 auto; padding:16px 16px 48px; }
+  .head { background:var(--ink); color:#fff; border-radius:16px; padding:22px 20px; margin-bottom:14px; position:relative; overflow:hidden; }
+  .head::after { content:''; position:absolute; right:-40px; top:-40px; width:160px; height:160px; border-radius:50%; background:rgba(240,192,64,0.12); }
+  .head .brand { font-size:12px; letter-spacing:2px; color:#F0C040; font-weight:700; }
+  .head h1 { font-size:22px; font-weight:800; margin:6px 0 2px; }
+  .head .who { font-size:15px; opacity:.92; }
+  .head .period { font-size:12px; opacity:.6; margin-top:8px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:18px; margin-bottom:12px; }
+  .card h2 { font-size:14px; font-weight:800; color:var(--ink); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+  .card h2 small { font-size:11px; font-weight:500; color:var(--muted); margin-left:auto; }
+  .tiles { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  .tile { background:var(--accent-soft); border-radius:12px; padding:12px 10px; text-align:center; }
+  .tile .k { font-size:11px; color:var(--ink-2); }
+  .tile .v { font-size:24px; font-weight:800; color:var(--accent); line-height:1.1; margin:4px 0 2px; }
+  .tile .v small { font-size:12px; font-weight:600; }
+  .tile .s { font-size:10.5px; color:var(--muted); }
+  .tile.gold { background:var(--gold-soft); } .tile.gold .v { color:var(--gold); }
+  .bars { display:flex; flex-direction:column; gap:8px; }
+  .bar { display:grid; grid-template-columns:minmax(90px,38%) 1fr 44px; align-items:center; gap:10px; font-size:13px; }
+  .bar .lb { color:var(--ink-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .bar .lb small { color:var(--muted); font-size:11px; margin-left:4px; }
+  .bar .tr { height:10px; background:var(--line); border-radius:5px; overflow:hidden; }
+  .bar .fl { height:100%; background:var(--accent); border-radius:5px; }
+  .bar .fl.good { background:var(--good); } .bar .fl.warn { background:var(--warn); }
+  .bar .pc { text-align:right; font-weight:700; font-variant-numeric:tabular-nums; }
+  .cols { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; align-items:end; height:120px; }
+  .col { display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; gap:4px; }
+  .col .st { width:100%; max-width:52px; background:var(--accent); border-radius:4px 4px 0 0; min-height:3px; }
+  .col .pc { font-size:12px; font-weight:700; } .col .lb { font-size:11px; color:var(--muted); white-space:nowrap; }
+  .col .lb small { display:block; font-size:10px; }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .list { border-radius:12px; padding:12px; }
+  .list.good { background:var(--good-soft); } .list.warn { background:var(--warn-soft); }
+  .list h3 { font-size:12px; font-weight:800; margin-bottom:8px; }
+  .list.good h3 { color:var(--good); } .list.warn h3 { color:var(--warn); }
+  .list li { list-style:none; font-size:12.5px; display:flex; justify-content:space-between; gap:8px; padding:3px 0; color:var(--ink-2); }
+  .list li b { font-variant-numeric:tabular-nums; flex-shrink:0; }
+  .list .none { font-size:12px; color:var(--muted); }
+  .comment { background:var(--gold-soft); border-left:3px solid var(--gold); border-radius:10px; padding:14px 16px; font-size:14px; line-height:1.7; color:var(--ink); white-space:pre-wrap; }
+  .comment .by { font-size:12px; color:var(--muted); margin-top:8px; text-align:right; }
+  table.tests { width:100%; border-collapse:collapse; font-size:12.5px; }
+  table.tests th { font-size:11px; color:var(--muted); font-weight:600; text-align:left; padding:6px 4px; border-bottom:1px solid var(--line); }
+  table.tests td { padding:7px 4px; border-bottom:1px solid var(--line); color:var(--ink-2); }
+  table.tests td.r, table.tests th.r { text-align:right; font-variant-numeric:tabular-nums; }
+  .foot { font-size:11px; color:var(--muted); line-height:1.6; padding:0 4px; }
+  .badge { display:inline-block; font-size:10.5px; padding:2px 8px; border-radius:999px; background:var(--accent-soft); color:var(--accent); font-weight:700; }
+  .demo { position:fixed; top:10px; right:10px; background:#C8541F; color:#fff; font-size:11px; padding:4px 10px; border-radius:999px; z-index:9; }
+  .empty { text-align:center; color:var(--muted); padding:40px 0; font-size:14px; }
+  @media (max-width:520px) { .tiles { grid-template-columns:repeat(2,1fr); } .two { grid-template-columns:1fr; } .bar { grid-template-columns:minmax(80px,42%) 1fr 40px; } }
+  @media print { body { background:#fff; } .wrap { max-width:none; padding:0; } .card { break-inside:avoid; } .demo { display:none; } }
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><div class="empty">보고서를 불러오는 중...</div></div>
+
+<script type="module">
+import { buildStudentReport, draftComment, CRITERIA } from './report-calc.js';
+const $app = document.getElementById('app');
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const params = new URLSearchParams(location.search);
+
+// ── 샘플 데이터 (실제 10/22 중3 시험지 유형 기준, 오답은 가상) ──
+function demoReport() {
+  const items = [{"n": 1, "type": "원의 중심과 현의 수직이등분선(2)", "natRate": 71}, {"n": 2, "type": "원의 중심과 현의 수직이등분선(4); 원을 접은 경우", "natRate": 89}, {"n": 3, "type": "현의 길이(1); 중심에서 같은 거리의 두 현", "natRate": 84}, {"n": 4, "type": "원의 접선과 반지름", "natRate": 88}, {"n": 5, "type": "원의 접선의 성질(1)", "natRate": 91}, {"n": 6, "type": "원의 접선의 성질(2); 길이", "natRate": 70}, {"n": 7, "type": "원의 접선의 성질(3); 넓이", "natRate": 88}, {"n": 8, "type": "원의 접선의 성질의 활용", "natRate": 81}, {"n": 9, "type": "반원에서의 접선", "natRate": 79}, {"n": 10, "type": "원의 접선과 반지름; 동심원", "natRate": 85}, {"n": 11, "type": "삼각형의 내접원", "natRate": 92}, {"n": 12, "type": "원에 외접하는 사각형의 성질(1)", "natRate": 92}, {"n": 13, "type": "원에 외접하는 사각형의 성질(2); 한 내각이 90˚인 경우", "natRate": 92}, {"n": 14, "type": "원에 외접하는 사각형의 성질의 활용(1); 직사각형", "natRate": 67}, {"n": 15, "type": "원주각과 중심각의 크기(1)", "natRate": 66}, {"n": 16, "type": "원주각과 중심각의 크기(2)", "natRate": 92}, {"n": 17, "type": "원주각과 중심각의 크기(3)", "natRate": 70}, {"n": 18, "type": "원주각의 성질(1); 한 호", "natRate": 86}, {"n": 19, "type": "원주각의 성질(2); 반원", "natRate": 84}, {"n": 20, "type": "원주각과 삼각비의 값(1)", "natRate": 80}, {"n": 21, "type": "원주각과 삼각비의 값(2); 선분의 길이, 넓이", "natRate": 87}, {"n": 22, "type": "원주각의 크기와 호의 길이(1)", "natRate": 92}, {"n": 23, "type": "원주각의 크기와 호의 길이(2)", "natRate": 91}, {"n": 24, "type": "원주각의 크기와 호의 길이(3)", "natRate": 63}, {"n": 25, "type": "원에 내접하는 사각형의 성질(1)", "natRate": 85}, {"n": 26, "type": "원에 내접하는 사각형의 성질(2)", "natRate": 79}, {"n": 27, "type": "원에 내접하는 사각형과 외각의 성질", "natRate": 72}, {"n": 28, "type": "원에 내접하는 다각형", "natRate": 75}, {"n": 29, "type": "원에 내접하는 사각형", "natRate": 78}, {"n": 30, "type": "사각형이 원에 내접하기 위한 조건", "natRate": 81}, {"n": 31, "type": "접선과 현이 이루는 각; 원주각", "natRate": 72}, {"n": 32, "type": "접선과 현이 이루는 각의 활용(1); 현이 중심을 지나지 않는 경우", "natRate": 80}, {"n": 33, "type": "접선과 현이 이루는 각의 활용(2); 현이 중심을 지나는 경우", "natRate": 78}, {"n": 34, "type": "접선과 현이 이루는 각의 활용(3); 한 점에서 원에 그은 두 접선", "natRate": 80}, {"n": 35, "type": "두 원에서 접선과 현이 이루는 각(1)", "natRate": 78}];
+  const mk = (id, date, title, range, pick) => ({ id, date, title, range, grade: '중3', classGroup: '중3-2A', questionCount: pick.length, items: pick.map((n, i) => ({ ...items[n - 1], n: i + 1 })) });
+  const tests = [
+    mk('t1', '2026-10-06', '10월 6일 (중3)',  '원의 현 ~ 원의 접선', [1,2,3,4,5,6,7,8,9,10,11,12,13,14]),
+    mk('t2', '2026-10-13', '10월 13일 (중3)', '원주각',             [15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30]),
+    mk('t3', '2026-10-20', '10월 20일 (중3)', '접선과 현이 이루는 각', [31,32,33,34,35,24,27,14,15,6]),
+    mk('t4', '2026-10-27', '10월 27일 (중3)', '원 종합',             [1,3,5,8,12,16,19,22,25,28,31,33,35,24,6,14,15]),
+  ];
+  const student = { id: 's1', name: '박은서', grade: '중3', classGroup: '중3-2A' };
+  const results = [
+    { testId: 't1', studentId: 's1', wrong: [6, 14], absent: false },
+    { testId: 't2', studentId: 's1', wrong: [1, 3, 10, 13], absent: false },
+    { testId: 't3', studentId: 's1', wrong: [6, 7, 10], absent: false },
+    { testId: 't4', studentId: 's1', wrong: [14, 16], absent: false },
+  ];
+  // 반 친구들 (반 평균용)
+  const classResults = [...results,
+    { testId: 't1', studentId: 's2', wrong: [2,6,9,14], absent: false }, { testId: 't2', studentId: 's2', wrong: [1,3,6,10,12,13], absent: false }, { testId: 't3', studentId: 's2', wrong: [2,6,7,10], absent: false }, { testId: 't4', studentId: 's2', wrong: [5,14,16,17], absent: false },
+    { testId: 't1', studentId: 's3', wrong: [6], absent: false }, { testId: 't2', studentId: 's3', wrong: [3,10], absent: false }, { testId: 't3', studentId: 's3', wrong: [6], absent: false }, { testId: 't4', studentId: 's3', wrong: [14], absent: false },
+  ];
+  const rep = buildStudentReport({ student, month: '2026-10', tests, results, classResults });
+  rep.teacherName = '장미현';
+  rep.comment = draftComment(rep);
+  return rep;
+}
+
+function render(rep) {
+  const s = rep.summary;
+  const [y, m] = rep.month.split('-');
+  const last = new Date(y, parseInt(m, 10), 0).getDate();
+  const diffLb = CRITERIA.diffLabel;
+  const barCls = (p) => p >= CRITERIA.strongPct ? 'good' : p < CRITERIA.weakPct ? 'warn' : '';
+  const bars = (rows, lbFn) => rows.length ? `<div class="bars">${rows.map((r) => `
+      <div class="bar"><span class="lb">${lbFn(r)}</span><div class="tr"><div class="fl ${barCls(r.pct)}" style="width:${r.pct}%"></div></div><span class="pc">${r.pct}%</span></div>`).join('')}</div>` : '<div class="list .none" style="color:var(--muted);font-size:12px;">자료가 없습니다.</div>';
+  const maxW = Math.max(1, ...rep.weekly.map((w) => w.pct || 0));
+
+  $app.innerHTML = `
+    <div class="head">
+      <div class="brand">SONGMATH · 평촌관</div>
+      <h1>${y}년 ${parseInt(m, 10)}월 학습 보고서</h1>
+      <div class="who">${esc(rep.studentName)} 학생 <span style="opacity:.6">·</span> ${esc(rep.grade)} ${rep.classGroup ? `<span class="badge" style="background:rgba(255,255,255,.12);color:#F0C040;">${esc(rep.classGroup)}</span>` : ''}</div>
+      <div class="period">학습 반영 기간 ${y}.${m}.01 – ${y}.${m}.${last} · 일일테스트 ${s.tests}회 기준</div>
+    </div>
+
+    <div class="card">
+      <h2>이번 달 한눈에 <small>학원 자체 기준</small></h2>
+      ${s.total ? `
+      <div class="tiles">
+        <div class="tile gold"><div class="k">등급</div><div class="v">${s.gradeBand}<small>등급</small></div><div class="s">정답률 ${CRITERIA.gradeBands.find(([,g]) => g === s.gradeBand)[0]}% 이상</div></div>
+        <div class="tile"><div class="k">정답률</div><div class="v">${s.pct}<small>%</small></div><div class="s">${s.classAvgPct != null ? `반 평균 ${s.classAvgPct}%` : '&nbsp;'}</div></div>
+        <div class="tile"><div class="k">푼 문항</div><div class="v">${s.total}</div><div class="s">${s.correct}문항 정답</div></div>
+        <div class="tile"><div class="k">평균 난이도</div><div class="v">${s.avgDiff}</div><div class="s">${diffLb[Math.round(s.avgDiff)]} 수준 (1~5)</div></div>
+      </div>` : '<div class="empty">이번 달 채점된 테스트가 없습니다.</div>'}
+    </div>
+
+    ${rep.comment ? `<div class="card"><h2>선생님 의견</h2><div class="comment">${esc(rep.comment)}<div class="by">${esc(rep.teacherName || '')} 선생님</div></div></div>` : ''}
+
+    <div class="card">
+      <h2>주차별 정답률 <small>주 단위 흐름</small></h2>
+      ${rep.weekly.length ? `<div class="cols">${rep.weekly.map((w) => `
+        <div class="col"><span class="pc">${w.pct}%</span><div class="st" style="height:${Math.max(3, w.pct / maxW * 80)}%"></div><span class="lb">${parseInt(m,10)}월 ${w.week}주<small>${w.total}문항</small></span></div>`).join('')}</div>` : '<div class="empty">자료 없음</div>'}
+    </div>
+
+    <div class="card">
+      <h2>단원별 성취 <small>문항 수 · 정답률</small></h2>
+      ${bars(rep.units, (r) => `${esc(r.name)}<small>${r.total}문항</small>`)}
+    </div>
+
+    <div class="card">
+      <h2>유형 진단 <small>${CRITERIA.minItems}문항 이상 푼 유형 기준</small></h2>
+      <div class="two">
+        <div class="list good"><h3>✔ 잘하는 유형</h3>${rep.strong.length ? `<ul>${rep.strong.map((t) => `<li><span>${esc(t.name)}</span><b>${t.pct}%</b></li>`).join('')}</ul>` : '<div class="none">아직 없음</div>'}</div>
+        <div class="list warn"><h3>! 보완할 유형</h3>${rep.weak.length ? `<ul>${rep.weak.map((t) => `<li><span>${esc(t.name)}</span><b>${t.pct}%</b></li>`).join('')}</ul>` : '<div class="none">정답률 ' + CRITERIA.weakPct + '% 미만 유형 없음 👍</div>'}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>난이도별 정답률 <small>하 · 중하 · 중 · 상 · 최상</small></h2>
+      ${bars([1,2,3,4,5].map((d) => rep.diffs.find((x) => x.diff === d) || { diff: d, total: 0, pct: 0 }).filter((x) => x.total), (r) => `${diffLb[r.diff]}<small>${r.total}문항</small>`)}
+    </div>
+
+    <div class="card">
+      <h2>이번 달 테스트 <small>${rep.tests.length}회${s.absent ? ` · 결시 ${s.absent}회` : ''}</small></h2>
+      <table class="tests"><thead><tr><th>날짜</th><th>범위</th><th class="r">문항</th><th class="r">정답률</th></tr></thead>
+      <tbody>${rep.tests.map((t) => `<tr><td>${t.date.slice(5).replace('-', '/')}</td><td>${esc(t.range || t.title)}</td><td class="r">${t.correct}/${t.total}</td><td class="r"><b>${t.pct}%</b></td></tr>`).join('')}</tbody></table>
+    </div>
+
+    <p class="foot">* 등급은 보고서 기간에 푼 일일테스트 정답률로 산정합니다. 1등급 90% 이상 · 2등급 80% 이상 · 3등급 70% 이상 · 4등급 50% 이상 · 5등급 50% 미만.<br>
+    * 난이도는 문항별 전국 정답률을 기준으로 하(1)~최상(5)으로 나눈 학원 자체 기준입니다. 잘하는 유형은 정답률 ${CRITERIA.strongPct}% 이상, 보완할 유형은 ${CRITERIA.weakPct}% 미만입니다.<br>
+    * 송우찬수학학원 평촌관 · 문의 031-386-8899</p>`;
+}
+
+if (params.get('demo')) {
+  document.body.insertAdjacentHTML('afterbegin', '<div class="demo">샘플 보고서 (가상 오답)</div>');
+  render(demoReport());
+} else {
+  // 실제: ?id=studentReports 문서ID (학생/학부모 계정 로그인 상태에서 열람)
+  const id = params.get('id');
+  if (!id) { $app.innerHTML = '<div class="empty">보고서 링크가 올바르지 않습니다.</div>'; }
+  else {
+    const { initializeApp } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js');
+    const { getAuth, onAuthStateChanged } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js');
+    const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    const app = initializeApp({ apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA", authDomain: "songmath.firebaseapp.com", projectId: "songmath", storageBucket: "songmath.firebasestorage.app", messagingSenderId: "936295436575", appId: "1:936295436575:web:d1e201508719850cfbe02a" });
+    const db = getFirestore(app);
+    onAuthStateChanged(getAuth(app), async (user) => {
+      if (!user) { location.replace('login.html?next=' + encodeURIComponent(location.pathname + location.search)); return; }
+      try {
+        const snap = await getDoc(doc(db, 'studentReports', id));
+        if (!snap.exists()) { $app.innerHTML = '<div class="empty">보고서를 찾을 수 없습니다.</div>'; return; }
+        render(snap.data());
+      } catch (e) { $app.innerHTML = `<div class="empty">보고서를 열 수 없습니다.<br><small>${esc(e.message)}</small></div>`; }
+    });
+  }
+}
+</script>
+</body>
+</html>
