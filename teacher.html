@@ -761,17 +761,16 @@ select option:disabled { color:#9B94B3; }
     </div>
   </div>
 
-  <!-- ══ 일일테스트: 시험지 등록 · 오답 입력 (초·중등 월말보고서 원본 데이터) ══ -->
+  <!-- ══ 일일테스트: 시험지 올리고 → 반 고르고 → 학생별 오답만 입력 (초·중등 월말보고서 원본 데이터) ══ -->
   <div class="tab-panel" id="tab-dailytest">
     <style>
-      .dt-top { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:14px; }
+      .dt-step { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--gold); margin-bottom:10px; }
+      .dt-step .n { width:22px; height:22px; border-radius:50%; background:rgba(240,192,64,0.15); border:1px solid rgba(240,192,64,0.5); display:inline-flex; align-items:center; justify-content:center; font-size:12px; }
       .dt-list { display:flex; flex-direction:column; gap:6px; }
-      .dt-row { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:10px; border:1px solid var(--border-soft); background:rgba(255,255,255,0.03); cursor:pointer; }
+      .dt-row { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px; border:1px solid var(--border-soft); background:rgba(255,255,255,0.03); cursor:pointer; }
       .dt-row:hover { border-color:rgba(240,192,64,0.4); }
       .dt-row.active { border-color:var(--gold); background:rgba(240,192,64,0.08); }
-      .dt-row .dt-date { font-size:12px; color:var(--muted); min-width:84px; }
       .dt-row .dt-title { font-size:13.5px; font-weight:600; color:var(--off-white); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-      .dt-row .dt-meta { font-size:11.5px; color:var(--muted); white-space:nowrap; }
       .dt-tag { font-size:10.5px; padding:2px 7px; border-radius:6px; background:rgba(255,255,255,0.07); color:var(--muted); white-space:nowrap; }
       .dt-tag.ok { background:rgba(95,217,138,0.12); color:#7fe0a3; }
       .dt-tag.warn { background:rgba(255,179,92,0.12); color:#ffc883; }
@@ -780,7 +779,6 @@ select option:disabled { color:#9B94B3; }
       .dt-grid td { padding:8px 8px; border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:middle; }
       .dt-grid tr.absent td { opacity:0.45; }
       .dt-name { white-space:nowrap; font-weight:600; color:var(--off-white); }
-      .dt-name small { color:var(--muted); font-weight:400; margin-left:4px; }
       .dt-chips { display:flex; flex-wrap:wrap; gap:4px; }
       .dt-chip { width:30px; height:26px; border-radius:6px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.03); color:var(--muted); font-size:11.5px; font-family:inherit; cursor:pointer; padding:0; line-height:1; }
       .dt-chip:hover { border-color:rgba(255,120,120,0.6); color:#ff9a9a; }
@@ -788,110 +786,92 @@ select option:disabled { color:#9B94B3; }
       .dt-score { font-size:12px; white-space:nowrap; min-width:64px; text-align:right; }
       .dt-abs { font-size:11px; padding:3px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.15); background:transparent; color:var(--muted); cursor:pointer; font-family:inherit; white-space:nowrap; }
       .dt-abs.on { border-color:rgba(255,179,92,0.6); color:#ffc883; background:rgba(255,179,92,0.1); }
-      .dt-items { display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr)); gap:4px 14px; font-size:12px; color:var(--muted); max-height:220px; overflow:auto; padding:6px 0; }
-      .dt-items b { color:var(--off-white); font-weight:600; margin-right:6px; }
-      @media (max-width:640px) { .dt-row .dt-date { min-width:0; } .dt-chip { width:28px; } }
+      .dt-sel { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
+      .dt-sel .lb { font-size:12px; color:var(--muted); min-width:34px; }
+      @media (max-width:640px) { .dt-chip { width:28px; } }
     </style>
 
-    <!-- 1. 시험지 등록 -->
     <div class="card">
-      <div class="card-title">📄 시험지 등록 <span style="font-size:12px;color:var(--muted);font-weight:400;">— 매쓰플랫에서 내려받은 PDF를 그대로 올리면 날짜·학년·문항 수가 자동으로 채워집니다</span></div>
+      <div class="card-title">📝 일일테스트 오답 입력</div>
       <div class="alert ok" id="dt-ok"></div>
       <div class="alert err" id="dt-err"></div>
 
+      <!-- 1. 시험지 올리기 -->
+      <div class="dt-step"><span class="n">1</span>시험지 올리기</div>
       <div id="dtDrop" onclick="document.getElementById('dtFileInput').click()"
-        style="border:2px dashed rgba(240,192,64,0.3);border-radius:12px;padding:26px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:14px;">
-        <div style="font-size:30px;margin-bottom:6px;">📝</div>
-        <p style="font-size:14px;color:var(--off-white);margin-bottom:4px;">일일테스트 PDF를 클릭하거나 드래그해서 올려주세요</p>
-        <small style="font-size:12px;color:var(--muted);">.pdf · 최대 20MB · 한 번에 한 장</small>
-        <div id="dtFileName" style="margin-top:10px;font-size:13px;color:var(--gold);display:none;"></div>
+        style="border:2px dashed rgba(240,192,64,0.3);border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:14px;">
+        <p style="font-size:14px;color:var(--off-white);margin-bottom:2px;">📄 매쓰플랫에서 내려받은 PDF를 여기에 올려주세요</p>
+        <small style="font-size:12px;color:var(--muted);">클릭 또는 드래그 · 날짜·학년·문항 수는 자동으로 읽습니다</small>
+        <div id="dtFileName" style="margin-top:8px;font-size:13px;color:var(--gold);display:none;"></div>
       </div>
       <input type="file" id="dtFileInput" accept=".pdf" style="display:none;">
 
-      <div class="form-grid">
-        <div class="form-group">
-          <label>시험 일자 <span style="color:#ff9090;">*</span></label>
-          <input type="date" id="dt-date" style="color-scheme:dark;">
-        </div>
-        <div class="form-group">
-          <label>학년 <span style="color:#ff9090;">*</span></label>
-          <select id="dt-grade">
-            <option value="">선택...</option>
-            <option>초4</option><option>초5</option><option>초6</option>
-            <option>중1</option><option>중2</option><option>중3</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>문항 수 <span style="color:#ff9090;">*</span></label>
-          <input type="number" id="dt-count" min="1" max="200" placeholder="예: 35">
-        </div>
-        <div class="form-group">
-          <label>시험 제목</label>
-          <input type="text" id="dt-title" placeholder="예: 10월 22일 (중3)">
-        </div>
-        <div class="form-group" style="grid-column:1 / -1;">
-          <label>범위 / 단원</label>
-          <input type="text" id="dt-range" placeholder="예: 원의 현 ~ 원의 접선과 현이 이루는 각">
-        </div>
+      <!-- 2. 반 고르기 -->
+      <div class="dt-step"><span class="n">2</span>어느 반인가요?</div>
+      <div class="dt-sel">
+        <span class="lb">학년</span>
+        <button class="rating-btn" id="dtg-초4" onclick="dtPick('grade','초4',this)">초4</button>
+        <button class="rating-btn" id="dtg-초5" onclick="dtPick('grade','초5',this)">초5</button>
+        <button class="rating-btn" id="dtg-초6" onclick="dtPick('grade','초6',this)">초6</button>
+        <button class="rating-btn" id="dtg-중1" onclick="dtPick('grade','중1',this)">중1</button>
+        <button class="rating-btn" id="dtg-중2" onclick="dtPick('grade','중2',this)">중2</button>
+        <button class="rating-btn" id="dtg-중3" onclick="dtPick('grade','중3',this)">중3</button>
       </div>
-      <div id="dtParsedWrap" style="display:none;margin-bottom:10px;">
-        <div style="font-size:12px;color:#7fe0a3;margin-bottom:4px;">✅ 문항별 유형이 자동으로 읽혔습니다 (<span id="dtParsedCount">0</span>문항)</div>
-        <div class="dt-items" id="dtParsedItems"></div>
+      <div class="dt-sel">
+        <span class="lb">요일</span>
+        <button class="rating-btn" id="dtw-mwf" onclick="dtPick('day','mwf',this)">월수금</button>
+        <button class="rating-btn" id="dtw-tt" onclick="dtPick('day','tt',this)">화목</button>
+        <button class="rating-btn" id="dtw-tts" onclick="dtPick('day','tts',this)">화목토</button>
+        <button class="rating-btn" id="dtw-all" onclick="dtPick('day','all',this)">전체</button>
       </div>
-      <div id="dtParsedNone" style="display:none;font-size:12px;color:var(--muted);margin-bottom:10px;">ℹ️ 이 PDF에서는 문항별 유형을 읽지 못했습니다. 그대로 등록해도 되고, 월말 정리 때 단원 기준으로 집계됩니다.</div>
-      <div id="dtUploadWrap" style="display:none;margin-bottom:10px;">
-        <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;"><div id="dtUploadBar" style="height:100%;width:0;background:var(--gold);transition:width 0.2s;"></div></div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px;" id="dtUploadText">업로드 중...</div>
+      <div class="dt-sel" style="margin-bottom:14px;">
+        <span class="lb">날짜</span>
+        <input type="date" id="dt-date" style="color-scheme:dark;width:150px;padding:6px 8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;">
+        <span class="lb" style="margin-left:8px;">문항</span>
+        <input type="number" id="dt-count" min="1" max="200" placeholder="자동" style="width:70px;padding:6px 8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;">
+        <input type="hidden" id="dt-grade"><input type="hidden" id="dt-title"><input type="hidden" id="dt-range">
+        <div id="dtUploadWrap" style="display:none;flex:1;min-width:120px;">
+          <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;"><div id="dtUploadBar" style="height:100%;width:0;background:var(--gold);transition:width 0.2s;"></div></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px;" id="dtUploadText">업로드 중...</div>
+        </div>
+        <button class="btn btn-gold" id="dtSubmitBtn" onclick="dtSubmitTest()" style="margin-left:auto;">등록하고 오답 입력 →</button>
       </div>
-      <div class="btn-row">
-        <button class="btn btn-gold" id="dtSubmitBtn" onclick="dtSubmitTest()">시험지 등록</button>
-        <button class="btn btn-outline" onclick="dtResetForm()">초기화</button>
-      </div>
-    </div>
 
-    <!-- 2. 오답 입력 -->
-    <div class="card">
-      <div class="card-title" style="flex-wrap:wrap;">✏️ 오답 입력
-        <span style="font-size:12px;color:var(--muted);font-weight:400;">— 시험지를 고른 뒤 학생마다 틀린 번호만 눌러주세요</span>
-      </div>
-      <div class="alert ok" id="dtr-ok"></div>
-      <div class="alert err" id="dtr-err"></div>
-      <div class="dt-top">
-        <span style="font-size:12px;color:var(--muted);">기간:</span>
-        <button class="rating-btn selected" id="dtf-today" onclick="dtFilterTests('today',this)">오늘</button>
-        <button class="rating-btn" id="dtf-week" onclick="dtFilterTests('week',this)">최근 7일</button>
-        <button class="rating-btn" id="dtf-month" onclick="dtFilterTests('month',this)">이번 달</button>
-        <button class="rating-btn" id="dtf-all" onclick="dtFilterTests('all',this)">전체</button>
-        <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="dtLoadTests()">새로고침</button>
-      </div>
-      <div class="dt-list" id="dtTestList"><div class="empty-state"><div class="icon">📭</div>등록된 시험지가 없습니다.</div></div>
-
-      <div id="dtResultWrap" style="display:none;margin-top:18px;">
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
-          <span style="font-size:13px;font-weight:600;color:var(--gold);" id="dtResultTitle"></span>
-          <span style="font-size:12px;color:var(--muted);" id="dtResultMeta"></span>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
-          <span style="font-size:12px;color:var(--muted);">요일:</span>
-          <button class="rating-btn selected" id="dtd-all" onclick="dtFilterDay('all',this)">전체</button>
-          <button class="rating-btn" id="dtd-mwf" onclick="dtFilterDay('mwf',this)">월수금</button>
-          <button class="rating-btn" id="dtd-tt" onclick="dtFilterDay('tt',this)">화목</button>
-          <button class="rating-btn" id="dtd-tts" onclick="dtFilterDay('tts',this)">화목토</button>
+      <!-- 3. 오답 입력 -->
+      <div id="dtResultWrap" style="display:none;margin-top:6px;">
+        <div class="dt-step"><span class="n">3</span>틀린 번호만 눌러주세요
+          <span style="font-size:12px;font-weight:400;color:var(--muted);margin-left:4px;" id="dtResultTitle"></span>
           <input type="text" id="dtSearch" placeholder="🔍 이름" oninput="dtRenderGrid()"
-            style="margin-left:auto;width:140px;padding:6px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:12px;font-family:inherit;outline:none;">
+            style="margin-left:auto;width:120px;padding:5px 10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:12px;font-family:inherit;outline:none;font-weight:400;">
         </div>
+        <div class="alert ok" id="dtr-ok"></div>
+        <div class="alert err" id="dtr-err"></div>
         <div style="overflow:auto;max-height:70vh;border:1px solid var(--border-soft);border-radius:10px;">
           <table class="dt-grid">
-            <thead><tr><th style="width:110px;">학생</th><th>틀린 번호</th><th style="width:70px;text-align:right;">점수</th><th style="width:60px;"></th></tr></thead>
+            <thead><tr><th style="width:90px;">학생</th><th>틀린 번호</th><th style="width:70px;text-align:right;">점수</th><th style="width:60px;"></th></tr></thead>
             <tbody id="dtGridBody"></tbody>
           </table>
         </div>
         <div class="btn-row" style="margin-top:12px;">
           <button class="btn btn-gold" id="dtSaveBtn" onclick="dtSaveResults()">오답 저장</button>
           <button class="btn btn-outline" onclick="dtCloseResult()">닫기</button>
-          <button class="btn btn-outline" style="margin-left:auto;color:#ff9090;border-color:rgba(255,80,80,0.3);" onclick="dtDeleteTest()">시험지 삭제</button>
+          <button class="btn btn-outline" style="margin-left:auto;color:#ff9090;border-color:rgba(255,80,80,0.3);" onclick="dtDeleteTest()">이 시험지 삭제</button>
         </div>
       </div>
+    </div>
+
+    <!-- 등록한 시험지 (다시 열어 수정) -->
+    <div class="card">
+      <div class="card-title" style="flex-wrap:wrap;">🗂 등록한 시험지
+        <span style="font-size:12px;color:var(--muted);font-weight:400;">— 눌러서 오답을 다시 열어 수정할 수 있어요</span>
+        <span style="margin-left:auto;display:flex;gap:6px;">
+          <button class="rating-btn selected" id="dtf-today" onclick="dtFilterTests('today',this)">오늘</button>
+          <button class="rating-btn" id="dtf-week" onclick="dtFilterTests('week',this)">7일</button>
+          <button class="rating-btn" id="dtf-month" onclick="dtFilterTests('month',this)">이번 달</button>
+          <button class="rating-btn" id="dtf-all" onclick="dtFilterTests('all',this)">전체</button>
+        </span>
+      </div>
+      <div class="dt-list" id="dtTestList"><div class="empty-state"><div class="icon">📭</div>등록된 시험지가 없습니다.</div></div>
     </div>
   </div>
 
@@ -4488,11 +4468,13 @@ let dtFile = null;           // 선택한 PDF
 let dtParsedItems = [];      // [{n, type, natRate}]
 let dtTests = [];            // 내 시험지 목록
 let dtPeriod = 'today';
-let dtDay = 'all';
+let dtDay = 'all';         // 오답 입력 중인 시험지의 요일 그룹
+let dtSel = { grade: '', day: '' }; // 2단계 반 선택
 let dtCurrent = null;        // 열어둔 시험지
 let dtResults = {};          // studentId -> { wrong:Set, absent:bool }
 let dtInited = false;
 const DAY_GROUP = { all: null, mwf: ['월','수','금'], tt: ['화','목'], tts: ['화','목','토'] };
+const DAY_LABEL = { all: '전체', mwf: '월수금', tt: '화목', tts: '화목토' };
 const isMiddle = (s) => { const g = String(s?.grade || '').trim(); return !(g.startsWith('고') || /N수|재수|졸업/.test(g)); };
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
@@ -4508,8 +4490,20 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 // ── 탭 열 때 한 번 초기화 ──
+function dtAutoDay() {
+  const d = new Date().getDay();
+  return [1,3,5].includes(d) ? 'mwf' : [2,4].includes(d) ? 'tt' : d === 6 ? 'tts' : 'all';
+}
+window.dtPick = function (kind, val, btn) {
+  dtSel[kind] = val;
+  const prefix = kind === 'grade' ? 'dtg-' : 'dtw-';
+  document.querySelectorAll(`[id^="${prefix}"]`).forEach((b) => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  if (kind === 'grade') $('dt-grade').value = val;
+};
 window.dtInit = async function () {
   if (!$('dt-date').value) $('dt-date').value = todayStr();
+  if (!dtSel.day) { const d = dtAutoDay(); const b = $('dtw-' + d); if (b) dtPick('day', d, b); }
   if (dtInited) { dtLoadTests(); return; }
   dtInited = true;
   await meReady;
@@ -4541,7 +4535,7 @@ async function dtSetFile(file) {
   const m = file.name.match(/^(\d{2})(\d{2})(\d{2})_/);
   if (m) $('dt-date').value = `20${m[1]}-${m[2]}-${m[3]}`;
   const g = file.name.match(/\((초[4-6]|중[1-3])\)/);
-  if (g) $('dt-grade').value = g[1];
+  if (g) { const b = $('dtg-' + g[1]); if (b) dtPick('grade', g[1], b); }
   const t = file.name.replace(/^\d{6}_/, '').replace(/_문제지|_정답지|_해설지/g, '').replace(/\.pdf$/i, '');
   if (!$('dt-title').value) $('dt-title').value = t;
   dtParsedItems = [];
@@ -4551,21 +4545,13 @@ async function dtSetFile(file) {
     if (info.title) $('dt-title').value = info.title;
     if (info.range) $('dt-range').value = info.range;
     if (info.count) $('dt-count').value = info.count;
-    if (info.grade && !$('dt-grade').value) $('dt-grade').value = info.grade;
-    dtParsedItems = info.items;
-    if (info.items.length) {
-      if (!$('dt-count').value) $('dt-count').value = info.items.length;
-      $('dtParsedWrap').style.display = 'block'; $('dtParsedNone').style.display = 'none';
-      $('dtParsedCount').textContent = info.items.length;
-      $('dtParsedItems').innerHTML = info.items.map((it) => `<div><b>${it.n}</b>${esc(it.type)}${it.natRate != null ? ` <span style="opacity:.7">· ${it.natRate}%</span>` : ''}</div>`).join('');
-    } else {
-      $('dtParsedWrap').style.display = 'none'; $('dtParsedNone').style.display = 'block';
-    }
-    $('dtFileName').textContent = `✅ ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`;
+    if (info.grade && !$('dt-grade').value) { const b = $('dtg-' + info.grade); if (b) dtPick('grade', info.grade, b); }
+    dtParsedItems = info.items; // 문항별 유형·전국 정답률 — 화면에는 안 보이고 월말 정리용으로만 저장
+    if (info.items.length && !$('dt-count').value) $('dt-count').value = info.items.length;
+    $('dtFileName').textContent = `✅ ${file.name}${$('dt-count').value ? ` · ${$('dt-count').value}문항` : ''}`;
   } catch (e) {
     console.warn('PDF 읽기 실패', e);
-    $('dtParsedWrap').style.display = 'none'; $('dtParsedNone').style.display = 'block';
-    $('dtFileName').textContent = `✅ ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB) — 본문 자동 읽기 실패, 직접 입력해 주세요`;
+    $('dtFileName').textContent = `✅ ${file.name} — 문항 수를 직접 넣어주세요`;
   }
 }
 
@@ -4645,8 +4631,8 @@ async function dtParsePdf(file) {
 window.dtResetForm = function () {
   dtFile = null; dtParsedItems = [];
   ['dt-title', 'dt-range', 'dt-count'].forEach((id) => { $(id).value = ''; });
-  $('dt-grade').value = ''; $('dt-date').value = todayStr();
-  $('dtFileName').style.display = 'none'; $('dtParsedWrap').style.display = 'none'; $('dtParsedNone').style.display = 'none';
+  $('dt-date').value = todayStr();
+  $('dtFileName').style.display = 'none';
 };
 
 // ── 시험지 등록 ──
@@ -4654,8 +4640,10 @@ window.dtSubmitTest = async function () {
   if (!me) { note('dt-err', '로그인 정보를 확인할 수 없습니다.', 'err'); return; }
   const date = $('dt-date').value, grade = $('dt-grade').value, count = parseInt($('dt-count').value, 10);
   const title = $('dt-title').value.trim(), range = $('dt-range').value.trim();
-  if (!date || !grade || !count) { note('dt-err', '시험 일자, 학년, 문항 수는 필수입니다.', 'err'); return; }
-  if (!dtFile) { note('dt-err', '시험지 PDF를 올려주세요.', 'err'); return; }
+  if (!dtFile) { note('dt-err', '시험지 PDF를 먼저 올려주세요.', 'err'); return; }
+  if (!grade) { note('dt-err', '학년을 골라주세요.', 'err'); return; }
+  if (!dtSel.day) { note('dt-err', '요일을 골라주세요.', 'err'); return; }
+  if (!date || !count) { note('dt-err', '날짜와 문항 수를 확인해주세요.', 'err'); return; }
   const btn = $('dtSubmitBtn'); btn.disabled = true; btn.textContent = '등록 중...';
   $('dtUploadWrap').style.display = 'block';
   try {
@@ -4668,13 +4656,13 @@ window.dtSubmitTest = async function () {
     const downloadURL = await getDownloadURL(task.snapshot.ref);
     const docRef = await addDoc(collection(db, 'dailyTests'), {
       teacherUid: me.uid, teacherName: me.name,
-      date, grade, title: title || `${date} (${grade})`, range, questionCount: count,
+      date, grade, dayGroup: dtSel.day, title: title || `${date} (${grade})`, range, questionCount: count,
       items: dtParsedItems,                 // 매쓰플랫 학습지면 자동, 아니면 빈 배열 (월말 정리 때 채움)
       itemsParsed: dtParsedItems.length > 0,
       fileName: dtFile.name, filePath: path, downloadURL, fileSize: dtFile.size,
       createdAt: serverTimestamp()
     });
-    note('dt-ok', `✅ ${title || date} 시험지가 등록되었습니다. 아래에서 오답을 입력해 주세요.`, 'ok');
+    note('dt-ok', `✅ 시험지가 등록되었습니다. 틀린 번호를 눌러주세요.`, 'ok');
     dtResetForm();
     await dtLoadTests();
     dtOpenTest(docRef.id);
@@ -4722,11 +4710,10 @@ function dtRenderTests() {
   if (!rows.length) { el.innerHTML = `<div class="empty-state"><div class="icon">📭</div>${dtPeriod === 'today' ? '오늘 등록한 시험지가 없습니다. 위에서 먼저 등록해 주세요.' : '해당 기간에 등록된 시험지가 없습니다.'}</div>`; return; }
   el.innerHTML = rows.map((t) => `
     <div class="dt-row ${dtCurrent && dtCurrent.id === t.id ? 'active' : ''}" onclick="dtOpenTest('${t.id}')">
-      <span class="dt-date">${esc(t.date)}</span>
+      <span style="font-size:12px;color:var(--muted);">${esc(t.date)}</span>
+      <span class="dt-tag" style="color:var(--gold);background:rgba(240,192,64,0.12);">${esc(t.grade)} ${esc(DAY_LABEL[t.dayGroup] || '')}</span>
       <span class="dt-title">${esc(t.title)}${t.range ? ` <span style="font-weight:400;color:var(--muted);">· ${esc(t.range)}</span>` : ''}</span>
-      <span class="dt-tag">${esc(t.grade)}</span>
       <span class="dt-tag">${t.questionCount}문항</span>
-      <span class="dt-tag ${t.itemsParsed ? 'ok' : ''}">${t.itemsParsed ? '유형 자동' : '유형 미지정'}</span>
       <span class="dt-tag ${t.resultCount ? 'ok' : 'warn'}">${t.resultCount ? `오답 ${t.resultCount}명 입력` : '오답 미입력'}</span>
     </div>`).join('');
 }
@@ -4737,8 +4724,8 @@ window.dtOpenTest = async function (id) {
   if (!t) return;
   dtCurrent = t;
   dtRenderTests();
-  $('dtResultTitle').textContent = `${t.date} · ${t.title}`;
-  $('dtResultMeta').textContent = `${t.grade} · ${t.questionCount}문항${t.range ? ' · ' + t.range : ''}`;
+  dtDay = t.dayGroup || 'all';
+  $('dtResultTitle').textContent = `${t.date} · ${t.grade} ${DAY_LABEL[dtDay] || ''} · ${t.questionCount}문항`;
   $('dtResultWrap').style.display = 'block';
   dtResults = {};
   const snap = await getDocs(query(collection(db, 'dailyTestResults'), where('testId', '==', id)));
@@ -4747,12 +4734,6 @@ window.dtOpenTest = async function (id) {
   $('dtResultWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 window.dtCloseResult = function () { dtCurrent = null; $('dtResultWrap').style.display = 'none'; dtRenderTests(); };
-window.dtFilterDay = function (d, btn) {
-  dtDay = d;
-  document.querySelectorAll('[id^="dtd-"]').forEach((b) => b.classList.remove('selected'));
-  btn.classList.add('selected');
-  dtRenderGrid();
-};
 function dtVisibleStudents() {
   if (!dtCurrent) return [];
   let list = dtStudents.filter((s) => s.grade === dtCurrent.grade);
@@ -4775,7 +4756,7 @@ window.dtRenderGrid = function () {
       `<button type="button" class="dt-chip ${r.wrong.has(n) ? 'wrong' : ''}" onclick="dtToggle('${s.id}',${n},this)">${n}</button>`).join('');
     const score = r.absent ? '결시' : `${N - r.wrong.size}/${N} <span style="color:var(--muted)">(${Math.round((N - r.wrong.size) / N * 100)}%)</span>`;
     return `<tr class="${r.absent ? 'absent' : ''}" id="dtr-${s.id}">
-      <td class="dt-name">${esc(s.name)}<small>${esc(s.grade || '')}</small></td>
+      <td class="dt-name">${esc(s.name)}</td>
       <td><div class="dt-chips">${chips}</div></td>
       <td class="dt-score" id="dts-${s.id}">${score}</td>
       <td><button type="button" class="dt-abs ${r.absent ? 'on' : ''}" onclick="dtAbsent('${s.id}',this)">결시</button></td>
