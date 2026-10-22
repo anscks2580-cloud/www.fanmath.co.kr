@@ -37,6 +37,19 @@
   .pill.lo { background:var(--warn-soft); color:var(--warn); } .pill.hi { background:var(--good-soft); color:var(--good); }
   .memo { font-size:13.5px; color:var(--ink-2); background:var(--gold-soft); border-left:3px solid var(--gold); padding:8px 12px; border-radius:8px; margin-top:6px; white-space:pre-wrap; }
   .empty { text-align:center; color:var(--muted); padding:36px 0; font-size:14px; }
+  .cm-btn { font-size:12px; color:var(--accent); font-weight:700; background:none; border:none; font-family:inherit; cursor:pointer; padding:6px 0 0; display:flex; align-items:center; gap:6px; }
+  .cm-new { background:var(--warn); color:#fff; font-size:10px; padding:1px 7px; border-radius:999px; }
+  .cm-box { margin-top:8px; border-top:1px dashed var(--line); padding-top:8px; }
+  .cm { padding:8px 10px; border-radius:10px; margin-bottom:6px; font-size:13px; line-height:1.55; white-space:pre-wrap; }
+  .cm.parent { background:var(--accent-soft); margin-left:24px; }
+  .cm.teacher { background:var(--gold-soft); margin-right:24px; }
+  .cm .who { font-size:11px; color:var(--muted); margin-bottom:2px; }
+  .cm-form { display:flex; gap:6px; margin-top:6px; }
+  .cm-form textarea { flex:1; min-height:40px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; font-family:inherit; font-size:13px; resize:vertical; outline:none; }
+  .cm-form textarea:focus { border-color:var(--accent); }
+  .cm-form button { background:var(--accent); color:#fff; border:none; border-radius:10px; padding:0 14px; font-family:inherit; font-size:13px; font-weight:700; cursor:pointer; }
+  .item-wrap { border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin-bottom:8px; }
+  .item-wrap .item { border:none; padding:0; margin:0; }
   .foot { font-size:11px; color:var(--muted); text-align:center; margin-top:16px; }
 </style>
 </head>
@@ -46,16 +59,18 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, getDocs, collection, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, getDocs, collection, query, where, addDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const app = initializeApp({ apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA", authDomain: "songmath.firebaseapp.com", projectId: "songmath", storageBucket: "songmath.firebasestorage.app", messagingSenderId: "936295436575", appId: "1:936295436575:web:d1e201508719850cfbe02a" });
 const auth = getAuth(app), db = getFirestore(app);
 const $app = document.getElementById('app');
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-let cur = 'monthly', child = null, weekly = [], monthly = [];
+let cur = 'monthly', child = null, weekly = [], monthly = [], comments = [], me = null;
+const openThreads = new Set();
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) { location.replace('login.html'); return; }
+  me = user;
   try {
     const p = await getDoc(doc(db, 'parents', user.uid));
     let studentId;
@@ -64,10 +79,13 @@ onAuthStateChanged(auth, async (user) => {
     if (!studentId) { $app.innerHTML = '<div class="empty">학부모 계정이 아닙니다. 학원에 문의해 주세요.</div>'; return; }
     const sd = await getDoc(doc(db, 'students', studentId));
     child = { id: studentId, ...(sd.exists() ? sd.data() : {}) };
-    const [ws, ms] = await Promise.all([
+    const [ws, ms, cs] = await Promise.all([
       getDocs(query(collection(db, 'weeklyReports'), where('studentId', '==', studentId))),
       getDocs(query(collection(db, 'studentReports'), where('studentId', '==', studentId), where('status', '==', 'sent'))),
+      getDocs(query(collection(db, 'reportComments'), where('studentId', '==', studentId))),
     ]);
+    comments = []; cs.forEach((d) => comments.push({ id: d.id, ...d.data() }));
+    comments.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
     weekly = []; ws.forEach((d) => weekly.push({ id: d.id, ...d.data() }));
     weekly.sort((a, b) => (b.weekKey || '').localeCompare(a.weekKey || ''));
     monthly = []; ms.forEach((d) => monthly.push({ id: d.id, ...d.data() }));
@@ -77,6 +95,46 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 window.pTab = (t) => { cur = t; render(); };
+const threadOf = (type, id) => comments.filter((c) => c.targetType === type && c.targetId === id);
+const unreadOf = (type, id) => threadOf(type, id).filter((c) => c.authorRole === 'teacher' && !c.readByParent).length;
+window.pToggle = async (key) => {
+  if (openThreads.has(key)) openThreads.delete(key); else openThreads.add(key);
+  render();
+  // 열면 선생님 답글 읽음 처리
+  if (openThreads.has(key)) {
+    const [type, id] = key.split('|');
+    const unread = threadOf(type, id).filter((c) => c.authorRole === 'teacher' && !c.readByParent);
+    for (const c of unread) { try { await updateDoc(doc(db, 'reportComments', c.id), { readByParent: true }); c.readByParent = true; } catch (e) {} }
+    if (unread.length) render();
+  }
+};
+window.pSend = async (type, id, teacherUid, teacherName, label) => {
+  const ta = document.getElementById(`cm-ta-${type}-${id}`);
+  const text = (ta?.value || '').trim();
+  if (!text) return;
+  ta.disabled = true;
+  try {
+    const data = {
+      targetType: type, targetId: id, targetLabel: label,
+      studentId: child.id, studentName: child.name || '',
+      teacherUid: teacherUid || child.teacherUid || '', teacherName: teacherName || child.teacherName || '',
+      authorRole: 'parent', authorUid: me.uid, authorName: `${child.name} 학부모`,
+      text, readByTeacher: false, readByParent: true, createdAt: serverTimestamp(),
+    };
+    const ref = await addDoc(collection(db, 'reportComments'), data);
+    comments.push({ id: ref.id, ...data, createdAt: { seconds: Date.now() / 1000 } });
+    render();
+  } catch (e) { alert('댓글을 보내지 못했습니다: ' + e.message); ta.disabled = false; }
+};
+function threadHtml(type, id, teacherUid, teacherName, label) {
+  const key = `${type}|${id}`, th = threadOf(type, id), unread = unreadOf(type, id), open = openThreads.has(key);
+  return `
+    <button class="cm-btn" onclick="pToggle('${key}')">💬 댓글 ${th.length ? th.length + '개' : '남기기'} ${unread ? `<span class="cm-new">새 답글 ${unread}</span>` : ''} <span style="opacity:.6">${open ? '▲' : '▼'}</span></button>
+    ${open ? `<div class="cm-box">
+      ${th.map((c) => `<div class="cm ${c.authorRole}"><div class="who">${esc(c.authorName || (c.authorRole === 'teacher' ? '선생님' : '학부모'))} · ${c.createdAt?.seconds ? new Date(c.createdAt.seconds * 1000).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }) : ''}</div>${esc(c.text)}</div>`).join('')}
+      <div class="cm-form"><textarea id="cm-ta-${type}-${id}" placeholder="선생님께 궁금한 점이나 전하실 말씀을 남겨주세요"></textarea><button onclick="pSend('${type}','${id}','${esc(teacherUid || '')}','${esc(teacherName || '')}','${esc(label)}')">보내기</button></div>
+    </div>` : ''}`;
+}
 window.pLogout = async () => { await signOut(auth); location.replace('login.html'); };
 
 function render() {
@@ -91,15 +149,19 @@ function render() {
       <button class="tab ${cur === 'weekly' ? 'active' : ''}" onclick="pTab('weekly')">주간 성취도</button>
     </div>
     ${cur === 'monthly' ? `<div class="card"><h2>월간 학습보고서</h2>${monthly.length ? monthly.map((r) => `
+        <div class="item-wrap">
         <a class="item" href="report.html?id=${encodeURIComponent(r.id)}">
           <div><div class="t">${r.month.replace('-', '년 ')}월 보고서</div><div class="s">일일테스트 ${r.summary?.tests ?? 0}회 · ${r.summary?.total ?? 0}문항 · ${r.summary?.gradeBand ?? '-'}등급</div></div>
           <div class="r"><div class="pct">${r.summary?.pct ?? '-'}%</div><div class="go">보기 ›</div></div>
-        </a>`).join('') : '<div class="empty">아직 공개된 보고서가 없습니다.<br><small>매달 초에 지난달 보고서가 올라옵니다.</small></div>'}</div>`
+        </a>
+        ${threadHtml('monthly', r.id, r.teacherUid, r.teacherName, `${r.month.replace('-', '년 ')}월 보고서`)}
+        </div>`).join('') : '<div class="empty">아직 공개된 보고서가 없습니다.<br><small>매달 초에 지난달 보고서가 올라옵니다.</small></div>'}</div>`
     : `<div class="card"><h2>주간 성취도</h2>${weekly.length ? weekly.map((w) => { const rl = w.ratingsLabel || {}, rt = w.ratings || {}; return `
         <div class="wk">
           <div class="t"><span>${esc(w.weekLabel || w.weekKey)}</span><small>${esc(w.teacherName || '')} 선생님</small></div>
           <div class="pills"><span class="pill ${lvl(rt.homework)}">과제 ${esc(rl.homework || '-')}</span><span class="pill ${lvl(rt.attitude)}">수업태도 ${esc(rl.attitude || '-')}</span><span class="pill ${lvl(rt.clinic)}">클리닉 ${esc(rl.clinic || '-')}</span></div>
           ${w.memo ? `<div class="memo">${esc(w.memo)}</div>` : ''}
+          ${threadHtml('weekly', w.id, w.teacherUid, w.teacherName, `주간성취도 ${w.weekLabel || w.weekKey}`)}
         </div>`; }).join('') : '<div class="empty">아직 등록된 주간 성취도가 없습니다.</div>'}</div>`}
     <p class="foot">송우찬수학학원 평촌관 · 031-386-8899</p>`;
 }

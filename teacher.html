@@ -405,6 +405,7 @@ select option:disabled { color:#9B94B3; }
   <div class="ad-top-title" id="tnavTitle">일정</div>
   <div class="ad-top-right">
     <button class="btn btn-outline btn-sm" onclick="openTodayPopup()" style="display:inline-flex;align-items:center;">📋 오늘 할 일<span class="cal-badge" id="calTodayBadge"></span></button>
+    <button class="btn btn-outline btn-sm" onclick="teacherOpenMenu('parentcomments')" style="display:inline-flex;align-items:center;" title="학부모 댓글">💬<span class="cal-badge" id="pcBadge"></span></button>
     <span class="badge-name" id="teacherBadge">선생님</span>
     <a href="index.html" class="btn btn-outline btn-sm ad-home-link" style="text-decoration:none;">🏠 홈</a>
     <button class="btn btn-outline btn-sm" onclick="logoutTeacher()">로그아웃</button>
@@ -429,6 +430,7 @@ select option:disabled { color:#9B94B3; }
     <button class="teacher-tab" onclick="switchTab('tests',this)">누적테스트</button>
     <button class="teacher-tab" onclick="switchTab('dailytest',this);dtInit()">일일테스트</button>
     <button class="teacher-tab" onclick="switchTab('reportreview',this);rvInit()">보고서 검수</button>
+    <button class="teacher-tab" onclick="switchTab('parentcomments',this);pcInit()">학부모 댓글</button>
     <button class="teacher-tab" onclick="switchTab('progress',this)">반별 진도</button>
     <button class="teacher-tab" onclick="switchTab('clinic',this);initClinicTab()">토요클리닉</button>
     <button class="teacher-tab" onclick="switchTab('videos',this);loadTeacherVideos()">강의 목록</button>
@@ -907,6 +909,38 @@ select option:disabled { color:#9B94B3; }
           </div>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- ══ 학부모 댓글: 주간성취도·월간보고서에 학부모가 남긴 댓글 확인 · 답글 ══ -->
+  <div class="tab-panel" id="tab-parentcomments">
+    <style>
+      .pc-thread { border:1px solid var(--border-soft); border-radius:12px; padding:12px 14px; margin-bottom:10px; background:rgba(255,255,255,0.02); }
+      .pc-thread.unread { border-color:rgba(255,107,107,0.5); background:rgba(255,107,107,0.05); }
+      .pc-head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+      .pc-head .nm { font-weight:700; color:var(--off-white); font-size:14px; }
+      .pc-head .lb { font-size:12px; color:var(--gold); }
+      .pc-head .nw { font-size:10.5px; background:#ff6b6b; color:#fff; padding:1px 7px; border-radius:999px; }
+      .pc-msg { padding:8px 10px; border-radius:10px; margin-bottom:6px; font-size:13px; line-height:1.55; white-space:pre-wrap; color:var(--off-white); }
+      .pc-msg.parent { background:rgba(122,184,255,0.1); margin-right:24px; }
+      .pc-msg.teacher { background:rgba(240,192,64,0.1); margin-left:24px; }
+      .pc-msg .who { font-size:11px; color:var(--muted); margin-bottom:2px; }
+      .pc-form { display:flex; gap:6px; margin-top:6px; }
+      .pc-form textarea { flex:1; min-height:42px; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.04); color:var(--off-white); font-family:inherit; font-size:13px; resize:vertical; outline:none; }
+      .pc-form textarea:focus { border-color:var(--gold); }
+    </style>
+    <div class="card">
+      <div class="card-title" style="flex-wrap:wrap;">💬 학부모 댓글
+        <span style="font-size:12px;color:var(--muted);font-weight:400;" id="pcStat"></span>
+        <span style="margin-left:auto;display:flex;gap:6px;">
+          <button class="rating-btn selected" id="pcf-unread" onclick="pcFilter('unread',this)">답글 필요</button>
+          <button class="rating-btn" id="pcf-all" onclick="pcFilter('all',this)">전체</button>
+          <button class="btn btn-outline btn-sm" onclick="pcLoad()">새로고침</button>
+        </span>
+      </div>
+      <div class="alert ok" id="pc-ok"></div>
+      <div class="alert err" id="pc-err"></div>
+      <div id="pcList"><div class="empty-state"><div class="icon">💬</div>아직 학부모 댓글이 없습니다.</div></div>
     </div>
   </div>
 
@@ -4943,6 +4977,96 @@ window.rvSave = async function (done) {
 };
 </script>
 
+<!-- ══════════ 학부모 댓글: reportComments(내 담당) — 상단 배지 · 로그인 시 팝업 · 답글 ══════════ -->
+<script type="module">
+import { getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, getDocs, addDoc, updateDoc, collection, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+const db = getFirestore(getApp()), auth = getAuth(getApp());
+const $ = (id) => document.getElementById(id);
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let pcMe = null, pcAll = [], pcMode = 'unread', pcPopupShown = false;
+function note(id, msg, type) { const el = $(id); el.textContent = msg; el.className = `alert ${type}`; el.style.display = 'block'; setTimeout(() => { el.style.display = 'none'; }, 4000); }
+
+onAuthStateChanged(auth, async (u) => {
+  if (!u) { pcMe = null; return; }
+  const t = await getDoc(doc(db, 'teachers', u.uid));
+  if (!t.exists()) return;
+  pcMe = { uid: u.uid, name: t.data().name || '' };
+  await pcLoad(true);
+});
+
+// 스레드 = 같은 대상(targetType+targetId)에 달린 댓글 묶음
+function pcThreads() {
+  const map = {};
+  pcAll.forEach((c) => { const k = `${c.targetType}|${c.targetId}`; (map[k] = map[k] || { key: k, c: c, items: [] }).items.push(c); });
+  const th = Object.values(map);
+  th.forEach((x) => { x.items.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0)); x.unread = x.items.filter((c) => c.authorRole === 'parent' && !c.readByTeacher).length; x.last = x.items[x.items.length - 1]; });
+  th.sort((a, b) => b.unread - a.unread || (b.last.createdAt?.seconds || 0) - (a.last.createdAt?.seconds || 0));
+  return th;
+}
+window.pcLoad = async function (first = false) {
+  if (!pcMe) return;
+  try {
+    const snap = await getDocs(query(collection(db, 'reportComments'), where('teacherUid', '==', pcMe.uid)));
+    pcAll = []; snap.forEach((d) => pcAll.push({ id: d.id, ...d.data() }));
+  } catch (e) { if (!first) note('pc-err', '불러오기 오류: ' + e.message, 'err'); return; }
+  const unread = pcAll.filter((c) => c.authorRole === 'parent' && !c.readByTeacher).length;
+  const badge = $('pcBadge'); if (badge) { badge.textContent = unread; badge.style.display = unread ? 'inline-flex' : 'none'; }
+  if (first && unread && !pcPopupShown) { pcPopupShown = true; pcShowPopup(unread); }
+  pcRender();
+};
+function pcShowPopup(n) {
+  const th = pcThreads().filter((x) => x.unread).slice(0, 5);
+  const div = document.createElement('div');
+  div.id = 'pcPopup';
+  div.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  div.innerHTML = `<div style="width:100%;max-width:440px;background:var(--bg-card);border:1px solid rgba(255,107,107,0.5);border-radius:16px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+      <div style="font-size:16px;font-weight:800;color:var(--off-white);margin-bottom:6px;">💬 학부모 댓글 ${n}건이 답글을 기다리고 있어요</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">주간성취도·월간보고서에 학부모님이 남긴 글입니다.</div>
+      ${th.map((x) => `<div style="padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.04);margin-bottom:6px;font-size:13px;"><b style="color:var(--off-white);">${esc(x.c.studentName)}</b> <span style="color:var(--gold);font-size:11px;">${esc(x.c.targetLabel || '')}</span><div style="color:var(--muted);font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(x.last.text)}</div></div>`).join('')}
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="btn btn-outline btn-sm" style="flex:1;" onclick="document.getElementById('pcPopup').remove()">나중에</button>
+        <button class="btn btn-gold btn-sm" style="flex:1;" onclick="document.getElementById('pcPopup').remove();teacherOpenMenu('parentcomments')">답글 쓰기</button>
+      </div></div>`;
+  div.addEventListener('click', (e) => { if (e.target === div) div.remove(); });
+  document.body.appendChild(div);
+}
+window.pcInit = function () { pcLoad(); };
+window.pcFilter = function (m, btn) { pcMode = m; document.querySelectorAll('[id^="pcf-"]').forEach((b) => b.classList.remove('selected')); btn.classList.add('selected'); pcRender(); };
+function pcRender() {
+  const el = $('pcList'); if (!el) return;
+  let th = pcThreads();
+  const unreadTotal = th.reduce((a, x) => a + x.unread, 0);
+  $('pcStat').textContent = th.length ? `${th.length}개 대화 · 답글 필요 ${unreadTotal}건` : '';
+  if (pcMode === 'unread') th = th.filter((x) => x.unread);
+  if (!th.length) { el.innerHTML = `<div class="empty-state"><div class="icon">💬</div>${pcMode === 'unread' ? '답글이 필요한 댓글이 없습니다.' : '아직 학부모 댓글이 없습니다.'}</div>`; return; }
+  el.innerHTML = th.map((x) => `
+    <div class="pc-thread ${x.unread ? 'unread' : ''}" id="pct-${x.key.replace(/[^a-zA-Z0-9]/g, '_')}">
+      <div class="pc-head"><span class="nm">${esc(x.c.studentName)}</span><span class="lb">${esc(x.c.targetLabel || x.c.targetType)}</span>${x.unread ? `<span class="nw">새 댓글 ${x.unread}</span>` : ''}
+        <span style="margin-left:auto;font-size:11px;color:var(--muted);">${x.c.targetType === 'monthly' ? `<a href="report.html?id=${encodeURIComponent(x.c.targetId)}" target="_blank" style="color:var(--gold);">보고서 보기</a>` : ''}</span></div>
+      ${x.items.map((c) => `<div class="pc-msg ${c.authorRole}"><div class="who">${esc(c.authorName || '')} · ${c.createdAt?.seconds ? new Date(c.createdAt.seconds * 1000).toLocaleString('ko-KR', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : ''}</div>${esc(c.text)}</div>`).join('')}
+      <div class="pc-form"><textarea id="pc-ta-${x.key.replace(/[^a-zA-Z0-9]/g, '_')}" placeholder="학부모님께 답글"></textarea><button class="btn btn-gold btn-sm" onclick="pcReply('${x.key}')">답글</button></div>
+    </div>`).join('');
+}
+window.pcReply = async function (key) {
+  const th = pcThreads().find((x) => x.key === key); if (!th || !pcMe) return;
+  const ta = $(`pc-ta-${key.replace(/[^a-zA-Z0-9]/g, '_')}`); const text = (ta?.value || '').trim();
+  if (!text) { note('pc-err', '답글 내용을 적어주세요.', 'err'); return; }
+  try {
+    const c0 = th.c;
+    const data = { targetType: c0.targetType, targetId: c0.targetId, targetLabel: c0.targetLabel || '', studentId: c0.studentId, studentName: c0.studentName || '',
+      teacherUid: pcMe.uid, teacherName: pcMe.name, authorRole: 'teacher', authorUid: pcMe.uid, authorName: `${pcMe.name} 선생님`,
+      text, readByTeacher: true, readByParent: false, createdAt: serverTimestamp() };
+    await addDoc(collection(db, 'reportComments'), data);
+    // 이 대화의 학부모 댓글 읽음 처리
+    for (const c of th.items.filter((c) => c.authorRole === 'parent' && !c.readByTeacher)) await updateDoc(doc(db, 'reportComments', c.id), { readByTeacher: true });
+    note('pc-ok', '답글을 보냈습니다.', 'ok');
+    await pcLoad();
+  } catch (e) { note('pc-err', '답글 오류: ' + e.message, 'err'); }
+};
+</script>
+
 <!-- ══════════ 사이드바 메뉴 — 숨긴 기존 탭 버튼(#tnavLegacy)을 눌러 전환하므로 switchTab·초기화 함수는 그대로 ══════════ -->
 <script type="module">
 (function () {
@@ -4952,6 +5076,7 @@ window.rvSave = async function (done) {
       { id: 'weekly',   label: '주간성취도', desc: '중등부 · 금요일까지', middleOnly: true },
       { id: 'dailytest', label: '일일테스트', desc: '초·중등 · 시험지 등록 · 오답 입력', middleOnly: true },
       { id: 'reportreview', label: '보고서 검수', desc: '월간 학습보고서 의견 확인 · 확정', middleOnly: true },
+      { id: 'parentcomments', label: '학부모 댓글', desc: '주간성취도·보고서에 달린 학부모 댓글 · 답글' },
       { id: 'monthly',  label: '월말보고서', desc: '다음 달 3일까지' },
       { id: 'tests',    label: '누적테스트', desc: '테스트 결과 입력 · 조회' },
       { id: 'progress', label: '반별 진도',  desc: '지난주 진도 · 금요일까지' },
