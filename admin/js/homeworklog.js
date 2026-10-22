@@ -95,8 +95,8 @@ window.hlSave = async function () {
   try {
     if (hlEditing) await updateDoc(doc(db, 'homeworkLogs', hlEditing), data);
     else await addDoc(collection(db, 'homeworkLogs'), { ...data, createdAt: new Date().toISOString() });
-    showMsg('hlMsg', hlEditing ? '✅ 수정했습니다.' : `✅ ${hlSel.cls} 숙제를 저장했습니다. (${ids.length}명)`, 'success');
-    hlCancelEdit(false);
+    showMsg('hlMsg', hlEditing ? '✅ 수정했습니다.' : `✅ ${hlSel.cls} 숙제를 저장했습니다. (${ids.length}명) — 다음 반을 골라주세요`, 'success');
+    hlCancelEdit(true);   // 반·학생·내용 모두 비움 (날짜·선생님은 유지)
     hlLoad();
   } catch (e) { showMsg('hlMsg', '저장 오류: ' + e.message, 'error'); }
 };
@@ -105,7 +105,7 @@ window.hlCancelEdit = function (clearClass = true) {
   document.getElementById('hlContent').value = '';
   document.getElementById('hlSaveBtn').textContent = '저장';
   document.getElementById('hlCancelBtn').style.display = 'none';
-  if (clearClass) { hlSel.cls = ''; hlRenderClasses(); hlRenderStudents(); }
+  if (clearClass) { hlSel.cls = ''; hlOpenGrade = ''; hlRenderClasses(); hlRenderStudents(); }
   else { hlRenderStudents(); }
 };
 
