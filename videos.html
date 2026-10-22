@@ -1700,14 +1700,28 @@ window.openModal = function(id, title, videoDocId, tag) {
   document.getElementById('modalTitle').textContent = title;
   document.getElementById('resumePrompt').classList.remove('open');
 
-  const trackable = !!(myProfile && videoDocId && window.Vimeo && window.Vimeo.Player);
   const freeSeek = isFreeSeekTag(tag);
+  const trackable = !!(myProfile && videoDocId && window.Vimeo && window.Vimeo.Player);
+  // 학생이 아닌 계정(선생님·관리자 미리보기)도 기출해설이 아니면 앞으로 넘기기·배속 잠금은 동일하게
+  if (!trackable && !freeSeek && window.Vimeo && window.Vimeo.Player) {
+    setTimeout(() => {
+      try {
+        const pv = new Vimeo.Player(document.getElementById('modalIframe'));
+        let maxSec = 0, busy = false;
+        const back = () => { if (busy) return; busy = true; pv.setCurrentTime(maxSec).catch(()=>{}).finally(() => { busy = false; }); };
+        pv.on('timeupdate', (d) => { const sec = d.seconds || 0; if (sec > maxSec + SEEK_BUFFER_SEC) { back(); return; } if (!busy && sec > maxSec) maxSec = sec; });
+        pv.on('seeked', (d) => { if ((d.seconds || 0) > maxSec + SEEK_BUFFER_SEC) back(); });
+        pv.on('playbackratechange', (d) => { if (d && d.playbackRate !== 1) pv.setPlaybackRate(1).catch(()=>{}); });
+        vimeoPlayer = pv;
+      } catch (e) {}
+    }, 0);
+  }
   const resumeInfo = trackable ? computeResume(videoDocId, freeSeek) : null;
   const askResume = !!(resumeInfo && resumeInfo.resumeAt > 3);
 
   // 이어보기 질문을 띄울 땐 자동재생하지 않음
   document.getElementById('modalIframe').src =
-    `https://player.vimeo.com/video/${id}?autoplay=${askResume ? 0 : 1}&title=0&byline=0&portrait=0`;
+    `https://player.vimeo.com/video/${id}?autoplay=${askResume ? 0 : 1}&title=0&byline=0&portrait=0&speed=${freeSeek ? 1 : 0}`;
   document.getElementById('modal').classList.add('open');
 
   // 이전 재생 진행률 저장 후 새 재생 상태 초기화
@@ -1791,6 +1805,12 @@ window.openModal = function(id, title, videoDocId, tag) {
         currentProgress.locked = false;
         flushProgress();
       }
+    });
+
+    // ── 배속: 기출해설이 아니면 항상 1배속 ──
+    vimeoPlayer.on('playbackratechange', (data) => {
+      if (!currentProgress || currentProgress.freeSeek) return;
+      if (data && data.playbackRate !== 1) vimeoPlayer.setPlaybackRate(1).catch(()=>{});
     });
 
     // ── 처음 시청 중에는 아직 안 본 구간으로 넘기기(스킵) 방지 ──
