@@ -130,7 +130,8 @@ export function buildStudentReport({ student, month, tests, results, classResult
     diffs: fin(diffs, (a, b) => a.diff - b.diff),
     strong, weak,
     comment: '',
-    criteria: { gradeBands: CRITERIA.gradeBands, diffBands: CRITERIA.diffBands },
+    // Firestore는 배열 안의 배열을 못 넣으므로 문자열로 보관
+    criteria: { gradeBands: CRITERIA.gradeBands.map((b) => b.join(':')).join(','), diffBands: CRITERIA.diffBands.map((b) => b.join(':')).join(',') },
   };
 }
 
