@@ -1,0 +1,71 @@
+<!doctype html><meta charset="utf-8"><body style="font:14px sans-serif">
+<title>파서 테스트</title><pre id="out">sample.pdf 읽는 중...</pre>
+<script type="module">
+const out=document.getElementById('out');
+window.onerror=(m,s,l,c,e)=>{out.textContent+='\nERROR '+m;};
+let pdfjsLibPromise=null;
+function loadPdfjs(){ if(!pdfjsLibPromise){ pdfjsLibPromise=import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.mjs').then(lib=>{lib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.mjs';return lib;}); } return pdfjsLibPromise; }
+async function dtParsePdf(file) {
+  const pdfjs = await loadPdfjs();
+  const data = new Uint8Array(await file.arrayBuffer());
+  const pdf = await pdfjs.getDocument({ data }).promise;
+  const out = { title: '', range: '', count: 0, grade: '', items: [] };
+  const seen = new Set();
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const page = await pdf.getPage(p);
+    const tc = await page.getTextContent();
+    // 같은 줄(y 비슷)끼리 묶고, 2단 편집이라 가로 간격이 크게 벌어지면 다른 열로 나눔
+    const rows = [];
+    tc.items.forEach((it) => {
+      const s = String(it.str || '').replace(/[\u0000-\u001f]/g, ' '); // 매쓰플랫 PDF는 공백이 제어문자로 들어옴
+      if (!s.trim()) return;
+      const x = it.transform[4], y = it.transform[5];
+      let r = rows.find((l) => Math.abs(l.y - y) < 2.5);
+      if (!r) { r = { y, parts: [] }; rows.push(r); }
+      r.parts.push({ x, xe: x + (it.width || 0), s });
+    });
+    const lines = [];
+    rows.forEach((r) => {
+      r.parts.sort((a, b) => a.x - b.x);
+      let seg = null, prevEnd = null;
+      r.parts.forEach((p) => {
+        if (!seg || (prevEnd != null && p.x - prevEnd > 24)) { seg = { y: r.y, x: p.x, parts: [] }; lines.push(seg); }
+        seg.parts.push(p); prevEnd = Math.max(p.xe, p.x);
+      });
+    });
+    lines.forEach((l) => { l.text = l.parts.map((q) => q.s).join(' ').replace(/\s+/g, ' ').trim(); });
+    lines.sort((a, b) => b.y - a.y || a.x - b.x);
+    if (p === 1) {
+      const t1 = lines.find((l) => /일일\s*TEST/i.test(l.text));
+      if (t1) {
+        out.title = t1.text.replace(/일일\s*TEST\s*/i, '').trim();
+        const g = out.title.match(/\((초[4-6]|중[1-3])\)/); if (g) out.grade = g[1];
+        const i1 = lines.indexOf(t1);
+        const t2 = lines[i1 + 1]; if (t2 && !/문제\s*\|/.test(t2.text)) out.range = t2.text;
+      }
+      const c = lines.find((l) => /(\d+)\s*문제/.test(l.text)); if (c) out.count = parseInt(c.text.match(/(\d+)\s*문제/)[1], 10);
+    }
+    if (lines.some((l) => /^빠른정답$/.test(l.text))) break; // 정답 페이지부터는 안 읽음
+    // 유형 라벨: "| 유형명 | 정답률 71%" 또는 "| 유형명 |" (정답률 없는 경우)
+    const nums = lines.filter((l) => /^\d{2}$/.test(l.text));
+    lines.forEach((l) => {
+      let mm = l.text.match(/^\|\s*(.+?)\s*\|\s*정답률\s*(\d+)\s*%/);
+      let natRate = null, type = '';
+      if (mm) { type = mm[1]; natRate = parseInt(mm[2], 10); }
+      else { mm = l.text.match(/^\|\s*(.+?)\s*\|\s*$/); if (mm) type = mm[1]; }
+      if (!type) return;
+      // 라벨 바로 아래(y 작음), 같은 열(x 비슷)에 있는 가장 가까운 번호
+      const cand = nums.filter((n) => n.y < l.y && Math.abs(n.x - l.x) < 40).sort((a, b) => (l.y - a.y) - (l.y - b.y));
+      if (!cand.length) return;
+      const n = parseInt(cand[0].text, 10);
+      if (seen.has(n)) return;
+      seen.add(n);
+      out.items.push({ n, type, natRate });
+    });
+  }
+  out.items.sort((a, b) => a.n - b.n);
+  return out;
+}
+
+(async()=>{ try{ const blob=await (await fetch('sample.pdf')).blob(); const r=await dtParsePdf(blob); out.textContent=JSON.stringify({title:r.title,range:r.range,count:r.count,grade:r.grade,n:r.items.length})+'\n'+r.items.slice(0,5).map(i=>i.n+' '+i.type+' '+i.natRate).join('\n'); }catch(err){ out.textContent='FAIL '+err.message+'\n'+err.stack; } })();
+</script>
