@@ -65,7 +65,7 @@ const app = initializeApp({ apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA", a
 const auth = getAuth(app), db = getFirestore(app);
 const $app = document.getElementById('app');
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-let cur = 'monthly', child = null, weekly = [], monthly = [], comments = [], me = null;
+let cur = 'homework', child = null, weekly = [], monthly = [], comments = [], homework = [], me = null;
 const openThreads = new Set();
 
 onAuthStateChanged(auth, async (user) => {
@@ -79,11 +79,14 @@ onAuthStateChanged(auth, async (user) => {
     if (!studentId) { $app.innerHTML = '<div class="empty">학부모 계정이 아닙니다. 학원에 문의해 주세요.</div>'; return; }
     const sd = await getDoc(doc(db, 'students', studentId));
     child = { id: studentId, ...(sd.exists() ? sd.data() : {}) };
-    const [ws, ms, cs] = await Promise.all([
+    const [ws, ms, cs, hs] = await Promise.all([
       getDocs(query(collection(db, 'weeklyReports'), where('studentId', '==', studentId))),
       getDocs(query(collection(db, 'studentReports'), where('studentId', '==', studentId), where('status', '==', 'sent'))),
       getDocs(query(collection(db, 'reportComments'), where('studentId', '==', studentId))),
+      getDocs(query(collection(db, 'homeworkLogs'), where('studentIds', 'array-contains', studentId))),
     ]);
+    homework = []; hs.forEach((d) => homework.push({ id: d.id, ...d.data() }));
+    homework.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
     comments = []; cs.forEach((d) => comments.push({ id: d.id, ...d.data() }));
     comments.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
     weekly = []; ws.forEach((d) => weekly.push({ id: d.id, ...d.data() }));
@@ -145,9 +148,15 @@ function render() {
       <button onclick="pLogout()">로그아웃</button>
     </div>
     <div class="tabs">
-      <button class="tab ${cur === 'monthly' ? 'active' : ''}" onclick="pTab('monthly')">월간 학습보고서</button>
+      <button class="tab ${cur === 'homework' ? 'active' : ''}" onclick="pTab('homework')">숙제</button>
       <button class="tab ${cur === 'weekly' ? 'active' : ''}" onclick="pTab('weekly')">주간 성취도</button>
+      <button class="tab ${cur === 'monthly' ? 'active' : ''}" onclick="pTab('monthly')">월간 보고서</button>
     </div>
+    ${cur === 'homework' ? `<div class="card"><h2>숙제</h2>${homework.length ? homework.slice(0, 60).map((h) => { const d = new Date(h.date + 'T00:00:00'); const dow = ['일','월','화','수','목','금','토'][d.getDay()]; const isToday = h.date === new Date().toISOString().slice(0, 10); return `
+        <div class="wk" style="${isToday ? 'border-color:var(--accent);' : ''}">
+          <div class="t"><span>${d.getMonth() + 1}월 ${d.getDate()}일 (${dow})${isToday ? ' <span class="pill" style="font-size:11px;">오늘</span>' : ''}</span><small>${esc(h.teacherName || '')} 선생님 · ${esc(h.classGroup || '')}</small></div>
+          <div style="font-size:14.5px;color:var(--ink);margin-top:6px;white-space:pre-wrap;">${esc(h.content)}</div>
+        </div>`; }).join('') : '<div class="empty">아직 등록된 숙제가 없습니다.</div>'}</div>` : ''}
     ${cur === 'monthly' ? `<div class="card"><h2>월간 학습보고서</h2>${monthly.length ? monthly.map((r) => `
         <div class="item-wrap">
         <a class="item" href="report.html?id=${encodeURIComponent(r.id)}">
@@ -156,13 +165,13 @@ function render() {
         </a>
         ${threadHtml('monthly', r.id, r.teacherUid, r.teacherName, `${r.month.replace('-', '년 ')}월 보고서`)}
         </div>`).join('') : '<div class="empty">아직 공개된 보고서가 없습니다.<br><small>매달 초에 지난달 보고서가 올라옵니다.</small></div>'}</div>`
-    : `<div class="card"><h2>주간 성취도</h2>${weekly.length ? weekly.map((w) => { const rl = w.ratingsLabel || {}, rt = w.ratings || {}; return `
+    : cur === 'weekly' ? `<div class="card"><h2>주간 성취도</h2>${weekly.length ? weekly.map((w) => { const rl = w.ratingsLabel || {}, rt = w.ratings || {}; return `
         <div class="wk">
           <div class="t"><span>${esc(w.weekLabel || w.weekKey)}</span><small>${esc(w.teacherName || '')} 선생님</small></div>
           <div class="pills"><span class="pill ${lvl(rt.homework)}">과제 ${esc(rl.homework || '-')}</span><span class="pill ${lvl(rt.attitude)}">수업태도 ${esc(rl.attitude || '-')}</span><span class="pill ${lvl(rt.clinic)}">클리닉 ${esc(rl.clinic || '-')}</span></div>
           ${w.memo ? `<div class="memo">${esc(w.memo)}</div>` : ''}
           ${threadHtml('weekly', w.id, w.teacherUid, w.teacherName, `주간성취도 ${w.weekLabel || w.weekKey}`)}
-        </div>`; }).join('') : '<div class="empty">아직 등록된 주간 성취도가 없습니다.</div>'}</div>`}
+        </div>`; }).join('') : '<div class="empty">아직 등록된 주간 성취도가 없습니다.</div>'}</div>` : ''}
     <p class="foot">송우찬수학학원 평촌관 · 031-386-8899</p>`;
 }
 </script>

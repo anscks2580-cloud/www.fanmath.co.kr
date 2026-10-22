@@ -86,6 +86,7 @@
     <button class="admin-tab" onclick="switchTab('progress',this);initProgressTab()">📍 반별진도</button>
     <button class="admin-tab" onclick="switchTab('monthly',this);initMonthlyTab()">📝 월말보고서</button>
     <button class="admin-tab" onclick="switchTab('studyreport',this);initStudyReportTab()">📈 학습보고서 생성</button>
+    <button class="admin-tab" onclick="switchTab('homeworklog',this);initHomeworkLogTab()">📒 숙제 입력</button>
     <button class="admin-tab" onclick="switchTab('satclinic',this);initSatClinicTab()">🏥 토요클리닉</button>
     <button class="admin-tab" onclick="switchTab('dailyreport',this);initDailyReportTab()">📋 관리부 마감</button>
     <button class="admin-tab" onclick="switchTab('weeklylog',this);initWeeklyLogTab()">📅 주간업무일지</button>
@@ -1332,6 +1333,47 @@
     </div>
   </div>
 
+  <!-- 숙제 입력 (관리부): 날짜별 담당 › 반 › 학생 › 내용 → 학부모 페이지 "숙제" 탭 -->
+  <div class="tab-panel" id="tab-homeworklog">
+    <style>
+      .hl-cls { padding:7px 12px; border-radius:20px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:var(--off-white); font-size:13px; font-family:inherit; cursor:pointer; }
+      .hl-cls small { color:var(--muted); font-size:11px; }
+      .hl-cls.active { background:rgba(240,192,64,0.2); border-color:var(--gold); color:var(--gold); }
+      .hl-stu { display:inline-flex; align-items:center; gap:5px; padding:5px 10px; border-radius:8px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); font-size:13px; color:var(--off-white); cursor:pointer; }
+      .hl-stu input { accent-color:var(--gold); }
+      .hl-table { width:100%; border-collapse:collapse; font-size:13px; }
+      .hl-table th { font-size:11px; color:var(--muted); letter-spacing:1px; padding:8px 10px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1); }
+      .hl-table td { padding:9px 10px; border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:top; }
+    </style>
+    <div class="card">
+      <h3>📒 숙제 입력 <span style="font-size:12px;color:var(--muted);font-weight:400;">— 날짜 › 담당 › 반 › 학생 › 내용. 저장하면 해당 학생 학부모 페이지 "숙제" 탭에 바로 보입니다</span></h3>
+      <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px;">
+        <div class="form-group"><label>날짜</label><input type="date" id="hlDate" onchange="hlLoad()" style="color-scheme:dark;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;"></div>
+        <div class="form-group"><label>담당 선생님</label><select id="hlTeacher" onchange="hlOnTeacher()" style="padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;"></select></div>
+        <button class="btn btn-secondary btn-sm" onclick="hlCopyPrev()" title="직전 날짜 기록을 이 날짜로 복사">⎘ 지난 기록 복사</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">반</div>
+      <div id="hlClasses" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;"></div>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">학생 <span style="letter-spacing:0;text-transform:none;">(이 숙제를 받지 않는 학생은 체크 해제)</span></div>
+      <div id="hlStudents" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
+      <div class="form-group" style="margin-bottom:12px;"><label>숙제 내용</label><textarea id="hlContent" rows="2" placeholder="예: 쎈 p135~137 / 프린트(다각형~회전체)" style="width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-primary" id="hlSaveBtn" onclick="hlSave()">저장</button>
+        <button class="btn btn-secondary" id="hlCancelBtn" style="display:none;" onclick="hlCancelEdit()">수정 취소</button>
+      </div>
+      <div class="msg" id="hlMsg"></div>
+    </div>
+    <div class="card">
+      <h3 id="hlTableTitle">입력된 숙제</h3>
+      <div style="overflow:auto;">
+        <table class="hl-table">
+          <thead><tr><th style="width:90px;">담당</th><th style="width:110px;">반</th><th style="width:220px;">학생</th><th>내용</th><th style="width:110px;"></th></tr></thead>
+          <tbody id="hlTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- 학습보고서 생성 (일일테스트 → 학생별 월간 학습보고서) -->
   <div class="tab-panel" id="tab-studyreport">
     <style>
@@ -2217,6 +2259,7 @@
 <script defer src="admin/js/reports.js"></script>
 <script defer src="admin/js/studyreport.js"></script>
 <script defer src="admin/js/parents.js"></script>
+<script defer src="admin/js/homeworklog.js"></script>
 <script defer src="admin/js/satclinic.js"></script>
 <script defer src="admin/js/dailyreport.js"></script>
 <script defer src="admin/js/attendance.js"></script>
