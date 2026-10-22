@@ -116,6 +116,8 @@ window.openEditModal = function(uid) {
   document.getElementById('edit-grade').value  = s.grade || '중1';
   document.getElementById('edit-branch').value = s.branch || '평촌관';
   document.getElementById('edit-classgroup').value = s.classGroup || '';
+  document.getElementById('edit-parentphone').value = s.parentPhone || '';
+  document.getElementById('edit-parentStatus').textContent = s.parentUid ? `✅ 학부모 계정 연결됨 (아이디 ${s.name} · 비밀번호 ${s.parentPhone || ''})` : '학부모 계정 없음 — 번호를 넣고 저장하면 만들어집니다';
 
   // 선생님 드롭다운 채우기
   const tSel = document.getElementById('edit-teacher');
@@ -274,7 +276,16 @@ window.saveEditStudent = async function() {
     await updateDoc(doc(db, 'students', uid), {
       name, phone, grade, branch, teacherUid, teacherName, days, classGroup, assignedTags
     });
-    showMsg('editStudentMsg', (nameChanged || password) ? '✅ 저장 완료! (로그인 정보 포함)' : '✅ 저장 완료!', 'success');
+    // 3) 학부모 전화번호 → 학부모 계정 생성/변경
+    let parentNote = '';
+    const parentPhone = (document.getElementById('edit-parentphone')?.value || '').replace(/[^0-9]/g, '');
+    if (parentPhone && typeof window.linkParentAccount === 'function') {
+      try {
+        const r = await linkParentAccount({ ...s, id: uid, name }, parentPhone);
+        if (r === 'created') parentNote = ' · 학부모 계정 생성됨'; else if (r === 'updated') parentNote = ' · 학부모 번호 변경됨';
+      } catch (e) { parentNote = ' · ⚠️ 학부모 계정: ' + e.message; }
+    }
+    showMsg('editStudentMsg', ((nameChanged || password) ? '✅ 저장 완료! (로그인 정보 포함)' : '✅ 저장 완료!') + parentNote, parentNote.includes('⚠️') ? 'error' : 'success');
     await loadStudents();
     setTimeout(() => closeEditModal(), 900);
   } catch(e) {

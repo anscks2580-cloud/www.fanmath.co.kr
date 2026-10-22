@@ -132,11 +132,31 @@ window.srLoad = async function () {
         <td class="r">${r.summary?.pct ?? '-'}%</td>
         <td class="r">${r.summary?.gradeBand ?? '-'}</td>
         <td><span class="sr-st ${r.status || 'none'}">${stLabel[r.status] || r.status || '-'}</span></td>
-        <td><a class="sr-link" href="report.html?id=${encodeURIComponent(r.id)}" target="_blank">미리보기</a></td>
+        <td style="white-space:nowrap;"><a class="sr-link" href="report.html?id=${encodeURIComponent(r.id)}" target="_blank">미리보기</a>${r.status === 'sent' ? ` <a class="sr-link" href="#" style="color:#ff9090;border-color:rgba(255,80,80,0.3);" onclick="srUnpublish('${r.id}');return false;">공개 취소</a>` : ''}</td>
       </tr>`).join('');
   } catch (e) {
     body.innerHTML = `<tr><td colspan="9" style="color:#ff9090;padding:20px;text-align:center;">오류: ${srEsc(e.message)}</td></tr>`;
   }
+};
+
+// ── ④ 학부모 공개: 검수 완료(reviewed) → 발송(sent). 학부모 페이지·학생 계정에서 열람 가능해짐 ──
+window.srPublish = async function () {
+  const targets = srRows.filter((r) => r.status === 'reviewed');
+  const drafts = srRows.filter((r) => r.status === 'draft').length;
+  if (!targets.length) { srMsg(`공개할 검수 완료 보고서가 없습니다.${drafts ? ` (초안 ${drafts}명은 선생님 검수가 먼저 필요합니다)` : ''}`, 'error'); return; }
+  if (!confirm(`검수 완료된 ${targets.length}명의 보고서를 학부모에게 공개할까요?${drafts ? `\n(초안 ${drafts}명은 제외됩니다)` : ''}`)) return;
+  let n = 0;
+  for (const r of targets) {
+    await updateDoc(doc(db, 'studentReports', r.id), { status: 'sent', sentAt: new Date().toISOString() });
+    n++;
+  }
+  srMsg(`✅ ${n}명 보고서를 학부모에게 공개했습니다.`, 'success');
+  srLoad();
+};
+window.srUnpublish = async function (id) {
+  if (!confirm('이 보고서의 학부모 공개를 취소할까요? (검수 완료 상태로 돌아갑니다)')) return;
+  await updateDoc(doc(db, 'studentReports', id), { status: 'reviewed' });
+  srLoad();
 };
 
 // ── ② 내보내기: Claude에게 줄 파일 (숫자 요약 + 자동 의견) ──
