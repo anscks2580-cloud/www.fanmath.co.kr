@@ -64,13 +64,13 @@ window.setParentsFilter = function (f, btn) {
 };
 function renderParentsTab() {
   const q = (document.getElementById('paSearch')?.value || '').trim();
-  let list = studentsCache.filter(pIsMiddle);
+  let list = studentsCache.slice(); // 고등부 포함 전체
   if (pFilter === 'linked') list = list.filter((s) => s.parentUid);
   if (pFilter === 'unlinked') list = list.filter((s) => !s.parentUid);
   if (q) list = list.filter((s) => (s.name || '').includes(q));
   list.sort((a, b) => (a.classGroup || '').localeCompare(b.classGroup || '', 'ko') || (a.name || '').localeCompare(b.name || '', 'ko'));
-  const all = studentsCache.filter(pIsMiddle);
-  document.getElementById('paStat').innerHTML = `초·중등 <b>${all.length}</b>명 · 연결됨 <b>${all.filter((s) => s.parentUid).length}</b> · 미연결 <b>${all.filter((s) => !s.parentUid).length}</b>`;
+  const all = studentsCache;
+  document.getElementById('paStat').innerHTML = `전체 <b>${all.length}</b>명 · 연결됨 <b>${all.filter((s) => s.parentUid).length}</b> · 미연결 <b>${all.filter((s) => !s.parentUid).length}</b>`;
   const body = document.getElementById('paBody');
   if (!list.length) { body.innerHTML = '<tr><td colspan="6" style="color:var(--muted);padding:20px;text-align:center;">해당 학생이 없습니다.</td></tr>'; return; }
   body.innerHTML = list.map((s) => `
@@ -123,7 +123,7 @@ window.paImportExcel = async function (file) {
   await loadStudents(); renderParentsTab();
 };
 window.paDownloadTemplate = function () {
-  const ws = XLSX.utils.aoa_to_sheet([['이름', '학부모전화'], ...studentsCache.filter(pIsMiddle).filter((s) => !s.parentUid).sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko')).map((s) => [s.name, ''])]);
+  const ws = XLSX.utils.aoa_to_sheet([['이름', '학부모전화'], ...studentsCache.filter((s) => !s.parentUid).sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko')).map((s) => [s.name, ''])]);
   const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, '학부모');
   XLSX.writeFile(wb, '학부모전화_연결양식.xlsx');
 };
