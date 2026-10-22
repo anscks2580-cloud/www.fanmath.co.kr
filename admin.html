@@ -1416,15 +1416,18 @@
           <label>선생님</label>
           <select id="srTeacher" style="padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;"><option value="">전체</option></select>
         </div>
-        <button class="btn btn-primary" onclick="srGenerate()">① 집계해서 보고서 초안 만들기</button>
         <button class="btn btn-secondary" onclick="srLoad()">🔍 현황 조회</button>
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-        <button class="btn btn-secondary" onclick="srExport()">② 내보내기 (JSON)</button>
-        <button class="btn btn-secondary" onclick="document.getElementById('srImportFile').click()">③ 가져오기 (JSON · 의견 반영)</button>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:8px;">
+        <button class="btn btn-primary" onclick="srExport()">① 자료 내보내기 (JSON)</button>
+        <button class="btn btn-secondary" onclick="srDownloadPdfZip()">📦 시험지 PDF 모두 받기 (ZIP)</button>
+        <button class="btn btn-primary" onclick="document.getElementById('srImportFile').click()">② Claude 결과 가져오기 → 집계</button>
         <input type="file" id="srImportFile" accept=".json" style="display:none;" onchange="srImport(this.files[0]);this.value=''">
-        <button class="btn btn-primary" onclick="srPublish()" style="margin-left:auto;">④ 검수 완료분 학부모 공개</button>
-        <span style="font-size:12px;color:var(--muted);">② 내보낸 파일을 Claude에게 주면 선생님 의견을 다듬어 돌려줍니다 → ③으로 올리면 반영 · 생성 즉시 선생님 페이지 "보고서 검수"에 초안이 뜨므로 이 단계는 선택입니다</span>
+        <button class="btn btn-primary" onclick="srPublish()" style="margin-left:auto;">③ 검수 완료분 학부모 공개</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);line-height:1.6;">
+        ① JSON과 📦 ZIP을 Claude에게 주면 문항별 단원·유형·난이도를 분류하고 학생별 의견까지 써서 파일 하나로 돌려줍니다 → ②로 올리면 그때 보고서가 만들어집니다 → 선생님 검수 → ③ 공개.
+        <button class="btn btn-secondary btn-sm" style="margin-left:6px;" onclick="srGenerate()">분류 없이 빠른 집계</button> <span style="font-size:11px;">(매쓰플랫 유형만으로 대략 보고 싶을 때)</span>
       </div>
       <div class="msg" id="srMsg"></div>
     </div>

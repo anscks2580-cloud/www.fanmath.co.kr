@@ -162,14 +162,15 @@ window.srUnpublish = async function (id) {
 // ── ② 내보내기: Claude에게 줄 파일 (숫자 요약 + 자동 의견) ──
 window.srExport = async function () {
   const month = document.getElementById('srMonth').value;
-  if (!srRows.length) { srMsg('먼저 조회해서 목록을 띄워주세요.', 'error'); return; }
   // 그 달 시험지 원본: 유형이 없는 시험지는 Claude가 PDF를 보고 문항별 단원·유형·난이도를 채워 ③으로 되돌림
-  let tests = [];
+  let tests = [], results = [];
   try {
     const [from, to] = srMonthRange(month);
     const tSnap = await getDocs(query(collection(db, 'dailyTests'), where('date', '>=', from), where('date', '<=', to)));
-    tSnap.forEach((d) => { const t = d.data(); tests.push({ id: d.id, date: t.date, title: t.title, fileName: t.fileName, grade: t.grade, classGroup: t.classGroup, teacherName: t.teacherName, range: t.range || '', questionCount: t.questionCount, itemsParsed: !!t.itemsParsed, items: t.items || [] }); });
+    tSnap.forEach((d) => { const t = d.data(); tests.push({ id: d.id, date: t.date, title: t.title, fileName: t.fileName, grade: t.grade, classGroup: t.classGroup, teacherName: t.teacherName, range: t.range || '', questionCount: t.questionCount, itemsParsed: !!t.itemsParsed, items: t.items || [], downloadURL: t.downloadURL || '' }); });
     tests.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+    const rSnap = await getDocs(query(collection(db, 'dailyTestResults'), where('date', '>=', from), where('date', '<=', to)));
+    rSnap.forEach((d) => { const r = d.data(); results.push({ testId: r.testId, studentId: r.studentId, studentName: r.studentName, grade: r.studentGrade || r.grade, classGroup: r.classGroup || '', teacherName: r.teacherName, date: r.date, total: r.total, wrong: r.wrong || [], absent: !!r.absent }); });
   } catch (e) { /* 시험지 없이도 내보냄 */ }
   const needs = tests.filter((t) => !t.itemsParsed).map((t) => `${t.date} ${t.fileName || t.title}`);
   const out = srRows.map((r) => ({
@@ -179,10 +180,35 @@ window.srExport = async function () {
   }));
   const blob = new Blob([JSON.stringify({ month, exportedAt: new Date().toISOString(),
     note: 'tests[].items 가 비어 있는 시험지(itemsParsed=false)는 PDF를 보고 items=[{n,type,unit,diff(1~5),natRate?}] 를 채워서 ③ 가져오기로 올리면 다시 집계됩니다.',
-    testsNeedingClassification: needs, tests, reports: out }, null, 2)], { type: 'application/json' });
+    testsNeedingClassification: needs, tests, results, reports: out }, null, 2)], { type: 'application/json' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `학습보고서_${month}.json`; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 2000);
   srMsg(needs.length ? `내보냈습니다. 유형 분류가 필요한 시험지 ${needs.length}장 — 이 파일과 해당 PDF를 Claude에게 주세요.` : '내보냈습니다. 모든 시험지에 유형이 있어 분류 작업은 필요 없습니다.', 'success');
+};
+
+// ── 📦 그 달 시험지 PDF 전부 ZIP (관리자는 Storage 읽기 가능) ──
+window.srDownloadPdfZip = async function () {
+  const month = document.getElementById('srMonth').value; if (!month) return;
+  if (typeof JSZip === 'undefined') { srMsg('ZIP 모듈이 없습니다. 새로고침 후 다시 시도해 주세요.', 'error'); return; }
+  try {
+    const [from, to] = srMonthRange(month);
+    const tSnap = await getDocs(query(collection(db, 'dailyTests'), where('date', '>=', from), where('date', '<=', to)));
+    const tests = []; tSnap.forEach((d) => tests.push({ id: d.id, ...d.data() }));
+    if (!tests.length) { srMsg('이 달에 등록된 시험지가 없습니다.', 'error'); return; }
+    const zip = new JSZip(); let n = 0;
+    const safe = (x) => String(x || '').replace(/[\\/:*?"<>|]/g, '_');
+    for (const t of tests) {
+      if (!t.downloadURL) continue;
+      srMsg(`PDF 받는 중... (${n + 1}/${tests.length})`, 'success');
+      const blob = await (await fetch(t.downloadURL)).blob();
+      zip.file(`${t.date}_${safe(t.classGroup || t.grade)}_${t.id}_${safe(t.fileName || t.title || '시험지')}${/\.pdf$/i.test(t.fileName || '') ? '' : '.pdf'}`, blob);
+      n++;
+    }
+    const out = await zip.generateAsync({ type: 'blob' });
+    const a = document.createElement('a'); a.href = URL.createObjectURL(out); a.download = `일일테스트_${month}.zip`; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    srMsg(`✅ 시험지 ${n}장을 ZIP으로 받았습니다. 파일명의 날짜_반_ID 가 JSON의 tests[].id 와 맞습니다.`, 'success');
+  } catch (e) { srMsg('ZIP 오류: ' + e.message, 'error'); }
 };
 
 // ── ③ 가져오기: { reports:[{id, comment}] } 형태면 의견만 반영 ──
@@ -209,8 +235,16 @@ window.srImport = async function (file) {
       await updateDoc(doc(db, 'studentReports', r.id), { comment: r.comment.trim(), commentImportedAt: new Date().toISOString() });
       n++;
     }
-    if (nt) { srMsg(`✅ 시험지 ${nt}장에 유형을 반영했습니다. 다시 집계합니다...`, 'success'); await srGenerate(true); }
-    srMsg(`✅ 반영 완료 — 시험지 유형 ${nt}장 · 선생님 의견 ${n}명`, 'success');
+    srMsg(`시험지 유형 ${nt}장 반영 — 보고서를 만드는 중...`, 'success');
+    await srGenerate(true);
+    // 의견은 집계 뒤에 덮어써야 남음
+    let n2 = 0;
+    for (const r of list) {
+      if (!r.id || typeof r.comment !== 'string' || !r.comment.trim()) continue;
+      await updateDoc(doc(db, 'studentReports', r.id), { comment: r.comment.trim(), commentImportedAt: new Date().toISOString() });
+      n2++;
+    }
+    srMsg(`✅ 완료 — 시험지 유형 ${nt}장 · 보고서 생성 · 선생님 의견 ${n2}명 반영`, 'success');
     srLoad();
   } catch (e) {
     srMsg('가져오기 오류: ' + e.message, 'error');
