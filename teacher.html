@@ -771,6 +771,15 @@ select option:disabled { color:#9B94B3; }
       .dt-step .n { width:22px; height:22px; border-radius:50%; background:rgba(240,192,64,0.15); border:1px solid rgba(240,192,64,0.5); display:inline-flex; align-items:center; justify-content:center; font-size:12px; }
       .dt-sel { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
       .dt-sel .lb { font-size:12px; color:var(--muted); min-width:34px; }
+      #dtClassBtns { display:flex; flex-direction:column; gap:6px; }
+      .dt-acc { border:1px solid var(--border-soft); border-radius:10px; overflow:hidden; background:rgba(255,255,255,0.02); }
+      .dt-acc.open { border-color:rgba(240,192,64,0.35); }
+      .dt-acc-h { width:100%; display:flex; align-items:center; gap:10px; padding:10px 14px; background:transparent; border:none; color:var(--off-white); font-size:14px; font-family:inherit; cursor:pointer; text-align:left; }
+      .dt-acc-h:hover { background:rgba(255,255,255,0.04); }
+      .dt-acc-h .ar { color:var(--gold); width:12px; }
+      .dt-acc-h small { color:var(--muted); font-size:11.5px; }
+      .dt-acc-h .sel { margin-left:auto; font-size:11.5px; color:var(--gold); background:rgba(240,192,64,0.12); padding:2px 8px; border-radius:999px; }
+      .dt-acc-b { display:flex; gap:8px; flex-wrap:wrap; padding:4px 14px 12px 36px; }
       .dt-in { padding:7px 10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:8px; color:var(--off-white); font-size:13px; font-family:inherit; outline:none; }
       .dt-in:focus { border-color:var(--gold); }
       .dt-grid { width:100%; border-collapse:separate; border-spacing:0; font-size:13px; }
@@ -822,7 +831,7 @@ select option:disabled { color:#9B94B3; }
 
       <!-- 2. 반 -->
       <div class="dt-step"><span class="n">2</span>반 고르기 <span style="font-size:12px;font-weight:400;color:var(--muted);">— 내 담당 학생의 반명(관리자 페이지 학생 정보)으로 만들어집니다 · 누르면 학생이 바로 뜹니다</span></div>
-      <div class="dt-sel" id="dtClassBtns" style="margin-bottom:16px;"><span style="font-size:12px;color:var(--muted);">담당 학생을 불러오는 중...</span></div>
+      <div id="dtClassBtns" style="margin-bottom:16px;"><span style="font-size:12px;color:var(--muted);">담당 학생을 불러오는 중...</span></div>
 
       <!-- 3. 오답 -->
       <div class="dt-step"><span class="n">3</span>틀린 번호 누르기
@@ -4573,16 +4582,23 @@ function dtRenderClassBtns() {
   const el = $('dtClassBtns');
   const list = dtClassList();
   if (!list.length) { el.innerHTML = '<span style="font-size:12px;color:#ffc883;">내 담당으로 등록된 초·중등 학생이 없습니다. 관리자 페이지 학생 정보에서 담당 선생님과 반명을 지정해 주세요.</span>'; return; }
-  // 학년별로 접어두고 누른 학년만 펼침 (학년이 하나뿐이면 바로 펼침)
+  // 학년별 아코디언: 학년 줄이 세로로 쌓이고, 누르면 그 아래로 반 버튼이 펼쳐짐
   const byGrade = new Map();
   list.forEach(([c, n]) => { const g = dtGradeOf(c); if (!byGrade.has(g)) byGrade.set(g, []); byGrade.get(g).push([c, n]); });
-  const grades = [...byGrade.keys()].sort((a, b) => dtGradeKey(a) - dtGradeKey(b));
+  const key = (g) => { const m = g.match(/^(초|중|고)(\d)/); return m ? ({ 초: 0, 중: 1, 고: 2 }[m[1]] * 10 + +m[2]) : 99; };
+  const grades = [...byGrade.keys()].sort((a, b) => key(a) - key(b));
   if (dtSel.cls) dtOpenGrade = dtGradeOf(dtSel.cls);
+  else if (!dtOpenGrade && $('dt-grade').value && byGrade.has($('dt-grade').value)) dtOpenGrade = $('dt-grade').value; // PDF에서 읽은 학년 자동 펼침
   if (!dtOpenGrade && grades.length === 1) dtOpenGrade = grades[0];
-  el.innerHTML = `<div style="display:flex;gap:6px;flex-wrap:wrap;width:100%;">${grades.map((g) => `<button class="rating-btn ${dtOpenGrade === g ? 'selected' : ''}" style="font-weight:700;" onclick="dtOpenGradeSet('${g}')">${g} <span style="opacity:.6;font-size:11px;">${byGrade.get(g).length}반</span> ${dtOpenGrade === g ? '▴' : '▾'}</button>`).join('')}</div>`
-    + (dtOpenGrade && byGrade.has(dtOpenGrade) ? `<div style="display:flex;gap:6px;flex-wrap:wrap;width:100%;margin-top:8px;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.1);">${byGrade.get(dtOpenGrade).map(([c, n]) => `<button class="rating-btn ${dtSel.cls === c ? 'selected' : ''}" data-cls="${esc(c)}" onclick="dtPickClass(this.dataset.cls, this)">${esc(c)} <span style="opacity:.6;font-size:11px;">${n}</span></button>`).join('')}</div>` : '');
+  el.innerHTML = grades.map((g) => {
+    const cls = byGrade.get(g), open = dtOpenGrade === g, picked = cls.find(([c]) => c === dtSel.cls);
+    return `<div class="dt-acc ${open ? 'open' : ''}">
+      <button type="button" class="dt-acc-h" onclick="dtOpenGradeSet('${g}')"><span class="ar">${open ? '▾' : '▸'}</span><b>${g}</b><small>${cls.length}개 반 · ${cls.reduce((a, [, n]) => a + n, 0)}명</small>${picked && !open ? `<span class="sel">${esc(picked[0])}</span>` : ''}</button>
+      ${open ? `<div class="dt-acc-b">${cls.map(([c, n]) => `<button class="rating-btn ${dtSel.cls === c ? 'selected' : ''}" data-cls="${esc(c)}" onclick="dtPickClass(this.dataset.cls, this)">${esc(c)} <span style="opacity:.6;font-size:11px;">${n}</span></button>`).join('')}</div>` : ''}
+    </div>`;
+  }).join('');
 }
-window.dtOpenGradeSet = function (g) { dtOpenGrade = dtOpenGrade === g ? '' : g; if (dtSel.cls && dtGradeOf(dtSel.cls) !== dtOpenGrade) { dtSel.cls = ''; dtRenderGrid(); } dtRenderClassBtns(); };
+window.dtOpenGradeSet = function (g) { dtOpenGrade = dtOpenGrade === g ? '' : g; dtRenderClassBtns(); };
 window.dtPickClass = function (c, btn) {
   dtSel.cls = c;
   dtRenderClassBtns();

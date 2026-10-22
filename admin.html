@@ -1339,6 +1339,15 @@
       .hl-cls { padding:7px 12px; border-radius:20px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:var(--off-white); font-size:13px; font-family:inherit; cursor:pointer; }
       .hl-cls small { color:var(--muted); font-size:11px; }
       .hl-cls.active { background:rgba(240,192,64,0.2); border-color:var(--gold); color:var(--gold); }
+      #hlClasses { display:flex; flex-direction:column; gap:6px; }
+      .hl-acc { border:1px solid rgba(255,255,255,0.1); border-radius:10px; overflow:hidden; background:rgba(255,255,255,0.02); }
+      .hl-acc.open { border-color:rgba(240,192,64,0.35); }
+      .hl-acc-h { width:100%; display:flex; align-items:center; gap:10px; padding:10px 14px; background:transparent; border:none; color:var(--off-white); font-size:14px; font-family:inherit; cursor:pointer; text-align:left; }
+      .hl-acc-h:hover { background:rgba(255,255,255,0.04); }
+      .hl-acc-h .ar { color:var(--gold); width:12px; }
+      .hl-acc-h small { color:var(--muted); font-size:11.5px; }
+      .hl-acc-h .sel { margin-left:auto; font-size:11.5px; color:var(--gold); background:rgba(240,192,64,0.12); padding:2px 8px; border-radius:999px; }
+      .hl-acc-b { display:flex; gap:8px; flex-wrap:wrap; padding:4px 14px 12px 36px; }
       .hl-stu { display:inline-flex; align-items:center; gap:5px; padding:5px 10px; border-radius:8px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); font-size:13px; color:var(--off-white); cursor:pointer; }
       .hl-stu input { accent-color:var(--gold); }
       .hl-table { width:100%; border-collapse:collapse; font-size:13px; }
@@ -1353,7 +1362,7 @@
         <button class="btn btn-secondary btn-sm" onclick="hlCopyPrev()" title="직전 날짜 기록을 이 날짜로 복사">⎘ 지난 기록 복사</button>
       </div>
       <div style="font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">반</div>
-      <div id="hlClasses" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;"></div>
+      <div id="hlClasses" style="margin-bottom:12px;"></div>
       <div style="font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">학생 <span style="letter-spacing:0;text-transform:none;">(이 숙제를 받지 않는 학생은 체크 해제)</span></div>
       <div id="hlStudents" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
       <div class="form-group" style="margin-bottom:12px;"><label>숙제 내용</label><textarea id="hlContent" rows="2" placeholder="예: 쎈 p135~137 / 프린트(다각형~회전체)" style="width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>

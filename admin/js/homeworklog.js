@@ -46,16 +46,21 @@ function hlRenderClasses() {
   const el = document.getElementById('hlClasses');
   const list = hlClassesOf(hlSel.teacherUid);
   if (!list.length) { el.innerHTML = '<span style="font-size:12px;color:var(--muted);">이 선생님 담당 학생이 없습니다.</span>'; return; }
-  // 학년별로 접어두고, 누른 학년만 펼침 (반이 한 학년뿐이면 바로 펼침)
+  // 학년별 아코디언: 학년 줄이 세로로 쌓이고, 누르면 그 아래로 반 버튼이 펼쳐짐
   const byGrade = new Map();
   list.forEach(([c, n]) => { const g = hlGradeOf(c); if (!byGrade.has(g)) byGrade.set(g, []); byGrade.get(g).push([c, n]); });
   const grades = [...byGrade.keys()].sort((a, b) => hlClsKey(a) - hlClsKey(b));
   if (hlSel.cls) hlOpenGrade = hlGradeOf(hlSel.cls);
   if (!hlOpenGrade && grades.length === 1) hlOpenGrade = grades[0];
-  el.innerHTML = `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">${grades.map((g) => `<button class="hl-cls ${hlOpenGrade === g ? 'active' : ''}" style="border-radius:8px;font-weight:700;" onclick="hlOpenGradeSet('${g}')">${g} <small>${byGrade.get(g).length}반</small> ${hlOpenGrade === g ? '▴' : '▾'}</button>`).join('')}</div>`
-    + (hlOpenGrade && byGrade.has(hlOpenGrade) ? `<div style="display:flex;gap:6px;flex-wrap:wrap;padding:8px 10px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.1);">${byGrade.get(hlOpenGrade).map(([c, n]) => `<button class="hl-cls ${hlSel.cls === c ? 'active' : ''}" data-cls="${hlEsc(c)}" onclick="hlPickClass(this.dataset.cls)">${hlEsc(c)} <small>${n}</small></button>`).join('')}</div>` : '');
+  el.innerHTML = grades.map((g) => {
+    const cls = byGrade.get(g), open = hlOpenGrade === g, picked = cls.find(([c]) => c === hlSel.cls);
+    return `<div class="hl-acc ${open ? 'open' : ''}">
+      <button type="button" class="hl-acc-h" onclick="hlOpenGradeSet('${g}')"><span class="ar">${open ? '▾' : '▸'}</span><b>${g}</b><small>${cls.length}개 반 · ${cls.reduce((a, [, n]) => a + n, 0)}명</small>${picked && !open ? `<span class="sel">${hlEsc(picked[0])}</span>` : ''}</button>
+      ${open ? `<div class="hl-acc-b">${cls.map(([c, n]) => `<button class="hl-cls ${hlSel.cls === c ? 'active' : ''}" data-cls="${hlEsc(c)}" onclick="hlPickClass(this.dataset.cls)">${hlEsc(c)} <small>${n}</small></button>`).join('')}</div>` : ''}
+    </div>`;
+  }).join('');
 }
-window.hlOpenGradeSet = function (g) { hlOpenGrade = hlOpenGrade === g ? '' : g; if (hlSel.cls && hlGradeOf(hlSel.cls) !== hlOpenGrade) { hlSel.cls = ''; hlRenderStudents(); } hlRenderClasses(); };
+window.hlOpenGradeSet = function (g) { hlOpenGrade = hlOpenGrade === g ? '' : g; hlRenderClasses(); };
 window.hlPickClass = function (c) {
   hlSel.cls = c;
   hlRenderClasses();
