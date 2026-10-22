@@ -297,18 +297,34 @@ window.changePassword = async function() {
   btn.disabled = true; btn.textContent = '변경 중...';
 
   try {
-    // 1) 현재 비밀번호로 재인증
-    const email = name.includes('@') ? name : name + '@songmath.kr';
-    const cred = await signInWithEmailAndPassword(auth, email, curPw);
+    // 1) 현재 비밀번호로 재인증 — 학생 계정 먼저, 안 열리면 학부모 계정(이름.p@songmath.kr)
+    const emails = name.includes('@') ? [name] : [name + '@songmath.kr', name + '.p@songmath.kr'];
+    let cred = null, email = '', lastErr = null;
+    for (const em of emails) {
+      try { cred = await signInWithEmailAndPassword(auth, em, curPw); email = em; break; } catch (e) { lastErr = e; }
+    }
+    if (!cred) throw lastErr;
     const credential = EmailAuthProvider.credential(email, curPw);
     await reauthenticateWithCredential(cred.user, credential);
+    // 학생과 학부모가 같은 비밀번호를 쓰면 로그인 때 항상 학생으로 들어가므로 막음
+    if (!name.includes('@')) {
+      const other = email.endsWith('.p@songmath.kr') ? name + '@songmath.kr' : name + '.p@songmath.kr';
+      let clash = false;
+      try { const { getApps, initializeApp: ia } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+            const { getAuth: ga, signInWithEmailAndPassword: si, signOut: so } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
+            const chk = getApps().find(a => a.name === 'pwcheck') || ia(firebaseConfig, 'pwcheck');
+            const a2 = ga(chk); await si(a2, other, newPw); clash = true; await so(a2); } catch (e) { /* 안 열리면 겹치지 않는 것 */ }
+      if (clash) { await auth.signOut(); throw { code: 'same-as-other', message: email.endsWith('.p@songmath.kr') ? '학생이 쓰는 비밀번호와 같아서 쓸 수 없습니다. 다른 비밀번호를 정해주세요.' : '학부모가 쓰는 비밀번호와 같아서 쓸 수 없습니다. 다른 비밀번호를 정해주세요.' }; }
+    }
     // 2) 새 비밀번호로 변경
     await updatePassword(cred.user, newPw);
+    await auth.signOut();
     okEl.style.display = 'block';
     // 입력 초기화
     ['pc-name','pc-cur','pc-new','pc-new2'].forEach(id => document.getElementById(id).value = '');
   } catch(e) {
-    const msg = e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential'
+    const msg = e.code === 'same-as-other' ? e.message
+      : e.code === 'auth/wrong-password' || e.code === 'auth/invalid-credential'
       ? '현재 비밀번호가 올바르지 않습니다.'
       : e.code === 'auth/user-not-found'
       ? '아이디를 확인해주세요.'
