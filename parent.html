@@ -224,7 +224,7 @@ function threadHtml(type, id, teacherUid, teacherName, label) {
   const key = `${type}|${id}`, th = threadOf(type, id), unread = unreadOf(type, id);
   const who = isTeacherView() ? '답글 달기' : '댓글 달기';
   return `<div class="cm-box" id="th-${key.replace(/[^a-zA-Z0-9]/g, '_')}">
-      <div class="cm-head">💬 ${who} ${th.length ? `<small>${th.length}개</small>` : ''} ${unread ? `<span class="cm-new">${isTeacherView() ? '새 댓글' : '새 답글'} ${unread}</span>` : ''}</div>
+      <div class="cm-head">💬 ${who} ${th.length ? `<small>${th.length}개</small>` : `<small>${isTeacherView() ? '' : '궁금한 점이나 전하실 말씀을 남겨주세요'}</small>`} ${unread ? `<span class="cm-new">${isTeacherView() ? '새 댓글' : '새 답글'} ${unread}</span>` : ''}</div>
       ${th.map((c) => { const mine = c.authorUid === me.uid; const editing = editingId === c.id; return `<div class="cm ${c.authorRole}" id="cm-${c.id}">
         <div class="who"><span>${esc(c.authorName || (c.authorRole === 'teacher' ? '선생님' : '학부모'))} · ${c.createdAt?.seconds ? new Date(c.createdAt.seconds * 1000).toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' }) : ''}${c.editedAt ? ' · 수정됨' : ''}</span>
           ${mine && !editing ? `<span class="act"><button onclick="pEdit('${c.id}')">수정</button><button onclick="pDelete('${c.id}')">삭제</button></span>` : ''}</div>
