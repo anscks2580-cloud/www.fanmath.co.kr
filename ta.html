@@ -168,7 +168,9 @@
   <!-- 숙제 확인 -->
   <div class="tab-panel" id="tab-homework">
     <div class="card">
-      <h3>📚 업로드된 숙제 (<span id="hwCount">0</span>건)</h3>
+      <h3 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">📚 업로드된 숙제 (<span id="hwCount">0</span>건)
+        <select id="hwBranch" onchange="setHwBranch(this.value)" style="font-size:13px;padding:6px 10px;border-radius:8px;border:1px solid rgba(30,24,56,0.15);font-weight:700;font-family:inherit;"><option value="평촌관">평촌관</option><option value="산본관">산본관</option></select>
+      </h3>
       <div id="hwList"><div class="empty">불러오는 중...</div></div>
     </div>
   </div>
@@ -387,20 +389,26 @@ function todayStr() {
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
 
+// 관별 숙제: 기본은 조교 소속 관, 바꾸면 이 기기에서 기억 / 관 미지정(예전 자료)은 두 관 모두 보임
+let hwBranch = '';
+window.setHwBranch = (b) => { hwBranch = b; try { localStorage.setItem('swc_ta_hw_branch', b); } catch (e) {} loadHomework(); };
 window.loadHomework = async function() {
   const el = document.getElementById('hwList');
+  const sel = document.getElementById('hwBranch');
+  if (!hwBranch) { let saved = ''; try { saved = localStorage.getItem('swc_ta_hw_branch') || ''; } catch (e) {} hwBranch = saved || window.__taBranch || '평촌관'; }
+  if (sel) sel.value = hwBranch;
   el.innerHTML = '<div class="empty">불러오는 중...</div>';
   const snap = await getDocs(query(collection(db, 'homeworks'), orderBy('createdAt', 'desc')));
   const rows = [];
   snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
   const today = todayStr();
   // targetDate가 있으면 그 날짜부터 노출, 없는(기존) 자료는 그냥 노출
-  const visible = rows.filter(r => !r.targetDate || r.targetDate <= today);
+  const visible = rows.filter(r => (!r.targetDate || r.targetDate <= today) && (!r.branch || r.branch === hwBranch));
   document.getElementById('hwCount').textContent = visible.length;
   if (!visible.length) { el.innerHTML = '<div class="empty">오늘 확인할 숙제가 없습니다.</div>'; return; }
   el.innerHTML = visible.map(r => `
     <div class="item">
-      <div class="item-name">${esc(r.date || '')} 숙제</div>
+      <div class="item-name">${esc(r.date || '')} 숙제 ${r.branch ? '' : '<span class="item-meta">관 미지정</span>'}</div>
       <a href="${r.fileURL}" target="_blank" class="btn btn-secondary btn-sm">📄 열기</a>
     </div>`).join('');
 };
@@ -609,6 +617,7 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
   document.getElementById('taName').textContent = `${tDoc.data().name} 조교님 · ${tDoc.data().branch || ''}`;
+  window.__taBranch = (tDoc.data().branch === '산본관' || tDoc.data().branch === '평촌관') ? tDoc.data().branch : '';
   showPortal();
   await Promise.all([loadClinicRoom(), loadHomework(), loadTasks(), loadTaMyboxLink()]);
 });

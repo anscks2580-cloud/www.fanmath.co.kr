@@ -30,23 +30,41 @@ function nextClassDate(dateStr) {
   return next.toISOString().slice(0,10);
 }
 
+// 숙제 리스트 관 구분: 업로드할 때 관(branch) 저장 → 목록·조교 페이지에서 관별로 따로 봄
+//   예전 자료(관 없음)는 '관 미지정'으로 두 관 모두에 보이고, 목록에서 관을 지정할 수 있음
+let hwListBranch = '평촌관';
+try { const b = localStorage.getItem('swc_hwlist_branch'); if (b === '평촌관' || b === '산본관' || b === '') hwListBranch = b; } catch (e) {}
+const hwBadge = (b) => b ? `<span style="font-size:11px;padding:2px 8px;border-radius:10px;background:${b === '산본관' ? 'rgba(47,127,214,0.12);color:#2F7FD6' : 'rgba(91,63,166,0.12);color:var(--purple, #5B3FA6)'};font-weight:700;">${b}</span>` : '<span style="font-size:11px;color:var(--muted);">관 미지정</span>';
+window.hwListSetBranch = (b) => { hwListBranch = b; try { localStorage.setItem('swc_hwlist_branch', b); } catch (e) {} loadHomeworks(); };
+
 async function loadHomeworks() {
+  const bSel = document.getElementById('hwListBranch'); if (bSel) bSel.value = hwListBranch;
+  const upSel = document.getElementById('hw-branch'); if (upSel && hwListBranch && !upSel.dataset.touched) upSel.value = hwListBranch;
   const snap = await getDocs(query(collection(db, 'homeworks'), orderBy('createdAt', 'desc')));
-  const rows = [];
-  snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
+  const all = [];
+  snap.forEach(d => all.push({ id: d.id, ...d.data() }));
+  const rows = all.filter(r => !hwListBranch || !r.branch || r.branch === hwListBranch);
   document.getElementById('hwCount').textContent = rows.length;
   const el = document.getElementById('hwList');
-  if (!rows.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;">업로드된 숙제가 없습니다.</div>'; return; }
+  if (!rows.length) { el.innerHTML = `<div style="color:var(--muted);font-size:13px;">${hwListBranch ? hwListBranch + ' ' : ''}업로드된 숙제가 없습니다.</div>`; return; }
   el.innerHTML = rows.map(r => `
     <div class="student-item">
-      <div class="student-name">${r.date || r.title || ''}</div>
+      <div class="student-name" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">${hwBadge(r.branch)} ${r.date || r.title || ''}${r.targetDate && r.targetDate !== r.date ? ` <span style="font-size:11px;color:var(--muted);">조교 확인 ${r.targetDate}</span>` : ''}</div>
+      ${r.branch ? '' : `<select onchange="hwSetBranch('${r.id}', this.value)" style="font-size:12px;padding:4px 6px;border-radius:6px;"><option value="">관 지정...</option><option value="평촌관">평촌관</option><option value="산본관">산본관</option></select>`}
       <a href="${r.fileURL}" target="_blank" class="btn btn-secondary btn-sm">열기</a>
       <button class="btn btn-danger btn-sm" onclick="deleteHomework('${r.id}')">삭제</button>
     </div>`).join('');
 }
+window.hwSetBranch = async (id, b) => {
+  if (!b) return;
+  try { await updateDoc(doc(db, 'homeworks', id), { branch: b }); await loadHomeworks(); }
+  catch (e) { alert('저장 실패: ' + e.message); }
+};
+document.addEventListener('change', (e) => { if (e.target && e.target.id === 'hw-branch') e.target.dataset.touched = '1'; });
 
 window.uploadHomework = async () => {
   const date = document.getElementById('hw-date').value;
+  const branch = document.getElementById('hw-branch').value;
   const fileInput = document.getElementById('hw-file');
   const file = fileInput.files[0];
   if (!date || !file) { showMsg('hwUploadMsg', '날짜와 파일을 모두 입력해주세요.', 'error'); return; }
@@ -58,9 +76,9 @@ window.uploadHomework = async () => {
     const fileURL = await getDownloadURL(fileRef);
     const targetDate = nextClassDate(date);
     await addDoc(collection(db, 'homeworks'), {
-      date, targetDate, fileURL, fileName: file.name, createdAt: new Date().toISOString()
+      date, targetDate, branch, fileURL, fileName: file.name, createdAt: new Date().toISOString()
     });
-    showMsg('hwUploadMsg', '숙제 업로드 완료!', 'success');
+    showMsg('hwUploadMsg', `${branch} 숙제 업로드 완료!`, 'success');
     document.getElementById('hw-date').value = '';
     fileInput.value = '';
     await loadHomeworks();

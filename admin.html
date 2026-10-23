@@ -1167,6 +1167,7 @@
     <div class="card">
       <h3>+ 숙제 업로드 (이미지/PDF)</h3>
       <div class="form-row">
+        <div class="form-group"><label>관</label><select id="hw-branch" style="padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;font-weight:700;"><option value="평촌관">평촌관</option><option value="산본관">산본관</option></select></div>
         <div class="form-group"><label>날짜</label><input type="date" id="hw-date" style="color-scheme:light;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;"></div>
       </div>
       <input type="file" id="hw-file" accept="image/*,.pdf" style="margin-bottom:12px;color:var(--muted);font-size:13px;">
@@ -1174,7 +1175,9 @@
       <div class="msg" id="hwUploadMsg"></div>
     </div>
     <div class="card">
-      <h3>📚 업로드된 숙제 (<span id="hwCount">0</span>건)</h3>
+      <h3 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">📚 업로드된 숙제 (<span id="hwCount">0</span>건)
+        <select id="hwListBranch" onchange="hwListSetBranch(this.value)" style="padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;font-size:13px;padding:6px 10px;font-weight:700;"><option value="평촌관">평촌관</option><option value="산본관">산본관</option><option value="">전체</option></select>
+      </h3>
       <div id="hwList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
     </div>
 
@@ -2323,7 +2326,7 @@
 <script defer src="admin/js/videos.js"></script>
 <script defer src="admin/js/teachers.js"></script>
 <script defer src="admin/js/clinicroom.js"></script>
-<script defer src="admin/js/tamaterials.js"></script>
+<script defer src="admin/js/tamaterials.js?v=1792759000"></script>
 <script defer src="admin/js/reports.js"></script>
 <script defer src="admin/js/studyreport.js?v=1792682550"></script>
 <script defer src="admin/js/parents.js?v=1792681350"></script>
