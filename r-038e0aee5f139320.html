@@ -759,8 +759,8 @@ async function renderAll() {
 }
 
 // ── 입장 확인: 지정된 원장 계정만. 나머지는 페이지가 없는 것처럼 보임 ──
-// 송문찬(2개 계정)·송우찬 — 원장 계정을 더 추가하려면 여기에 관리자 계정 UID를 넣으면 됨
-const DR_ALLOW = ['dH1d1eOMDtSSQwGBKpyNsDCSilB3', 'e47diSgIXeaqnoQxuYIgebRJEGr1', 'v7MaJV6TjwdEvSqif9gMNDWQSeE2'];
+// 원장이 쓰는 관리자 계정 2개(로그인 이메일 기준) — 추가하려면 여기에 이메일을 넣으면 됨
+const DR_ALLOW = ['smc1823@nate.com', 'dncksfly@naver.com'];
 function gate(html) { $('drMain').style.display = 'none'; const g = $('drGate'); g.innerHTML = html; g.style.display = 'block'; }
 function notFound() {
   document.title = '404';
@@ -768,7 +768,7 @@ function notFound() {
   document.body.innerHTML = '<div class="dr-404"><b>404</b><div>페이지를 찾을 수 없습니다.</div></div>';
 }
 onAuthStateChanged(auth, async (user) => {
-  if (!user || !DR_ALLOW.includes(user.uid)) { notFound(); return; }
+  if (!user || !DR_ALLOW.includes(String(user.email || '').toLowerCase())) { notFound(); return; }
   let a;
   try { const s = await getDoc(doc(db, 'admins', user.uid)); a = s.exists() ? s.data() : null; }
   catch (e) { notFound(); return; }
