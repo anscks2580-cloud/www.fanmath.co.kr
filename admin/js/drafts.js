@@ -158,7 +158,7 @@ window.saveDraft = async function(type) {
   }
 };
 
-// 마감 기록: 관리부 마감·출결 이미지를 저장할 때 내용도 같이 남김 → 원장 페이지(director.html)에서 날짜별로 확인
+// 마감 기록: 관리부 마감·출결 이미지를 저장할 때 내용도 같이 남김 → 날짜별 기록으로 남음
 // 임시저장과 같은 문서(dailyDrafts)에 imageSavedAt(마감 완료 시각)·savedBy를 붙여 저장
 window.recordClosing = async function(type) {
   let payload;
@@ -174,7 +174,7 @@ window.recordClosing = async function(type) {
       imageSavedAt: nowIso,
       savedBy: a.name || a.email || '',
     });
-    showDraftStatus(type, `✅ 마감 기록됨 (${new Date().toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'})}) — 원장 페이지에 반영`);
+    showDraftStatus(type, `✅ 마감 기록됨 (${new Date().toLocaleTimeString('ko-KR', {hour:'2-digit',minute:'2-digit'})})`);
   } catch(e) {
     showDraftStatus(type, '❌ 마감 기록 실패: ' + e.message, true);
   }

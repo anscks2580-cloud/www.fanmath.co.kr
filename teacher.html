@@ -3514,7 +3514,7 @@ async function calBuildAutoTodos() {
     }
   } catch (e) { console.warn('[일정] 토요클리닉 확인 실패:', e.message); }
 
-  // ⑤ 숙제 입력 — 오늘 수업 있는 내 반 중 숙제 기록 없는 반 (원장 페이지 빨간불과 같은 기준)
+  // ⑤ 숙제 입력 — 오늘 수업 있는 내 반 중 숙제 기록 없는 반 (그날 수업 반 기준)
   try {
     if (!calIsOff(todayStr)) {
       const dayName = CAL_DOW[dow];

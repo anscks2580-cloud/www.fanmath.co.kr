@@ -3,17 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>원장 페이지 | 송우찬수학학원</title>
-<meta name="robots" content="noindex,nofollow">
+<title>송우찬수학학원</title>
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
 <link rel="stylesheet" href="style.css">
 <style>
 /* ═══════════════════════════════════════════════════════════
    원장 페이지 — 학원 마감·보고를 한눈에 (보기 전용)
-   - 원장(admins.role != 'office')만 입장
+   - 링크로만 들어오는 비공개 페이지: 어디에도 연결하지 않음. 지정된 원장 계정(DR_ALLOW)만 입장,
+     그 외(로그아웃 상태·다른 관리자·선생님 등)에게는 '페이지 없음' 화면만 보임
    - 고치기는 각 항목의 "관리자 화면에서 고치기" → admin.html#메뉴
    ═══════════════════════════════════════════════════════════ */
 :root { --red:#D64545; --red-bg:rgba(214,69,69,0.08); --green:#2E9E5B; --green-bg:rgba(46,158,91,0.08); --amber:#D97B1A; --amber-bg:rgba(217,123,26,0.09); }
 body { background:var(--bg); }
+body.dr-locked nav.dr-top { display:none; }
+.dr-404 { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; color:#555; background:#fff; }
+.dr-404 b { font-size:64px; color:#ccc; font-weight:300; line-height:1; }
 nav.dr-top { padding:0 20px; gap:14px; justify-content:flex-start; }
 .dr-brand { display:inline-flex; align-items:center; gap:9px; text-decoration:none; color:var(--off-white); flex-shrink:0; }
 .dr-brand img { height:30px; width:30px; object-fit:contain; }
@@ -185,7 +190,7 @@ a.lk:hover { text-decoration:underline; }
 }
 </style>
 </head>
-<body>
+<body class="dr-locked">
 
 <nav class="dr-top">
   <a href="index.html" class="dr-brand"><img src="swc-logo.svg" alt="SWC"><span>송우찬수학학원 <b>원장 페이지</b></span></a>
@@ -753,15 +758,23 @@ async function renderAll() {
   ]);
 }
 
-// ── 입장 확인: 관리자 중 원장만 (관리부 role 'office'는 불가) ──
+// ── 입장 확인: 지정된 원장 계정만. 나머지는 페이지가 없는 것처럼 보임 ──
+// 송문찬(2개 계정)·송우찬 — 원장 계정을 더 추가하려면 여기에 관리자 계정 UID를 넣으면 됨
+const DR_ALLOW = ['dH1d1eOMDtSSQwGBKpyNsDCSilB3', 'e47diSgIXeaqnoQxuYIgebRJEGr1', 'v7MaJV6TjwdEvSqif9gMNDWQSeE2'];
 function gate(html) { $('drMain').style.display = 'none'; const g = $('drGate'); g.innerHTML = html; g.style.display = 'block'; }
+function notFound() {
+  document.title = '404';
+  document.body.className = '';
+  document.body.innerHTML = '<div class="dr-404"><b>404</b><div>페이지를 찾을 수 없습니다.</div></div>';
+}
 onAuthStateChanged(auth, async (user) => {
-  if (!user) { location.replace('login.html'); return; }
+  if (!user || !DR_ALLOW.includes(user.uid)) { notFound(); return; }
   let a;
   try { const s = await getDoc(doc(db, 'admins', user.uid)); a = s.exists() ? s.data() : null; }
-  catch (e) { gate(`<h2>확인 중 오류</h2><p>${esc(e.message)}</p><a class="btn" href="login.html">로그인 화면</a>`); return; }
-  if (!a) { gate('<h2>원장 계정만 들어올 수 있습니다</h2><p>관리자(원장) 계정으로 로그인해 주세요.</p><a class="btn btn-gold" href="login.html">로그인 화면</a>'); return; }
-  if (a.role === 'office') { gate('<h2>원장 계정만 들어올 수 있습니다</h2><p>관리부 계정은 관리자 페이지를 이용해 주세요.</p><a class="btn btn-gold" href="admin.html">관리자 페이지로</a>'); return; }
+  catch (e) { notFound(); return; }
+  if (!a) { notFound(); return; }
+  document.body.classList.remove('dr-locked');
+  document.title = '원장 페이지 | 송우찬수학학원';
   $('drWho').textContent = (a.name || user.email) + ' 원장';
   const now = new Date();
   $('drToday').textContent = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 ${DOW[now.getDay()]}요일 · 보기 전용 (고치기는 관리자 화면에서)`;

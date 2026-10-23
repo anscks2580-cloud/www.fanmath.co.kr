@@ -197,8 +197,6 @@
     visibleGroups = custom.length ? custom : ROLE_PRESETS[role];
     render();
     const badge = $('adRoleBadge'); if (badge) badge.textContent = ROLE_LABELS[role] + (custom.length ? ' · 직접 지정' : '');
-    // 원장 페이지(director.html) 버튼: 원장만
-    const dl = $('directorLink'); if (dl) dl.style.display = role === 'master' ? '' : 'none';
     const who = $('adSideWho'); if (who) who.textContent = a.name || a.email || '';
     const nameEl = $('adminName'); if (nameEl) nameEl.textContent = (a.name ? a.name + ' · ' : '') + ROLE_LABELS[role];
     document.querySelectorAll('#tab-home [data-group]').forEach((card) => { card.hidden = !isVisible(card.dataset.group); });

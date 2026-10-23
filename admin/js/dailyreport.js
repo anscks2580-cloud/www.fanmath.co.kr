@@ -314,6 +314,6 @@ window.downloadDailyReport = function() {
   link.download = `일일업무보고_${data.branch}_${dateStr}_${data.author}.png`;
   link.href = canvas.toDataURL('image/png');
   link.click();
-  if (typeof recordClosing === 'function') recordClosing('dr');   // 원장 페이지용 마감 기록
+  if (typeof recordClosing === 'function') recordClosing('dr');   // 마감 기록
 };
 
