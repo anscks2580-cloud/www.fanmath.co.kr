@@ -68,6 +68,12 @@
 .mt-pages { flex:1; overflow:auto; padding:18px 12px 40px; -webkit-overflow-scrolling:touch; }
 .mt-pages canvas { display:block; margin:0 auto 14px; background:#fff; box-shadow:0 4px 18px rgba(30,24,56,0.25); max-width:none; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
 .mt-wait { color:#fff; text-align:center; font-size:14px; padding:40px 0; }
+.mt-bar .fs { font-size:13px; font-weight:600; }
+.mt-view:fullscreen, .mt-view.max { background:#2f2a45; }
+.mt-view:-webkit-full-screen { background:#2f2a45; }
+.mt-view:fullscreen .mt-bar, .mt-view.max .mt-bar { padding:6px 12px; }
+.mt-view:fullscreen .mt-pages, .mt-view.max .mt-pages { padding:10px 4px 30px; }
+.mt-view:-webkit-full-screen .mt-pages { padding:10px 4px 30px; }
 @media print { .mt-view { display:none !important; } }
 .px-empty { color:var(--muted); font-size:13px; padding:24px 0; text-align:center; }
 .px-meta { font-size:12px; color:var(--muted); margin-bottom:6px; }
@@ -1318,6 +1324,7 @@ select option:disabled { color:#6B6489; }
     <span class="pg" id="mtViewPg"></span>
     <button type="button" onclick="mtZoom(-1)" aria-label="축소">－</button>
     <button type="button" onclick="mtZoom(1)" aria-label="확대">＋</button>
+    <button type="button" class="fs" id="mtFsBtn" onclick="mtFull()" aria-label="전체 화면">⛶ 전체 화면</button>
     <button type="button" onclick="mtClose()" aria-label="닫기">✕</button>
   </div>
   <div class="mt-pages" id="mtPages"></div>
@@ -1395,7 +1402,7 @@ async function drawAll() {
   const box = $('mtPages');
   const keep = box.scrollHeight ? box.scrollTop / box.scrollHeight : 0;
   box.innerHTML = '';
-  const width = Math.min(box.clientWidth - 24, 1000);
+  const width = isFull() ? Math.min(box.clientWidth - 8, 1600) : Math.min(box.clientWidth - 24, 1000);
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   for (let p = 1; p <= cur.pdf.numPages; p++) {
     if (my !== token) return;
@@ -1449,14 +1456,47 @@ window.mtZoom = function (d) {
   cur.scale = Math.min(3, Math.max(0.5, +(cur.scale + d * 0.25).toFixed(2)));
   drawAll();
 };
+// ── 전체 화면: 지원 기기는 진짜 전체 화면, 아이폰처럼 안 되는 기기는 화면 꽉 채우기로 대신 ──
+const fsEl = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+const isFull = () => !!fsEl() || $('mtView').classList.contains('max');
+async function exitFull() {
+  const v = $('mtView');
+  if (v.classList.contains('max')) { v.classList.remove('max'); onFsChange(); }
+  if (fsEl()) {
+    const ex = document.exitFullscreen || document.webkitExitFullscreen;
+    try { await ex.call(document); } catch (_) {}
+  }
+}
+function onFsChange() {
+  const on = isFull();
+  const b = $('mtFsBtn');
+  b.textContent = on ? '⛶ 원래 크기' : '⛶ 전체 화면';
+  b.setAttribute('aria-label', on ? '원래 크기' : '전체 화면');
+  if (cur && $('mtView').classList.contains('open')) requestAnimationFrame(() => drawAll());
+}
+document.addEventListener('fullscreenchange', onFsChange);
+document.addEventListener('webkitfullscreenchange', onFsChange);
+window.mtFull = async function () {
+  const v = $('mtView');
+  if (isFull()) { await exitFull(); return; }
+  const req = v.requestFullscreen || v.webkitRequestFullscreen;
+  if (req) { try { await req.call(v); return; } catch (_) {} }
+  v.classList.add('max'); onFsChange();
+};
 window.mtClose = function () {
+  exitFull();
   token++;
   $('mtView').classList.remove('open');
   $('mtPages').innerHTML = '';
   document.body.style.overflow = '';
   if (cur) { try { cur.pdf.destroy(); } catch (_) {} cur = null; }
 };
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('mtView').classList.contains('open')) mtClose(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape' || !$('mtView').classList.contains('open')) return;
+  if (fsEl()) return;                                        // 진짜 전체 화면은 브라우저가 먼저 빠져나옴
+  if ($('mtView').classList.contains('max')) { exitFull(); return; }
+  mtClose();
+});
 </script>
 
 <!-- ══════════ Firebase + 로직 ══════════ -->
