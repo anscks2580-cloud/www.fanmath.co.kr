@@ -1132,8 +1132,12 @@ select option:disabled { color:#6B6489; }
       <!-- 시간 / 지참교재 -->
       <div class="form-grid">
         <div class="form-group">
-          <label>시간 <span style="color:#D64545;">*</span></label>
-          <input type="text" id="c-time" placeholder="예: 10:00 ~ 12:00">
+          <label>시간 <span style="color:#D64545;">*</span> <small style="color:var(--muted);font-weight:400;">시작 ~ 끝</small></label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="time" id="c-time-start" step="600" style="flex:1;min-width:0;color-scheme:light;">
+            <span style="color:var(--muted);">~</span>
+            <input type="time" id="c-time-end" step="600" style="flex:1;min-width:0;color-scheme:light;">
+          </div>
         </div>
         <div class="form-group">
           <label>지참교재 <span style="color:#D64545;">*</span></label>
@@ -2996,7 +3000,9 @@ window.submitClinic = async function() {
   const dateVal   = document.getElementById('c-date').value;
   const studentId = document.getElementById('c-studentId').value;
   const stuName   = document.getElementById('c-studentName').value;
-  const time      = document.getElementById('c-time').value.trim();
+  const tStart    = document.getElementById('c-time-start').value;
+  const tEnd      = document.getElementById('c-time-end').value;
+  const time      = tStart ? (tEnd ? `${tStart} ~ ${tEnd}` : tStart) : '';
   const book      = document.getElementById('c-book').value.trim();
   const content   = document.getElementById('c-content').value.trim();
   const ok  = document.getElementById('clinic-ok');
@@ -3004,7 +3010,10 @@ window.submitClinic = async function() {
 
   if (!dateVal)    { showAlert(err, '어느 토요일 클리닉인지 골라주세요.', 'err'); return; }
   if (!studentId)  { showAlert(err, '학생을 선택해주세요.', 'err'); return; }
-  if (!time)       { showAlert(err, '시간을 입력해주세요.', 'err'); return; }
+  if (!tStart)     { showAlert(err, '시작 시간을 입력해주세요.', 'err'); return; }
+  if (!tEnd)       { showAlert(err, '끝나는 시간을 입력해주세요.', 'err'); return; }
+  if (tEnd <= tStart) { showAlert(err, '끝나는 시간이 시작 시간보다 늦어야 합니다.', 'err'); return; }
+  const stu = studentsCache.find(s => s.id === studentId);
   if (!book)       { showAlert(err, '지참교재를 입력해주세요.', 'err'); return; }
   if (!content)    { showAlert(err, '클리닉 내용을 입력해주세요.', 'err'); return; }
 
@@ -3014,8 +3023,12 @@ window.submitClinic = async function() {
       teacherName:  currentTeacher.name,
       studentId,
       studentName:  stuName,
+      studentGrade: stu?.grade || '',
+      branch:       stu?.branch || currentTeacher.branch || '',
       date:         dateVal,
       time,
+      startTime:    tStart,
+      endTime:      tEnd,
       book,
       content,
       submittedAt:  serverTimestamp()
@@ -3048,6 +3061,7 @@ window.submitNoClinic = async function() {
       book:         '',
       content:      '',
       isNone:       true,
+      branch:       currentTeacher.branch || '',
       submittedAt:  serverTimestamp()
     });
     showAlert(ok, `✅ ${clinicSatLabel(dateVal)} 토요클리닉 없음이 제출되었습니다.`, 'ok');
@@ -3062,7 +3076,7 @@ window.resetClinic = function() {
   clinicSelectedName = '';
   document.getElementById('c-studentId').value   = '';
   document.getElementById('c-studentName').value = '';
-  document.getElementById('c-time').value    = '';
+  // 시간은 같은 시간대 학생을 이어서 입력하기 쉽게 그대로 둠
   document.getElementById('c-book').value    = '';
   document.getElementById('c-content').value = '';
   document.getElementById('clinicStudentSearch').value = '';

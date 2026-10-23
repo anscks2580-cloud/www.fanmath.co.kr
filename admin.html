@@ -1477,9 +1477,13 @@
 
     <!-- 필터 카드 -->
     <div class="card">
-      <h3>🏥 토요 추가클리닉 조회 · 다운로드</h3>
+      <h3>🏥 토요 추가클리닉 조회 · 다운로드 <span style="font-size:12px;color:var(--muted);font-weight:400;">— 관별로 따로 · 시간대(시작 시간) › 선생님 순으로 정리</span></h3>
 
-      <div class="form-row" style="max-width:700px;grid-template-columns:1fr 1fr 1fr;margin-bottom:16px;">
+      <div class="form-row" style="max-width:900px;grid-template-columns:repeat(3,1fr);margin-bottom:12px;">
+        <div class="form-group">
+          <label>관</label>
+          <select id="clinicBranch" onchange="scOnBranch()" style="font-weight:700;"><option value="평촌관">평촌관</option><option value="산본관">산본관</option></select>
+        </div>
         <div class="form-group">
           <label>날짜 (시작)</label>
           <input type="date" id="clinicDateFrom" style="color-scheme:light;width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
@@ -1488,11 +1492,21 @@
           <label>날짜 (종료)</label>
           <input type="date" id="clinicDateTo" style="color-scheme:light;width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
         </div>
+      </div>
+      <div class="form-row" style="max-width:900px;grid-template-columns:repeat(3,1fr);margin-bottom:16px;">
         <div class="form-group">
-          <label>선생님 필터</label>
-          <select id="clinicTeacherFilter">
+          <label>시간대</label>
+          <select id="clinicSlotFilter" onchange="scOnFilter()"><option value="">전체 시간대</option></select>
+        </div>
+        <div class="form-group">
+          <label>선생님</label>
+          <select id="clinicTeacherFilter" onchange="scOnFilter()">
             <option value="">전체 선생님</option>
           </select>
+        </div>
+        <div class="form-group">
+          <label>학년</label>
+          <select id="clinicGradeFilter" onchange="scOnFilter()"><option value="">전체 학년</option></select>
         </div>
       </div>
 
@@ -2308,7 +2322,7 @@
 <script defer src="admin/js/studyreport.js?v=1792682550"></script>
 <script defer src="admin/js/parents.js?v=1792681350"></script>
 <script defer src="admin/js/homeworklog.js?v=1792748000"></script>
-<script defer src="admin/js/satclinic.js"></script>
+<script defer src="admin/js/satclinic.js?v=1792749600"></script>
 <script defer src="admin/js/dailyreport.js?v=1792748600"></script>
 <script defer src="admin/js/attendance.js?v=1792748600"></script>
 <script defer src="admin/js/weeklylog.js"></script>
