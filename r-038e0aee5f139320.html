@@ -257,6 +257,12 @@ a.lk:hover { text-decoration:underline; }
       <span class="sub" id="weekSub"></span>
     </div>
     <div class="card" id="weekWeekly"></div>
+    <div class="dr-period" style="margin-top:22px;">
+      <button class="nav-btn" onclick="drSatMove(-1)" aria-label="지난 토요일">‹</button>
+      <span class="label" id="satLabel"></span>
+      <button class="nav-btn" onclick="drSatMove(1)" aria-label="다음 토요일">›</button>
+      <span class="sub">토요 추가 클리닉</span>
+    </div>
     <div class="card" id="weekSat"></div>
   </section>
 
@@ -325,6 +331,7 @@ const S = {
   branch: '', students: [], teachers: [], events: [], comments: null,
   day: ymd(new Date()),
   weekMon: addDays(mondayOf(new Date()), -7),   // 주간성취도는 지난주분을 이번 주 금요일까지 → 기본은 지난주
+  satMon: mondayOf(new Date()),                 // 토요 추가 클리닉은 이번 주 토요일이 기본
   month: (() => { const d = new Date(); return monthKey(new Date(d.getFullYear(), d.getMonth() - 1, 1)); })(),   // 지난달 (매달 3일 마감)
   tab: 'day', alerts: {},
 };
@@ -357,6 +364,7 @@ window.drReload = async () => { await loadBase(); S.comments = null; renderAll()
 window.drDayMove = (n) => { S.day = ymd(addDays(parseYmd(S.day), n)); renderDay(); };
 window.drDaySet = (v) => { if (v) { S.day = v; renderDay(); } };
 window.drWeekMove = (n) => { S.weekMon = addDays(S.weekMon, 7 * n); renderWeek(); };
+window.drSatMove = (n) => { S.satMon = addDays(S.satMon, 7 * n); renderSat(); };
 window.drMonthMove = (n) => { const [y, m] = S.month.split('-').map(Number); S.month = monthKey(new Date(y, m - 1 + n, 1)); renderMonth(); };
 window.drLogout = async () => { await signOut(auth); location.reload(); };
 window.drJump = (tab, anchor) => { drTab(tab); if (anchor) setTimeout(() => { const el = $(anchor); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60); };
@@ -554,6 +562,7 @@ async function dayAlerts() {
   renderAlerts();
 }
 window.drJumpDay = (anchor) => { if (S.alerts.dayDate) { S.day = S.alerts.dayDate; renderDay(); } drJump('day', anchor); };
+window.drJumpSat = () => { if (S.alerts.satDate) { S.satMon = mondayOf(parseYmd(S.alerts.satDate)); renderSat(); } drJump('week', 'weekSat'); };
 
 // ══════════════════════════════════════
 // 주간 — 주간성취도(weeklyReports, 중등) · 토요 추가 클리닉(satClinicReports)
@@ -566,14 +575,11 @@ async function renderWeek() {
   const thisMon = mondayOf(new Date());
   const rel = Math.round((thisMon - mon) / (7 * 86400000));
   $('weekLabel').textContent = `${mon.getMonth() + 1}/${mon.getDate()} ~ ${sun.getMonth() + 1}/${sun.getDate()}${rel === 1 ? ' · 지난주' : rel === 0 ? ' · 이번 주' : ''}`;
-  $('weekSub').textContent = `주간성취도 마감 ${md(due)} · 토요클리닉 ${md(sat)}`;
-  $('weekWeekly').innerHTML = $('weekSat').innerHTML = '<div class="empty">불러오는 중...</div>';
-  let wk, sc;
+  $('weekSub').textContent = `주간성취도 마감 ${md(due)}`;
+  $('weekWeekly').innerHTML = '<div class="empty">불러오는 중...</div>';
+  let wk;
   try {
-    [wk, sc] = await Promise.all([
-      getDocs(query(collection(db, 'weeklyReports'), where('weekKey', '==', key))),
-      getDocs(query(collection(db, 'satClinicReports'), where('date', '==', satStr))),
-    ]);
+    wk = await getDocs(query(collection(db, 'weeklyReports'), where('weekKey', '==', key)));
   } catch (e) { if (token === weekToken) $('weekWeekly').innerHTML = `<div class="err">불러오지 못했습니다 (${esc(e.message)})</div>`; return; }
   if (token !== weekToken) return;
   const pastDue = new Date() > addDays(due, 1);
@@ -600,7 +606,23 @@ async function renderWeek() {
   $('weekWeekly').innerHTML = `<div class="card-hd"><h3>📈 주간성취도 <span style="font-weight:500;font-size:13px;color:var(--muted)">(중등부)</span></h3><div class="r">${ts.length ? `<span class="sm" style="font-size:12.5px;color:var(--muted)">${done} / ${tot}명</span>` : ''}${wSt}${fix('weekly')}</div></div>` +
     (ts.length ? blocks.join('') + '<div class="note">선생님 이름을 누르면 학생별로 입력한 내용을 볼 수 있습니다. 빨간 줄은 아직 입력하지 않은 학생입니다.</div>' : '<div class="empty">중등부 담당 학생이 있는 선생님이 없습니다.</div>');
 
-  // 토요 추가 클리닉
+  if (rel === 1) { S.alerts.weekly = pastDue || new Date() >= due ? tot - done : 0; S.alerts.weeklyLeft = tot - done; renderAlerts(); }
+}
+
+// ── 토요 추가 클리닉 (기본: 이번 주 토요일) — forAlert면 화면은 그리지 않고 빨간불만 계산 ──
+let satToken = 0;
+async function renderSat(forAlert) {
+  const mon = forAlert || S.satMon, sat = addDays(mon, 5), satStr = ymd(sat);
+  const token = forAlert ? 0 : ++satToken;
+  if (!forAlert) {
+    const rel = Math.round((mon - mondayOf(new Date())) / (7 * 86400000));
+    $('satLabel').textContent = `${md(sat)}${rel === 0 ? ' · 이번 주' : rel === -1 ? ' · 지난주' : rel === 1 ? ' · 다음 주' : ''}`;
+    $('weekSat').innerHTML = '<div class="empty">불러오는 중...</div>';
+  }
+  let sc;
+  try { sc = await getDocs(query(collection(db, 'satClinicReports'), where('date', '==', satStr))); }
+  catch (e) { if (!forAlert && token === satToken) $('weekSat').innerHTML = `<div class="err">불러오지 못했습니다 (${esc(e.message)})</div>`; return; }
+  if (!forAlert && token !== satToken) return;
   const scRows = []; sc.forEach((d) => scRows.push({ id: d.id, ...d.data() }));
   const ats = activeTeachers();
   const scopeIds = new Set(scopeStudents().map((s) => s.id));
@@ -616,11 +638,10 @@ async function renderWeek() {
       (list.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>학생</th><th>시간</th><th>지참 교재</th><th>클리닉 내용</th></tr></thead><tbody>${list.map((r) => `<tr><td class="nm"><b>${esc(r.studentName)}</b></td><td>${esc(r.time || '')}</td><td>${esc(r.book || '')}</td><td class="memo">${esc(r.content || '')}</td></tr>`).join('')}</tbody></table></div>`
         : `<div class="empty">${!mine.length ? '아직 제출하지 않았습니다.' : '이 날 토요클리닉이 없었다고 제출했습니다.'}</div>`) + '</div></details>';
   });
-  const scSt = !ats.length ? '<span class="st mute">대상 없음</span>' : !satPassed ? '<span class="st mute">토요일 전</span>' : scMiss ? `<span class="st bad">미제출 ${scMiss}명</span>` : '<span class="st ok">전원 제출</span>';
+  if (forAlert) { S.alerts.sat = satPassed ? scMiss : 0; S.alerts.satDate = satStr; renderAlerts(); return; }
+  const scSt = !ats.length ? '<span class="st mute">대상 없음</span>' : !satPassed ? `<span class="st mute">토요일 전${scMiss < ats.length ? ` · ${ats.length - scMiss}명 미리 입력` : ''}</span>` : scMiss ? `<span class="st bad">미제출 ${scMiss}명</span>` : '<span class="st ok">전원 제출</span>';
   $('weekSat').innerHTML = `<div class="card-hd"><h3>🗓 토요 추가 클리닉 · ${esc(md(sat))}</h3><div class="r">${scSt}${fix('satclinic')}</div></div>` +
     (ats.length ? scBlocks.join('') + '<div class="note">선생님 이름을 누르면 학생별 클리닉 내용을 볼 수 있습니다.</div>' : '<div class="empty">담당 학생이 있는 선생님이 없습니다.</div>');
-
-  if (rel === 1) { S.alerts.weekly = pastDue || new Date() >= due ? tot - done : 0; S.alerts.weeklyLeft = tot - done; S.alerts.sat = satPassed ? scMiss : 0; renderAlerts(); }
 }
 
 // ══════════════════════════════════════
@@ -735,11 +756,11 @@ function renderAlerts() {
   if (a.att) items.push(['day', 'dayAtt', `${dl} 출결 마감 미기록`]);
   if (a.hw) items.push(['day', 'dayHw', `${dl} 숙제 없음 ${a.hw}반`]);
   if (a.weekly) items.push(['week', 'weekWeekly', `주간성취도 ${a.weekly}명분 미입력`]);
-  if (a.sat) items.push(['week', 'weekSat', `토요클리닉 미제출 ${a.sat}명`]);
+  if (a.sat) items.push(['sat', 'weekSat', `${a.satDate ? md(parseYmd(a.satDate)) + ' ' : ''}토요클리닉 미제출 ${a.sat}명`]);
   if (a.month) items.push(['month', 'monthReport', `지난달 월말보고서 ${a.month}명 안 나감${a.monthPastDue ? ' (마감 지남)' : ''}`]);
   if (a.comment) items.push(['comment', 'cmBox', `학부모 댓글 답글 대기 ${a.comment}건`]);
   $('drAlerts').innerHTML = '<span class="lb">확인 필요</span>' + (items.length
-    ? items.map(([tab, anchor, txt]) => `<button class="dr-alert" onclick="${tab === 'day' ? `drJumpDay('${anchor}')` : `drJump('${tab}','${anchor}')`}"><i></i>${esc(txt)}</button>`).join('')
+    ? items.map(([tab, anchor, txt]) => `<button class="dr-alert" onclick="${tab === 'day' ? `drJumpDay('${anchor}')` : tab === 'sat' ? `drJumpSat()` : `drJump('${tab}','${anchor}')`}"><i></i>${esc(txt)}</button>`).join('')
     : '<span class="dr-alert ok"><i></i>지금 빨간불이 없습니다</span>');
   const cnt = { day: (a.closing ? 1 : 0) + (a.att ? 1 : 0) + (a.hw ? 1 : 0), week: (a.weekly ? 1 : 0) + (a.sat ? 1 : 0), month: a.month ? 1 : 0, comment: a.comment || 0 };
   document.querySelectorAll('.dr-tab').forEach((b) => {
@@ -756,6 +777,8 @@ async function renderAll() {
     dayAlerts(),
     // 빨간불 요약은 기본 기간(오늘·지난주·지난달) 기준 — 보고 있는 기간이 다르면 기본 기간으로 한 번 계산
     (async () => { const keep = S.weekMon; S.weekMon = addDays(mondayOf(new Date()), -7); await renderWeek(); if (+keep !== +S.weekMon) { S.weekMon = keep; await renderWeek(); } })(),
+    // 토요클리닉 빨간불: 가장 최근에 지난 토요일 기준 (이번 주 토요일이 아직이면 지난주 토요일)
+    (async () => { const thisMon = mondayOf(new Date()); const alertMon = new Date() >= addDays(thisMon, 5) ? thisMon : addDays(thisMon, -7); await renderSat(alertMon); await renderSat(); })(),
     (async () => { const keep = S.month; const now = new Date(); S.month = monthKey(new Date(now.getFullYear(), now.getMonth() - 1, 1)); await renderMonth(); if (keep !== S.month) { S.month = keep; await renderMonth(); } })(),
     renderComments(),
   ]);
