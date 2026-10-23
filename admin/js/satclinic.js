@@ -143,6 +143,8 @@ function scRender() {
     resEl.innerHTML = '';
     showMsg('clinicAdminMsg', `${scBranch}${filterNote ? ' (' + filterNote + ')' : ''} — 해당 기간에 제출된 토요클리닉이 없습니다.`, 'error');
     document.getElementById('clinicExcelBtn').style.display = 'none';
+    document.getElementById('clinicImgBtns').style.display = 'none';
+    document.getElementById('scCanvasWrap').style.display = 'none';
     return;
   }
 
@@ -193,7 +195,121 @@ function scRender() {
   resEl.innerHTML = html;
   showMsg('clinicAdminMsg', `✅ ${scBranch}${filterNote ? ' (' + filterNote + ')' : ''} — 클리닉 ${satClinicView.length}명${multiDate ? ` · 토요일 ${dates.length}회` : ''}${none.length ? ` · 없음 제출 ${none.length}건` : ''}`, 'success');
   document.getElementById('clinicExcelBtn').style.display = satClinicView.length ? 'inline-flex' : 'none';
+  document.getElementById('clinicImgBtns').style.display = satClinicView.length ? 'inline-flex' : 'none';
+  document.getElementById('scCanvasWrap').style.display = 'none';
 }
+
+// ══ 이미지: 화면에 보이는 조회 결과(관·필터 그대로)를 표로 그려 PNG 저장/복사 ══
+//   날짜(토요일)별 › 시간대(시작 시간) › 선생님 › 학생 한 줄씩
+function scDrawImage() {
+  const S2 = 2;                                   // 선명하게 2배
+  const cols = [{ h: '시간', w: 78 }, { h: '선생님', w: 70 }, { h: '학생', w: 70 }, { h: '학년', w: 46 }, { h: '지참교재', w: 140 }, { h: '클리닉 내용', w: 270 }];
+  const W = cols.reduce((a, c) => a + c.w, 0) + 2;
+  const pad = 5, lineH = 16, minRowH = 24, titleH = 34, headH = 24, gap = 10;
+  const font = (b, px) => `${b ? 'bold ' : ''}${px}px "Malgun Gothic","Apple SD Gothic Neo",sans-serif`;
+  const bands = ['#FFF2CC', '#DDEBF7', '#E2EFDA', '#FCE4D6', '#EDEDED', '#D9E1F2'];
+  const canvas = document.getElementById('scCanvas');
+  const ctx = canvas.getContext('2d');
+  // 글자 줄바꿈
+  const wrap = (text, w, f) => {
+    ctx.font = f;
+    return String(text || '').replace(/\r/g, '').split('\n').flatMap((line) => {
+      const out = []; let cur = '';
+      for (const ch of line) { if (ctx.measureText(cur + ch).width > w - pad * 2 && cur) { out.push(cur); cur = ch; } else cur += ch; }
+      out.push(cur); return out;
+    });
+  };
+  // 배치 계산
+  const dates = [...new Set(satClinicView.map((r) => r.date))];
+  const plan = dates.map((date) => {
+    const rows = satClinicView.filter((r) => r.date === date).map((r) => {
+      const book = wrap(r.book, cols[4].w, font(false, 12)), content = wrap(r.content, cols[5].w, font(false, 12));
+      return { r, book, content, h: Math.max(minRowH, Math.max(book.length, content.length) * lineH + 8) };
+    });
+    return { date, rows, h: titleH + headH + rows.reduce((a, x) => a + x.h, 0) };
+  });
+  const H = plan.reduce((a, p) => a + p.h, 0) + gap * (plan.length - 1) + 2;
+  canvas.width = W * S2; canvas.height = H * S2;
+  ctx.setTransform(S2, 0, 0, S2, 0, 0);
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = 'middle';
+  const xs = [1]; cols.forEach((c) => xs.push(xs[xs.length - 1] + c.w));
+  const cell = (x, y, w, h, bg, lines, bold, size = 12, align = 'center') => {
+    if (bg) { ctx.fillStyle = bg; ctx.fillRect(x, y, w, h); }
+    ctx.strokeStyle = '#999'; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, w, h);
+    if (lines == null) return;
+    const arr = Array.isArray(lines) ? lines : [String(lines)];
+    ctx.fillStyle = '#111'; ctx.font = font(bold, size); ctx.textAlign = align;
+    const y0 = y + h / 2 - (arr.length - 1) * lineH / 2;
+    arr.forEach((ln, i) => ctx.fillText(ln, align === 'center' ? x + w / 2 : x + pad, y0 + i * lineH));
+  };
+  let y = 1;
+  plan.forEach((p, pi) => {
+    if (pi) y += gap;
+    cell(1, y, W - 2, titleH, '#FFF2CC', `${scBranch} 토요 추가클리닉 · ${scDateLabel(p.date)} · ${p.rows.length}명`, true, 14);
+    y += titleH;
+    cols.forEach((c, i) => cell(xs[i], y, c.w, headH, '#F5C518', c.h, true, 12));
+    y += headH;
+    // 시간대 묶음
+    const slots = [...new Set(p.rows.map((x) => x.r.slot.key))];
+    slots.forEach((sk, si) => {
+      const sRows = p.rows.filter((x) => x.r.slot.key === sk);
+      const sTop = y;
+      const teachers = [...new Set(sRows.map((x) => x.r.teacherName || ''))];
+      teachers.forEach((tn) => {
+        const tRows = sRows.filter((x) => (x.r.teacherName || '') === tn);
+        const tTop = y;
+        tRows.forEach((x) => {
+          cell(xs[2], y, cols[2].w, x.h, null, x.r.studentName || '', true, 12);
+          cell(xs[3], y, cols[3].w, x.h, null, x.r.grade || '-', false, 12);
+          cell(xs[4], y, cols[4].w, x.h, null, x.book, false, 12, 'left');
+          cell(xs[5], y, cols[5].w, x.h, null, x.content, false, 12, 'left');
+          y += x.h;
+        });
+        cell(xs[1], tTop, cols[1].w, y - tTop, null, (tn || '') + 'T', true, 12);
+      });
+      // 시간 칸: 시작 시간 + (모두 같으면) 끝 시간
+      const times = [...new Set(sRows.map((x) => x.r.time || ''))];
+      let label = [sk + ' 시작'];
+      if (sk === '시간 미기재') label = ['미기재'];
+      else if (times.length === 1 && times[0]) {
+        const parts = String(times[0]).split(/\s*[~\-]\s*/);
+        label = parts.length === 2 ? [parts[0] + ' ~', parts[1]] : [times[0]];
+      }
+      cell(xs[0], sTop, cols[0].w, y - sTop, bands[si % bands.length], label, true, 12);
+    });
+  });
+  ctx.strokeStyle = '#666'; ctx.lineWidth = 1.5; ctx.strokeRect(1.5, 1.5, W - 3, H - 3);
+  return canvas;
+}
+function scImgName() {
+  const dates = [...new Set(satClinicView.map((r) => r.date))];
+  return `토요클리닉_${scBranch}_${dates.length === 1 ? dates[0] : dates[0] + '~' + dates[dates.length - 1]}.png`;
+}
+window.scPreviewImage = function () {
+  if (!satClinicView.length) { showMsg('clinicAdminMsg', '먼저 조회해 주세요.', 'error'); return; }
+  scDrawImage();
+  document.getElementById('scCanvasWrap').style.display = 'block';
+  document.getElementById('scCanvas').scrollIntoView({ behavior: 'smooth', block: 'center' });
+};
+window.scDownloadImage = function () {
+  if (!satClinicView.length) { showMsg('clinicAdminMsg', '먼저 조회해 주세요.', 'error'); return; }
+  const canvas = scDrawImage();
+  document.getElementById('scCanvasWrap').style.display = 'block';
+  const a = document.createElement('a');
+  a.download = scImgName();
+  a.href = canvas.toDataURL('image/png'); a.click();
+};
+window.scCopyImage = async function () {
+  if (!satClinicView.length) { showMsg('clinicAdminMsg', '먼저 조회해 주세요.', 'error'); return; }
+  const canvas = scDrawImage();
+  document.getElementById('scCanvasWrap').style.display = 'block';
+  try {
+    const blob = await new Promise((r) => canvas.toBlob(r, 'image/png'));
+    await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+    showMsg('clinicAdminMsg', '✅ 이미지를 복사했습니다. 카톡에 붙여넣기(Ctrl+V) 하세요.', 'success');
+  } catch (e) { showMsg('clinicAdminMsg', '복사가 안 되는 브라우저입니다. "이미지 저장"을 써주세요.', 'error'); }
+};
 
 window.downloadClinicExcel = function () {
   if (!satClinicView.length) return;

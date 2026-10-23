@@ -1512,11 +1512,17 @@
 
       <div class="btn-row">
         <button class="btn btn-primary" onclick="loadSatClinicAdmin()">🔍 조회</button>
+        <span id="clinicImgBtns" style="display:none;gap:8px;">
+          <button class="btn btn-primary" onclick="scCopyImage()">📋 이미지 복사 (카톡 붙여넣기)</button>
+          <button class="btn btn-secondary" onclick="scDownloadImage()">💾 이미지 저장</button>
+          <button class="btn btn-secondary" onclick="scPreviewImage()">👁 미리보기</button>
+        </span>
         <button class="btn btn-secondary" id="clinicExcelBtn" onclick="downloadClinicExcel()" style="display:none;">📊 엑셀 다운로드</button>
       </div>
       <div class="msg" id="clinicAdminMsg"></div>
     </div>
 
+    <div id="scCanvasWrap" style="display:none;margin-bottom:14px;"><canvas id="scCanvas" style="max-width:100%;border-radius:8px;border:1px solid rgba(30,24,56,0.1);background:#fff;"></canvas></div>
     <!-- 결과 테이블 -->
     <div id="clinicAdminResult"></div>
   </div>
@@ -2322,7 +2328,7 @@
 <script defer src="admin/js/studyreport.js?v=1792682550"></script>
 <script defer src="admin/js/parents.js?v=1792681350"></script>
 <script defer src="admin/js/homeworklog.js?v=1792748000"></script>
-<script defer src="admin/js/satclinic.js?v=1792749600"></script>
+<script defer src="admin/js/satclinic.js?v=1792758000"></script>
 <script defer src="admin/js/dailyreport.js?v=1792752000"></script>
 <script defer src="admin/js/attendance.js?v=1792748600"></script>
 <script defer src="admin/js/weeklylog.js"></script>
