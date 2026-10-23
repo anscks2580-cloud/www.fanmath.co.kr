@@ -131,7 +131,7 @@ function smFiltered() {
   return smList.filter(x => {
     if (smFilterBranch !== 'all' && x.branch !== smFilterBranch) return false;
     if (!smSearch) return true;
-    const hay = [x.parentName, x.studentName, x.parentPhone, x.studentPhone, x.grade].map(v => String(v || '').replace(/-/g, '')).join(' ');
+    const hay = [x.parentName, x.studentName, x.parentPhone, x.studentPhone, x.grade, x.hopeSchool].map(v => String(v || '').replace(/-/g, '')).join(' ');
     return hay.includes(smSearch);
   });
 }
@@ -158,7 +158,7 @@ function smRenderList() {
     <div class="sm-table-wrap">
     <table class="cr-table sm-table">
       <thead><tr>
-        <th>#</th><th>신청일시</th><th>참석관</th><th>학부모</th><th>학부모 연락처</th><th>학생</th><th>학년</th><th>학생 연락처</th><th>참석</th><th>메모</th><th></th>
+        <th>#</th><th>신청일시</th><th>참석관</th><th>학부모</th><th>학부모 연락처</th><th>학생</th><th>학년</th><th>1차 지망 고교</th><th>학생 연락처</th><th>참석</th><th>메모</th><th></th>
       </tr></thead>
       <tbody>
       ${rows.map((x, i) => `
@@ -170,6 +170,7 @@ function smRenderList() {
           <td style="white-space:nowrap;"><a href="tel:${smEsc(x.parentPhone || '')}" style="color:inherit;text-decoration:none;">${smEsc(x.parentPhone || '-')}</a></td>
           <td><b>${smEsc(x.studentName || '-')}</b></td>
           <td>${smEsc(x.grade || '-')}</td>
+          <td>${x.hopeSchool ? smEsc(x.hopeSchool) : '<span style="color:var(--muted);">-</span>'}</td>
           <td style="white-space:nowrap;">${x.studentPhone ? `<a href="tel:${smEsc(x.studentPhone)}" style="color:inherit;text-decoration:none;">${smEsc(x.studentPhone)}</a>` : '<span style="color:var(--muted);">-</span>'}</td>
           <td><label class="sm-check"><input type="checkbox" ${x.attended ? 'checked' : ''} onchange="toggleSeminarAttended('${x.id}', this.checked)"> ${x.attended ? '참석' : '예정'}</label></td>
           <td class="sm-memo" onclick="editSeminarMemo('${x.id}')" title="클릭해서 메모 입력">${x.memo ? smEsc(x.memo) : '<span style="color:var(--muted);">+ 메모</span>'}</td>
@@ -227,6 +228,7 @@ window.exportSeminarExcel = function() {
       '학부모 연락처': x.parentPhone || '',
       '학생 이름': x.studentName || '',
       '학년': x.grade || '',
+      '1차 지망 고교': x.hopeSchool || '',
       '학생 연락처': x.studentPhone || '',
       '참석 확인': x.attended ? 'O' : '',
       '메모': x.memo || '',
@@ -234,7 +236,7 @@ window.exportSeminarExcel = function() {
   const wb = XLSX.utils.book_new();
   const addSheet = (name, arr) => {
     const ws = XLSX.utils.json_to_sheet(toRows(arr));
-    ws['!cols'] = [4, 17, 8, 20, 12, 15, 12, 10, 15, 9, 30].map(w => ({ wch: w }));
+    ws['!cols'] = [4, 17, 8, 20, 12, 15, 12, 10, 14, 15, 9, 30].map(w => ({ wch: w }));
     XLSX.utils.book_append_sheet(wb, ws, name);
   };
   addSheet('전체', smList);

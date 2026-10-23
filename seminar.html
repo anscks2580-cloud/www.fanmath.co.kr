@@ -195,6 +195,12 @@
             <input type="text" name="gradeEtc" maxlength="20" placeholder="학년을 직접 입력해 주세요 (예: 초6)">
           </div>
         </div>
+        <div class="f-row" style="margin-top:14px;">
+          <div class="f-field">
+            <label>1차 지망 고등학교<span class="f-sub">선택</span></label>
+            <input type="text" name="hopeSchool" maxlength="40" placeholder="예: 평촌고 (아직 정하지 않았으면 비워 두세요)" autocomplete="off">
+          </div>
+        </div>
       </div>
 
       <!-- 개인정보 동의 -->
@@ -333,6 +339,7 @@ function buildTelegramMessage(d) {
     '',
     '👨‍👩‍👧 학부모: ' + v(d.parentName) + ' / ' + v(d.parentPhone),
     '🧑‍🎓 학생: ' + v(d.studentName) + ' (' + v(d.grade) + ') / ' + v(d.studentPhone),
+    '🏫 1차 지망 고교: ' + v(d.hopeSchool),
     '',
     '🕒 ' + new Date().toLocaleString('ko-KR'),
   ].join('\n');
@@ -372,6 +379,7 @@ form.addEventListener('submit', async (e) => {
     studentName: (fd.get('studentName') || '').trim(),
     studentPhone: (fd.get('studentPhone') || '').trim(),
     grade,
+    hopeSchool: (fd.get('hopeSchool') || '').trim(),
     privacyAgreed: true,
     status: 'new',
     source: 'seminar.html',
