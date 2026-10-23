@@ -191,14 +191,40 @@ a.lk:hover { text-decoration:underline; }
   .stat { flex-basis:64px; padding:8px 10px; }
   .stat b { font-size:19px; }
 }
+.cl-ov { position:fixed; inset:0; background:rgba(20,16,40,0.55); z-index:9000; display:none; align-items:flex-start; justify-content:center; padding:28px 14px; overflow-y:auto; }
+.cl-box { width:100%; max-width:760px; background:#fff; border-radius:16px; padding:20px 20px 16px; box-shadow:0 20px 60px rgba(0,0,0,0.25); }
+.cl-hd { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.cl-hd h3 { font-size:17px; margin:0; }
+.cl-hd .x { margin-left:auto; }
+.cl-tabs { display:flex; gap:6px; margin-bottom:12px; }
+.cl-tabs button { padding:6px 12px; border-radius:16px; border:1px solid var(--border-soft); background:#fff; font-size:12.5px; font-family:inherit; cursor:pointer; }
+.cl-tabs button.on { background:var(--purple, #5B3FA6); color:#fff; border-color:var(--purple, #5B3FA6); }
+.cl-item { border:1px solid var(--border-soft); border-radius:12px; padding:12px; margin-bottom:12px; }
+.cl-item.done { opacity:.75; }
+.cl-it-hd { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
+.cl-it-hd b { font-size:14.5px; }
+.cl-it-hd .meta { font-size:12px; color:var(--muted); }
+.cl-it-hd .r { margin-left:auto; display:flex; gap:6px; align-items:center; }
+.cl-img { display:block; width:100%; border-radius:8px; border:1px solid var(--border-soft); background:#fafafa; cursor:zoom-in; }
+.cl-st { font-size:12px; margin-top:8px; display:flex; gap:14px; flex-wrap:wrap; }
+.cl-st .ok { color:var(--green); font-weight:700; } .cl-st .no { color:var(--muted); }
+.cl-empty { text-align:center; color:var(--muted); font-size:13.5px; padding:30px 0; }
+.btn-ok { background:var(--green) !important; color:#fff !important; border-color:var(--green) !important; }
 </style>
 </head>
 <body class="dr-locked">
+
+<div class="cl-ov" id="clOv" onclick="if(event.target===this)clClose()"><div class="cl-box">
+  <div class="cl-hd"><h3>🖼 관리부 마감 이미지</h3><span id="clSub" style="font-size:12px;color:var(--muted);"></span><button class="btn x" onclick="clClose()">닫기</button></div>
+  <div class="cl-tabs"><button id="clTabNew" class="on" onclick="clSetTab('new')">확인 안 한 것</button><button id="clTabAll" onclick="clSetTab('all')">최근 7일 전체</button></div>
+  <div id="clList"></div>
+</div></div>
 
 <nav class="dr-top">
   <a href="index.html" class="dr-brand"><img src="swc-logo.svg" alt="SWC"><span>송우찬수학학원 <b>원장 페이지</b></span></a>
   <div class="dr-top-right">
     <span class="dr-who" id="drWho"></span>
+    <button class="btn" id="clBtn" onclick="clOpen(true)">🖼 마감 이미지 <span id="clBadge" style="display:none;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--red);color:#fff;font-size:11px;align-items:center;justify-content:center;"></span></button>
     <a href="admin.html" class="btn">⚙️ 관리자 페이지</a>
     <button class="btn" onclick="drLogout()">로그아웃</button>
   </div>
@@ -286,7 +312,7 @@ a.lk:hover { text-decoration:underline; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, getDocs, query, where, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
@@ -359,7 +385,7 @@ window.drTab = (t) => {
   try { history.replaceState(null, '', '#' + t); } catch (e) {}
   if (t === 'comment') renderComments();
 };
-window.drSetBranch = (b) => { S.branch = b; try { localStorage.setItem('swc_director_branch', b); } catch (e) {} renderAll(); };
+window.drSetBranch = (b) => { S.branch = b; try { localStorage.setItem('swc_director_branch', b); } catch (e) {} renderAll(); clRender(); };
 window.drReload = async () => { await loadBase(); S.comments = null; renderAll(); };
 window.drDayMove = (n) => { S.day = ymd(addDays(parseYmd(S.day), n)); renderDay(); };
 window.drDaySet = (v) => { if (v) { S.day = v; renderDay(); } };
@@ -817,6 +843,65 @@ function showLogin(msg) {
   });
   setTimeout(() => $('drEmail')?.focus(), 50);
 }
+// ══════════════════════════════════════
+// 관리부 마감 이미지 팝업 — closingReports (관리부가 일일업무보고·주간업무일지·학생출결 이미지를 저장하면 제출됨)
+//   확인 안 한 이미지가 있으면 자동으로 팝업, '확인' 누르면 confirms.{내 키}에 기록 → 관리자 페이지에 원장별 확인완료 표시
+// ══════════════════════════════════════
+const DR_NAMES = { smc1823: '송문찬 원장', dncksfly: '송우찬 원장' };
+const CL = { me: '', rows: [], tab: 'new', shownIds: new Set(), unsub: null };
+const clFmt = (iso) => { const t = new Date(iso); return `${t.getMonth() + 1}/${t.getDate()}(${DOW[t.getDay()]}) ${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`; };
+const clInScope = (r) => !S.branch || r.branch === S.branch || r.branch === '전체' || !r.branch;
+const clMine = (r) => !!(r.confirms || {})[CL.me];
+function clDateText(r) {
+  if (!r.date) return '';
+  const d = parseYmd(r.date);
+  if (r.type === 'wl' && r.dateTo) { const t = parseYmd(r.dateTo); return `${md(d)} ~ ${md(t)}`; }
+  return md(d);
+}
+function clRender() {
+  const pending = CL.rows.filter((r) => clInScope(r) && !clMine(r));
+  const b = $('clBadge'); if (b) { b.textContent = pending.length; b.style.display = pending.length ? 'inline-flex' : 'none'; }
+  if ($('clOv').style.display !== 'flex') return;
+  $('clTabNew').classList.toggle('on', CL.tab === 'new'); $('clTabAll').classList.toggle('on', CL.tab === 'all');
+  $('clSub').textContent = `${S.branch || '전체 관'} · 확인 안 한 것 ${pending.length}건`;
+  const list = (CL.tab === 'new' ? pending : CL.rows.filter(clInScope)).slice().sort((a, b) => String(b.submittedAt).localeCompare(String(a.submittedAt)));
+  if (!list.length) { $('clList').innerHTML = `<div class="cl-empty">${CL.tab === 'new' ? '✅ 새로 들어온 마감 이미지를 모두 확인했습니다.' : '최근 7일 동안 제출된 마감 이미지가 없습니다.'}</div>`; return; }
+  $('clList').innerHTML = (CL.tab === 'new' && list.length > 1 ? `<div style="text-align:right;margin-bottom:10px;"><button class="btn btn-ok" onclick="clConfirmAll()">✅ ${list.length}건 모두 확인</button></div>` : '') +
+    list.map((r) => {
+      const mine = clMine(r);
+      return `<div class="cl-item ${mine ? 'done' : ''}">
+        <div class="cl-it-hd"><b>${esc(r.branch || '')} ${esc(r.typeLabel || '')}</b><span class="meta">${esc(clDateText(r))} · ${esc(clFmt(r.submittedAt))} 제출${r.submittedBy ? ' · ' + esc(r.submittedBy) : ''}</span>
+          <span class="r">${mine ? '<span class="chip ok">확인함</span>' : `<button class="btn btn-ok" onclick="clConfirm('${esc(r.id)}')">✅ 확인</button>`}<a class="btn" href="${esc(r.imageURL)}" target="_blank" rel="noopener">크게 보기</a></span></div>
+        <img class="cl-img" src="${esc(r.imageURL)}" alt="${esc(r.typeLabel || '')}" loading="lazy" onclick="window.open(this.src,'_blank')">
+        <div class="cl-st">${Object.entries(DR_NAMES).map(([k, n]) => { const c = (r.confirms || {})[k]; return c ? `<span class="ok">✅ ${n} 확인완료 <span style="font-weight:400;color:var(--muted)">${esc(clFmt(c.at))}</span></span>` : `<span class="no">⏳ ${n} 미확인</span>`; }).join('')}</div>
+      </div>`;
+    }).join('');
+}
+window.clOpen = (manual) => { $('clOv').style.display = 'flex'; if (manual) CL.tab = CL.rows.some((r) => clInScope(r) && !clMine(r)) ? 'new' : 'all'; clRender(); };
+window.clClose = () => { $('clOv').style.display = 'none'; };
+window.clSetTab = (t) => { CL.tab = t; clRender(); };
+async function clConfirmOne(id) {
+  await updateDoc(doc(db, 'closingReports', id), { [`confirms.${CL.me}`]: { name: DR_NAMES[CL.me] || '', at: new Date().toISOString() } });
+}
+window.clConfirm = async (id) => { try { await clConfirmOne(id); } catch (e) { alert('확인 저장 실패: ' + e.message); } };
+window.clConfirmAll = async () => {
+  const ids = CL.rows.filter((r) => clInScope(r) && !clMine(r)).map((r) => r.id);
+  try { await Promise.all(ids.map(clConfirmOne)); } catch (e) { alert('확인 저장 실패: ' + e.message); }
+};
+function clStart(email) {
+  CL.me = String(email || '').toLowerCase().split('@')[0];
+  if (CL.unsub) CL.unsub();
+  const from = new Date(); from.setDate(from.getDate() - 7);
+  CL.unsub = onSnapshot(query(collection(db, 'closingReports'), where('submittedAt', '>=', from.toISOString())), (snap) => {
+    CL.rows = []; snap.forEach((d) => CL.rows.push({ id: d.id, ...d.data() }));
+    // 새로 들어온(아직 팝업으로 안 보여준) 미확인 이미지가 있으면 팝업 자동으로 열기
+    const fresh = CL.rows.filter((r) => clInScope(r) && !clMine(r) && !CL.shownIds.has(r.id + '|' + r.submittedAt));
+    fresh.forEach((r) => CL.shownIds.add(r.id + '|' + r.submittedAt));
+    if (fresh.length) { CL.tab = 'new'; clOpen(false); }
+    clRender();
+  }, (e) => console.warn('[마감 이미지]', e.message));
+}
+
 onAuthStateChanged(auth, async (user) => {
   // 로그아웃 상태이거나 지정 계정이 아니면 로그인 화면 (다른 계정 로그인 상태는 건드리지 않음)
   if (!user || !DR_ALLOW.includes(String(user.email || '').toLowerCase())) { showLogin(); return; }
@@ -826,7 +911,7 @@ onAuthStateChanged(auth, async (user) => {
   if (!a) { await signOut(auth); showLogin('이메일 또는 비밀번호를 확인해 주세요.'); return; }
   document.body.classList.remove('dr-locked');
   document.title = '원장 페이지 | 송우찬수학학원';
-  $('drWho').textContent = (a.name || user.email) + ' 원장';
+  $('drWho').textContent = DR_NAMES[String(user.email || '').toLowerCase().split('@')[0]] || ((a.name || user.email) + ' 원장');
   const now = new Date();
   $('drToday').textContent = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 ${DOW[now.getDay()]}요일 · 보기 전용 (고치기는 관리자 화면에서)`;
   let savedBranch = null; try { savedBranch = localStorage.getItem('swc_director_branch'); } catch (e) {}
@@ -836,6 +921,7 @@ onAuthStateChanged(auth, async (user) => {
   const want = (location.hash || '').replace('#', '');
   if (['day', 'week', 'month', 'comment'].includes(want)) drTab(want);
   renderAll();
+  clStart(user.email);
 });
 </script>
 </body>

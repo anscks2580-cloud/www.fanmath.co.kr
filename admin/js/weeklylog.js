@@ -193,5 +193,6 @@ window.downloadWeeklyLog = function() {
   link.download = `주간업무일지_${branch}_${fmtDate(fromVal).replace(/\./g,'')}.png`;
   link.href = canvas.toDataURL('image/png');
   link.click();
+  if (typeof recordClosing === 'function') recordClosing('wl', canvas);   // 마감 기록 + 원장 페이지로 이미지 제출
 };
 

@@ -378,7 +378,7 @@ window.downloadAttendanceImage = function() {
   link.download = `출결_${branchFilter||'전체'}_${dateTag}_${dayName}요일.png`;
   link.href = canvas.toDataURL('image/png');
   link.click();
-  if (typeof recordClosing === 'function') recordClosing('att');   // 마감 기록
+  if (typeof recordClosing === 'function') recordClosing('att', canvas);   // 마감 기록 + 원장 페이지로 이미지 제출
 };
 
 function roundRect(ctx, x, y, w, h, r) {
