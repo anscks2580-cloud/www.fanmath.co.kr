@@ -20,8 +20,8 @@
   margin-bottom: 20px; display: flex; align-items: center; gap: 6px;
 }
 .breadcrumb a { color: var(--muted); text-decoration: none; }
-.breadcrumb a:hover { color: var(--gold); }
-.breadcrumb span { color: var(--gold); }
+.breadcrumb a:hover { color: var(--purple, #5B3FA6); }
+.breadcrumb span { color: var(--purple, #5B3FA6); }
 
 /* ── STEPS ── */
 .steps { display: flex; flex-direction: column; gap: 0; }
@@ -41,7 +41,7 @@
   border: 1px solid var(--gold);
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 15px; font-weight: 600; color: var(--gold);
+  font-size: 15px; font-weight: 600; color: var(--purple, #5B3FA6);
   margin-top: 2px;
 }
 
@@ -62,7 +62,7 @@
   background: var(--gold-glow);
   border: 1px solid var(--border);
   border-radius: 6px;
-  font-size: 13px; color: var(--gold);
+  font-size: 13px; color: var(--purple, #5B3FA6);
 }
 
 /* ── FAQ ── */
@@ -89,14 +89,14 @@
   transition: color 0.2s;
 }
 
-.faq-q:hover { color: var(--gold); }
+.faq-q:hover { color: var(--purple, #5B3FA6); }
 
 .faq-arrow {
   flex-shrink: 0; font-size: 18px; color: var(--muted);
   transition: transform 0.25s;
 }
 
-.faq-item.open .faq-arrow { transform: rotate(180deg); color: var(--gold); }
+.faq-item.open .faq-arrow { transform: rotate(180deg); color: var(--purple, #5B3FA6); }
 
 .faq-a {
   max-height: 0; overflow: hidden;
@@ -127,13 +127,13 @@
   display: inline-flex; align-items: center; gap: 8px;
   padding: 13px 26px;
   background: var(--gold);
-  color: var(--bg);
+  color: var(--on-gold, #2A1E55);
   font-size: 14px; font-weight: 600;
   border-radius: 8px; text-decoration: none;
   transition: background 0.2s, transform 0.15s;
 }
 
-.btn-gold:hover { background: #f5cc50; transform: translateY(-2px); }
+.btn-gold:hover { background: #E0B010; transform: translateY(-2px); }
 
 .btn-ghost {
   display: inline-flex; align-items: center; gap: 8px;
@@ -145,7 +145,7 @@
   transition: border-color 0.2s;
 }
 
-.btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+.btn-ghost:hover { border-color: var(--gold); color: var(--purple, #5B3FA6); }
 
 @media (max-width: 768px) {
   .page-inner { padding: 60px 20px 80px; }
@@ -170,14 +170,14 @@
   transition: transform 0.2s ease;
 }
 .nav-links a:hover {
-  color: var(--gold) !important;
+  color: var(--purple, #5B3FA6) !important;
   transform: translateY(-1px);
 }
 .nav-links a:hover::after {
   transform: scaleX(1);
 }
 .nav-links a.active {
-  color: var(--gold) !important;
+  color: var(--purple, #5B3FA6) !important;
 }
 .nav-links a.active::after {
   transform: scaleX(1);
@@ -187,9 +187,9 @@
 <body>
 
 <nav>
-  <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#F0EDF8;flex-shrink:0;overflow:hidden;max-width:100%;">
+  <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#1E1838;flex-shrink:0;overflow:hidden;max-width:100%;">
     <img src="swc-logo.svg" style="height:30px;width:30px;object-fit:contain;flex-shrink:0;display:block;" alt="SWC">
-    <span style="font-size:13px;font-weight:600;color:#F0EDF8;white-space:nowrap;letter-spacing:-0.3px;overflow:hidden;text-overflow:ellipsis;">송우찬수학학원</span>
+    <span style="font-size:13px;font-weight:600;color:#1E1838;white-space:nowrap;letter-spacing:-0.3px;overflow:hidden;text-overflow:ellipsis;">송우찬수학학원</span>
   </a>
     <ul class="nav-links" style="white-space:nowrap;flex-shrink:0;">
     <li><a href="about.html">학원소개</a></li>
@@ -203,10 +203,10 @@
   </ul>
 
   <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;"><div id="navUserArea" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-    <a href="login.html" id="navLoginBtn" style="font-size:13px;color:var(--gold);text-decoration:none;padding:7px 16px;border:1px solid var(--border);border-radius:6px;white-space:nowrap;display:none;">로그인</a>
+    <a href="login.html" id="navLoginBtn" style="font-size:13px;color:var(--purple, #5B3FA6);text-decoration:none;padding:7px 16px;border:1px solid var(--border);border-radius:6px;white-space:nowrap;display:none;">로그인</a>
     <span id="navUserName" style="font-size:13px;color:var(--muted);white-space:nowrap;display:none;"></span>
-    <a id="navAdminBtn" href="admin.html" style="font-size:12px;color:var(--gold);text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:6px;white-space:nowrap;display:none;">관리자 페이지</a>
-    <button id="navLogoutBtn" onclick="doNavLogout()" style="font-size:12px;color:var(--muted);background:rgba(255,255,255,0.06);border:1px solid var(--border-soft);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:inherit;white-space:nowrap;display:none;">로그아웃</button>
+    <a id="navAdminBtn" href="admin.html" style="font-size:12px;color:var(--purple, #5B3FA6);text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:6px;white-space:nowrap;display:none;">관리자 페이지</a>
+    <button id="navLogoutBtn" onclick="doNavLogout()" style="font-size:12px;color:var(--muted);background:rgba(30,24,56,0.06);border:1px solid var(--border-soft);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:inherit;white-space:nowrap;display:none;">로그아웃</button>
   </div><button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="메뉴">
     <span></span><span></span><span></span>
   </button></div>
@@ -273,11 +273,11 @@
           <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px;">
             <a href="tel:031-386-8899" style="display:flex;align-items:center;gap:12px;text-decoration:none;">
               <span style="font-size:13px;color:var(--muted);min-width:52px;">평촌관</span>
-              <span style="font-size:22px;font-weight:700;color:var(--gold);letter-spacing:-0.5px;">031-386-8899</span>
+              <span style="font-size:22px;font-weight:700;color:var(--purple, #5B3FA6);letter-spacing:-0.5px;">031-386-8899</span>
             </a>
             <a href="tel:031-346-8899" style="display:flex;align-items:center;gap:12px;text-decoration:none;">
               <span style="font-size:13px;color:var(--muted);min-width:52px;">산본관</span>
-              <span style="font-size:22px;font-weight:700;color:var(--gold);letter-spacing:-0.5px;">031-346-8899</span>
+              <span style="font-size:22px;font-weight:700;color:var(--purple, #5B3FA6);letter-spacing:-0.5px;">031-346-8899</span>
             </a>
           </div>
           <p style="margin-top:18px;font-size:13px;color:var(--muted);">* 전화번호를 누르시면 바로 연결 가능합니다.</p>
@@ -352,15 +352,15 @@
 <footer>
   <div class="footer-logo">
     <img src="swc-logo.svg" style="height:26px;width:26px;object-fit:contain;flex-shrink:0;display:block;opacity:0.8;" alt="SWC">
-    <span style="color:#F0EDF8;"><b>송우찬수학학원</b></span>
+    <span style="color:#1E1838;"><b>송우찬수학학원</b></span>
   </div>
     <div class="footer-info">
-    <span style="color:var(--gold);font-weight:600;">평촌관</span> 경기도 안양시 동안구 평촌대로 117 맵시프라자 4층 &nbsp;|&nbsp; <a href="tel:031-386-8899" style="color:inherit;text-decoration:none;">031-386-8899</a><br>
-    <span style="color:var(--gold);font-weight:600;">산본관</span> 경기도 군포시 산본로 390 5층 &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:inherit;text-decoration:none;">031-346-8899</a><br>
+    <span style="color:var(--purple, #5B3FA6);font-weight:600;">평촌관</span> 경기도 안양시 동안구 평촌대로 117 맵시프라자 4층 &nbsp;|&nbsp; <a href="tel:031-386-8899" style="color:inherit;text-decoration:none;">031-386-8899</a><br>
+    <span style="color:var(--purple, #5B3FA6);font-weight:600;">산본관</span> 경기도 군포시 산본로 390 5층 &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:inherit;text-decoration:none;">031-346-8899</a><br>
     <span style="font-size:11px;opacity:0.55;">(주) 판수학 &nbsp;|&nbsp; 대표 조현주 &nbsp;|&nbsp; 사업자등록번호 828-86-01755</span><br>
     <span style="font-size:11px;opacity:0.55;">평촌관 : 제 99-079호 &nbsp;|&nbsp; 산본관 : 제 1928-2호</span><br>
     <span style="font-size:11px;opacity:0.45;">© Copyright 2026 송우찬수학학원. All Rights Reserved.</span><br>
-    <span style="font-size:12px;opacity:0.7;"><a href="tel:031-386-8899" style="color:var(--gold);text-decoration:none;">평촌관 031-386-8899</a> &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:var(--gold);text-decoration:none;">산본관 031-346-8899</a></span>
+    <span style="font-size:12px;opacity:0.7;"><a href="tel:031-386-8899" style="color:var(--purple, #5B3FA6);text-decoration:none;">평촌관 031-386-8899</a> &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:var(--purple, #5B3FA6);text-decoration:none;">산본관 031-346-8899</a></span>
   </div>
 
   <a href="https://pf.kakao.com/_KxaxdlX" target="_blank" class="kakao-footer-link"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3C6.477 3 2 6.477 2 10.8c0 2.7 1.47 5.08 3.72 6.56l-.95 3.54a.3.3 0 0 0 .44.33l4.07-2.72A11.5 11.5 0 0 0 12 18.6c5.523 0 10-3.477 10-7.8S17.523 3 12 3Z"/></svg> 카카오톡 문의</a>

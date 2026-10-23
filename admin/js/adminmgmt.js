@@ -48,7 +48,7 @@ async function loadAdmins() {
     const adminCountEl = document.getElementById('adminCount'); if (adminCountEl) adminCountEl.textContent = adminsCache.length;
   } catch(e) {
     document.getElementById('adminList').innerHTML =
-      `<div style="color:#ff9090;font-size:13px;">오류: ${e.message}</div>`;
+      `<div style="color:#D64545;font-size:13px;">오류: ${e.message}</div>`;
   }
 }
 
@@ -62,7 +62,7 @@ function renderAdmins() {
     <div class="student-item">
       <div class="student-name">${a.name || '(이름 없음)'}</div>
       <span class="student-meta">${a.email || ''}</span>
-      <span class="student-meta" style="color:var(--gold);font-size:12px;">${a.branch || ''}</span>
+      <span class="student-meta" style="color:var(--purple, #5B3FA6);font-size:12px;">${a.branch || ''}</span>
       <span class="adm-role-chip${a.role === 'office' ? ' office' : ''}">${a.role === 'office' ? '관리부' : '원장'}${Array.isArray(a.menuGroups) && a.menuGroups.length ? ' · 메뉴 직접 지정' : ''}</span>
       <span class="student-meta" style="font-size:11px;color:var(--muted);">
         ${a.createdAt ? new Date(a.createdAt).toLocaleDateString('ko-KR') : ''}

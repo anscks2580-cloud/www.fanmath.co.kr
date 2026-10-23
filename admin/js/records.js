@@ -58,13 +58,13 @@ window.loadRecords = async function() {
 
       return `<div class="student-item" style="cursor:pointer;" onclick="recSelect('${d.id}')">
         <div class="student-name" style="font-size:13px;">${dateLabel}</div>
-        <span class="student-meta" style="color:var(--gold);">${branchLabel}</span>
+        <span class="student-meta" style="color:var(--purple, #5B3FA6);">${branchLabel}</span>
         <span class="student-meta">${typeLabel[type]}</span>
         <span class="student-meta" style="font-size:11px;color:var(--muted);">저장: ${savedAt}</span>
       </div>`;
     }).join('');
   } catch(e) {
-    el.innerHTML = `<div style="color:#ff9090;font-size:13px;">오류: ${e.message}</div>`;
+    el.innerHTML = `<div style="color:#D64545;font-size:13px;">오류: ${e.message}</div>`;
   }
 };
 
@@ -103,8 +103,8 @@ function recRenderDetail(type, d) {
     ];
     return `<table style="width:100%;border-collapse:collapse;">` +
       fields.map(([k,v]) => `
-        <tr style="border-bottom:1px solid rgba(255,255,255,0.06);">
-          <td style="padding:6px 12px;color:var(--gold);font-weight:600;width:140px;font-size:12px;">${k}</td>
+        <tr style="border-bottom:1px solid rgba(30,24,56,0.06);">
+          <td style="padding:6px 12px;color:var(--purple, #5B3FA6);font-weight:600;width:140px;font-size:12px;">${k}</td>
           <td style="padding:6px 12px;color:var(--off-white);font-size:13px;white-space:pre-wrap;">${v || '-'}</td>
         </tr>`).join('') + `</table>`;
   }
@@ -127,14 +127,14 @@ function recRenderDetail(type, d) {
       }
       if (!rows.length) return;
       html += `<div style="margin-bottom:12px;">
-        <div style="font-size:12px;font-weight:700;color:var(--gold);margin-bottom:6px;">${label}</div>
+        <div style="font-size:12px;font-weight:700;color:var(--purple, #5B3FA6);margin-bottom:6px;">${label}</div>
         <table style="width:100%;border-collapse:collapse;font-size:12px;">
-          <tr>${(WL_COLS_local[sec]||[]).map(c=>`<th style="padding:5px 8px;background:rgba(240,192,64,0.1);color:var(--gold);text-align:left;border-bottom:1px solid rgba(255,255,255,0.1);">${c}</th>`).join('')}</tr>
-          ${rows.map(row=>`<tr>${row.map(v=>`<td style="padding:5px 8px;border-bottom:1px solid rgba(255,255,255,0.05);color:var(--off-white);">${v||'-'}</td>`).join('')}</tr>`).join('')}
+          <tr>${(WL_COLS_local[sec]||[]).map(c=>`<th style="padding:5px 8px;background:rgba(245,197,24,0.1);color:var(--purple, #5B3FA6);text-align:left;border-bottom:1px solid rgba(30,24,56,0.1);">${c}</th>`).join('')}</tr>
+          ${rows.map(row=>`<tr>${row.map(v=>`<td style="padding:5px 8px;border-bottom:1px solid rgba(30,24,56,0.05);color:var(--off-white);">${v||'-'}</td>`).join('')}</tr>`).join('')}
         </table></div>`;
     });
-    if (d.consultNote) html += `<div style="font-size:12px;"><span style="color:var(--gold);font-weight:600;">상담요형처리:</span> ${d.consultNote}</div>`;
-    if (d.textbook)    html += `<div style="font-size:12px;margin-top:8px;"><span style="color:var(--gold);font-weight:600;">교재입출고:</span><br><span style="white-space:pre-wrap;">${d.textbook}</span></div>`;
+    if (d.consultNote) html += `<div style="font-size:12px;"><span style="color:var(--purple, #5B3FA6);font-weight:600;">상담요형처리:</span> ${d.consultNote}</div>`;
+    if (d.textbook)    html += `<div style="font-size:12px;margin-top:8px;"><span style="color:var(--purple, #5B3FA6);font-weight:600;">교재입출고:</span><br><span style="white-space:pre-wrap;">${d.textbook}</span></div>`;
     return html;
   }
   if (type === 'att') {
@@ -144,11 +144,11 @@ function recRenderDetail(type, d) {
     const absentNames = studentsCache.filter(s=>status[s.id]==='absent').map(s=>s.name).join(', ');
     return `
       <div style="display:flex;gap:20px;margin-bottom:12px;">
-        <span style="font-size:15px;font-weight:700;color:var(--gold);">${d.date} (${d.branch||'전체'})</span>
-        <span style="color:#93C5FD;">출석 ${present}명</span>
-        <span style="color:#FCA5A5;">결석 ${absent}명</span>
+        <span style="font-size:15px;font-weight:700;color:var(--purple, #5B3FA6);">${d.date} (${d.branch||'전체'})</span>
+        <span style="color:#2F7FD6;">출석 ${present}명</span>
+        <span style="color:#C62828;">결석 ${absent}명</span>
       </div>
-      ${absentNames ? `<div style="font-size:13px;color:#FCA5A5;">결석: ${absentNames}</div>` : ''}`;
+      ${absentNames ? `<div style="font-size:13px;color:#C62828;">결석: ${absentNames}</div>` : ''}`;
   }
   return JSON.stringify(d, null, 2);
 }

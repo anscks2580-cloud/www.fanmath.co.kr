@@ -169,11 +169,11 @@ function renderTimetableList() {
       <div style="display:flex;gap:10px;align-items:center;width:100%;flex-wrap:wrap;">
         <div class="student-name">${t.teacherName}</div>
         <span class="preview-badge">${t.dayGroup}</span>
-        <span class="preview-badge" style="${t.scheduleType==='vacation'?'background:rgba(255,150,80,0.15);color:#ffb066;':''}">${t.scheduleType==='vacation' ? `방학특강 (${t.validFrom}~${t.validTo})` : '정규반'}</span>
+        <span class="preview-badge" style="${t.scheduleType==='vacation'?'background:rgba(255,150,80,0.15);color:#D97B1A;':''}">${t.scheduleType==='vacation' ? `방학특강 (${t.validFrom}~${t.validTo})` : '정규반'}</span>
         <button class="btn btn-danger btn-sm" style="margin-left:auto;" onclick="deleteTimetable('${t.id}')">삭제</button>
       </div>
       <div style="font-size:12px;color:var(--muted);line-height:1.8;">
-        ${(t.blocks||[]).map(b => `${b.grade}${b.day?`(${b.day})`:''} ${b.start}~${b.end} <span style="color:${b.type==='clinic'?'var(--gold)':'#8fd0ff'};">${b.type==='clinic'?'클리닉':'수업'}</span>`).join(' &nbsp;·&nbsp; ')}
+        ${(t.blocks||[]).map(b => `${b.grade}${b.day?`(${b.day})`:''} ${b.start}~${b.end} <span style="color:${b.type==='clinic'?'var(--gold)':'#2F7FD6'};">${b.type==='clinic'?'클리닉':'수업'}</span>`).join(' &nbsp;·&nbsp; ')}
       </div>
     </div>`).join('');
 }
@@ -312,7 +312,7 @@ window.runClinicDiagnosis = () => {
   out.push(`<div style="margin-top:6px;">📋 등록된 시간표 총 ${timetablesCache.length}개, 학생 총 ${studentsCache.length}명</div><hr style="border-color:var(--border-soft);margin:10px 0;">`);
 
   if (!timetablesCache.length) {
-    out.push(`<div style="color:#ff9090;">⚠️ 등록된 시간표가 하나도 없습니다. 엑셀 업로드나 저장이 실제로 반영됐는지 확인해주세요 (새로고침 후 '등록된 시간표' 목록에 나타나야 합니다).</div>`);
+    out.push(`<div style="color:#D64545;">⚠️ 등록된 시간표가 하나도 없습니다. 엑셀 업로드나 저장이 실제로 반영됐는지 확인해주세요 (새로고침 후 '등록된 시간표' 목록에 나타나야 합니다).</div>`);
     document.getElementById('ttDiag').innerHTML = out.join('');
     return;
   }
@@ -324,11 +324,11 @@ window.runClinicDiagnosis = () => {
     const rightDayGroupStudents = matchedStudents.filter(s => ttDaysToGroup(s.days) === t.dayGroup);
 
     out.push(`<div style="padding:10px 0;border-bottom:1px solid var(--border-soft);">
-      <b style="color:var(--gold);">${t.teacherName}</b> · ${t.dayGroup} · ${t.scheduleType==='vacation'?`방학특강(${t.validFrom}~${t.validTo})`:'정규'}
+      <b style="color:var(--purple, #5B3FA6);">${t.teacherName}</b> · ${t.dayGroup} · ${t.scheduleType==='vacation'?`방학특강(${t.validFrom}~${t.validTo})`:'정규'}
       &nbsp; ${activeToday ? '✅오늘요일해당' : '❌오늘요일아님'} &nbsp; ${inRange ? '✅기간내' : '❌기간아님'}<br>
-      <span style="color:var(--muted);">→ '담당선생님'이 정확히 "${t.teacherName}"으로 등록된 학생: <b style="color:${matchedStudents.length?'#90ff90':'#ff9090'};">${matchedStudents.length}명</b></span><br>
-      <span style="color:var(--muted);">→ 그 중 등원요일이 ${t.dayGroup} 패턴(요일 배열이 정확히 일치)인 학생: <b style="color:${rightDayGroupStudents.length?'#90ff90':'#ff9090'};">${rightDayGroupStudents.length}명</b>
-      ${matchedStudents.length && !rightDayGroupStudents.length ? ` <span style="color:#ffb066;">← 등원요일 값이 안 맞는 것 같아요. (예: ${JSON.stringify(matchedStudents[0].days)})</span>` : ''}</span>
+      <span style="color:var(--muted);">→ '담당선생님'이 정확히 "${t.teacherName}"으로 등록된 학생: <b style="color:${matchedStudents.length?'#2E9E5B':'#D64545'};">${matchedStudents.length}명</b></span><br>
+      <span style="color:var(--muted);">→ 그 중 등원요일이 ${t.dayGroup} 패턴(요일 배열이 정확히 일치)인 학생: <b style="color:${rightDayGroupStudents.length?'#2E9E5B':'#D64545'};">${rightDayGroupStudents.length}명</b>
+      ${matchedStudents.length && !rightDayGroupStudents.length ? ` <span style="color:#D97B1A;">← 등원요일 값이 안 맞는 것 같아요. (예: ${JSON.stringify(matchedStudents[0].days)})</span>` : ''}</span>
     </div>`);
   });
 
@@ -336,7 +336,7 @@ window.runClinicDiagnosis = () => {
   const studentTeacherNames = [...new Set(studentsCache.map(s => s.teacherName).filter(Boolean))];
   const unmatched = allTeacherNames.filter(n => !studentTeacherNames.some(sn => ttNormTeacher(sn) === ttNormTeacher(n)));
   if (unmatched.length) {
-    out.push(`<div style="margin-top:10px;color:#ffb066;">⚠️ 시간표에는 있지만 학생 '담당선생님'에는 정확히 일치하는 이름이 없는 선생님: ${unmatched.join(', ')}<br>
+    out.push(`<div style="margin-top:10px;color:#D97B1A;">⚠️ 시간표에는 있지만 학생 '담당선생님'에는 정확히 일치하는 이름이 없는 선생님: ${unmatched.join(', ')}<br>
     (학생 등록정보의 실제 담당선생님 값 목록: ${studentTeacherNames.join(', ') || '없음'})</div>`);
   }
 

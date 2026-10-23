@@ -132,10 +132,10 @@ window.srLoad = async function () {
         <td class="r">${r.summary?.pct ?? '-'}%</td>
         <td class="r">${r.summary?.gradeBand ?? '-'}</td>
         <td><span class="sr-st ${r.status || 'none'}">${stLabel[r.status] || r.status || '-'}</span></td>
-        <td style="white-space:nowrap;"><a class="sr-link" href="report.html?id=${encodeURIComponent(r.id)}" target="_blank">미리보기</a>${r.status === 'sent' ? ` <a class="sr-link" href="#" style="color:#ffc883;border-color:rgba(255,179,92,0.4);" onclick="srUnpublish('${r.id}');return false;">공개 취소</a>` : ''} <a class="sr-link" href="#" style="color:#ff9090;border-color:rgba(255,80,80,0.3);" onclick="srDeleteReport('${r.id}');return false;">삭제</a></td>
+        <td style="white-space:nowrap;"><a class="sr-link" href="report.html?id=${encodeURIComponent(r.id)}" target="_blank">미리보기</a>${r.status === 'sent' ? ` <a class="sr-link" href="#" style="color:#D97B1A;border-color:rgba(255,179,92,0.4);" onclick="srUnpublish('${r.id}');return false;">공개 취소</a>` : ''} <a class="sr-link" href="#" style="color:#D64545;border-color:rgba(214,69,69,0.3);" onclick="srDeleteReport('${r.id}');return false;">삭제</a></td>
       </tr>`).join('');
   } catch (e) {
-    body.innerHTML = `<tr><td colspan="9" style="color:#ff9090;padding:20px;text-align:center;">오류: ${srEsc(e.message)}</td></tr>`;
+    body.innerHTML = `<tr><td colspan="9" style="color:#D64545;padding:20px;text-align:center;">오류: ${srEsc(e.message)}</td></tr>`;
   }
 };
 

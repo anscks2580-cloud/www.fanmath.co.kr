@@ -108,7 +108,7 @@ function attSortClassKeys(byClass) {
 
 function attChipColors(status) {
   if (status === 'absent') return { bg:'#EF4444', bdr:'#B91C1C', text:'#fff', sub:'rgba(255,255,255,0.85)', title:'결석 → 클릭:해당없음' };
-  if (status === 'none')   return { bg:'#FFFFFF', bdr:'#AAAAAA', text:'#555', sub:'#888',                   title:'해당없음 → 클릭:출석' };
+  if (status === 'none')   return { bg:'#FFFFFF', bdr:'#8A8699', text:'#555', sub:'#888',                   title:'해당없음 → 클릭:출석' };
   /* present */             return { bg:'#3B82F6', bdr:'#1D4ED8', text:'#fff', sub:'rgba(255,255,255,0.85)', title:'출석 → 클릭:결석' };
 }
 
@@ -171,7 +171,7 @@ window.renderAttendance = function() {
     const sortedClasses = attSortClassKeys(byClass);
 
     html += `<div style="margin-bottom:20px;">
-      <div style="font-size:13px;font-weight:700;color:#A78BFA;letter-spacing:1px;
+      <div style="font-size:13px;font-weight:700;color:#6B4FBB;letter-spacing:1px;
         padding:6px 10px;background:rgba(167,139,250,0.1);border-radius:6px;margin-bottom:10px;">
         🏫 ${branch} (${bStudents.length}명)
       </div>`;
@@ -179,7 +179,7 @@ window.renderAttendance = function() {
     sortedClasses.forEach(cls => {
       const cStudents = byClass[cls];
       html += `<div style="margin-bottom:12px;">
-        <div style="font-size:11px;color:var(--gold);font-weight:700;letter-spacing:1px;
+        <div style="font-size:11px;color:var(--purple, #5B3FA6);font-weight:700;letter-spacing:1px;
           margin-bottom:6px;padding-left:4px;">${cls} (${cStudents.length}명)</div>
         <div style="display:flex;flex-wrap:wrap;gap:6px;">`;
 
@@ -230,21 +230,21 @@ function updateAttSummary() {
 
   sumEl.innerHTML = `
     <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
-      <div style="font-size:18px;font-weight:700;color:var(--gold);">총 ${total}명</div>
+      <div style="font-size:18px;font-weight:700;color:var(--purple, #5B3FA6);">총 ${total}명</div>
       <div style="display:flex;gap:4px;align-items:center;">
         <span style="width:12px;height:12px;border-radius:2px;background:#3B82F6;display:inline-block;"></span>
-        <span style="font-size:14px;font-weight:600;color:#93C5FD;">출석 ${present}명</span>
+        <span style="font-size:14px;font-weight:600;color:#2F7FD6;">출석 ${present}명</span>
       </div>
       <div style="display:flex;gap:4px;align-items:center;">
         <span style="width:12px;height:12px;border-radius:2px;background:#EF4444;display:inline-block;"></span>
-        <span style="font-size:14px;font-weight:600;color:#FCA5A5;">결석 ${absent}명</span>
+        <span style="font-size:14px;font-weight:600;color:#C62828;">결석 ${absent}명</span>
       </div>
       <div style="display:flex;gap:4px;align-items:center;">
-        <span style="width:12px;height:12px;border-radius:2px;background:#fff;border:1px solid #aaa;display:inline-block;"></span>
+        <span style="width:12px;height:12px;border-radius:2px;background:#fff;border:1px solid #8A8699;display:inline-block;"></span>
         <span style="font-size:14px;font-weight:600;color:var(--muted);">해당없음 ${none}명</span>
       </div>
     </div>
-    ${absentNames ? `<div style="font-size:12px;color:#FCA5A5;">결석: ${absentNames}</div>` : ''}`;
+    ${absentNames ? `<div style="font-size:12px;color:#C62828;">결석: ${absentNames}</div>` : ''}`;
 }
 
 // 출결 이미지 다운로드
@@ -337,7 +337,7 @@ window.downloadAttendanceImage = function() {
         ctx.fill();
         // 테두리 (해당없음)
         if (st === 'none') {
-          ctx.strokeStyle = '#AAAAAA'; ctx.lineWidth = 1;
+          ctx.strokeStyle = '#8A8699'; ctx.lineWidth = 1;
           roundRect(ctx, cx, cy, CHIP_W, CHIP_H, 7);
           ctx.stroke();
         }

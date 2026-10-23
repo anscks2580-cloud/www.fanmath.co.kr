@@ -75,14 +75,14 @@ async function loadApexVideos() {
     el.innerHTML = list.map(v => `
       <div class="student-item">
         <div class="student-name">${v.title}</div>
-        <span class="student-meta" style="color:var(--gold);font-size:12px;">${v.category || ''}</span>
+        <span class="student-meta" style="color:var(--purple, #5B3FA6);font-size:12px;">${v.category || ''}</span>
         <span class="student-meta" onclick="copyText('${v.vimeoId}', this)" title="클릭하면 복사됩니다" style="font-size:11px;cursor:pointer;">Vimeo: ${v.vimeoId}</span>
         <span class="student-meta" style="font-size:11px;color:var(--muted);">${v.description || ''}</span>
         <button class="btn btn-danger btn-sm" onclick="deleteApexVideo('${v.id}','${(v.title||'').replace(/'/g,"\\'")}')">삭제</button>
       </div>`).join('');
   } catch(e) {
     document.getElementById('apexVideoList').innerHTML =
-      `<div style="color:#ff9090;font-size:13px;">오류: ${e.message}</div>`;
+      `<div style="color:#D64545;font-size:13px;">오류: ${e.message}</div>`;
   }
 }
 
@@ -143,14 +143,14 @@ window.syncPromoFolder = async () => {
     statusEl.textContent = '';
     const titleEl = document.getElementById('promoSyncPreviewTitle');
     const listEl  = document.getElementById('promoSyncPreviewList');
-    titleEl.innerHTML = `신규 영상 <b style="color:var(--gold);">${promoSyncCandidates.length}개</b> 발견
+    titleEl.innerHTML = `신규 영상 <b style="color:var(--purple, #5B3FA6);">${promoSyncCandidates.length}개</b> 발견
       <span style="margin-left:10px;">
         <a href="#" onclick="event.preventDefault();document.querySelectorAll('.promo-sync-check').forEach(c=>c.checked=true);">전체선택</a>
         <span style="color:var(--muted);">/</span>
         <a href="#" onclick="event.preventDefault();document.querySelectorAll('.promo-sync-check').forEach(c=>c.checked=false);">전체해제</a>
       </span>`;
     listEl.innerHTML = promoSyncCandidates.map((v, i) => `
-      <div style="display:flex;align-items:center;gap:10px;padding:6px 4px;border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;">
+      <div style="display:flex;align-items:center;gap:10px;padding:6px 4px;border-bottom:1px solid rgba(30,24,56,0.04);font-size:13px;">
         <input id="promo-sync-check-${i}" class="promo-sync-check" type="checkbox" checked
           style="flex-shrink:0;width:16px;height:16px;accent-color:var(--gold);">
         <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${v.title}</span>
@@ -208,7 +208,7 @@ async function loadPromoVideos() {
       </div>`).join('');
   } catch(e) {
     document.getElementById('promoVideoList').innerHTML =
-      `<div style="color:#ff9090;font-size:13px;">오류: ${e.message}</div>`;
+      `<div style="color:#D64545;font-size:13px;">오류: ${e.message}</div>`;
   }
 }
 

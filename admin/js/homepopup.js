@@ -48,7 +48,7 @@ window.initHomePopupTab = async function() {
     hpData.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     renderHomePopupList();
   } catch(e) {
-    el.innerHTML = `<div style="color:#ff9090;font-size:13px;">오류: ${e.message}</div>`;
+    el.innerHTML = `<div style="color:#D64545;font-size:13px;">오류: ${e.message}</div>`;
   }
 };
 

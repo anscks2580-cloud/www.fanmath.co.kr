@@ -13,7 +13,7 @@
   const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const DOW = ['일', '월', '화', '수', '목', '금', '토'];
   const md = (d) => `${d.getMonth() + 1}/${d.getDate()}(${DOW[d.getDay()]})`;
-  const TYPE_COLOR = { '휴무': '#ff7a7a', '회의': '#7ab8ff', '설명회': '#c58bff', '시험기간': '#ffb35c', '행사': '#5fd98a', '할 일': '#f0c040', '기타': '#b9b2cf' };
+  const TYPE_COLOR = { '휴무': '#D64545', '회의': '#2F7FD6', '설명회': '#6B4FBB', '시험기간': '#D97B1A', '행사': '#2E9E5B', '할 일': '#F5C518', '기타': '#6B6489' };
 
   let loadedAt = 0;
   let loading = false;
@@ -113,7 +113,7 @@
           <div class="box" data-open="consult"><span class="n">${weekN}</span><span class="k">최근 7일</span></div>
           <div class="box${openN ? ' warn' : ''}" data-open="consult"><span class="n">${openN}</span><span class="k">상담 진행 전</span></div>
         </div>
-        ${recent.length ? '<div class="hm-list">' + recent.map((r) => `<div class="hm-row"><span class="dot" style="background:${r.done ? '#5fd98a' : '#f0c040'}"></span><span class="t"><b>${esc(r.name)}${r.grade ? ' <small style="display:inline">' + esc(r.grade) + '</small>' : ''}</b><small>${r.done ? '상담 완료' : '상담 전'}</small></span><span class="r">${r.created ? esc(md(r.created)) : ''}</span></div>`).join('') + '</div>' : '<div class="hm-empty">접수된 상담이 없습니다.</div>'}`;
+        ${recent.length ? '<div class="hm-list">' + recent.map((r) => `<div class="hm-row"><span class="dot" style="background:${r.done ? '#2E9E5B' : '#F5C518'}"></span><span class="t"><b>${esc(r.name)}${r.grade ? ' <small style="display:inline">' + esc(r.grade) + '</small>' : ''}</b><small>${r.done ? '상담 완료' : '상담 전'}</small></span><span class="r">${r.created ? esc(md(r.created)) : ''}</span></div>`).join('') + '</div>' : '<div class="hm-empty">접수된 상담이 없습니다.</div>'}`;
     } catch (e) {
       el.innerHTML = `<div class="hm-empty">상담 현황을 불러오지 못했습니다 (${esc(e.message)})</div>`;
     }
@@ -217,7 +217,7 @@
           <div class="box" data-open="students"><span class="n">${mid}<small style="font-size:12px;color:var(--muted)"> / ${high}</small></span><span class="k">중등 / 고등</span></div>
           <div class="box" data-open="teachers"><span class="n">${teachers.filter((t) => t.role !== 'ta').length}</span><span class="k">선생님 (조교 ${teachers.filter((t) => t.role === 'ta').length})</span></div>
         </div>
-        <div class="hm-foot">${Object.keys(byBranch).map((b) => esc(b) + ' ' + byBranch[b] + '명').join(' · ')}${noTeacher ? ` · <span style="color:#ff9c9c">담당 선생님 미지정 ${noTeacher}명</span>` : ''}</div>`;
+        <div class="hm-foot">${Object.keys(byBranch).map((b) => esc(b) + ' ' + byBranch[b] + '명').join(' · ')}${noTeacher ? ` · <span style="color:#D64545">담당 선생님 미지정 ${noTeacher}명</span>` : ''}</div>`;
     } catch (e) {
       el.innerHTML = `<div class="hm-empty">학생 현황을 불러오지 못했습니다 (${esc(e.message)})</div>`;
     }

@@ -79,8 +79,8 @@ window.drSwitchDay = function(day) {
     const checked = drChecked.has(key);
     return `
       <label style="display:flex;align-items:center;gap:6px;padding:5px 10px;
-        background:${checked ? 'rgba(240,192,64,0.15)' : 'rgba(255,255,255,0.04)'};
-        border:1px solid ${checked ? 'rgba(240,192,64,0.5)' : 'rgba(255,255,255,0.1)'};
+        background:${checked ? 'rgba(245,197,24,0.15)' : 'rgba(30,24,56,0.04)'};
+        border:1px solid ${checked ? 'rgba(245,197,24,0.5)' : 'rgba(30,24,56,0.1)'};
         border-radius:6px;cursor:pointer;font-size:12px;color:var(--off-white);white-space:nowrap;
         transition:all 0.15s;" id="drLabel-${key}">
         <input type="checkbox" ${checked ? 'checked' : ''} value="${key}"
@@ -96,8 +96,8 @@ window.drToggleClass = function(cb, key) {
   // 라벨 스타일 갱신
   const lbl = document.getElementById('drLabel-' + key);
   if (lbl) {
-    lbl.style.background = cb.checked ? 'rgba(240,192,64,0.15)' : 'rgba(255,255,255,0.04)';
-    lbl.style.borderColor = cb.checked ? 'rgba(240,192,64,0.5)' : 'rgba(255,255,255,0.1)';
+    lbl.style.background = cb.checked ? 'rgba(245,197,24,0.15)' : 'rgba(30,24,56,0.04)';
+    lbl.style.borderColor = cb.checked ? 'rgba(245,197,24,0.5)' : 'rgba(30,24,56,0.1)';
   }
   updateDrClassInput();
 };

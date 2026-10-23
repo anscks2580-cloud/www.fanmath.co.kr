@@ -11,8 +11,8 @@
 .admin-header { margin-bottom:40px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px; }
 .admin-header h1 { font-size:26px; font-weight:700; margin-bottom:6px; }
 .admin-header p { font-size:13px; color:var(--muted); }
-.logout-btn { padding:8px 16px; background:rgba(255,255,255,0.06); border:1px solid var(--border-soft); border-radius:8px; color:var(--muted); font-size:12px; cursor:pointer; font-family:inherit; }
-.logout-btn:hover { color:var(--off-white); border-color:rgba(255,255,255,0.3); }
+.logout-btn { padding:8px 16px; background:rgba(30,24,56,0.06); border:1px solid var(--border-soft); border-radius:8px; color:var(--muted); font-size:12px; cursor:pointer; font-family:inherit; }
+.logout-btn:hover { color:var(--off-white); border-color:rgba(30,24,56,0.3); }
 
 .admin-tabs { display:flex; gap:0; border-bottom:2px solid var(--border-soft); margin-bottom:32px; flex-wrap:wrap; }
 .admin-tab {
@@ -25,30 +25,30 @@
   height:2px; background:var(--gold);
   transform:scaleX(0); transition:transform 0.2s;
 }
-.admin-tab.active { color:var(--gold); }
+.admin-tab.active { color:var(--purple, #5B3FA6); }
 .admin-tab.active::after { transform:scaleX(1); }
 .tab-panel { display:none; }
 .tab-panel.active { display:block; }
 
 .card { background:var(--bg-card); border:1px solid var(--border-soft); border-radius:14px; padding:26px; margin-bottom:20px; }
-.card h3 { font-size:15px; font-weight:600; margin-bottom:18px; color:var(--gold); }
+.card h3 { font-size:15px; font-weight:600; margin-bottom:18px; color:var(--purple, #5B3FA6); }
 
 .btn { padding:10px 20px; border:none; border-radius:8px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; transition:all 0.2s; }
-.btn-primary { background:var(--gold); color:var(--bg); }
-.btn-primary:hover { background:#f5cc50; }
-.btn-secondary { background:rgba(255,255,255,0.08); color:var(--off-white); border:1px solid var(--border-soft); text-decoration:none; display:inline-block; }
-.btn-secondary:hover { background:rgba(255,255,255,0.14); }
+.btn-primary { background:var(--gold); color:var(--on-gold, #2A1E55); }
+.btn-primary:hover { background:#E0B010; }
+.btn-secondary { background:rgba(30,24,56,0.08); color:var(--off-white); border:1px solid var(--border-soft); text-decoration:none; display:inline-block; }
+.btn-secondary:hover { background:rgba(30,24,56,0.14); }
 .btn-sm { padding:6px 13px; font-size:12px; }
 
 .item {
   display:flex; align-items:center; gap:12px; flex-wrap:wrap;
-  padding:14px 16px; background:rgba(255,255,255,0.03);
+  padding:14px 16px; background:rgba(30,24,56,0.03);
   border:1px solid var(--border-soft); border-radius:10px; margin-bottom:8px;
 }
 .item-name { font-weight:600; font-size:14px; flex:1; min-width:120px; }
 .item-meta { font-size:12px; color:var(--muted); }
-.badge { font-size:11px; background:rgba(240,192,64,0.1); color:var(--gold); padding:3px 9px; border-radius:5px; font-weight:600; }
-.badge-overdue { background:rgba(255,80,80,0.15); color:#ff9090; }
+.badge { font-size:11px; background:rgba(245,197,24,0.1); color:var(--purple, #5B3FA6); padding:3px 9px; border-radius:5px; font-weight:600; }
+.badge-overdue { background:rgba(214,69,69,0.15); color:#D64545; }
 .empty { color:var(--muted); font-size:13px; }
 
 @media(max-width:640px){ .admin-tabs{ overflow-x:auto; flex-wrap:nowrap; } }
@@ -57,21 +57,21 @@
 #loginScreen { display:none !important; } /* 로그인은 login.html 통합 로그인에서 */
 #portalScreen { display:none; }
 .login-card {
-  background:linear-gradient(145deg,#231848 0%,#1A1230 100%);
-  border:1px solid rgba(240,192,64,0.2);
+  background:linear-gradient(145deg,#F0EEF8 0%,#F7F6FB 100%);
+  border:1px solid rgba(245,197,24,0.2);
   border-radius:20px; padding:48px 40px; width:100%; max-width:400px;
-  box-shadow:0 1px 0 rgba(240,192,64,0.5), 0 24px 60px rgba(0,0,0,0.5);
+  box-shadow:0 1px 0 rgba(245,197,24,0.5), 0 24px 60px rgba(30,24,56,0.15);
   position:relative; overflow:hidden;
 }
 .login-card::before {
   content:''; position:absolute; top:0; left:10%; right:10%; height:1px;
-  background:linear-gradient(90deg,transparent,rgba(240,192,64,0.8),transparent);
+  background:linear-gradient(90deg,transparent,rgba(245,197,24,0.8),transparent);
 }
 .login-card-title { font-size:20px; font-weight:700; text-align:center; margin-bottom:4px; }
 .login-card-sub   { font-size:13px; color:var(--muted); text-align:center; margin-bottom:28px; }
-.btn-login-full { width:100%; padding:13px; background:var(--gold); color:var(--bg); font-size:15px; font-weight:700; border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
+.btn-login-full { width:100%; padding:13px; background:var(--gold); color:var(--on-gold, #2A1E55); font-size:15px; font-weight:700; border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
 .login-footer-link { text-align:center; margin-top:20px; font-size:12px; color:var(--muted); }
-.login-footer-link a { color:var(--gold); text-decoration:none; }
+.login-footer-link a { color:var(--purple, #5B3FA6); text-decoration:none; }
 </style>
 </head>
 <body>
@@ -299,7 +299,7 @@ window.loadClinicRoom = async function() {
     studentsSnap.forEach(d => students.push({ id: d.id, ...d.data() }));
     timetablesSnap.forEach(d => timetables.push({ id: d.id, ...d.data() }));
   } catch (e) {
-    const errMsg = `<div class="empty" style="color:#ff9090;">불러오지 못했습니다. (${esc(e.message)})<br>원장님께 권한 설정(Firestore 보안규칙) 확인을 요청해주세요.</div>`;
+    const errMsg = `<div class="empty" style="color:#D64545;">불러오지 못했습니다. (${esc(e.message)})<br>원장님께 권한 설정(Firestore 보안규칙) 확인을 요청해주세요.</div>`;
     el.innerHTML = errMsg;
     upEl.innerHTML = errMsg;
     return;

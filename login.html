@@ -10,15 +10,15 @@
 body { display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px; }
 .login-wrap { width:100%; max-width:420px; }
 .login-card {
-  background: linear-gradient(145deg, #231848 0%, #1A1230 100%);
-  border:1px solid rgba(240,192,64,0.2);
+  background: linear-gradient(145deg, #F0EEF8 0%, #F7F6FB 100%);
+  border:1px solid rgba(245,197,24,0.2);
   border-radius:20px; padding:48px 40px;
-  box-shadow: 0 1px 0 rgba(240,192,64,0.5), 0 24px 60px rgba(0,0,0,0.5);
+  box-shadow: 0 1px 0 rgba(245,197,24,0.5), 0 24px 60px rgba(30,24,56,0.15);
   position:relative; overflow:hidden;
 }
 .login-card::before {
   content:''; position:absolute; top:0; left:10%; right:10%; height:1px;
-  background:linear-gradient(90deg, transparent, rgba(240,192,64,0.8), transparent);
+  background:linear-gradient(90deg, transparent, rgba(245,197,24,0.8), transparent);
 }
 .login-logo {
   display:flex; align-items:center; gap:10px;
@@ -41,7 +41,7 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
   height:2px; background:var(--gold);
   transform:scaleX(0); transition:transform 0.2s;
 }
-.login-tab.active { color:var(--gold); }
+.login-tab.active { color:var(--purple, #5B3FA6); }
 .login-tab.active::after { transform:scaleX(1); }
 .tab-form { display:none; }
 .tab-form.active { display:block; }
@@ -53,13 +53,13 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
 }
 .form-group input {
   width:100%; padding:13px 16px;
-  background:rgba(255,255,255,0.05);
-  border:1px solid rgba(255,255,255,0.1);
+  background:rgba(30,24,56,0.05);
+  border:1px solid rgba(30,24,56,0.1);
   border-radius:8px; color:var(--off-white); font-size:15px;
   font-family:inherit; transition:border-color 0.2s; outline:none;
 }
-.form-group input:focus { border-color:rgba(240,192,64,0.5); background:rgba(255,255,255,0.07); }
-.form-group input::placeholder { color:rgba(255,255,255,0.2); }
+.form-group input:focus { border-color:rgba(245,197,24,0.5); background:rgba(30,24,56,0.07); }
+.form-group input::placeholder { color:rgba(30,24,56,0.2); }
 
 /* 체크박스 옵션 */
 .login-options {
@@ -69,24 +69,24 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
 
 .btn-login {
   width:100%; padding:14px;
-  background:var(--gold); color:var(--bg);
+  background:var(--gold); color:var(--on-gold, #2A1E55);
   font-size:15px; font-weight:700;
   border:none; border-radius:8px;
   cursor:pointer; font-family:inherit;
   transition:background 0.2s, transform 0.15s;
 }
-.btn-login:hover { background:#f5cc50; transform:translateY(-1px); }
+.btn-login:hover { background:#E0B010; transform:translateY(-1px); }
 .btn-login:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
 
 .error-msg {
   display:none; margin-top:12px; padding:12px 16px;
-  background:rgba(255,80,80,0.1); border:1px solid rgba(255,80,80,0.3);
-  border-radius:8px; font-size:13px; color:#ff9090; text-align:center;
+  background:rgba(214,69,69,0.1); border:1px solid rgba(214,69,69,0.3);
+  border-radius:8px; font-size:13px; color:#D64545; text-align:center;
 }
 /* 비밀번호 변경 섹션 */
 .pw-change-wrap {
   margin-top:16px; padding-top:16px;
-  border-top:1px solid rgba(255,255,255,0.08);
+  border-top:1px solid rgba(30,24,56,0.08);
 }
 .pw-change-toggle {
   background:none; border:none; padding:0;
@@ -94,19 +94,19 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
   font-family:inherit; text-decoration:underline;
   transition:color 0.2s;
 }
-.pw-change-toggle:hover { color:var(--gold); }
+.pw-change-toggle:hover { color:var(--purple, #5B3FA6); }
 .pw-change-body { display:none; }
 .pw-change-body.open { display:block; }
 .success-msg {
   display:none; margin-top:12px; padding:12px 16px;
-  background:rgba(80,200,80,0.1); border:1px solid rgba(80,200,80,0.3);
-  border-radius:8px; font-size:13px; color:#90ee90; text-align:center;
+  background:rgba(46,158,91,0.1); border:1px solid rgba(46,158,91,0.3);
+  border-radius:8px; font-size:13px; color:#2E9E5B; text-align:center;
 }
 .login-footer {
   text-align:center; margin-top:24px;
   font-size:12px; color:var(--muted); line-height:1.9;
 }
-.login-footer a { color:var(--gold); text-decoration:none; }
+.login-footer a { color:var(--purple, #5B3FA6); text-decoration:none; }
 </style>
 </head>
 <body>
@@ -140,7 +140,7 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
       <!-- 비밀번호 변경 폼 (로그인 버튼 아래 펼쳐짐) -->
       <div class="pw-change-wrap">
         <div class="pw-change-body" id="pw-change-body">
-          <div style="font-size:12px;color:var(--gold);font-weight:600;margin-bottom:12px;padding-top:4px;">🔑 비밀번호 변경</div>
+          <div style="font-size:12px;color:var(--purple, #5B3FA6);font-weight:600;margin-bottom:12px;padding-top:4px;">🔑 비밀번호 변경</div>
           <div class="form-group">
             <label>아이디</label>
             <input type="text" id="pc-name" placeholder="" autocomplete="off">
@@ -157,7 +157,7 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
             <label>새 비밀번호 확인</label>
             <input type="password" id="pc-new2" placeholder="새 비밀번호 재입력" autocomplete="new-password">
           </div>
-          <button class="btn-login" id="pc-btn" onclick="changePassword()" style="background:rgba(240,192,64,0.15);color:var(--gold);border:1px solid rgba(240,192,64,0.4);">비밀번호 변경</button>
+          <button class="btn-login" id="pc-btn" onclick="changePassword()" style="background:rgba(245,197,24,0.15);color:var(--purple, #5B3FA6);border:1px solid rgba(245,197,24,0.4);">비밀번호 변경</button>
           <div class="error-msg"   id="pc-err"></div>
           <div class="success-msg" id="pc-ok">✅ 비밀번호가 변경되었습니다. 새 비밀번호로 로그인해 주세요.</div>
         </div>

@@ -219,7 +219,7 @@ window.loadReports = async () => {
               ${data.memo ? `<div style="font-size:12px;color:var(--muted);">${data.memo}</div>` : ''}
             </div>
             <button onclick="downloadPDF('${safeURL}','${safeName}','${safeMonth}','${safeFileName}')"
-              style="align-self:center;font-size:12px;color:var(--gold);background:none;padding:6px 14px;border:1px solid rgba(240,192,64,0.4);border-radius:6px;white-space:nowrap;cursor:pointer;font-family:inherit;">
+              style="align-self:center;font-size:12px;color:var(--purple, #5B3FA6);background:none;padding:6px 14px;border:1px solid rgba(245,197,24,0.4);border-radius:6px;white-space:nowrap;cursor:pointer;font-family:inherit;">
               ⬇ 다운로드
             </button>
           </div>`;
@@ -229,7 +229,7 @@ window.loadReports = async () => {
 
     el.innerHTML = html;
   } catch(e) {
-    el.innerHTML = `<div style="color:#ff9090;font-size:13px;">오류: ${e.message}</div>`;
+    el.innerHTML = `<div style="color:#D64545;font-size:13px;">오류: ${e.message}</div>`;
   }
 };
 

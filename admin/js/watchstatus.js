@@ -138,7 +138,7 @@ window.wsToggleDetail = function(i) {
 function wsBar(percent, color) {
   return `
     <div style="display:flex;align-items:center;gap:6px;">
-      <div style="flex:1;height:6px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">
+      <div style="flex:1;height:6px;background:rgba(30,24,56,0.08);border-radius:4px;overflow:hidden;">
         <div style="width:${percent}%;height:100%;background:${color};"></div>
       </div>
       <span style="font-size:11px;color:var(--muted);min-width:32px;text-align:right;">${percent}%</span>
@@ -188,7 +188,7 @@ window.renderWatchStatus = function renderWatchStatus() {
     el.innerHTML = `
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
         <thead>
-          <tr style="border-bottom:1px solid rgba(240,192,64,0.3);color:var(--gold);text-align:left;">
+          <tr style="border-bottom:1px solid rgba(245,197,24,0.3);color:var(--purple, #5B3FA6);text-align:left;">
             <th style="padding:8px 10px;">강의</th>
             <th style="padding:8px 10px;">접근 학생</th>
             <th style="padding:8px 10px;">영상</th>
@@ -206,17 +206,17 @@ window.renderWatchStatus = function renderWatchStatus() {
             const none = studentArr.filter(x => x.watched === 0).length;
             return `
             <tr data-tag="${wsEsc(c.tag)}" onclick="wsSelectCourse(this.dataset.tag)"
-              style="border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;"
-              onmouseover="this.style.background='rgba(240,192,64,0.06)'" onmouseout="this.style.background=''">
+              style="border-bottom:1px solid rgba(30,24,56,0.06);cursor:pointer;"
+              onmouseover="this.style.background='rgba(245,197,24,0.06)'" onmouseout="this.style.background=''">
               <td style="padding:10px;">
                 <div style="font-weight:600;">${wsEsc(c.label)}</div>
                 <div style="font-size:11px;color:var(--muted);">${wsEsc(c.cat)}</div>
               </td>
               <td style="padding:10px;">${studentArr.length}명</td>
               <td style="padding:10px;color:var(--muted);">${c.videoCount}개</td>
-              <td style="padding:10px;min-width:130px;">${wsBar(avg, avg >= 90 ? '#5FD98A' : 'var(--gold)')}</td>
-              <td style="padding:10px;color:#5FD98A;font-weight:600;">${allDone}명</td>
-              <td style="padding:10px;color:${none ? '#ff9090' : 'var(--muted)'};font-weight:600;">${none}명</td>
+              <td style="padding:10px;min-width:130px;">${wsBar(avg, avg >= 90 ? '#2E9E5B' : 'var(--gold)')}</td>
+              <td style="padding:10px;color:#2E9E5B;font-weight:600;">${allDone}명</td>
+              <td style="padding:10px;color:${none ? '#D64545' : 'var(--muted)'};font-weight:600;">${none}명</td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -264,7 +264,7 @@ window.renderWatchStatus = function renderWatchStatus() {
   const head = `
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
       <button class="btn btn-secondary btn-sm" onclick="wsSelectCourse('')">← 전체 강의</button>
-      <div style="font-size:15px;font-weight:700;color:var(--gold);">${wsEsc(course ? course.label : wsCourse)}</div>
+      <div style="font-size:15px;font-weight:700;color:var(--purple, #5B3FA6);">${wsEsc(course ? course.label : wsCourse)}</div>
       <div style="font-size:12px;color:var(--muted);">${wsEsc(course ? course.cat : '')}</div>
     </div>`;
 
@@ -273,7 +273,7 @@ window.renderWatchStatus = function renderWatchStatus() {
   el.innerHTML = head + `
     <table style="width:100%;border-collapse:collapse;font-size:13px;">
       <thead>
-        <tr style="border-bottom:1px solid rgba(240,192,64,0.3);color:var(--gold);text-align:left;">
+        <tr style="border-bottom:1px solid rgba(245,197,24,0.3);color:var(--purple, #5B3FA6);text-align:left;">
           <th style="padding:8px 10px;">학생</th>
           <th style="padding:8px 10px;">관/담당T</th>
           <th style="padding:8px 10px;">평균 시청률</th>
@@ -285,13 +285,13 @@ window.renderWatchStatus = function renderWatchStatus() {
       </thead>
       <tbody>
         ${students.map((st, i) => {
-          const barColor = st.state === 'completed' ? '#5FD98A' : (st.avg > 0 ? 'var(--gold)' : 'rgba(255,255,255,0.15)');
+          const barColor = st.state === 'completed' ? '#2E9E5B' : (st.avg > 0 ? 'var(--gold)' : 'rgba(30,24,56,0.15)');
           const statusLabel = st.state === 'completed' ? '✅ 완료' : (st.state === 'inprogress' ? '⏳ 시청중' : '⚠️ 미시청');
-          const statusColor = st.state === 'completed' ? '#5FD98A' : (st.state === 'inprogress' ? 'var(--gold)' : '#ff9090');
+          const statusColor = st.state === 'completed' ? '#2E9E5B' : (st.state === 'inprogress' ? 'var(--gold)' : '#D64545');
           const videos = [...st.videos].sort((a, b) => a.videoTitle.localeCompare(b.videoTitle, 'ko', { numeric: true }));
           return `
-          <tr onclick="wsToggleDetail(${i})" style="border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;"
-            onmouseover="this.style.background='rgba(240,192,64,0.06)'" onmouseout="this.style.background=''">
+          <tr onclick="wsToggleDetail(${i})" style="border-bottom:1px solid rgba(30,24,56,0.06);cursor:pointer;"
+            onmouseover="this.style.background='rgba(245,197,24,0.06)'" onmouseout="this.style.background=''">
             <td style="padding:9px 10px;font-weight:600;">${wsEsc(st.name)}${st.grade ? `<span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:6px;">${wsEsc(st.grade)}</span>` : ''}</td>
             <td style="padding:9px 10px;color:var(--muted);">${wsEsc(st.branch)}${st.teacherName ? ' · ' + wsEsc(st.teacherName) + 'T' : ''}</td>
             <td style="padding:9px 10px;min-width:130px;">${wsBar(st.avg, barColor)}</td>
@@ -301,14 +301,14 @@ window.renderWatchStatus = function renderWatchStatus() {
             <td style="padding:9px 10px;color:var(--muted);" id="ws-arrow-${i}">▸</td>
           </tr>
           <tr id="ws-detail-${i}" style="display:none;">
-            <td colspan="7" style="padding:4px 10px 14px 24px;background:rgba(255,255,255,0.02);">
+            <td colspan="7" style="padding:4px 10px 14px 24px;background:rgba(30,24,56,0.02);">
               <table style="width:100%;border-collapse:collapse;font-size:12px;">
                 ${videos.map(v => {
-                  const c = v.completed ? '#5FD98A' : (v.percent > 0 ? 'var(--gold)' : 'rgba(255,255,255,0.15)');
+                  const c = v.completed ? '#2E9E5B' : (v.percent > 0 ? 'var(--gold)' : 'rgba(30,24,56,0.15)');
                   const lbl = v.completed ? '완료' : (v.percent > 0 ? '시청중' : '미시청');
-                  const lc = v.completed ? '#5FD98A' : (v.percent > 0 ? 'var(--gold)' : '#ff9090');
+                  const lc = v.completed ? '#2E9E5B' : (v.percent > 0 ? 'var(--gold)' : '#D64545');
                   return `
-                  <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+                  <tr style="border-bottom:1px solid rgba(30,24,56,0.04);">
                     <td style="padding:7px 8px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${wsEsc(v.videoTitle)}</td>
                     <td style="padding:7px 8px;min-width:120px;">${wsBar(v.percent, c)}</td>
                     <td style="padding:7px 8px;color:${lc};font-weight:600;">${lbl}</td>

@@ -201,8 +201,8 @@
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
         <input type="text" id="diag-name" placeholder="이름 직접 검색 (예: 홍길동)"
-          style="flex:1;min-width:160px;max-width:240px;padding:8px 13px;background:rgba(255,255,255,0.05);
-          border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;
+          style="flex:1;min-width:160px;max-width:240px;padding:8px 13px;background:rgba(30,24,56,0.05);
+          border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:13px;
           font-family:inherit;outline:none;">
         <button class="btn btn-primary btn-sm" onclick="diagSearchByName()">이름 검색</button>
         <button class="btn btn-secondary btn-sm" onclick="diagRunAll()">전체 진단 실행</button>
@@ -211,8 +211,8 @@
     </div>
       <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap;">
         <input type="text" id="studentSearch" placeholder="이름 검색..." oninput="renderStudents()"
-          style="flex:1;min-width:160px;max-width:280px;padding:8px 13px;background:rgba(255,255,255,0.05);
-          border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;
+          style="flex:1;min-width:160px;max-width:280px;padding:8px 13px;background:rgba(30,24,56,0.05);
+          border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:13px;
           font-family:inherit;outline:none;">
         <button class="btn btn-danger" onclick="deleteAllStudents()" style="font-size:12px;">
           🗑 전체 삭제
@@ -223,13 +223,13 @@
 
   <!-- 학생 수정 모달 -->
   <div id="editStudentModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;">
-    <div style="background:#1A1230;border:1px solid rgba(240,192,64,0.3);border-radius:16px;padding:28px;width:92%;max-width:500px;max-height:90vh;overflow-y:auto;">
-      <h3 style="color:var(--gold);margin-bottom:20px;font-size:16px;">✏️ 학생 정보 수정</h3>
+    <div style="background:#F7F6FB;border:1px solid rgba(245,197,24,0.3);border-radius:16px;padding:28px;width:92%;max-width:500px;max-height:90vh;overflow-y:auto;">
+      <h3 style="color:var(--purple, #5B3FA6);margin-bottom:20px;font-size:16px;">✏️ 학생 정보 수정</h3>
 
       <!-- 🔐 로그인 정보 (이름 = 아이디, 전화번호 = 기본 비밀번호) -->
-      <div style="border:1px solid rgba(240,192,64,0.25);border-radius:10px;padding:14px 14px 4px;margin-bottom:18px;background:rgba(240,192,64,0.04);">
-        <div style="font-size:13px;font-weight:700;color:var(--gold);margin-bottom:8px;">🔐 로그인 정보</div>
-        <div id="edit-authStatus" style="font-size:12px;line-height:1.6;color:var(--muted);margin-bottom:12px;padding:8px 10px;border-radius:6px;background:rgba(255,255,255,0.03);">로그인 계정 확인 중...</div>
+      <div style="border:1px solid rgba(245,197,24,0.25);border-radius:10px;padding:14px 14px 4px;margin-bottom:18px;background:rgba(245,197,24,0.04);">
+        <div style="font-size:13px;font-weight:700;color:var(--purple, #5B3FA6);margin-bottom:8px;">🔐 로그인 정보</div>
+        <div id="edit-authStatus" style="font-size:12px;line-height:1.6;color:var(--muted);margin-bottom:12px;padding:8px 10px;border-radius:6px;background:rgba(30,24,56,0.03);">로그인 계정 확인 중...</div>
         <div class="form-row">
           <div class="form-group"><label>이름 (로그인 아이디)</label>
             <input type="text" id="edit-name" placeholder="예: 홍길동">
@@ -248,7 +248,7 @@
         <div style="font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:10px;">
           · 이름을 바꾸면 로그인 아이디도 같이 바뀝니다.<br>
           · 전화번호를 바꾸고 비밀번호 칸을 비워두면, 비밀번호도 새 전화번호로 바뀝니다.<br>
-          · 로그인이 안 된다는 학생은 아래 버튼으로 <b style="color:var(--gold);">현재 이름·전화번호 그대로</b> 계정을 다시 맞춰주세요. (비밀번호 칸에 입력했으면 그 값으로, 비워두면 전화번호로 설정)
+          · 로그인이 안 된다는 학생은 아래 버튼으로 <b style="color:var(--purple, #5B3FA6);">현재 이름·전화번호 그대로</b> 계정을 다시 맞춰주세요. (비밀번호 칸에 입력했으면 그 값으로, 비워두면 전화번호로 설정)
         </div>
         <button type="button" class="btn btn-primary btn-sm" style="margin-bottom:12px;" onclick="syncStudentAuth()">🔄 로그인 계정 즉시 맞추기</button>
       </div>
@@ -306,8 +306,8 @@
 
   <!-- 관리자 계정 수정 -->
   <div id="editAdminModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;">
-    <div style="background:#1A1230;border:1px solid rgba(240,192,64,0.3);border-radius:16px;padding:28px;width:92%;max-width:460px;max-height:90vh;overflow-y:auto;">
-      <h3 style="color:var(--gold);margin-bottom:20px;font-size:16px;">✏️ 관리자 정보 수정</h3>
+    <div style="background:#F7F6FB;border:1px solid rgba(245,197,24,0.3);border-radius:16px;padding:28px;width:92%;max-width:460px;max-height:90vh;overflow-y:auto;">
+      <h3 style="color:var(--purple, #5B3FA6);margin-bottom:20px;font-size:16px;">✏️ 관리자 정보 수정</h3>
 
       <div class="form-group" style="margin-bottom:12px;">
         <label>이름 (표시용)</label>
@@ -357,7 +357,7 @@
       <h3>📊 엑셀 파일로 학생 일괄 등록</h3>
       <div class="grade-map-info">
         <b>엑셀 파일 형식 안내</b><br>
-        컬럼 순서: <b style="color:var(--gold);">이름 / 전화번호 / 학년 / 관할 / 담당선생님 / 요일</b><br>
+        컬럼 순서: <b style="color:var(--purple, #5B3FA6);">이름 / 전화번호 / 학년 / 관할 / 담당선생님 / 요일</b><br>
         예시: 홍길동 | 01012345678 | 고1 | 평촌관 | 송문찬 | 월수금<br>
         · 담당선생님: 선생님 이름 그대로 입력 (등록된 선생님과 자동 매칭)<br>
         · 요일: 붙여서 입력 — 예) 월수금, 화목, 월화수목금<br>
@@ -402,7 +402,7 @@
       <div class="grade-map-info">
         현재 등록된 학생 전체를 엑셀로 다운로드합니다.<br>
         <b>반</b> 컬럼에 각 학생의 수업 반을 입력한 뒤 아래에 다시 업로드하세요.<br>
-        · 반 형식 예시: <b style="color:var(--gold);">중2-7A</b> &nbsp;/&nbsp; 요일별로 다를 경우: <b style="color:var(--gold);">월:중2-7A/수:중2-7A/금:중2-7A</b>
+        · 반 형식 예시: <b style="color:var(--purple, #5B3FA6);">중2-7A</b> &nbsp;/&nbsp; 요일별로 다를 경우: <b style="color:var(--purple, #5B3FA6);">월:중2-7A/수:중2-7A/금:중2-7A</b>
       </div>
       <button class="btn btn-primary" onclick="exportStudentsForClassAssign()">⬇ 학생 목록 엑셀 다운로드</button>
     </div>
@@ -440,7 +440,7 @@
     <div class="card">
       <h3>📂 기출해설 에이펙스 공개 설정</h3>
       <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:16px;">
-        <code style="color:var(--gold);background:rgba(240,192,64,0.1);padding:2px 6px;border-radius:4px;">기출_</code>
+        <code style="color:var(--purple, #5B3FA6);background:rgba(245,197,24,0.1);padding:2px 6px;border-radius:4px;">기출_</code>
         로 시작하는 폴더의 영상들을 에이펙스관에 공개하거나 비공개합니다.
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
@@ -493,7 +493,7 @@
     <div class="card">
       <h3>📺 로비 TV 홍보영상 재생</h3>
       <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:16px;">
-        아래 등록된 영상들이 <b style="color:var(--gold);">순서대로 무한 반복 재생</b>되는 재생 전용 페이지입니다.
+        아래 등록된 영상들이 <b style="color:var(--purple, #5B3FA6);">순서대로 무한 반복 재생</b>되는 재생 전용 페이지입니다.
         로비 데스크탑 크롬에서 이 페이지를 열고 크롬캐스트로 TV에 화면을 미러링하면 됩니다.
       </div>
       <a class="btn btn-primary" href="promo-player.html" target="_blank" rel="noopener">▶ 재생 페이지 열기 (새 탭)</a>
@@ -503,7 +503,7 @@
     <div class="card">
       <h3>🔄 Vimeo 폴더에서 불러오기</h3>
       <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px;">
-        강의 영상과 같은 방식이에요. Vimeo에 <b style="color:var(--gold);">홍보영상 전용 폴더</b>를 하나 만들어두고
+        강의 영상과 같은 방식이에요. Vimeo에 <b style="color:var(--purple, #5B3FA6);">홍보영상 전용 폴더</b>를 하나 만들어두고
         거기에 영상을 올린 뒤, 아래에서 그 폴더명을 입력하고 불러오면 새로 올라온 영상만 자동으로 찾아줍니다.
         홍보영상을 바꾸고 싶을 땐 Vimeo 폴더에 새 영상만 올리고 여기서 다시 불러오면 돼요.
       </div>
@@ -586,7 +586,7 @@
       <div id="tba-preview" style="margin-top:16px;"></div>
       <div id="tba-progress" style="display:none;margin-top:14px;">
         <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;"><span id="tba-progress-text">업로드 중...</span><span id="tba-progress-pct">0%</span></div>
-        <div style="background:rgba(255,255,255,0.08);border-radius:99px;height:6px;"><div id="tba-progress-bar" style="background:var(--gold);height:6px;border-radius:99px;width:0;transition:width 0.2s;"></div></div>
+        <div style="background:rgba(30,24,56,0.08);border-radius:99px;height:6px;"><div id="tba-progress-bar" style="background:var(--gold);height:6px;border-radius:99px;width:0;transition:width 0.2s;"></div></div>
       </div>
       <div class="msg" id="tba-folder-msg"></div>
     </div>
@@ -616,7 +616,7 @@
       <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
         홈페이지 상담 신청 폼(consult.html)과 상담 QR로 접수된 내역입니다. 상담 QR은 방문하신 분 휴대폰에서 <b style="color:var(--off-white);">상담신청서 → 학부모 설문 → 결과 확인</b>까지 진행하고 끝나며, 결과는 이 목록의 상담 기록에 함께 저장됩니다. 각 기록의 <b style="color:var(--off-white);">📷 결과 이미지</b>로 설문 결과(개인정보 제외)를 이미지로 저장해 카카오톡으로 전달할 수 있습니다. 학생과 함께 오신 경우 같은 휴대폰으로 <b style="color:var(--off-white);">학생 설문</b>까지 이어서 할 수 있고, 각 기록의 <b style="color:var(--off-white);">학생 설문 시작</b>으로 원장님이 직접 진행할 수도 있습니다.
       </div>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;padding:14px 16px;background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);border-radius:10px;">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;padding:14px 16px;background:rgba(245,197,24,0.06);border:1px solid rgba(245,197,24,0.2);border-radius:10px;">
         <button class="btn btn-primary" onclick="openConsultQr()">📱 상담 QR · 오늘 현황</button>
         <button class="btn btn-secondary" onclick="document.getElementById('loungeCard').scrollIntoView({behavior:'smooth',block:'start'})">🎬 수업 미리보기 영상 구성</button>
         <span style="font-size:12px;color:var(--muted);line-height:1.5;">관리자 로그인 없이 링크(QR)로만 열리는 상담 전용 화면입니다. 홈페이지·관리자 페이지 어디에도 연결되어 있지 않습니다.<br>QR은 고정 주소라 한 번 인쇄해 상담 테이블에 두고 계속 쓰면 됩니다.</span>
@@ -678,10 +678,10 @@
     <div class="card">
       <h3>🎞 상담자료 관리</h3>
       <div style="font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6;">
-        학부모 상담 때 태블릿으로 한 화면씩 넘겨가며 설명하는 상담 프레젠테이션입니다. <b style="color:var(--off-white);">편집</b>에서 제목·설명·이미지·화면 순서·표시 여부를 바꾸고 저장하면 바로 반영됩니다. <b style="color:var(--off-white);">상담자료 열기</b>는 관리자 로그인 상태에서만 열리고, 학부모님께는 아래 <b style="color:var(--gold);">공유 링크</b>를 카카오톡으로 보내 주세요.
+        학부모 상담 때 태블릿으로 한 화면씩 넘겨가며 설명하는 상담 프레젠테이션입니다. <b style="color:var(--off-white);">편집</b>에서 제목·설명·이미지·화면 순서·표시 여부를 바꾸고 저장하면 바로 반영됩니다. <b style="color:var(--off-white);">상담자료 열기</b>는 관리자 로그인 상태에서만 열리고, 학부모님께는 아래 <b style="color:var(--purple, #5B3FA6);">공유 링크</b>를 카카오톡으로 보내 주세요.
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;">
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);border-radius:10px;">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;background:rgba(245,197,24,0.06);border:1px solid rgba(245,197,24,0.2);border-radius:10px;">
           <div style="flex:1;min-width:180px;"><div style="font-size:15px;font-weight:700;">중등 프로그램</div><div id="cdk-middle-status" style="font-size:12px;color:var(--muted);margin-top:3px;">확인 중...</div></div>
           <button class="btn btn-primary" onclick="window.open('consult-deck.html?deck=middle','_blank')">▶ 상담자료 열기</button>
           <button class="btn btn-secondary" onclick="window.open('consult-deck-admin.html?deck=middle','_blank')">✏️ 편집</button>
@@ -700,7 +700,7 @@
           <p class="cdk-share-note">이 링크를 카카오톡으로 보내면 어머님들이 <b style="color:var(--off-white);">로그인 없이 휴대폰으로 상담자료만</b> 볼 수 있습니다. 링크로는 관리자 페이지·상담 기록 등 다른 화면이나 데이터에 들어갈 수 없습니다.<br>
             편집에서 저장하면 이미 보낸 링크에도 자동으로 반영되고, 링크 주소는 바뀌지 않습니다. [공유 중지]를 누르면 지금까지 보낸 링크는 열리지 않습니다.</p>
         </div>
-        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;margin-top:10px;background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);border-radius:10px;">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 16px;margin-top:10px;background:rgba(245,197,24,0.06);border:1px solid rgba(245,197,24,0.2);border-radius:10px;">
           <div style="flex:1;min-width:180px;"><div style="font-size:15px;font-weight:700;">고등 프로그램</div><div id="cdk-high-status" style="font-size:12px;color:var(--muted);margin-top:3px;">확인 중...</div></div>
           <button class="btn btn-primary" onclick="window.open('consult-deck.html?deck=high','_blank')">▶ 상담자료 열기</button>
           <button class="btn btn-secondary" onclick="window.open('consult-deck-admin.html?deck=high','_blank')">✏️ 편집</button>
@@ -716,14 +716,14 @@
             <button class="btn btn-secondary btn-sm" data-cdk-on="high" disabled onclick="cdkSharePreview('high')">📱 휴대폰 화면으로 보기</button>
             <button class="btn btn-secondary btn-sm" data-cdk-on="high" disabled onclick="cdkShareStop('high')">공유 중지</button>
           </div>
-          <p class="cdk-share-note">문자·카톡에는 짧은 주소 <b style="color:var(--gold);">www.fanmath.co.kr/h</b> 로 보내도 같은 화면이 열립니다. 편집에서 저장하면 이미 보낸 링크에도 자동으로 반영되고, [공유 중지]를 누르면 지금까지 보낸 링크는 열리지 않습니다.</p>
+          <p class="cdk-share-note">문자·카톡에는 짧은 주소 <b style="color:var(--purple, #5B3FA6);">www.fanmath.co.kr/h</b> 로 보내도 같은 화면이 열립니다. 편집에서 저장하면 이미 보낸 링크에도 자동으로 반영되고, [공유 중지]를 누르면 지금까지 보낸 링크는 열리지 않습니다.</p>
         </div>
         <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border-soft);border-radius:10px;opacity:0.55;">
           <div style="flex:1;"><div style="font-size:15px;font-weight:700;">기타 상담자료</div><div style="font-size:12px;color:var(--muted);margin-top:3px;">준비 중</div></div>
         </div>
       </div>
       <div style="font-size:12px;color:var(--muted);margin-top:16px;line-height:1.7;">
-        iPad에서는 상담자료를 연 뒤 공유 → <b style="color:var(--gold);">홈 화면에 추가</b>하면 브라우저 화면 없이 앱처럼 전체화면으로 열립니다.<br>
+        iPad에서는 상담자료를 연 뒤 공유 → <b style="color:var(--purple, #5B3FA6);">홈 화면에 추가</b>하면 브라우저 화면 없이 앱처럼 전체화면으로 열립니다.<br>
         넘기기: 화면 하단 버튼 · 좌우 스와이프 · 키보드 ←/→/Space · 숫자 1~9로 주제 이동
       </div>
     </div>
@@ -737,7 +737,7 @@
       <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
         홈페이지 설명회 참석 신청 페이지(<b style="color:var(--off-white);">seminar.html</b>)에 보이는 내용입니다. 저장하면 신청 페이지와 첫 화면 배너에 바로 반영되고, 접수를 끄면 신청 페이지에 마감 안내가 표시되며 첫 화면 배너도 사라집니다.
       </div>
-      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);border-radius:10px;">
+      <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:16px;padding:12px 16px;background:rgba(245,197,24,0.06);border:1px solid rgba(245,197,24,0.2);border-radius:10px;">
         <button class="sm-switch on" id="sm-open" type="button" onclick="toggleSeminarOpen()" title="접수 받기 / 마감"></button>
         <span id="sm-open-label" style="font-size:13px;font-weight:600;">홈페이지에서 신청 받는 중</span>
         <span style="flex:1;"></span>
@@ -834,13 +834,13 @@
       <div class="form-group" style="margin-bottom:14px;">
         <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">제목</label>
         <input type="text" id="notice-title" placeholder="예: 8월 여름 특강 안내"
-          style="width:100%;padding:10px 14px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+          style="width:100%;padding:10px 14px;background:#FFFFFF;border:1px solid rgba(245,197,24,0.3);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
       </div>
 
       <div class="form-group" style="margin-bottom:14px;">
         <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">내용</label>
         <textarea id="notice-body" rows="4" placeholder="학부모님께 전달할 내용을 입력하세요."
-          style="width:100%;padding:10px 14px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;resize:vertical;"></textarea>
+          style="width:100%;padding:10px 14px;background:#FFFFFF;border:1px solid rgba(245,197,24,0.3);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;resize:vertical;"></textarea>
       </div>
 
       <div class="form-group" style="margin-bottom:14px;">
@@ -867,14 +867,14 @@
           학생 선택 (<span id="notice-selected-count">0</span>명 선택됨, 여러 명 가능)
         </label>
         <input type="text" id="notice-student-search" placeholder="학생 이름 검색" oninput="renderNoticeStudentList()"
-          style="width:100%;padding:10px 14px;margin-bottom:8px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+          style="width:100%;padding:10px 14px;margin-bottom:8px;background:#FFFFFF;border:1px solid rgba(245,197,24,0.3);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
         <div id="notice-student-list" style="max-height:260px;overflow-y:auto;"></div>
       </div>
 
       <div class="form-group" style="margin-bottom:14px;">
         <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">사진 첨부 (선택, 여러 장 가능)</label>
         <input type="file" id="notice-images" accept="image/*" multiple
-          style="width:100%;padding:10px 14px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
+          style="width:100%;padding:10px 14px;background:#FFFFFF;border:1px solid rgba(245,197,24,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
         <div id="notice-image-preview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"></div>
       </div>
 
@@ -883,10 +883,10 @@
     </div>
 
     <!-- 미리보기 카드 (학부모 앱에 보일 실제 모습) -->
-    <div class="card" id="notice-preview-card" style="display:none;border:1px solid rgba(240,192,64,0.5);">
+    <div class="card" id="notice-preview-card" style="display:none;border:1px solid rgba(245,197,24,0.5);">
       <h3>👁 학부모 앱에 이렇게 보여요</h3>
       <div style="font-size:12px;color:var(--muted);margin-bottom:14px;" id="notice-preview-target"></div>
-      <div style="background:rgba(255,255,255,0.03);border-radius:12px;padding:16px 18px;">
+      <div style="background:rgba(30,24,56,0.03);border-radius:12px;padding:16px 18px;">
         <div style="font-weight:700;font-size:15px;margin-bottom:6px;" id="notice-preview-title"></div>
         <div style="font-size:13px;color:var(--off-white);white-space:pre-wrap;line-height:1.6;margin-bottom:10px;" id="notice-preview-body"></div>
         <div id="notice-preview-images" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
@@ -909,16 +909,16 @@
       <h3>🎓 연말 일괄 진급 처리</h3>
       <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:20px;">
         전체 학생의 학년과 수업 반을 한 단계씩 올립니다.<br>
-        <span style="color:#FCA5A5;">⚠️ 실행 후 되돌릴 수 없습니다. 반드시 미리보기로 확인 후 실행하세요.</span><br>
-        · 고3 → <span style="color:var(--gold);">N수</span> 처리 (반 배정 초기화)<br>
+        <span style="color:#C62828;">⚠️ 실행 후 되돌릴 수 없습니다. 반드시 미리보기로 확인 후 실행하세요.</span><br>
+        · 고3 → <span style="color:var(--purple, #5B3FA6);">N수</span> 처리 (반 배정 초기화)<br>
         · N수 학생은 변경하지 않습니다.<br>
         · 반 이름의 숫자 앞 학년 표기도 자동으로 올라갑니다. (예: 중1-7A → 중2-7A)
       </div>
 
       <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px;">
         <select id="promo-branch"
-          style="padding:8px 14px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;
-          color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:dark;">
+          style="padding:8px 14px;background:#FFFFFF;border:1px solid rgba(245,197,24,0.3);border-radius:8px;
+          color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:light;">
           <option value="">전체 관</option>
           <option value="평촌관">평촌관만</option>
           <option value="산본관">산본관만</option>
@@ -950,7 +950,7 @@
       <div class="form-group" style="margin-bottom:16px;">
         <label>학생 선택</label>
         <input type="text" id="assignStudentSearch" placeholder="🔍 이름 검색..." oninput="renderAssignStudentList()"
-          style="width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;margin-bottom:8px;">
+          style="width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;margin-bottom:8px;">
         <input type="hidden" id="assignStudent">
         <div id="assignStudentList" style="max-height:280px;overflow-y:auto;border:1px solid var(--border-soft);border-radius:10px;padding:6px;"></div>
       </div>
@@ -1000,16 +1000,16 @@
       </div>
       <button class="btn btn-primary" onclick="createTeacher()">등록</button>
       <div class="msg" id="teacherCreateMsg"></div>
-      <div style="margin-top:14px;padding:12px 14px;background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.8;">
-        선생님 로그인: <b style="color:var(--gold);">이름</b>과 <b style="color:var(--gold);">비밀번호</b>로 <a href="teacher.html" style="color:var(--gold);">teacher.html</a> 에서 로그인합니다.<br>
-        역할을 <b style="color:var(--gold);">조교</b>로 등록하면 로그인 페이지의 <b style="color:var(--gold);">조교 탭</b>에서 <a href="ta.html" style="color:var(--gold);">ta.html</a> 로 로그인합니다.
+      <div style="margin-top:14px;padding:12px 14px;background:rgba(245,197,24,0.06);border:1px solid rgba(245,197,24,0.2);border-radius:8px;font-size:12px;color:var(--muted);line-height:1.8;">
+        선생님 로그인: <b style="color:var(--purple, #5B3FA6);">이름</b>과 <b style="color:var(--purple, #5B3FA6);">비밀번호</b>로 <a href="teacher.html" style="color:var(--purple, #5B3FA6);">teacher.html</a> 에서 로그인합니다.<br>
+        역할을 <b style="color:var(--purple, #5B3FA6);">조교</b>로 등록하면 로그인 페이지의 <b style="color:var(--purple, #5B3FA6);">조교 탭</b>에서 <a href="ta.html" style="color:var(--purple, #5B3FA6);">ta.html</a> 로 로그인합니다.
       </div>
     </div>
     <div class="card">
       <h3>📊 선생님 엑셀 일괄 등록</h3>
       <div class="grade-map-info">
         <b>엑셀 파일 형식</b><br>
-        컬럼 순서: <b style="color:var(--gold);">이름 / 비밀번호 / 담당관 / 담당과목 / 메모</b><br>
+        컬럼 순서: <b style="color:var(--purple, #5B3FA6);">이름 / 비밀번호 / 담당관 / 담당과목 / 메모</b><br>
         예시: 송문찬 | 12345678 | 평촌관 | 고등 | 고등부 전담<br>
         · 담당관: 평촌관 / 산본관 / 공통<br>
         · 비밀번호: 8자리 이상
@@ -1046,8 +1046,8 @@
     <div class="card">
       <h3>+ 선생님 시간표 등록</h3>
       <div class="grade-map-info">
-        시간표를 등록하면, 조교 페이지의 <b style="color:var(--gold);">클리닉실 현황</b>이 학생 등록 정보(담당선생님·등원요일·학년)를 기준으로<br>
-        지금 이 순간 "클리닉" 시간대인 학생들을 <b style="color:var(--gold);">자동으로</b> 보여줍니다. (수동 입실/퇴실 필요 없음)
+        시간표를 등록하면, 조교 페이지의 <b style="color:var(--purple, #5B3FA6);">클리닉실 현황</b>이 학생 등록 정보(담당선생님·등원요일·학년)를 기준으로<br>
+        지금 이 순간 "클리닉" 시간대인 학생들을 <b style="color:var(--purple, #5B3FA6);">자동으로</b> 보여줍니다. (수동 입실/퇴실 필요 없음)
       </div>
       <div class="form-row">
         <div class="form-group" style="grid-column:1/-1;">
@@ -1071,7 +1071,7 @@
         <div class="form-group"><label>종료일</label><input type="date" id="tt-to"></div>
       </div>
       <div class="grade-map-info" style="margin-bottom:10px;">
-        방학특강으로 등록하면 <b style="color:var(--gold);">해당 기간에만</b> 이 시간표가 우선 적용되고, 기간이 지나면 자동으로 정규반 시간표로 돌아갑니다.
+        방학특강으로 등록하면 <b style="color:var(--purple, #5B3FA6);">해당 기간에만</b> 이 시간표가 우선 적용되고, 기간이 지나면 자동으로 정규반 시간표로 돌아갑니다.
       </div>
       <div id="tt-blocks"></div>
       <button class="btn btn-secondary btn-sm" onclick="ttAddBlockRow()" style="margin:10px 0;">+ 시간 블록 추가</button>
@@ -1085,12 +1085,12 @@
       <h3>📊 엑셀로 한 번에 등록</h3>
       <div class="grade-map-info">
         <b>엑셀 파일 형식</b> (컬럼 순서 고정)<br>
-        <b style="color:var(--gold);">선생님 / 요일그룹 / 시간표종류 / 시작일 / 종료일 / 학년 / 시작시간 / 종료시간 / 구분 / 특정요일(선택)</b><br>
+        <b style="color:var(--purple, #5B3FA6);">선생님 / 요일그룹 / 시간표종류 / 시작일 / 종료일 / 학년 / 시작시간 / 종료시간 / 구분 / 특정요일(선택)</b><br>
         · 요일그룹: 월수금 / 화목 / 화목토<br>
         · 시간표종류: 방학특강 / 정규<br>
         · 시작일·종료일: 방학특강일 때만 입력 (예: 2026-07-20), 정규는 비워두면 됨<br>
         · 구분: 수업 / 클리닉<br>
-        · <b style="color:var(--gold);">특정요일</b>: 비워두면 그 요일그룹의 평일에 매번 적용. 화목토 그룹에서 토요일만 다른 시간이면 이 칸에 "토"라고 적으면 그 줄은 토요일에만 적용됩니다.<br>
+        · <b style="color:var(--purple, #5B3FA6);">특정요일</b>: 비워두면 그 요일그룹의 평일에 매번 적용. 화목토 그룹에서 토요일만 다른 시간이면 이 칸에 "토"라고 적으면 그 줄은 토요일에만 적용됩니다.<br>
         · 같은 선생님+요일그룹+시간표종류+기간이면 여러 줄이 하나의 시간표로 합쳐집니다.
       </div>
       <div class="excel-drop" id="ttExcelDrop" onclick="document.getElementById('ttExcelInput').click()">
@@ -1140,7 +1140,7 @@
     <div class="card">
       <h3>+ 숙제 업로드 (이미지/PDF)</h3>
       <div class="form-row">
-        <div class="form-group"><label>날짜</label><input type="date" id="hw-date" style="color-scheme:dark;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;"></div>
+        <div class="form-group"><label>날짜</label><input type="date" id="hw-date" style="color-scheme:light;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;"></div>
       </div>
       <input type="file" id="hw-file" accept="image/*,.pdf" style="margin-bottom:12px;color:var(--muted);font-size:13px;">
       <button class="btn btn-primary" onclick="uploadHomework()">업로드</button>
@@ -1190,11 +1190,11 @@
       <div class="form-row" style="max-width:700px;margin-bottom:16px;">
         <div class="form-group">
           <label>시작일</label>
-          <input type="date" id="excelDateFrom" style="color-scheme:dark;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+          <input type="date" id="excelDateFrom" style="color-scheme:light;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
         </div>
         <div class="form-group">
           <label>종료일</label>
-          <input type="date" id="excelDateTo" style="color-scheme:dark;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+          <input type="date" id="excelDateTo" style="color-scheme:light;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
         </div>
         <div class="form-group">
           <label>선생님 필터</label>
@@ -1222,11 +1222,11 @@
       <div class="form-row" style="max-width:700px;grid-template-columns:1fr 1fr 1fr;margin-bottom:16px;">
         <div class="form-group">
           <label>시작일</label>
-          <input type="date" id="progressDateFrom" style="color-scheme:dark;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+          <input type="date" id="progressDateFrom" style="color-scheme:light;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
         </div>
         <div class="form-group">
           <label>종료일</label>
-          <input type="date" id="progressDateTo" style="color-scheme:dark;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+          <input type="date" id="progressDateTo" style="color-scheme:light;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
         </div>
         <div class="form-group">
           <label>선생님 필터</label>
@@ -1261,13 +1261,13 @@
       <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:18px;">
         <div class="form-group">
           <label>연도</label>
-          <select id="monthlyYear" style="padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+          <select id="monthlyYear" style="padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
             <option value="">전체</option>
           </select>
         </div>
         <div class="form-group">
           <label>월</label>
-          <select id="monthlyMonth" style="padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+          <select id="monthlyMonth" style="padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
             <option value="">전체</option>
             <option value="01">1월</option>
             <option value="02">2월</option>
@@ -1300,14 +1300,14 @@
   <div class="tab-panel" id="tab-parents">
     <style>
       .pa-table { width:100%; border-collapse:collapse; font-size:13px; }
-      .pa-table th { font-size:11px; color:var(--muted); letter-spacing:1px; padding:8px 10px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1); }
-      .pa-table td { padding:7px 10px; border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:middle; }
-      .pa-in { width:150px; padding:6px 9px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:7px; color:var(--off-white); font-size:13px; font-family:inherit; outline:none; }
+      .pa-table th { font-size:11px; color:var(--muted); letter-spacing:1px; padding:8px 10px; text-align:left; border-bottom:1px solid rgba(30,24,56,0.1); }
+      .pa-table td { padding:7px 10px; border-bottom:1px solid rgba(30,24,56,0.05); vertical-align:middle; }
+      .pa-in { width:150px; padding:6px 9px; background:rgba(30,24,56,0.05); border:1px solid rgba(30,24,56,0.12); border-radius:7px; color:var(--off-white); font-size:13px; font-family:inherit; outline:none; }
       .pa-in:focus { border-color:var(--gold); }
-      .pa-st { font-size:10.5px; padding:2px 8px; border-radius:999px; background:rgba(255,255,255,0.06); color:var(--muted); white-space:nowrap; }
-      .pa-st.on { background:rgba(95,217,138,0.15); color:#7fe0a3; }
-      .pa-filter { padding:6px 12px; border-radius:8px; border:1px solid rgba(255,255,255,0.12); background:transparent; color:var(--muted); font-size:12px; font-family:inherit; cursor:pointer; }
-      .pa-filter.active { border-color:var(--gold); color:var(--gold); background:rgba(240,192,64,0.1); }
+      .pa-st { font-size:10.5px; padding:2px 8px; border-radius:999px; background:rgba(30,24,56,0.06); color:var(--muted); white-space:nowrap; }
+      .pa-st.on { background:rgba(46,158,91,0.15); color:#2E9E5B; }
+      .pa-filter { padding:6px 12px; border-radius:8px; border:1px solid rgba(30,24,56,0.12); background:transparent; color:var(--muted); font-size:12px; font-family:inherit; cursor:pointer; }
+      .pa-filter.active { border-color:var(--gold); color:var(--purple, #5B3FA6); background:rgba(245,197,24,0.1); }
     </style>
     <div class="card">
       <h3>👪 학부모 계정 연결 <span style="font-size:12px;color:var(--muted);font-weight:400;">— 학부모는 <b style="color:var(--off-white);">학생 이름 + 학부모 전화번호</b>로 로그인해 주간성취도·월간 학습보고서를 봅니다</span></h3>
@@ -1336,36 +1336,36 @@
   <!-- 숙제 입력 (관리부): 날짜별 담당 › 반 › 학생 › 내용 → 학부모 페이지 "숙제" 탭 -->
   <div class="tab-panel" id="tab-homeworklog">
     <style>
-      .hl-cls { padding:7px 12px; border-radius:20px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); color:var(--off-white); font-size:13px; font-family:inherit; cursor:pointer; }
+      .hl-cls { padding:7px 12px; border-radius:20px; border:1px solid rgba(30,24,56,0.15); background:rgba(30,24,56,0.05); color:var(--off-white); font-size:13px; font-family:inherit; cursor:pointer; }
       .hl-cls small { color:var(--muted); font-size:11px; }
-      .hl-cls.active { background:rgba(240,192,64,0.2); border-color:var(--gold); color:var(--gold); }
+      .hl-cls.active { background:rgba(245,197,24,0.2); border-color:var(--gold); color:var(--purple, #5B3FA6); }
       #hlClasses { display:flex; flex-direction:column; gap:6px; }
-      .hl-acc { border:1px solid rgba(255,255,255,0.1); border-radius:10px; overflow:hidden; background:rgba(255,255,255,0.02); }
-      .hl-acc.open { border-color:rgba(240,192,64,0.35); }
+      .hl-acc { border:1px solid rgba(30,24,56,0.1); border-radius:10px; overflow:hidden; background:rgba(30,24,56,0.02); }
+      .hl-acc.open { border-color:rgba(245,197,24,0.35); }
       .hl-acc-h { width:100%; display:flex; align-items:center; gap:10px; padding:10px 14px; background:transparent; border:none; color:var(--off-white); font-size:14px; font-family:inherit; cursor:pointer; text-align:left; }
-      .hl-acc-h:hover { background:rgba(255,255,255,0.04); }
-      .hl-acc-h .ar { color:var(--gold); width:12px; }
+      .hl-acc-h:hover { background:rgba(30,24,56,0.04); }
+      .hl-acc-h .ar { color:var(--purple, #5B3FA6); width:12px; }
       .hl-acc-h small { color:var(--muted); font-size:11.5px; }
-      .hl-acc-h .sel { margin-left:auto; font-size:11.5px; color:var(--gold); background:rgba(240,192,64,0.12); padding:2px 8px; border-radius:999px; }
+      .hl-acc-h .sel { margin-left:auto; font-size:11.5px; color:var(--purple, #5B3FA6); background:rgba(245,197,24,0.12); padding:2px 8px; border-radius:999px; }
       .hl-acc-b { display:flex; gap:8px; flex-wrap:wrap; padding:4px 14px 12px 36px; }
-      .hl-stu { display:inline-flex; align-items:center; gap:5px; padding:5px 10px; border-radius:8px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); font-size:13px; color:var(--off-white); cursor:pointer; }
+      .hl-stu { display:inline-flex; align-items:center; gap:5px; padding:5px 10px; border-radius:8px; background:rgba(30,24,56,0.04); border:1px solid rgba(30,24,56,0.08); font-size:13px; color:var(--off-white); cursor:pointer; }
       .hl-stu input { accent-color:var(--gold); }
       .hl-table { width:100%; border-collapse:collapse; font-size:13px; }
-      .hl-table th { font-size:11px; color:var(--muted); letter-spacing:1px; padding:8px 10px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1); }
-      .hl-table td { padding:9px 10px; border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:top; }
+      .hl-table th { font-size:11px; color:var(--muted); letter-spacing:1px; padding:8px 10px; text-align:left; border-bottom:1px solid rgba(30,24,56,0.1); }
+      .hl-table td { padding:9px 10px; border-bottom:1px solid rgba(30,24,56,0.05); vertical-align:top; }
     </style>
     <div class="card">
       <h3>📒 숙제 입력 <span style="font-size:12px;color:var(--muted);font-weight:400;">— 날짜 › 담당 › 반 › 학생 › 내용. 저장하면 해당 학생 학부모 페이지 "숙제" 탭에 바로 보입니다</span></h3>
       <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:12px;">
-        <div class="form-group"><label>날짜</label><input type="date" id="hlDate" onchange="hlLoad()" style="color-scheme:dark;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;"></div>
-        <div class="form-group"><label>담당 선생님</label><select id="hlTeacher" onchange="hlOnTeacher()" style="padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;"></select></div>
+        <div class="form-group"><label>날짜</label><input type="date" id="hlDate" onchange="hlLoad()" style="color-scheme:light;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;"></div>
+        <div class="form-group"><label>담당 선생님</label><select id="hlTeacher" onchange="hlOnTeacher()" style="padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;"></select></div>
         <button class="btn btn-secondary btn-sm" onclick="hlCopyPrev()" title="직전 날짜 기록을 이 날짜로 복사">⎘ 지난 기록 복사</button>
       </div>
       <div style="font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">반</div>
       <div id="hlClasses" style="margin-bottom:12px;"></div>
       <div style="font-size:11px;color:var(--muted);letter-spacing:1px;margin-bottom:6px;">학생 <span style="letter-spacing:0;text-transform:none;">(이 숙제를 받지 않는 학생은 체크 해제)</span></div>
       <div id="hlStudents" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
-      <div class="form-group" style="margin-bottom:12px;"><label>숙제 내용</label><textarea id="hlContent" rows="2" placeholder="예: 쎈 p135~137 / 프린트(다각형~회전체)" style="width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>
+      <div class="form-group" style="margin-bottom:12px;"><label>숙제 내용</label><textarea id="hlContent" rows="2" placeholder="예: 쎈 p135~137 / 프린트(다각형~회전체)" style="width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;resize:vertical;"></textarea></div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
         <button class="btn btn-primary" id="hlSaveBtn" onclick="hlSave()">저장</button>
         <button class="btn btn-secondary" id="hlCancelBtn" style="display:none;" onclick="hlCancelEdit()">수정 취소</button>
@@ -1379,7 +1379,7 @@
         <button class="btn btn-secondary btn-sm" onclick="hlDownloadImage()">💾 이미지 저장</button>
         <button class="btn btn-secondary btn-sm" onclick="hlPreviewImage()">👁 미리보기</button>
       </div>
-      <div id="hlCanvasWrap" style="display:none;margin-bottom:14px;"><canvas id="hlCanvas" style="max-width:100%;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:#fff;"></canvas></div>
+      <div id="hlCanvasWrap" style="display:none;margin-bottom:14px;"><canvas id="hlCanvas" style="max-width:100%;border-radius:8px;border:1px solid rgba(30,24,56,0.1);background:#fff;"></canvas></div>
       <div style="overflow:auto;">
         <table class="hl-table">
           <thead><tr><th style="width:90px;">담당</th><th style="width:110px;">반</th><th style="width:220px;">학생</th><th>내용</th><th style="width:110px;"></th></tr></thead>
@@ -1393,15 +1393,15 @@
   <div class="tab-panel" id="tab-studyreport">
     <style>
       .sr-table { width:100%; border-collapse:collapse; font-size:13px; }
-      .sr-table th { font-size:11px; color:var(--muted); letter-spacing:1px; padding:8px 10px; text-align:left; border-bottom:1px solid rgba(255,255,255,0.1); }
-      .sr-table td { padding:8px 10px; border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:middle; }
+      .sr-table th { font-size:11px; color:var(--muted); letter-spacing:1px; padding:8px 10px; text-align:left; border-bottom:1px solid rgba(30,24,56,0.1); }
+      .sr-table td { padding:8px 10px; border-bottom:1px solid rgba(30,24,56,0.05); vertical-align:middle; }
       .sr-table td.r, .sr-table th.r { text-align:right; font-variant-numeric:tabular-nums; }
       .sr-st { font-size:10.5px; padding:2px 8px; border-radius:999px; white-space:nowrap; }
-      .sr-st.draft { background:rgba(255,179,92,0.15); color:#ffc883; }
-      .sr-st.reviewed { background:rgba(95,217,138,0.15); color:#7fe0a3; }
+      .sr-st.draft { background:rgba(255,179,92,0.15); color:#D97B1A; }
+      .sr-st.reviewed { background:rgba(46,158,91,0.15); color:#2E9E5B; }
       .sr-st.sent { background:rgba(122,184,255,0.15); color:#9ccaff; }
-      .sr-st.none { background:rgba(255,255,255,0.06); color:var(--muted); }
-      .sr-link { font-size:12px; color:var(--gold); text-decoration:none; border:1px solid rgba(240,192,64,0.4); padding:3px 9px; border-radius:6px; white-space:nowrap; }
+      .sr-st.none { background:rgba(30,24,56,0.06); color:var(--muted); }
+      .sr-link { font-size:12px; color:var(--purple, #5B3FA6); text-decoration:none; border:1px solid rgba(245,197,24,0.4); padding:3px 9px; border-radius:6px; white-space:nowrap; }
       .sr-stat { display:flex; gap:14px; flex-wrap:wrap; font-size:12.5px; color:var(--muted); margin:10px 0; }
       .sr-stat b { color:var(--off-white); }
     </style>
@@ -1410,11 +1410,11 @@
       <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px;">
         <div class="form-group">
           <label>보고 월</label>
-          <input type="month" id="srMonth" style="color-scheme:dark;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+          <input type="month" id="srMonth" style="color-scheme:light;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
         </div>
         <div class="form-group">
           <label>선생님</label>
-          <select id="srTeacher" style="padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;"><option value="">전체</option></select>
+          <select id="srTeacher" style="padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;"><option value="">전체</option></select>
         </div>
         <button class="btn btn-secondary" onclick="srLoad()">🔍 현황 조회</button>
       </div>
@@ -1429,7 +1429,7 @@
         ① JSON과 📦 ZIP을 Claude에게 주면 문항별 단원·유형·난이도를 분류하고 학생별 의견까지 써서 파일 하나로 돌려줍니다 → ②로 올리면 그때 보고서가 만들어집니다 → 선생님 검수 → ③ 공개.
         <button class="btn btn-secondary btn-sm" style="margin-left:6px;" onclick="srGenerate()">분류 없이 빠른 집계</button> <span style="font-size:11px;">(매쓰플랫 유형만으로 대략 보고 싶을 때)</span>
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid rgba(30,24,56,0.06);">
         <span style="font-size:11px;color:var(--muted);letter-spacing:1px;">정리</span>
         <button class="btn btn-danger btn-sm" onclick="srDeleteMonth()">이 달 보고서 전체 삭제</button>
         <button class="btn btn-danger btn-sm" onclick="srPurgeMonth()">이 달 시험지 PDF·오답 기록 삭제</button>
@@ -1458,11 +1458,11 @@
       <div class="form-row" style="max-width:700px;grid-template-columns:1fr 1fr 1fr;margin-bottom:16px;">
         <div class="form-group">
           <label>날짜 (시작)</label>
-          <input type="date" id="clinicDateFrom" style="color-scheme:dark;width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+          <input type="date" id="clinicDateFrom" style="color-scheme:light;width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
         </div>
         <div class="form-group">
           <label>날짜 (종료)</label>
-          <input type="date" id="clinicDateTo" style="color-scheme:dark;width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+          <input type="date" id="clinicDateTo" style="color-scheme:light;width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
         </div>
         <div class="form-group">
           <label>선생님 필터</label>
@@ -1495,14 +1495,14 @@
       <div class="form-row" style="max-width:700px;grid-template-columns:1fr 1fr 1fr;">
         <div class="form-group">
           <label>관 선택</label>
-          <select id="dr-branch" style="width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+          <select id="dr-branch" style="width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
             <option value="평촌관">평촌관</option>
             <option value="산본관">산본관</option>
           </select>
         </div>
         <div class="form-group">
           <label>날짜</label>
-          <input type="date" id="dr-date" style="color-scheme:dark;width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+          <input type="date" id="dr-date" style="color-scheme:light;width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
         </div>
         <div class="form-group">
           <label>작성자</label>
@@ -1515,12 +1515,12 @@
         <label>금일 수업 반</label>
 
         <!-- 아코디언 토글 버튼 -->
-        <div id="drClassAccordion" style="border:1px solid rgba(255,255,255,0.1);border-radius:8px;overflow:hidden;margin-bottom:8px;">
+        <div id="drClassAccordion" style="border:1px solid rgba(30,24,56,0.1);border-radius:8px;overflow:hidden;margin-bottom:8px;">
           <!-- 헤더 -->
-          <div onclick="toggleDrClassAccordion()" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(255,255,255,0.04);cursor:pointer;"
-            onmouseover="this.style.background='rgba(240,192,64,0.07)'" onmouseout="this.style.background='rgba(255,255,255,0.04)'">
-            <span style="font-size:13px;color:var(--gold);font-weight:600;">📅 요일별 수업반 선택</span>
-            <span id="drClassArrow" style="color:var(--gold);font-size:11px;transition:transform 0.2s;">▼</span>
+          <div onclick="toggleDrClassAccordion()" style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(30,24,56,0.04);cursor:pointer;"
+            onmouseover="this.style.background='rgba(245,197,24,0.07)'" onmouseout="this.style.background='rgba(30,24,56,0.04)'">
+            <span style="font-size:13px;color:var(--purple, #5B3FA6);font-weight:600;">📅 요일별 수업반 선택</span>
+            <span id="drClassArrow" style="color:var(--purple, #5B3FA6);font-size:11px;transition:transform 0.2s;">▼</span>
           </div>
           <!-- 내용 -->
           <div id="drClassBody" style="display:none;padding:14px;">
@@ -1534,50 +1534,50 @@
         </div>
 
         <!-- 선택된 반 표시 / 수동 편집 -->
-        <input type="text" id="dr-classes" placeholder="선택하거나 직접 입력" style="width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
+        <input type="text" id="dr-classes" placeholder="선택하거나 직접 입력" style="width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
       </div>
 
       <!-- 4칸 그리드 -->
       <div class="form-row" style="max-width:700px;">
         <div class="form-group">
           <label>상담 및 테스트</label>
-          <textarea id="dr-consult" rows="3" placeholder="-" style="width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
+          <textarea id="dr-consult" rows="3" placeholder="-" style="width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
         </div>
         <div class="form-group">
           <label>현금영수증 발행 현황</label>
-          <textarea id="dr-receipt" rows="3" placeholder="-" style="width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
+          <textarea id="dr-receipt" rows="3" placeholder="-" style="width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
         </div>
       </div>
       <div class="form-row" style="max-width:700px;">
         <div class="form-group">
           <label>출결 현황 (결석자)</label>
-          <textarea id="dr-absent" rows="5" placeholder="예: 강예서(문잔t)-병결" style="width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
+          <textarea id="dr-absent" rows="5" placeholder="예: 강예서(문잔t)-병결" style="width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
         </div>
         <div class="form-group">
           <label>교재 입/출고</label>
-          <textarea id="dr-textbook" rows="5" placeholder="예: 개뿔 중등라이트 1-1 2ea 입고 및 초6 2-A 판매처리" style="width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
+          <textarea id="dr-textbook" rows="5" placeholder="예: 개뿔 중등라이트 1-1 2ea 입고 및 초6 2-A 판매처리" style="width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
         </div>
       </div>
       <div class="form-row" style="max-width:700px;">
         <div class="form-group">
           <label>비고 (신규/퇴원)</label>
-          <textarea id="dr-note" rows="3" placeholder="-" style="width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
+          <textarea id="dr-note" rows="3" placeholder="-" style="width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
         </div>
         <div class="form-group">
           <label>전화문의</label>
-          <textarea id="dr-phone" rows="3" placeholder="-" style="width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
+          <textarea id="dr-phone" rows="3" placeholder="-" style="width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
         </div>
       </div>
       <div class="form-group" style="margin-bottom:20px;">
         <label>익일 상담 및 신규원생</label>
-        <textarea id="dr-nextday" rows="2" placeholder="-" style="width:100%;max-width:700px;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
+        <textarea id="dr-nextday" rows="2" placeholder="-" style="width:100%;max-width:700px;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
       </div>
 
       <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center;">
         <button class="btn btn-primary" onclick="previewDailyReport()">👁 미리보기</button>
         <button class="btn btn-secondary" onclick="downloadDailyReport()">⬇ 이미지 다운로드</button>
-        <button class="btn btn-secondary" onclick="saveDraft('dr')" style="border-color:rgba(100,200,100,0.4);color:#90ee90;">💾 임시저장</button>
-        <button class="btn btn-secondary" onclick="loadDraft('dr')" style="border-color:rgba(100,180,255,0.4);color:#90cfff;">📂 불러오기</button>
+        <button class="btn btn-secondary" onclick="saveDraft('dr')" style="border-color:rgba(100,200,100,0.4);color:#2E9E5B;">💾 임시저장</button>
+        <button class="btn btn-secondary" onclick="loadDraft('dr')" style="border-color:rgba(100,180,255,0.4);color:#2F7FD6;">📂 불러오기</button>
         <span id="dr-draft-status" style="font-size:11px;color:var(--muted);"></span>
       </div>
     </div>
@@ -1586,7 +1586,7 @@
     <div id="drPreviewWrap" style="display:none;margin-top:16px;">
       <div class="card">
         <h3 style="margin-bottom:14px;">미리보기</h3>
-        <canvas id="drCanvas" style="max-width:100%;border-radius:8px;border:1px solid rgba(255,255,255,0.1);"></canvas>
+        <canvas id="drCanvas" style="max-width:100%;border-radius:8px;border:1px solid rgba(30,24,56,0.1);"></canvas>
       </div>
     </div>
   </div>
@@ -1598,17 +1598,17 @@
       <div class="form-row" style="max-width:600px;grid-template-columns:1fr 1fr 1fr;">
         <div class="form-group">
           <label>관 선택</label>
-          <select id="wl-branch" style="width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+          <select id="wl-branch" style="width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
             <option value="평촌관">평촌관</option><option value="산본관">산본관</option>
           </select>
         </div>
         <div class="form-group">
           <label>시작일</label>
-          <input type="date" id="wl-from" style="color-scheme:dark;width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+          <input type="date" id="wl-from" style="color-scheme:light;width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
         </div>
         <div class="form-group">
           <label>종료일</label>
-          <input type="date" id="wl-to" style="color-scheme:dark;width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+          <input type="date" id="wl-to" style="color-scheme:light;width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
         </div>
       </div>
     </div>
@@ -1663,14 +1663,14 @@
     <div class="card">
       <h3>📦 교재입출고</h3>
       <textarea id="wl-textbook" rows="5" placeholder="교재 입출고 내역을 자유롭게 입력하세요."
-        style="width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);
+        style="width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);
         border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
     </div>
 
     <div style="display:flex;gap:12px;margin-bottom:32px;flex-wrap:wrap;align-items:center;">
       <button class="btn btn-primary" onclick="downloadWeeklyLog()">⬇ 이미지 저장</button>
-      <button class="btn btn-secondary" onclick="saveDraft('wl')" style="border-color:rgba(100,200,100,0.4);color:#90ee90;">💾 임시저장</button>
-      <button class="btn btn-secondary" onclick="loadDraft('wl')" style="border-color:rgba(100,180,255,0.4);color:#90cfff;">📂 불러오기</button>
+      <button class="btn btn-secondary" onclick="saveDraft('wl')" style="border-color:rgba(100,200,100,0.4);color:#2E9E5B;">💾 임시저장</button>
+      <button class="btn btn-secondary" onclick="loadDraft('wl')" style="border-color:rgba(100,180,255,0.4);color:#2F7FD6;">📂 불러오기</button>
       <span id="wl-draft-status" style="font-size:11px;color:var(--muted);"></span>
     </div>
     <canvas id="wlCanvas" style="display:none;"></canvas>
@@ -1678,14 +1678,14 @@
 
   <!-- 학생 출결 -->
   <div class="tab-panel" id="tab-attendance">
-    <div class="card" style="border-color:rgba(240,192,64,0.4);">
+    <div class="card" style="border-color:rgba(245,197,24,0.4);">
       <h3>📶 오늘의 출결코드 (학부모 앱 자가 출석체크용)</h3>
       <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;">
         학생/학부모가 학부모 앱에서 이 코드를 입력하면 자동으로 출석체크되고, 등록된 학부모에게 등원 알림이 발송됩니다.
         매일 등원 전 코드를 새로 발급해주세요.
       </p>
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-        <div id="dailyCodeDisplay" style="font-size:28px;font-weight:800;letter-spacing:6px;color:var(--gold);min-width:140px;">------</div>
+        <div id="dailyCodeDisplay" style="font-size:28px;font-weight:800;letter-spacing:6px;color:var(--purple, #5B3FA6);min-width:140px;">------</div>
         <button class="btn btn-sm btn-primary" onclick="generateDailyCode()">🔄 오늘의 코드 새로 발급</button>
         <span id="dailyCodeStatus" style="font-size:12px;color:var(--muted);"></span>
       </div>
@@ -1693,29 +1693,29 @@
     <div class="card">
       <h3>✅ 출결 체크</h3>
       <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
-        <div id="attTodayLabel" style="font-size:15px;font-weight:700;color:var(--gold);min-width:160px;"></div>
+        <div id="attTodayLabel" style="font-size:15px;font-weight:700;color:var(--purple, #5B3FA6);min-width:160px;"></div>
         <div style="display:flex;gap:6px;">
           <button class="btn btn-sm btn-secondary" onclick="changeAttDay(-1)">◀ 전날</button>
           <button class="btn btn-sm btn-primary"   onclick="resetAttDay()">오늘</button>
           <button class="btn btn-sm btn-secondary" onclick="changeAttDay(1)">다음날 ▶</button>
         </div>
         <select id="attBranchFilter" onchange="renderAttendance()"
-          style="padding:7px 14px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.4);
-          border-radius:8px;color:#F0EDF8;font-size:13px;font-family:inherit;outline:none;
-          cursor:pointer;color-scheme:dark;">
-          <option value=""   style="background:#2D1F5E;color:#F0EDF8;">전체</option>
-          <option value="평촌관" style="background:#2D1F5E;color:#F0EDF8;">평촌관</option>
-          <option value="산본관" style="background:#2D1F5E;color:#F0EDF8;">산본관</option>
+          style="padding:7px 14px;background:#FFFFFF;border:1px solid rgba(245,197,24,0.4);
+          border-radius:8px;color:#1E1838;font-size:13px;font-family:inherit;outline:none;
+          cursor:pointer;color-scheme:light;">
+          <option value=""   style="background:#FFFFFF;color:#1E1838;">전체</option>
+          <option value="평촌관" style="background:#FFFFFF;color:#1E1838;">평촌관</option>
+          <option value="산본관" style="background:#FFFFFF;color:#1E1838;">산본관</option>
         </select>
         <button class="btn btn-sm btn-secondary" id="attDownloadBtn" onclick="downloadAttendanceImage()" style="display:none;">⬇ 이미지 저장</button>
-        <button class="btn btn-sm btn-secondary" onclick="saveDraft('att')" style="border-color:rgba(100,200,100,0.4);color:#90ee90;">💾 임시저장</button>
-        <button class="btn btn-sm btn-secondary" onclick="loadDraft('att')" style="border-color:rgba(100,180,255,0.4);color:#90cfff;">📂 불러오기</button>
+        <button class="btn btn-sm btn-secondary" onclick="saveDraft('att')" style="border-color:rgba(100,200,100,0.4);color:#2E9E5B;">💾 임시저장</button>
+        <button class="btn btn-sm btn-secondary" onclick="loadDraft('att')" style="border-color:rgba(100,180,255,0.4);color:#2F7FD6;">📂 불러오기</button>
         <span id="att-draft-status" style="font-size:11px;color:var(--muted);"></span>
       </div>
       <div style="display:flex;gap:14px;margin-bottom:16px;font-size:12px;color:var(--muted);">
         <span style="display:flex;align-items:center;gap:5px;"><span style="width:13px;height:13px;border-radius:3px;background:#3B82F6;display:inline-block;"></span>출석</span>
         <span style="display:flex;align-items:center;gap:5px;"><span style="width:13px;height:13px;border-radius:3px;background:#EF4444;display:inline-block;"></span>결석</span>
-        <span style="display:flex;align-items:center;gap:5px;"><span style="width:13px;height:13px;border-radius:3px;background:#fff;border:1px solid #aaa;display:inline-block;"></span>해당없음</span>
+        <span style="display:flex;align-items:center;gap:5px;"><span style="width:13px;height:13px;border-radius:3px;background:#fff;border:1px solid #8A8699;display:inline-block;"></span>해당없음</span>
         <span>· 클릭 시 출석→결석→해당없음 순환</span>
       </div>
       <div id="attStudentList"></div>
@@ -1734,19 +1734,19 @@
       <!-- 필터 -->
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
         <select id="rec-type" onchange="loadRecords()"
-          style="padding:8px 12px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:dark;">
+          style="padding:8px 12px;background:#FFFFFF;border:1px solid rgba(245,197,24,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:light;">
           <option value="dr">관리부 마감</option>
           <option value="wl">주간업무일지</option>
           <option value="att">학생 출결</option>
         </select>
         <select id="rec-branch" onchange="loadRecords()"
-          style="padding:8px 12px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:dark;">
+          style="padding:8px 12px;background:#FFFFFF;border:1px solid rgba(245,197,24,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:light;">
           <option value="">전체 관</option>
           <option value="평촌관">평촌관</option>
           <option value="산본관">산본관</option>
         </select>
         <input type="month" id="rec-month"
-          style="padding:8px 12px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:dark;">
+          style="padding:8px 12px;background:#FFFFFF;border:1px solid rgba(245,197,24,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:light;">
         <button class="btn btn-primary btn-sm" onclick="loadRecords()">🔍 조회</button>
       </div>
       <div id="rec-list"><div style="color:var(--muted);font-size:13px;">위에서 종류를 선택하고 조회하세요.</div></div>
@@ -1789,7 +1789,7 @@
     <div class="card">
       <h3>+ 관리자 계정 추가</h3>
       <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:18px;">
-        Firebase Auth에 계정을 생성하고 <code style="color:var(--gold);background:rgba(240,192,64,0.1);padding:2px 6px;border-radius:4px;">admins</code> 컬렉션에 등록합니다.<br>
+        Firebase Auth에 계정을 생성하고 <code style="color:var(--purple, #5B3FA6);background:rgba(245,197,24,0.1);padding:2px 6px;border-radius:4px;">admins</code> 컬렉션에 등록합니다.<br>
         등록된 계정만 이 관리자 페이지에 접근할 수 있습니다.
       </div>
       <div class="form-row" style="max-width:600px;">
@@ -1845,25 +1845,25 @@
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
         <select id="ws-course" onchange="wsSelectCourse(this.value)"
-          style="padding:8px 12px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.6);border-radius:8px;color:var(--off-white);font-size:13px;font-weight:600;font-family:inherit;outline:none;color-scheme:dark;max-width:260px;">
+          style="padding:8px 12px;background:#FFFFFF;border:1px solid rgba(245,197,24,0.6);border-radius:8px;color:var(--off-white);font-size:13px;font-weight:600;font-family:inherit;outline:none;color-scheme:light;max-width:260px;">
           <option value="">전체 강의 (요약)</option>
         </select>
         <select id="ws-branch" onchange="renderWatchStatus()"
-          style="padding:8px 12px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:dark;">
+          style="padding:8px 12px;background:#FFFFFF;border:1px solid rgba(245,197,24,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:light;">
           <option value="">전체 관</option>
           <option value="평촌관">평촌관</option>
           <option value="산본관">산본관</option>
         </select>
         <select id="ws-teacher" onchange="renderWatchStatus()"
-          style="padding:8px 12px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:dark;">
+          style="padding:8px 12px;background:#FFFFFF;border:1px solid rgba(245,197,24,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:light;">
           <option value="">전체 담당T</option>
         </select>
         <input type="text" id="ws-student" placeholder="학생 이름 검색" oninput="renderWatchStatus()"
-          style="padding:8px 12px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
+          style="padding:8px 12px;background:#FFFFFF;border:1px solid rgba(245,197,24,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
         <input type="text" id="ws-video" placeholder="영상 제목/태그 검색" oninput="renderWatchStatus()"
-          style="padding:8px 12px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
+          style="padding:8px 12px;background:#FFFFFF;border:1px solid rgba(245,197,24,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
         <select id="ws-status" onchange="renderWatchStatus()"
-          style="padding:8px 12px;background:#2D1F5E;border:1px solid rgba(240,192,64,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:dark;">
+          style="padding:8px 12px;background:#FFFFFF;border:1px solid rgba(245,197,24,0.3);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:light;">
           <option value="">전체 상태</option>
           <option value="unwatched">미시청</option>
           <option value="inprogress">시청중</option>
@@ -1882,9 +1882,9 @@
     <div class="card">
       <h3>📅 학원 일정 등록</h3>
       <div style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px;">
-        여기 등록한 일정은 선생님 페이지의 <b style="color:var(--gold);">달력</b>과 로그인 시 뜨는 <b style="color:var(--gold);">오늘 할 일 팝업</b>에 바로 표시됩니다.
+        여기 등록한 일정은 선생님 페이지의 <b style="color:var(--purple, #5B3FA6);">달력</b>과 로그인 시 뜨는 <b style="color:var(--purple, #5B3FA6);">오늘 할 일 팝업</b>에 바로 표시됩니다.
         특정 선생님에게 업무를 맡길 때는 종류를 <b style="color:var(--off-white);">할 일</b>로, 대상을 <b style="color:var(--off-white);">선생님 지정</b>으로 선택하세요.
-        종류를 <b style="color:#ff7a7a;">휴무</b>로 등록한 토요일은 토요클리닉 보고 알림이 뜨지 않아요.
+        종류를 <b style="color:#D64545;">휴무</b>로 등록한 토요일은 토요클리닉 보고 알림이 뜨지 않아요.
       </div>
       <div class="form-row">
         <div class="form-group"><label>제목</label><input type="text" id="sc-title" placeholder="예: 2학기 기말 대비 강사 회의"></div>
@@ -1901,8 +1901,8 @@
         </div>
       </div>
       <div class="form-row">
-        <div class="form-group"><label>날짜 (시작)</label><input type="date" id="sc-start" style="color-scheme:dark;"></div>
-        <div class="form-group"><label>종료일 (하루면 비워두기)</label><input type="date" id="sc-end" style="color-scheme:dark;"></div>
+        <div class="form-group"><label>날짜 (시작)</label><input type="date" id="sc-start" style="color-scheme:light;"></div>
+        <div class="form-group"><label>종료일 (하루면 비워두기)</label><input type="date" id="sc-end" style="color-scheme:light;"></div>
       </div>
       <div class="form-row">
         <div class="form-group"><label>시간 (선택)</label><input type="text" id="sc-time" placeholder="예: 오후 2시"></div>
@@ -1941,7 +1941,7 @@
     <div class="card">
       <h3>🔢 영상 고유 코드 조회</h3>
       <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:14px;">
-        학원 홈페이지에 올라간 모든 강의 영상에는 <b style="color:var(--gold);">고유 코드</b>가 붙어 있어요.
+        학원 홈페이지에 올라간 모든 강의 영상에는 <b style="color:var(--purple, #5B3FA6);">고유 코드</b>가 붙어 있어요.
         학생·학부모가 "<b style="color:var(--off-white);">26-1111-003 영상이 안 나와요</b>"처럼 코드로 문의하면
         아래 검색창에 그대로 붙여넣기만 하면 됩니다. 수업을 직접 하지 않아도 코드만 보면 <b style="color:var(--off-white);">몇 학년이 언제 배우는 어떤 강의</b>인지 알 수 있어요.
       </div>
@@ -1959,7 +1959,7 @@
       </div>
 
       <details style="border:1px solid var(--border-soft);border-radius:8px;padding:10px 14px;">
-        <summary style="cursor:pointer;font-size:13px;color:var(--gold);font-weight:600;">📖 전체 코드표 보기 (펼치기)</summary>
+        <summary style="cursor:pointer;font-size:13px;color:var(--purple, #5B3FA6);font-weight:600;">📖 전체 코드표 보기 (펼치기)</summary>
         <div id="vcLegend" style="margin-top:12px;"></div>
       </details>
     </div>
@@ -1969,8 +1969,8 @@
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
         <input id="vcSearch" type="text" placeholder="코드(26-1111-003, 1111003), 제목, 과목, 선생님 이름으로 검색"
           oninput="renderVideoCodeTab()"
-          style="flex:1;min-width:240px;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.15);
-            border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;color-scheme:dark;">
+          style="flex:1;min-width:240px;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.15);
+            border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;color-scheme:light;">
         <select id="vcFilterType" onchange="renderVideoCodeTab()" class="vc-select">
           <option value="">구분 전체</option>
           <option value="중등">중등</option>
@@ -1998,12 +1998,12 @@
       </div>
 
       <div id="vcDecode" style="display:none;margin-bottom:10px;padding:10px 14px;border-radius:8px;
-        background:rgba(240,192,64,0.08);border:1px solid rgba(240,192,64,0.3);font-size:13px;line-height:1.7;"></div>
+        background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.3);font-size:13px;line-height:1.7;"></div>
 
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;">
         <span id="vcSummary" style="font-size:12px;color:var(--muted);flex:1;min-width:200px;"></span>
         <button class="btn btn-secondary btn-sm" onclick="assignMissingVideoCodes()"
-          style="background:rgba(240,192,64,0.15);border-color:var(--gold);color:var(--gold);">✨ 코드 없는 영상 일괄 부여</button>
+          style="background:rgba(245,197,24,0.15);border-color:var(--gold);color:var(--purple, #5B3FA6);">✨ 코드 없는 영상 일괄 부여</button>
       </div>
 
       <div style="overflow-x:auto;border:1px solid var(--border-soft);border-radius:8px;">
@@ -2029,7 +2029,7 @@
       <div class="form-row">
         <div class="form-group" style="flex:2;">
           <label>올릴 비메오 폴더</label>
-          <select id="auFolder" onfocus="auLoadFolders()" onchange="auRenderQueue()" style="color-scheme:dark;"><option value="">폴더 목록 불러오는 중...</option></select>
+          <select id="auFolder" onfocus="auLoadFolders()" onchange="auRenderQueue()" style="color-scheme:light;"><option value="">폴더 목록 불러오는 중...</option></select>
         </div>
         <div class="form-group" style="flex:1;">
           <label>폴더 검색</label>
@@ -2195,19 +2195,19 @@
       </div>
 
       <!-- 폴더 선택기 -->
-      <div style="border:1px solid rgba(255,255,255,0.1);border-radius:8px;margin-bottom:12px;overflow:hidden;">
+      <div style="border:1px solid rgba(30,24,56,0.1);border-radius:8px;margin-bottom:12px;overflow:hidden;">
         <!-- 검색 + 전체선택 헤더 -->
-        <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(255,255,255,0.03);border-bottom:1px solid rgba(255,255,255,0.08);">
+        <div style="display:flex;align-items:center;gap:8px;padding:10px 12px;background:rgba(30,24,56,0.03);border-bottom:1px solid rgba(30,24,56,0.08);">
           <input id="folderSearchInput" type="text" placeholder="폴더 검색..."
             oninput="filterFolderList()"
-            style="flex:1;padding:6px 10px;background:#1A1230;border:1px solid rgba(255,255,255,0.15);
-              border-radius:6px;color:var(--off-white);font-size:12px;font-family:inherit;color-scheme:dark;">
+            style="flex:1;padding:6px 10px;background:#F7F6FB;border:1px solid rgba(30,24,56,0.15);
+              border-radius:6px;color:var(--off-white);font-size:12px;font-family:inherit;color-scheme:light;">
           <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;white-space:nowrap;">
             <input type="checkbox" id="folderCheckAll" onchange="toggleAllFolders(this)"
               style="accent-color:var(--gold);">
             전체선택
           </label>
-          <span id="folderSelectedCount" style="font-size:11px;color:var(--gold);white-space:nowrap;"></span>
+          <span id="folderSelectedCount" style="font-size:11px;color:var(--purple, #5B3FA6);white-space:nowrap;"></span>
         </div>
         <!-- 아코디언 폴더 목록 -->
         <div id="folderAccordion" style="max-height:300px;overflow-y:auto;"></div>
@@ -2218,7 +2218,7 @@
         <span id="syncStatus" style="font-size:13px;color:var(--muted);"></span>
       </div>
       <div id="syncPreview" style="margin-top:16px;display:none;">
-        <div style="font-size:12px;color:var(--gold);margin-bottom:10px;" id="syncPreviewTitle"></div>
+        <div style="font-size:12px;color:var(--purple, #5B3FA6);margin-bottom:10px;" id="syncPreviewTitle"></div>
         <div id="syncPreviewList" style="max-height:320px;overflow-y:auto;"></div>
         <div style="margin-top:12px;display:flex;gap:10px;">
           <button class="btn btn-primary" onclick="syncSaveAll()">✅ 전체 저장</button>
@@ -2232,14 +2232,14 @@
       <h3>🧹 Vimeo 정리 (홈페이지 미반영 영상 삭제)</h3>
       <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7;">
         Vimeo 계정 전체 영상 중 홈페이지에 등록되지 않은 영상(강의·홍보영상·에이펙스·상담 샘플강의 어디에도 없는 영상)을 찾아
-        Vimeo에서 <b style="color:#ff9090;">일괄 삭제</b>합니다. 삭제한 영상은 복구할 수 없으니 목록을 꼭 확인하세요.
+        Vimeo에서 <b style="color:#D64545;">일괄 삭제</b>합니다. 삭제한 영상은 복구할 수 없으니 목록을 꼭 확인하세요.
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
         <button class="btn btn-secondary" onclick="scanVimeoOrphans()">🔍 미반영 영상 찾기</button>
         <span id="orphanStatus" style="font-size:13px;color:var(--muted);"></span>
       </div>
       <div id="orphanPreview" style="margin-top:16px;display:none;">
-        <div style="font-size:12px;color:var(--gold);margin-bottom:10px;" id="orphanPreviewTitle"></div>
+        <div style="font-size:12px;color:var(--purple, #5B3FA6);margin-bottom:10px;" id="orphanPreviewTitle"></div>
         <div id="orphanPreviewList" style="max-height:320px;overflow-y:auto;"></div>
         <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
           <button class="btn btn-danger" onclick="deleteVimeoOrphans()">🗑 선택한 영상 Vimeo에서 삭제</button>
@@ -2260,7 +2260,7 @@
         <button class="btn btn-secondary btn-sm" data-vcat="수리논술" onclick="filterAdminVideos('수리논술',this)">수리논술</button>
         <button class="btn btn-secondary btn-sm" data-vcat="보충강의실" onclick="filterAdminVideos('보충강의실',this)">보충강의실</button>
         <button class="btn btn-secondary btn-sm" data-vcat="Song's Tip" onclick="filterAdminVideos(&quot;Song's Tip&quot;,this)">Song's Tip</button>
-        <button class="btn btn-secondary btn-sm" data-vcat="선생님전용" onclick="filterAdminVideos('선생님전용',this)" style="border-color:rgba(255,80,80,0.4);">🔒 선생님전용</button>
+        <button class="btn btn-secondary btn-sm" data-vcat="선생님전용" onclick="filterAdminVideos('선생님전용',this)" style="border-color:rgba(214,69,69,0.4);">🔒 선생님전용</button>
       </div>
       <div id="videoAdminList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
     </div>
@@ -2335,7 +2335,7 @@
         <div class="cq-links">
           <div class="row"><b>학원 태블릿용</b><button class="btn btn-secondary btn-sm" onclick="copyConsultQrUrl('tablet')">링크 복사</button></div>
           <div class="row"><b>수업 미리보기만</b><button class="btn btn-secondary btn-sm" onclick="copyConsultQrUrl('lounge')">링크 복사</button><button class="btn btn-secondary btn-sm" onclick="window.open(consultLinkUrl('lounge'),'_blank')">열기</button></div>
-          <div class="cq-note">학원 태블릿을 쓸 때는 <b style="color:var(--gold);">관리자 로그인이 안 된 브라우저(시크릿 창 등)</b>에서 태블릿용 링크를 여세요. 관리자 페이지가 열려 있는 기기를 상담 오신 분께 맡기지 않도록 합니다.</div>
+          <div class="cq-note">학원 태블릿을 쓸 때는 <b style="color:var(--purple, #5B3FA6);">관리자 로그인이 안 된 브라우저(시크릿 창 등)</b>에서 태블릿용 링크를 여세요. 관리자 페이지가 열려 있는 기기를 상담 오신 분께 맡기지 않도록 합니다.</div>
         </div>
         <div class="cq-live-title"><span class="cq-dot"></span>오늘 접수 현황 <span style="font-weight:400;color:var(--muted);font-size:11.5px;">(실시간)</span></div>
         <div class="cq-live" id="cqLive"><div class="cq-live-empty">오늘 접수된 상담지가 없습니다. 전송되면 여기에 바로 표시됩니다.</div></div>
@@ -2358,7 +2358,7 @@
     <button class="cq-close" onclick="closeConsultImage()" aria-label="닫기">✕</button>
     <h3>📷 상담 결과 이미지</h3>
     <p class="ci-hint">설문 결과만 한 장의 이미지로 만들었습니다. (연락처·학교 등 개인정보는 들어가지 않습니다)<br>
-      <b style="color:var(--off-white);">PC</b>: [이미지 복사] 후 PC 카카오톡 채팅창에 <b style="color:var(--gold);">Ctrl+V</b> 하거나, 저장한 파일을 끌어다 놓으세요.<br>
+      <b style="color:var(--off-white);">PC</b>: [이미지 복사] 후 PC 카카오톡 채팅창에 <b style="color:var(--purple, #5B3FA6);">Ctrl+V</b> 하거나, 저장한 파일을 끌어다 놓으세요.<br>
       <b style="color:var(--off-white);">휴대폰</b>: [공유하기] → 카카오톡을 고르면 바로 보낼 수 있습니다.</p>
     <div class="ci-prev" id="ciPrev"><div class="ci-wait">이미지를 만드는 중…</div></div>
     <div class="ci-btns">

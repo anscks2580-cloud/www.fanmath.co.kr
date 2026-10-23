@@ -102,7 +102,7 @@ function parseTeacherExcel(file) {
       <tr><th>이름</th><th>비밀번호</th><th>담당관</th><th>담당과목</th><th>메모</th></tr>
       ${teacherExcelData.map(r => `<tr>
         <td>${r.name}</td>
-        <td>${r.pw.length >= 8 ? '✅' : '<span style="color:#ff9090">⚠️ 8자 미만</span>'}</td>
+        <td>${r.pw.length >= 8 ? '✅' : '<span style="color:#D64545">⚠️ 8자 미만</span>'}</td>
         <td>${r.branch}</td><td>${r.subject}</td><td>${r.memo||'-'}</td>
       </tr>`).join('')}`;
     document.getElementById('teacherExcelPreview').style.display = 'block';

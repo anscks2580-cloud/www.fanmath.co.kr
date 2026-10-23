@@ -27,7 +27,7 @@ window.renderStudents = function renderStudents() {
     <div class="student-item">
       <div class="student-name">${s.name}</div>
       <span class="student-meta">${s.grade} · ${s.branch}</span>
-      <span class="student-meta" style="color:var(--gold);font-size:12px;">${s.teacherName ? s.teacherName + ' T' : '미배정'}</span>
+      <span class="student-meta" style="color:var(--purple, #5B3FA6);font-size:12px;">${s.teacherName ? s.teacherName + ' T' : '미배정'}</span>
       <span class="student-meta" style="font-size:11px;">${(s.days||[]).join('·') || '-'}</span>
       <span class="student-meta" style="font-size:11px;color:${s.classGroup ? 'var(--gold)' : 'var(--muted)'};">${s.classGroup || '반 미배정'}</span>
       <span class="student-meta" style="font-size:11px;">영상접근 ${(s.assignedTags||[]).length}개</span>
@@ -56,7 +56,7 @@ window.renderAssignStudentList = function() {
   }
 
   el.innerHTML = list.map(s => `
-    <div class="student-item" style="cursor:pointer;margin-bottom:6px;${s.id === selectedUid ? 'border-color:var(--gold);background:rgba(240,192,64,0.08);' : ''}" onclick="selectAssignStudent('${s.id}')">
+    <div class="student-item" style="cursor:pointer;margin-bottom:6px;${s.id === selectedUid ? 'border-color:var(--gold);background:rgba(245,197,24,0.08);' : ''}" onclick="selectAssignStudent('${s.id}')">
       <div class="student-name">${s.name}</div>
       <span class="student-meta">${s.grade} · ${s.branch}</span>
       <span class="student-meta" style="font-size:11px;">영상접근 ${(s.assignedTags||[]).length}개</span>
@@ -180,19 +180,19 @@ window.checkStudentAuth = async function(uid) {
     const d = res.data || {};
     const s = studentsCache.find(st => st.id === uid) || {};
     if (!d.exists) {
-      box.style.color = '#ff8a8a';
+      box.style.color = '#D64545';
       box.innerHTML = '⚠️ 로그인 계정(Auth)이 없습니다. 아래 <b>로그인 계정 즉시 맞추기</b>를 누르면 새로 만들어집니다.';
       return;
     }
     const authName = decodeLocalPart(d.email);
     const lastLogin = d.lastSignIn ? new Date(d.lastSignIn).toLocaleString('ko-KR') : '기록 없음';
-    const disabledTxt = d.disabled ? ' · <b style="color:#ff8a8a;">계정 비활성화됨</b>' : '';
+    const disabledTxt = d.disabled ? ' · <b style="color:#D64545;">계정 비활성화됨</b>' : '';
     if (authName === s.name && d.email === s.name + STUDENT_EMAIL_DOMAIN) {
-      box.style.color = '#7ee2a8';
+      box.style.color = '#2E9E5B';
       box.innerHTML = `✅ 로그인 아이디 정상 (<b>${authName}</b>) · 최근 로그인: ${lastLogin}${disabledTxt}<br>
         <span style="color:var(--muted);">※ 비밀번호는 보안상 조회가 안 됩니다. 로그인이 안 되면 비밀번호를 다시 설정해주세요.</span>`;
     } else {
-      box.style.color = '#ffb86b';
+      box.style.color = '#D97B1A';
       box.innerHTML = `⚠️ 실제 로그인 아이디가 학생 이름과 다릅니다.<br>
         · 등록된 이름: <b>${s.name || '-'}</b><br>
         · 실제 로그인 아이디: <b>${authName || '-'}</b> <span style="color:var(--muted);">(${d.email || '-'})</span><br>
@@ -200,7 +200,7 @@ window.checkStudentAuth = async function(uid) {
     }
   } catch (e) {
     if (editingStudentId !== uid) return;
-    box.style.color = '#ff8a8a';
+    box.style.color = '#D64545';
     box.textContent = '로그인 계정 확인 실패: ' + authErrMsg(e);
   }
 };
@@ -415,10 +415,10 @@ function parseExcel(file) {
         <td>${r.phone}</td>
         <td><span class="preview-badge">${r.grade}</span></td>
         <td>${r.branch}</td>
-        <td style="color:${r.teacherUid?'var(--gold)':'#ff9090'};">${r.teacherName||'-'} ${r.teacherUid?'✅':'⚠️미매칭'}</td>
+        <td style="color:${r.teacherUid?'var(--gold)':'#D64545'};">${r.teacherName||'-'} ${r.teacherUid?'✅':'⚠️미매칭'}</td>
         <td>${r.days.join('·')||'-'}</td>
         <td>${r.parentPhone||'-'}</td>
-        <td style="color:var(--gold);">${recommendTags(r.grade, r.branch, r.teacherName).length}개</td>
+        <td style="color:var(--purple, #5B3FA6);">${recommendTags(r.grade, r.branch, r.teacherName).length}개</td>
       </tr>`).join('')}`;
     document.getElementById('excelPreview').style.display = 'block';
   };

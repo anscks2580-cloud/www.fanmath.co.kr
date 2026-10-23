@@ -85,7 +85,7 @@ function pxaRenderPreview(bad = []) {
   const box = document.getElementById('pxa-preview');
   if (!pxaQueue.length) {
     box.innerHTML = bad.length
-      ? `<div style="color:#ff9090;font-size:13px;margin-bottom:8px;">올릴 수 있는 PDF가 없습니다.</div>${pxaBadList(bad)}`
+      ? `<div style="color:#D64545;font-size:13px;margin-bottom:8px;">올릴 수 있는 PDF가 없습니다.</div>${pxaBadList(bad)}`
       : '<div style="color:var(--muted);font-size:13px;">선택한 폴더에 PDF가 없습니다.</div>';
     return;
   }
@@ -94,11 +94,11 @@ function pxaRenderPreview(bad = []) {
     const items = pxaQueue.filter(x => x.exam === exam);
     const grades  = [...new Set(items.map(x => x.grade))].sort(pxaOrder(PXA_GRADES));
     const regions = [...new Set(items.map(x => x.region))].sort(pxaOrder(PXA_REGIONS));
-    const exists = pxaData[pxaClean(exam)] ? ` <span style="color:#ffb35c;font-size:12px;font-weight:500;">· 이미 있는 시험 — 같은 이름 파일은 덮어씀</span>` : '';
+    const exists = pxaData[pxaClean(exam)] ? ` <span style="color:#D97B1A;font-size:12px;font-weight:500;">· 이미 있는 시험 — 같은 이름 파일은 덮어씀</span>` : '';
     const th = 'padding:6px 10px;border-bottom:1px solid var(--border-soft);font-weight:600;color:var(--muted);text-align:center;';
-    const td = 'padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.05);text-align:center;';
+    const td = 'padding:6px 10px;border-bottom:1px solid rgba(30,24,56,0.05);text-align:center;';
     return `<div style="margin-bottom:14px;">
-      <div style="font-size:14px;font-weight:700;color:var(--off-white);margin-bottom:8px;">${pxaEsc(exam)} <span style="color:var(--gold);">${items.length}개</span>${exists}</div>
+      <div style="font-size:14px;font-weight:700;color:var(--off-white);margin-bottom:8px;">${pxaEsc(exam)} <span style="color:var(--purple, #5B3FA6);">${items.length}개</span>${exists}</div>
       <div style="overflow-x:auto;"><table style="border-collapse:collapse;font-size:13px;min-width:320px;">
         <tr><th style="${th}text-align:left;">학년</th>${regions.map(r => `<th style="${th}">${pxaEsc(r)}</th>`).join('')}</tr>
         ${grades.map(g => `<tr><td style="${td}text-align:left;font-weight:600;color:var(--off-white);">${pxaEsc(g)}</td>${regions.map(r => {
@@ -117,7 +117,7 @@ function pxaRenderPreview(bad = []) {
     </div>`;
 }
 function pxaBadList(bad) {
-  return `<details style="margin:4px 0 14px;font-size:12.5px;color:#ffb35c;"><summary style="cursor:pointer;">제외된 파일 ${bad.length}개</summary>
+  return `<details style="margin:4px 0 14px;font-size:12.5px;color:#D97B1A;"><summary style="cursor:pointer;">제외된 파일 ${bad.length}개</summary>
     <div style="margin-top:6px;line-height:1.7;color:var(--muted);">${bad.slice(0, 200).map(pxaEsc).join('<br>')}</div></details>`;
 }
 window.pxaCancelFolder = () => {
@@ -214,7 +214,7 @@ window.pxaLoadList = async () => {
       data[ex.name] = files;
     }));
   } catch (e) {
-    box.innerHTML = `<div style="color:#ff9090;font-size:13px;">불러오지 못했습니다 (${pxaEsc(e.code || e.message)})</div>`;
+    box.innerHTML = `<div style="color:#D64545;font-size:13px;">불러오지 못했습니다 (${pxaEsc(e.code || e.message)})</div>`;
     return;
   }
   pxaData = data;
@@ -227,10 +227,10 @@ window.pxaLoadList = async () => {
     files.forEach(f => { ((byGrade[f.grade] = byGrade[f.grade] || {})[f.region] = byGrade[f.grade][f.region] || []).push(f); });
     const grades = Object.keys(byGrade).sort(pxaOrder(PXA_GRADES));
     const summary = grades.map(g => `${pxaEsc(g)} ${Object.values(byGrade[g]).reduce((s, a) => s + a.length, 0)}`).join(' · ');
-    return `<details style="border:1px solid var(--border-soft);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:rgba(255,255,255,0.02);">
+    return `<details style="border:1px solid var(--border-soft);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:rgba(30,24,56,0.02);">
       <summary style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;">
         <span><b style="color:var(--off-white);font-size:14px;">${pxaEsc(exam)}</b>
-          <span style="color:var(--gold);font-size:13px;margin-left:6px;">${files.length}개</span>
+          <span style="color:var(--purple, #5B3FA6);font-size:13px;margin-left:6px;">${files.length}개</span>
           <span style="color:var(--muted);font-size:12px;margin-left:8px;">${summary}</span></span>
         <button class="btn btn-danger btn-sm" data-exam="${pxaEsc(exam)}" onclick="event.preventDefault();pxaDeleteExam(this.dataset.exam)">시험 전체 삭제</button>
       </summary>

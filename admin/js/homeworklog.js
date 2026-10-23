@@ -125,14 +125,14 @@ window.hlLoad = async function () {
     el.innerHTML = hlRows.map((r) => {
       const showT = r.teacherName !== prevT; prevT = r.teacherName;
       return `<tr>
-        <td style="font-weight:700;color:var(--gold);">${showT ? hlEsc(r.teacherName) + 'T' : ''}</td>
+        <td style="font-weight:700;color:var(--purple, #5B3FA6);">${showT ? hlEsc(r.teacherName) + 'T' : ''}</td>
         <td style="white-space:nowrap;">${hlEsc(r.classGroup)}</td>
         <td style="font-size:12.5px;color:var(--muted);">${(r.studentNames || []).map(hlEsc).join(', ')}</td>
         <td style="color:var(--off-white);white-space:pre-wrap;">${hlEsc(r.content)}</td>
         <td style="white-space:nowrap;"><button class="btn btn-sm btn-secondary" onclick="hlEdit('${r.id}')">수정</button> <button class="btn btn-sm btn-danger" onclick="hlDelete('${r.id}')">삭제</button></td>
       </tr>`;
     }).join('');
-  } catch (e) { el.innerHTML = `<tr><td colspan="5" style="color:#ff9090;padding:20px;">오류: ${hlEsc(e.message)}</td></tr>`; }
+  } catch (e) { el.innerHTML = `<tr><td colspan="5" style="color:#D64545;padding:20px;">오류: ${hlEsc(e.message)}</td></tr>`; }
 };
 window.hlEdit = function (id) {
   const r = hlRows.find((x) => x.id === id); if (!r) return;
@@ -205,7 +205,7 @@ function hlDrawImage() {
   // 제목
   cell(x0, 1, W - 2, titleH, '#FFF2CC', title, true, 14);
   let y = 1 + titleH;
-  ['담당', '반', '학생', '내용'].forEach((h, i) => cell(xs[i], y, colW[i], headH, '#FFD966', h, true, 12));
+  ['담당', '반', '학생', '내용'].forEach((h, i) => cell(xs[i], y, colW[i], headH, '#F5C518', h, true, 12));
   y += headH;
   groups.forEach((g, gi) => {
     const gTop = y;

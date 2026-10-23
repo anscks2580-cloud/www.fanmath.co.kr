@@ -180,30 +180,30 @@ function renderVideos() {
   // 일괄 처리 툴바
   html += `
     <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;
-      padding:10px 14px;background:rgba(240,192,64,0.06);border:1px solid rgba(240,192,64,0.2);
+      padding:10px 14px;background:rgba(245,197,24,0.06);border:1px solid rgba(245,197,24,0.2);
       border-radius:8px;margin-bottom:12px;">
       <label style="display:flex;align-items:center;gap:6px;font-size:12px;cursor:pointer;white-space:nowrap;color:var(--off-white);">
         <input type="checkbox" id="checkAll" onchange="toggleAllVideoChecks(this)"
           style="width:15px;height:15px;accent-color:var(--gold);cursor:pointer;">
         전체선택
       </label>
-      <span id="checkedCount" style="font-size:12px;color:var(--gold);min-width:60px;"></span>
+      <span id="checkedCount" style="font-size:12px;color:var(--purple, #5B3FA6);min-width:60px;"></span>
       <div style="position:relative;flex:1;min-width:200px;">
         <input id="bulkTagSearch" type="text" placeholder="카테고리 검색..."
           oninput="filterBulkTagOptions()"
           onfocus="document.getElementById('bulkTagDropdown').style.display='block'"
           onblur="setTimeout(()=>document.getElementById('bulkTagDropdown').style.display='none',200)"
-          style="width:100%;box-sizing:border-box;padding:6px 10px;background:#1A1230;
-            border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:var(--off-white);
-            font-size:12px;font-family:inherit;color-scheme:dark;"
+          style="width:100%;box-sizing:border-box;padding:6px 10px;background:#F7F6FB;
+            border:1px solid rgba(30,24,56,0.15);border-radius:6px;color:var(--off-white);
+            font-size:12px;font-family:inherit;color-scheme:light;"
           data-selected-value="">
         <div id="bulkTagDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;
-          max-height:200px;overflow-y:auto;background:#1A1230;border:1px solid rgba(255,255,255,0.2);
+          max-height:200px;overflow-y:auto;background:#F7F6FB;border:1px solid rgba(30,24,56,0.2);
           border-radius:6px;z-index:100;margin-top:2px;"></div>
       </div>
       <button class="btn btn-secondary btn-sm" onclick="bulkChangeTag()">일괄 카테고리 변경</button>
-      <button class="btn btn-secondary btn-sm" onclick="bulkSaveOrder()" style="background:rgba(240,192,64,0.15);border-color:var(--gold);color:var(--gold);">📋 순서·제목 일괄 저장</button>
-      <button class="btn btn-secondary btn-sm" onclick="autoOrderByTitle()" title="선택한 강의만 교육과정 단원 순서 → 제목 번호 순으로 순서를 자동 배정합니다" style="background:rgba(124,184,221,0.15);border-color:#7cb8dd;color:#7cb8dd;">📚 단원순 자동배정</button>
+      <button class="btn btn-secondary btn-sm" onclick="bulkSaveOrder()" style="background:rgba(245,197,24,0.15);border-color:var(--gold);color:var(--purple, #5B3FA6);">📋 순서·제목 일괄 저장</button>
+      <button class="btn btn-secondary btn-sm" onclick="autoOrderByTitle()" title="선택한 강의만 교육과정 단원 순서 → 제목 번호 순으로 순서를 자동 배정합니다" style="background:rgba(124,184,221,0.15);border-color:#2F7FD6;color:#2F7FD6;">📚 단원순 자동배정</button>
       <button class="btn btn-danger btn-sm" onclick="bulkDelete()">일괄 삭제</button>
     </div>`;
 
@@ -226,24 +226,24 @@ function renderVideos() {
     const groupId = 'vgrp-' + group.label.replace(/[^a-zA-Z0-9가-힣]/g,'_');
 
     html += `
-      <div style="margin-bottom:8px;border:1px solid rgba(255,255,255,0.07);border-radius:8px;overflow:hidden;">
+      <div style="margin-bottom:8px;border:1px solid rgba(30,24,56,0.07);border-radius:8px;overflow:hidden;">
         <!-- 그룹 헤더 -->
         <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;
-          background:rgba(255,255,255,0.03);cursor:pointer;"
+          background:rgba(30,24,56,0.03);cursor:pointer;"
           onclick="toggleAdminGroup('${groupId}')">
           <input type="checkbox" class="group-check" data-group="${groupId}"
             onclick="event.stopPropagation();toggleGroupCheck(this,'${groupId}')"
             style="width:15px;height:15px;cursor:pointer;accent-color:var(--gold);flex-shrink:0;">
-          <span style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:1px;
+          <span style="font-size:11px;font-weight:700;color:var(--purple, #5B3FA6);letter-spacing:1px;
             text-transform:uppercase;flex:1;">${group.label}</span>
           <span style="font-size:11px;color:var(--muted);">${items.length}개</span>
-          <span id="arrow-${groupId}" style="color:var(--gold);font-size:11px;transition:transform 0.2s;">▼</span>
+          <span id="arrow-${groupId}" style="color:var(--purple, #5B3FA6);font-size:11px;transition:transform 0.2s;">▼</span>
         </div>
         <!-- 그룹 내용 (기본 접힘) -->
         <div id="${groupId}" style="display:none;">
           ${items.map(v => `
             <div class="assign-item" style="flex-wrap:wrap;gap:8px;align-items:center;
-              border-top:1px solid rgba(255,255,255,0.04);">
+              border-top:1px solid rgba(30,24,56,0.04);">
               <input type="checkbox" class="video-check" data-id="${v.id}" data-group="${groupId}"
                 onchange="updateCheckedCount()"
                 style="width:15px;height:15px;cursor:pointer;flex-shrink:0;accent-color:var(--gold);">
@@ -252,18 +252,18 @@ function renderVideos() {
                 color:${v.code ? 'var(--gold)' : 'var(--muted)'};${v.code ? 'cursor:pointer;' : ''}">${v.code || '코드 없음'}</span>
               <input id="order-${v.id}" type="number" min="1" value="${v.order != null ? v.order : ''}"
                 placeholder="순서"
-                style="width:52px;padding:4px 6px;background:#1A1230;border:1px solid rgba(255,255,255,0.15);
-                  border-radius:6px;color:var(--gold);font-size:12px;font-family:inherit;text-align:center;
-                  -moz-appearance:textfield;color-scheme:dark;">
+                style="width:52px;padding:4px 6px;background:#F7F6FB;border:1px solid rgba(30,24,56,0.15);
+                  border-radius:6px;color:var(--purple, #5B3FA6);font-size:12px;font-family:inherit;text-align:center;
+                  -moz-appearance:textfield;color-scheme:light;">
               <input id="title-${v.id}" type="text" value="${(v.title||'').replace(/"/g,'&quot;')}"
-                style="flex:1;min-width:160px;padding:4px 8px;background:#1A1230;border:1px solid rgba(255,255,255,0.15);
-                  border-radius:6px;color:var(--off-white);font-size:12px;font-family:inherit;color-scheme:dark;">
+                style="flex:1;min-width:160px;padding:4px 8px;background:#F7F6FB;border:1px solid rgba(30,24,56,0.15);
+                  border-radius:6px;color:var(--off-white);font-size:12px;font-family:inherit;color-scheme:light;">
               <span style="font-size:11px;color:var(--muted);flex-shrink:0;">${v.date||''}</span>
-              <select id="tag-sel-${v.id}" style="padding:4px 8px;background:#1A1230;border:1px solid rgba(255,255,255,0.15);
-                border-radius:6px;color:var(--off-white);font-size:12px;font-family:inherit;cursor:pointer;flex-shrink:0;color-scheme:dark;">
+              <select id="tag-sel-${v.id}" style="padding:4px 8px;background:#F7F6FB;border:1px solid rgba(30,24,56,0.15);
+                border-radius:6px;color:var(--off-white);font-size:12px;font-family:inherit;cursor:pointer;flex-shrink:0;color-scheme:light;">
                 ${optgroupHtml}
               </select>
-              <button class="btn btn-secondary btn-sm" onclick="saveRow('${v.id}')" style="background:rgba(240,192,64,0.15);border-color:var(--gold);color:var(--gold);">저장</button>
+              <button class="btn btn-secondary btn-sm" onclick="saveRow('${v.id}')" style="background:rgba(245,197,24,0.15);border-color:var(--gold);color:var(--purple, #5B3FA6);">저장</button>
               <button class="btn btn-secondary btn-sm" onclick="changeVideoTag('${v.id}')">태그변경</button>
               <button class="btn btn-danger btn-sm" onclick="deleteVideo('${v.id}')">삭제</button>
             </div>`).join('')}
@@ -305,9 +305,9 @@ function renderGroupNameList() {
   const entries = Object.entries(groupNamesCache);
   if (!entries.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;">등록된 그룹 이름이 없습니다.</div>'; return; }
   el.innerHTML = entries.map(([tag, name]) => `
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:13px;">
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:1px solid rgba(30,24,56,0.05);font-size:13px;">
       <span style="color:var(--muted);font-size:11px;min-width:260px;flex-shrink:0;">${tag}</span>
-      <span style="color:var(--gold);flex:1;">→ ${name}</span>
+      <span style="color:var(--purple, #5B3FA6);flex:1;">→ ${name}</span>
       <button class="btn btn-danger btn-sm" onclick="deleteGroupName('${tag.replace(/'/g,"\\'")}')">삭제</button>
     </div>`).join('');
 }
@@ -423,15 +423,15 @@ function renderBulkTagOptions(q) {
   dropdown.innerHTML = filtered.map(item => {
     if (!item.value) {
       // 헤더
-      return `<div style="padding:5px 10px;font-size:10px;font-weight:700;color:var(--gold);
-        letter-spacing:1px;background:rgba(240,192,64,0.06);border-bottom:1px solid rgba(240,192,64,0.1);">
+      return `<div style="padding:5px 10px;font-size:10px;font-weight:700;color:var(--purple, #5B3FA6);
+        letter-spacing:1px;background:rgba(245,197,24,0.06);border-bottom:1px solid rgba(245,197,24,0.1);">
         ${item.label.trim()}
       </div>`;
     }
     return `<div onclick="selectBulkTag('${item.value.replace(/'/g,"\\'")}','${item.label.trim().replace(/'/g,"\\'")}')"
       style="padding:7px 10px 7px ${12 + item.indent*8}px;font-size:12px;cursor:pointer;color:var(--off-white);
-        border-bottom:1px solid rgba(255,255,255,0.04);"
-      onmouseover="this.style.background='rgba(240,192,64,0.1)'"
+        border-bottom:1px solid rgba(30,24,56,0.04);"
+      onmouseover="this.style.background='rgba(245,197,24,0.1)'"
       onmouseout="this.style.background=''">
       ${item.label.trim()}
     </div>`;
@@ -953,25 +953,25 @@ function renderFolderAccordion(q='') {
     const groupId = 'fgrp' + gi;
     const allChecked = filtered.every(f => isFolderChecked(f));
     html += `
-      <div style="border-bottom:1px solid rgba(255,255,255,0.06);">
+      <div style="border-bottom:1px solid rgba(30,24,56,0.06);">
         <div onclick="toggleFolderGroup('${groupId}')"
           style="display:flex;align-items:center;gap:8px;padding:8px 12px;cursor:pointer;
-            background:rgba(255,255,255,0.02);"
-          onmouseover="this.style.background='rgba(240,192,64,0.06)'"
-          onmouseout="this.style.background='rgba(255,255,255,0.02)'">
+            background:rgba(30,24,56,0.02);"
+          onmouseover="this.style.background='rgba(245,197,24,0.06)'"
+          onmouseout="this.style.background='rgba(30,24,56,0.02)'">
           <input type="checkbox" class="folder-group-check" data-gi="${gi}"
             ${allChecked&&filtered.length?'checked':''}
             onclick="event.stopPropagation();toggleFolderGroupCheck(this,${gi})"
             style="accent-color:var(--gold);">
-          <span style="font-size:12px;font-weight:700;color:var(--gold);flex:1;">${group.group}</span>
+          <span style="font-size:12px;font-weight:700;color:var(--purple, #5B3FA6);flex:1;">${group.group}</span>
           <span style="font-size:11px;color:var(--muted);">${filtered.length}개</span>
-          <span id="arrow-${groupId}" style="color:var(--gold);font-size:10px;transition:transform 0.2s;">▼</span>
+          <span id="arrow-${groupId}" style="color:var(--purple, #5B3FA6);font-size:10px;transition:transform 0.2s;">▼</span>
         </div>
         <div id="${groupId}" style="display:${q?'block':'none'};">
           ${filtered.map(f => `
             <label style="display:flex;align-items:center;gap:8px;padding:6px 12px 6px 28px;
-              cursor:pointer;border-top:1px solid rgba(255,255,255,0.04);font-size:12px;"
-              onmouseover="this.style.background='rgba(255,255,255,0.03)'"
+              cursor:pointer;border-top:1px solid rgba(30,24,56,0.04);font-size:12px;"
+              onmouseover="this.style.background='rgba(30,24,56,0.03)'"
               onmouseout="this.style.background=''">
               <input type="checkbox" class="folder-check" value="${f}"
                 ${isFolderChecked(f)?'checked':''}
@@ -1343,15 +1343,15 @@ function renderOrphanPreview() {
     const label = key === '__root__' ? '폴더 없음' : key;
     return `
     <div style="margin-bottom:14px;">
-      <div style="font-size:11px;font-weight:700;color:var(--gold);letter-spacing:1px;
-        padding:5px 0;border-bottom:1px solid rgba(240,192,64,0.2);margin-bottom:4px;">
+      <div style="font-size:11px;font-weight:700;color:var(--purple, #5B3FA6);letter-spacing:1px;
+        padding:5px 0;border-bottom:1px solid rgba(245,197,24,0.2);margin-bottom:4px;">
         ${label} <span style="font-weight:400;color:var(--muted);">${items.length}개</span>
       </div>
       ${items.map(v => `
         <div style="display:flex;align-items:center;gap:10px;padding:6px 4px;
-          border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;">
+          border-bottom:1px solid rgba(30,24,56,0.04);font-size:13px;">
           <input id="orphan-check-${v.idx}" class="orphan-check" type="checkbox" checked
-            style="flex-shrink:0;width:16px;height:16px;accent-color:#ff9090;">
+            style="flex-shrink:0;width:16px;height:16px;accent-color:#D64545;">
           <a href="https://vimeo.com/${v.vimeoId}" target="_blank" rel="noopener"
             style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--off-white);text-decoration:none;">
             ${(v.title||'').replace(/</g,'&lt;')}</a>
@@ -1409,7 +1409,7 @@ function renderSyncPreview(folderCount) {
 
   const unfiled = syncCandidates.filter(v => !v.tag).length;
   titleEl.innerHTML = `신규 영상 <b>${syncCandidates.length}개</b> 발견
-    ${unfiled ? `<span style="color:#ffd060;margin-left:8px;">· 폴더 미지정 ${unfiled}개 (카테고리·제목 직접 지정)</span>` : ''}
+    ${unfiled ? `<span style="color:#5B3FA6;margin-left:8px;">· 폴더 미지정 ${unfiled}개 (카테고리·제목 직접 지정)</span>` : ''}
     <span style="margin-left:10px;">
       <a href="#" onclick="event.preventDefault();document.querySelectorAll('.sync-check').forEach(c=>c.checked=true);">전체선택</a>
       <span style="color:var(--muted);">/</span>
@@ -1443,26 +1443,26 @@ function renderSyncPreview(folderCount) {
 
     return `
     <div style="margin-bottom:14px;">
-      <div style="font-size:11px;font-weight:700;color:${isUnfiled ? '#ffd060' : 'var(--gold)'};letter-spacing:1px;
-        padding:5px 0;border-bottom:1px solid rgba(240,192,64,0.2);margin-bottom:4px;">
+      <div style="font-size:11px;font-weight:700;color:${isUnfiled ? '#F5C518' : 'var(--gold)'};letter-spacing:1px;
+        padding:5px 0;border-bottom:1px solid rgba(245,197,24,0.2);margin-bottom:4px;">
         ${headerLabel} <span style="font-weight:400;color:var(--muted);">${items.length}개</span>
       </div>
       ${items.map(v => isUnfiled ? `
         <div style="display:flex;align-items:center;gap:8px;padding:6px 4px;
-          border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;flex-wrap:wrap;">
+          border-bottom:1px solid rgba(30,24,56,0.04);font-size:13px;flex-wrap:wrap;">
           <input id="sync-check-${v.idx}" class="sync-check" type="checkbox" checked
             style="flex-shrink:0;width:16px;height:16px;accent-color:var(--gold);">
           <input id="sync-title-${v.idx}" type="text" value="${(v.title||'').replace(/"/g,'&quot;')}"
-            style="flex:1;min-width:160px;padding:5px 8px;background:#1A1230;border:1px solid rgba(255,255,255,0.15);
-              border-radius:6px;color:var(--off-white);font-size:12px;font-family:inherit;color-scheme:dark;">
-          <select id="sync-tag-${v.idx}" style="padding:5px 8px;background:#1A1230;border:1px solid #ffd060;
-            border-radius:6px;color:var(--off-white);font-size:12px;font-family:inherit;color-scheme:dark;">
+            style="flex:1;min-width:160px;padding:5px 8px;background:#F7F6FB;border:1px solid rgba(30,24,56,0.15);
+              border-radius:6px;color:var(--off-white);font-size:12px;font-family:inherit;color-scheme:light;">
+          <select id="sync-tag-${v.idx}" style="padding:5px 8px;background:#F7F6FB;border:1px solid #F5C518;
+            border-radius:6px;color:var(--off-white);font-size:12px;font-family:inherit;color-scheme:light;">
             <option value="">-- 카테고리 선택 --</option>
             ${catOptHtml}
           </select>
         </div>` : `
         <div style="display:flex;align-items:center;gap:10px;padding:6px 4px;
-          border-bottom:1px solid rgba(255,255,255,0.04);font-size:13px;">
+          border-bottom:1px solid rgba(30,24,56,0.04);font-size:13px;">
           <input id="sync-check-${v.idx}" class="sync-check" type="checkbox" checked
             style="flex-shrink:0;width:16px;height:16px;accent-color:var(--gold);">
           <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${v.title}</span>
@@ -1569,16 +1569,16 @@ window.copyText = async (text, el) => {
       document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
     }
     copyToast(`복사됨: ${t}`);
-    if (el) { const prev = el.style.color; el.style.color = '#7fe0a0'; setTimeout(() => el.style.color = prev, 800); }
+    if (el) { const prev = el.style.color; el.style.color = '#2E9E5B'; setTimeout(() => el.style.color = prev, 800); }
   } catch(e) { copyToast('복사 실패: ' + e.message); }
 };
 function copyToast(msg) {
   let t = document.getElementById('copyToast');
   if (!t) {
     t = document.createElement('div'); t.id = 'copyToast';
-    t.style.cssText = 'position:fixed;left:50%;bottom:32px;transform:translateX(-50%);background:#1A1230;color:var(--gold);'
+    t.style.cssText = 'position:fixed;left:50%;bottom:32px;transform:translateX(-50%);background:#F7F6FB;color:var(--purple, #5B3FA6);'
       + 'border:1px solid var(--gold);padding:8px 16px;border-radius:8px;font-size:12px;z-index:9999;'
-      + 'box-shadow:0 4px 16px rgba(0,0,0,0.4);transition:opacity .2s;pointer-events:none;';
+      + 'box-shadow:0 4px 16px rgba(30,24,56,0.12);transition:opacity .2s;pointer-events:none;';
     document.body.appendChild(t);
   }
   t.textContent = msg; t.style.opacity = '1';

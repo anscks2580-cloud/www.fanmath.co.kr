@@ -90,12 +90,12 @@ function parseClassAssignExcel(file) {
       </tr>
       ${classAssignData.map(r => {
         const status = r.matched.length === 1
-          ? '<span style="color:#90ff90;">✅ 매칭</span>'
+          ? '<span style="color:#2E9E5B;">✅ 매칭</span>'
           : r.matched.length > 1
-          ? `<span style="color:#ffd060;">⚠️ 동명이인 ${r.matched.length}명</span>`
-          : '<span style="color:#ff9090;">❌ 미매칭</span>';
+          ? `<span style="color:#5B3FA6;">⚠️ 동명이인 ${r.matched.length}명</span>`
+          : '<span style="color:#D64545;">❌ 미매칭</span>';
         const cls = r.classGroup
-          ? `<span style="color:var(--gold);font-weight:600;">${r.classGroup}</span>`
+          ? `<span style="color:var(--purple, #5B3FA6);font-weight:600;">${r.classGroup}</span>`
           : '<span style="color:var(--muted);">-</span>';
         return `<tr><td>${r.name}</td><td>${cls}</td><td>${status}</td></tr>`;
       }).join('')}`;

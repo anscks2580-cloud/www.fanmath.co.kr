@@ -282,7 +282,7 @@ function renderVcDecode(q) {
     return;
   }
   el.style.display = 'block';
-  el.innerHTML = `💡 <b style="color:var(--gold);font-family:'SF Mono',Menlo,Consolas,monospace;">${yy}-${prefix}${seq ? '-' + seq : ''}</b> 는
+  el.innerHTML = `💡 <b style="color:var(--purple, #5B3FA6);font-family:'SF Mono',Menlo,Consolas,monospace;">${yy}-${prefix}${seq ? '-' + seq : ''}</b> 는
     <b>20${yy}년 등록</b> · <b>${vcEsc(vcDescribe(p))}</b>${seq ? ` · <b>${Number(seq)}${p.type === '기출해설' ? '번' : '강'}</b>` : ''}
     <span style="color:var(--muted);">(배우는 시기: ${vcEsc(p.when)})</span>`;
 }
@@ -299,8 +299,8 @@ window.renderVideoCodeTab = function () {
   const mism = videosCache.filter(v => vcInfo(v).mismatch).length;
   document.getElementById('vcSummary').innerHTML =
     `전체 ${total}개 중 <b style="color:var(--off-white);">${list.length}개</b> 표시` +
-    (noCode ? ` · <span style="color:#ffd060;">코드 없음 ${noCode}개</span>` : '') +
-    (mism ? ` · <span style="color:#ffd060;">확인 필요 ${mism}개</span>` : '');
+    (noCode ? ` · <span style="color:#5B3FA6;">코드 없음 ${noCode}개</span>` : '') +
+    (mism ? ` · <span style="color:#5B3FA6;">확인 필요 ${mism}개</span>` : '');
 
   if (!list.length) {
     tbody.innerHTML = `<tr><td colspan="8" style="color:var(--muted);padding:16px;">검색 결과가 없습니다.</td></tr>`;
@@ -320,12 +320,12 @@ window.renderVideoCodeTab = function () {
       <td>${p ? vcEsc(p.subject) : `<span style="color:var(--muted);">${vcEsc(v.tag || '태그 없음')}</span>`}</td>
       <td style="white-space:nowrap;" title="${p && p.bookDesc ? vcEsc(p.bookDesc) : ''}">${p && p.book ? vcEsc(p.book) : '<span style="color:var(--muted);">-</span>'}</td>
       <td style="white-space:nowrap;">${p && p.teacher ? vcEsc(p.teacher) : '<span style="color:var(--muted);">-</span>'}</td>
-      <td style="white-space:nowrap;color:var(--gold);">${seq != null && !isNaN(seq) ? seq : '-'}</td>
+      <td style="white-space:nowrap;color:var(--purple, #5B3FA6);">${seq != null && !isNaN(seq) ? seq : '-'}</td>
       <td style="max-width:320px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${vcEsc(v.title)}">${vcEsc(v.title || '-')}</td>
       <td style="white-space:nowrap;text-align:right;">
         ${v.vimeoId ? `<a href="https://vimeo.com/${vcEsc(v.vimeoId)}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm" style="text-decoration:none;">▶ 보기</a>` : ''}
         ${p ? `<button class="btn btn-secondary btn-sm" onclick="editVideoCode('${vcEsc(v.id)}')">수정</button>` : ''}
-        ${p && (mismatch || !v.code) ? `<button class="btn btn-secondary btn-sm" style="border-color:var(--gold);color:var(--gold);" onclick="reissueVideoCode('${vcEsc(v.id)}')">${v.code ? '재발급' : '부여'}</button>` : ''}
+        ${p && (mismatch || !v.code) ? `<button class="btn btn-secondary btn-sm" style="border-color:var(--gold);color:var(--purple, #5B3FA6);" onclick="reissueVideoCode('${vcEsc(v.id)}')">${v.code ? '재발급' : '부여'}</button>` : ''}
       </td>
     </tr>`).join('');
 };

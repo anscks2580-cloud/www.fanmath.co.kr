@@ -117,7 +117,7 @@ async function smLoadList() {
     snap.forEach(d => smList.push({ id: d.id, ...d.data() }));
     smRenderList();
   } catch (e) {
-    el.innerHTML = `<div style="color:#ff9090;font-size:13px;">오류: ${smEsc(e.message)}</div>`;
+    el.innerHTML = `<div style="color:#D64545;font-size:13px;">오류: ${smEsc(e.message)}</div>`;
   }
 }
 

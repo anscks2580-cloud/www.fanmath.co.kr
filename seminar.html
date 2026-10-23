@@ -19,7 +19,7 @@
   .form-wrap { max-width: 720px; margin: 0 auto; padding: 40px 24px 80px; }
   .form-header { text-align:center; margin-bottom: 30px; }
   .form-badge {
-    display:inline-block; font-size:11px; letter-spacing:2px; color:var(--gold);
+    display:inline-block; font-size:11px; letter-spacing:2px; color:var(--purple, #5B3FA6);
     border:1px solid var(--border); border-radius:100px; padding:5px 14px; margin-bottom:14px;
   }
   .form-header h1 { font-size:26px; font-weight:700; margin-bottom:10px; letter-spacing:-0.5px; }
@@ -27,13 +27,13 @@
 
   .f-section {
     background: var(--bg-card);
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(30,24,56,0.1);
     border-radius: 14px;
     padding: 22px 24px;
     margin-bottom: 16px;
   }
   .f-label {
-    font-size: 13px; font-weight:600; color: var(--gold);
+    font-size: 13px; font-weight:600; color: var(--purple, #5B3FA6);
     margin-bottom: 12px; display:flex; align-items:center; gap:6px;
   }
   .f-sub { font-size: 11px; color: var(--muted); font-weight:400; margin-left:4px; }
@@ -42,10 +42,10 @@
   .f-row:last-child { margin-bottom:0; }
   .f-field { flex:1; min-width: 140px; }
   .f-field label { display:block; font-size:12px; color:#C9BEDD; margin-bottom:6px; font-weight:500; }
-  .f-field label .req { color: var(--gold); margin-left:2px; }
+  .f-field label .req { color: var(--purple, #5B3FA6); margin-left:2px; }
   .f-field input[type=text], .f-field input[type=tel] {
     width:100%; padding:11px 12px; border-radius:8px;
-    background: rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18);
+    background: rgba(30,24,56,0.07); border:1px solid rgba(30,24,56,0.18);
     color: var(--off-white); font-size:14px; font-family:inherit;
   }
   .f-field input:focus { outline:none; border-color: var(--gold); }
@@ -56,31 +56,31 @@
   .session-card {
     position:relative; display:block; cursor:pointer;
     border:1.5px solid var(--border-soft); border-radius:14px;
-    background: rgba(255,255,255,0.03); padding:18px 18px 16px;
+    background: rgba(30,24,56,0.03); padding:18px 18px 16px;
     transition: all .15s;
   }
   .session-card input { position:absolute; opacity:0; width:1px; height:1px; pointer-events:none; }
-  .session-card:hover { border-color: rgba(240,192,64,0.45); }
-  .session-card:has(input:checked) { border-color: var(--gold); background: var(--gold-glow); box-shadow: 0 0 0 1px rgba(240,192,64,0.35); }
+  .session-card:hover { border-color: rgba(245,197,24,0.45); }
+  .session-card:has(input:checked) { border-color: var(--gold); background: var(--gold-glow); box-shadow: 0 0 0 1px rgba(245,197,24,0.35); }
   .session-card .sc-branch { font-size:16px; font-weight:800; color:var(--off-white); display:flex; align-items:center; gap:8px; margin-bottom:8px; }
   .session-card .sc-branch .tick {
-    width:20px; height:20px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.3);
+    width:20px; height:20px; border-radius:50%; border:1.5px solid rgba(30,24,56,0.3);
     display:inline-flex; align-items:center; justify-content:center; font-size:12px; color:transparent; flex-shrink:0;
   }
-  .session-card:has(input:checked) .sc-branch .tick { background:var(--gold); border-color:var(--gold); color:var(--bg); }
-  .session-card .sc-when { font-size:14px; font-weight:700; color:var(--gold); margin-bottom:4px; }
+  .session-card:has(input:checked) .sc-branch .tick { background:var(--gold); border-color:var(--gold); color:var(--on-gold, #2A1E55); }
+  .session-card .sc-when { font-size:14px; font-weight:700; color:var(--purple, #5B3FA6); margin-bottom:4px; }
   .session-card .sc-place { font-size:12px; color:var(--muted); line-height:1.5; }
 
   .chip-group { display:flex; flex-wrap:wrap; gap:8px; }
   .chip-opt {
     display:flex; align-items:center; gap:6px;
     padding: 9px 15px; border-radius: 20px;
-    border:1px solid var(--border-soft); background: rgba(255,255,255,0.03);
+    border:1px solid var(--border-soft); background: rgba(30,24,56,0.03);
     font-size:13px; color: var(--muted); cursor:pointer; transition: all .15s;
     position: relative;
   }
   .chip-opt input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
-  .chip-opt:has(input:checked) { border-color: var(--gold); color: var(--gold); background: var(--gold-glow); }
+  .chip-opt:has(input:checked) { border-color: var(--gold); color: var(--purple, #5B3FA6); background: var(--gold-glow); }
 
   .agree-box {
     display:flex; align-items:flex-start; gap:10px; cursor:pointer;
@@ -93,14 +93,14 @@
 
   .submit-btn {
     width:100%; padding:16px; margin-top: 8px;
-    background: var(--gold); color: var(--bg); font-weight:700; font-size:15px;
+    background: var(--gold); color: var(--on-gold, #2A1E55); font-weight:700; font-size:15px;
     border:none; border-radius:10px; cursor:pointer; transition: opacity .15s;
   }
   .submit-btn:disabled { opacity:0.5; cursor:not-allowed; }
   .submit-btn:hover:not(:disabled) { opacity:0.9; }
 
   .contact-line { text-align:center; font-size:12.5px; color:var(--muted); margin-top:18px; line-height:1.8; }
-  .contact-line a { color:var(--gold); text-decoration:none; font-weight:600; }
+  .contact-line a { color:var(--purple, #5B3FA6); text-decoration:none; font-weight:600; }
 
   .result-box { text-align:center; padding: 50px 24px; }
   .result-box .emoji { font-size: 44px; margin-bottom: 16px; }
@@ -111,19 +111,19 @@
     background: var(--gold-glow); border:1px solid var(--border); text-align:left;
   }
   .result-box .r-card b { color:var(--off-white); }
-  .result-box .r-card .when { font-size:15px; font-weight:800; color:var(--gold); margin-top:4px; }
+  .result-box .r-card .when { font-size:15px; font-weight:800; color:var(--purple, #5B3FA6); margin-top:4px; }
   .result-box .home-btn {
     display:inline-block; margin-top:24px; padding:11px 22px; border-radius:10px;
-    border:1.5px solid var(--gold); color:var(--gold); text-decoration:none; font-size:13px; font-weight:700;
+    border:1.5px solid var(--gold); color:var(--purple, #5B3FA6); text-decoration:none; font-size:13px; font-weight:700;
   }
 </style>
 </head>
 <body>
 
 <nav>
-  <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#F0EDF8;flex-shrink:0;overflow:hidden;max-width:100%;">
+  <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#1E1838;flex-shrink:0;overflow:hidden;max-width:100%;">
     <img src="swc-logo.svg" style="height:30px;width:30px;object-fit:contain;flex-shrink:0;display:block;" alt="SWC">
-    <span style="font-size:13px;font-weight:600;color:#F0EDF8;white-space:nowrap;letter-spacing:-0.3px;overflow:hidden;text-overflow:ellipsis;">송우찬수학학원</span>
+    <span style="font-size:13px;font-weight:600;color:#1E1838;white-space:nowrap;letter-spacing:-0.3px;overflow:hidden;text-overflow:ellipsis;">송우찬수학학원</span>
   </a>
 </nav>
 
@@ -201,7 +201,7 @@
       <div class="f-section">
         <label class="agree-box">
           <input type="checkbox" name="agree" required>
-          <span>개인정보 수집·이용에 동의합니다. <span class="req" style="color:var(--gold);">*</span></span>
+          <span>개인정보 수집·이용에 동의합니다. <span class="req" style="color:var(--purple, #5B3FA6);">*</span></span>
         </label>
         <div class="agree-detail">
           수집 항목: 학부모 성함·연락처, 학생 이름·연락처·학년 &nbsp;|&nbsp; 이용 목적: 설명회 참석 확인 및 안내 연락 &nbsp;|&nbsp; 보유 기간: 설명회 종료 후 3개월 이내 파기

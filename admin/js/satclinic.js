@@ -78,7 +78,7 @@ window.loadSatClinicAdmin = async function() {
 
     resEl.innerHTML = Object.entries(byTeacher).map(([tName, rows]) => `
       <div class="card" style="margin-bottom:16px;">
-        <h4 style="color:var(--gold);margin-bottom:14px;font-size:14px;">👩‍🏫 ${tName} (${rows.length}건)</h4>
+        <h4 style="color:var(--purple, #5B3FA6);margin-bottom:14px;font-size:14px;">👩‍🏫 ${tName} (${rows.length}건)</h4>
         <div style="overflow-x:auto;">
           <table class="preview-table" style="width:100%;min-width:600px;">
             <thead><tr>

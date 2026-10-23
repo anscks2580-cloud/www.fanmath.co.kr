@@ -23,13 +23,13 @@
 
   .f-section {
     background: var(--bg-card);
-    border: 1px solid rgba(255,255,255,0.1);
+    border: 1px solid rgba(30,24,56,0.1);
     border-radius: 14px;
     padding: 22px 24px;
     margin-bottom: 16px;
   }
   .f-label {
-    font-size: 13px; font-weight:600; color: var(--gold);
+    font-size: 13px; font-weight:600; color: var(--purple, #5B3FA6);
     margin-bottom: 10px; display:flex; align-items:center; gap:6px;
   }
   .f-sub { font-size: 11px; color: var(--muted); font-weight:400; margin-left:4px; }
@@ -40,7 +40,7 @@
   .f-field label { display:block; font-size:12px; color:#C9BEDD; margin-bottom:6px; font-weight:500; }
   .f-field input[type=text], .f-field input[type=tel], .f-field input[type=date], .f-field input[type=number] {
     width:100%; padding:10px 12px; border-radius:8px;
-    background: rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.18);
+    background: rgba(30,24,56,0.07); border:1px solid rgba(30,24,56,0.18);
     color: var(--off-white); font-size:13px; font-family:inherit;
   }
   .f-field input:focus { outline:none; border-color: var(--gold); }
@@ -49,7 +49,7 @@
   .chip-opt {
     display:flex; align-items:center; gap:6px;
     padding: 8px 14px; border-radius: 20px;
-    border:1px solid var(--border-soft); background: rgba(255,255,255,0.03);
+    border:1px solid var(--border-soft); background: rgba(30,24,56,0.03);
     font-size:12px; color: var(--muted); cursor:pointer; transition: all .15s;
     position: relative;
   }
@@ -57,30 +57,30 @@
     position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none;
   }
   .chip-opt:has(input:checked) {
-    border-color: var(--gold); color: var(--gold); background: var(--gold-glow);
+    border-color: var(--gold); color: var(--purple, #5B3FA6); background: var(--gold-glow);
   }
 
   .level-tabs { display:flex; gap:8px; margin-bottom: 4px; }
   .level-tab {
     flex:1; text-align:center; padding: 12px; border-radius:10px;
-    border:1px solid var(--border-soft); background: rgba(255,255,255,0.03);
+    border:1px solid var(--border-soft); background: rgba(30,24,56,0.03);
     font-size:14px; font-weight:600; color:var(--muted); cursor:pointer; transition: all .15s;
   }
-  .level-tab.active { border-color: var(--gold); color: var(--gold); background: var(--gold-glow); }
+  .level-tab.active { border-color: var(--gold); color: var(--purple, #5B3FA6); background: var(--gold-glow); }
 
   .self-check { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
   .self-check:last-child { margin-bottom:0; }
   .self-check span { font-size:12px; color: var(--off-white); flex:1; }
   .self-check input[type=range] { flex:2; accent-color: var(--gold); }
-  .self-check .val { width:38px; text-align:right; font-size:13px; font-weight:700; color:var(--gold); }
-  .sc-block { margin-top:12px; padding:14px 14px 12px; border:1px solid var(--border-soft); border-radius:12px; background: rgba(255,255,255,0.02); }
-  .sc-title { font-size:12px; font-weight:700; color: var(--gold); margin-bottom:10px; }
+  .self-check .val { width:38px; text-align:right; font-size:13px; font-weight:700; color:var(--purple, #5B3FA6); }
+  .sc-block { margin-top:12px; padding:14px 14px 12px; border:1px solid var(--border-soft); border-radius:12px; background: rgba(30,24,56,0.02); }
+  .sc-title { font-size:12px; font-weight:700; color: var(--purple, #5B3FA6); margin-bottom:10px; }
 
   .hidden { display:none !important; }
 
   .submit-btn {
     width:100%; padding:16px; margin-top: 8px;
-    background: var(--gold); color: var(--bg); font-weight:700; font-size:15px;
+    background: var(--gold); color: var(--on-gold, #2A1E55); font-weight:700; font-size:15px;
     border:none; border-radius:10px; cursor:pointer; transition: opacity .15s;
   }
   .submit-btn:disabled { opacity:0.5; cursor:not-allowed; }
@@ -98,9 +98,9 @@
 <body>
 
 <nav>
-  <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#F0EDF8;flex-shrink:0;overflow:hidden;max-width:100%;">
+  <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#1E1838;flex-shrink:0;overflow:hidden;max-width:100%;">
     <img src="swc-logo.svg" style="height:30px;width:30px;object-fit:contain;flex-shrink:0;display:block;" alt="SWC">
-    <span style="font-size:13px;font-weight:600;color:#F0EDF8;white-space:nowrap;letter-spacing:-0.3px;overflow:hidden;text-overflow:ellipsis;">송우찬수학학원</span>
+    <span style="font-size:13px;font-weight:600;color:#1E1838;white-space:nowrap;letter-spacing:-0.3px;overflow:hidden;text-overflow:ellipsis;">송우찬수학학원</span>
   </a>
 </nav>
 

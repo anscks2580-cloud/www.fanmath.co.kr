@@ -52,12 +52,12 @@ window.wlAddRow = function(sec) {
   row.innerHTML = cols.map((col, ci) => `
     <input type="text" placeholder="${ph[ci]}"
       data-sec="${sec}" data-row="${idx}" data-col="${ci}"
-      style="flex:1;min-width:0;padding:7px 10px;background:rgba(255,255,255,0.05);
-        border:1px solid rgba(255,255,255,0.1);border-radius:6px;
+      style="flex:1;min-width:0;padding:7px 10px;background:rgba(30,24,56,0.05);
+        border:1px solid rgba(30,24,56,0.1);border-radius:6px;
         color:var(--off-white);font-size:12px;font-family:inherit;outline:none;">
   `).join('') + `
-    <button onclick="this.parentElement.remove()" style="background:rgba(255,80,80,0.15);border:1px solid rgba(255,80,80,0.3);
-      color:#ff9090;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:12px;flex-shrink:0;">✕</button>`;
+    <button onclick="this.parentElement.remove()" style="background:rgba(214,69,69,0.15);border:1px solid rgba(214,69,69,0.3);
+      color:#D64545;border-radius:6px;padding:5px 9px;cursor:pointer;font-size:12px;flex-shrink:0;">✕</button>`;
   container.appendChild(row);
 };
 

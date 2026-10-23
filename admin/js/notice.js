@@ -74,7 +74,7 @@ window.renderNoticeStudentList = function() {
   }
 
   el.innerHTML = list.map(s => `
-    <div class="student-item" style="cursor:pointer;margin-bottom:6px;${noticeSelectedStudentIds.has(s.id) ? 'border-color:var(--gold);background:rgba(240,192,64,0.08);' : ''}" onclick="toggleNoticeStudent('${s.id}')">
+    <div class="student-item" style="cursor:pointer;margin-bottom:6px;${noticeSelectedStudentIds.has(s.id) ? 'border-color:var(--gold);background:rgba(245,197,24,0.08);' : ''}" onclick="toggleNoticeStudent('${s.id}')">
       <div class="student-name">${noticeSelectedStudentIds.has(s.id) ? '✅ ' : ''}${s.name}</div>
       <span class="student-meta">${s.grade || ''} · ${s.branch || ''}</span>
       <span class="student-meta" style="font-size:11px;">${s.classGroup || '반 미배정'}</span>
@@ -120,7 +120,7 @@ window.showNoticePreview = function() {
   const imgInput = document.getElementById('notice-images');
   const files = imgInput?.files ? [...imgInput.files] : [];
   const imgPreviewEl = document.getElementById('notice-preview-images');
-  imgPreviewEl.innerHTML = files.map(f => `<img src="${URL.createObjectURL(f)}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,0.1);">`).join('');
+  imgPreviewEl.innerHTML = files.map(f => `<img src="${URL.createObjectURL(f)}" style="width:72px;height:72px;object-fit:cover;border-radius:8px;border:1px solid rgba(30,24,56,0.1);">`).join('');
 
   document.getElementById('notice-preview-card').style.display = 'block';
   document.getElementById('notice-preview-card').scrollIntoView({ behavior:'smooth', block:'start' });
@@ -220,7 +220,7 @@ async function loadNotices() {
     }).join('');
   } catch (e) {
     console.error('공지 목록 로딩 오류:', e);
-    el.innerHTML = '<div style="color:#ff9090;font-size:13px;">목록을 불러오지 못했습니다.</div>';
+    el.innerHTML = '<div style="color:#D64545;font-size:13px;">목록을 불러오지 못했습니다.</div>';
   }
 }
 

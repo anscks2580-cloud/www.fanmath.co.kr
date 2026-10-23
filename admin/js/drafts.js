@@ -135,7 +135,7 @@ function showDraftStatus(type, msg, isErr=false) {
   const el = document.getElementById(type + '-draft-status');
   if (!el) return;
   el.textContent = msg;
-  el.style.color = isErr ? '#ff9090' : '#90ee90';
+  el.style.color = isErr ? '#D64545' : '#2E9E5B';
   setTimeout(() => { el.textContent = ''; }, 3000);
 }
 

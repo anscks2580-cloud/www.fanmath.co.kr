@@ -14,7 +14,7 @@
 .ad-top-right .badge-name { white-space:nowrap; }
 .ad-top-right .btn-outline { white-space:nowrap; }
 @media (max-width:1023px) { .ad-top-right .badge-name, .ad-top-right .ad-home-link { display:none; } }
-.badge-name { background:rgba(240,192,64,0.15); border:1px solid rgba(240,192,64,0.3); color:var(--gold); font-size:12px; font-weight:600; padding:5px 12px; border-radius:20px; }
+.badge-name { background:rgba(245,197,24,0.15); border:1px solid rgba(245,197,24,0.3); color:var(--purple, #5B3FA6); font-size:12px; font-weight:600; padding:5px 12px; border-radius:20px; }
 
 /* ── 탭 ── */
 .teacher-tabs { display:flex; gap:0; border-bottom:2px solid var(--border-soft); margin-bottom:32px; flex-wrap:wrap; }
@@ -28,32 +28,32 @@
   height:2px; background:var(--gold);
   transform:scaleX(0); transition:transform 0.2s;
 }
-.teacher-tab.active { color:var(--gold); }
+.teacher-tab.active { color:var(--purple, #5B3FA6); }
 /* ── 📚 기출문제 ── */
 .px-toolbar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
-.px-toolbar select, .px-toolbar input { padding:10px 13px; background:rgba(255,255,255,0.05); border:1px solid var(--border-soft); border-radius:8px; color:var(--off-white); font-size:14px; font-family:inherit; outline:none; min-width:0; }
+.px-toolbar select, .px-toolbar input { padding:10px 13px; background:rgba(30,24,56,0.05); border:1px solid var(--border-soft); border-radius:8px; color:var(--off-white); font-size:14px; font-family:inherit; outline:none; min-width:0; }
 .px-toolbar select { flex:1 1 240px; } .px-toolbar input { flex:1 1 200px; }
-.px-toolbar select option { background:#1A1230; }
-.px-toolbar select:focus, .px-toolbar input:focus { border-color:rgba(240,192,64,0.5); }
+.px-toolbar select option { background:#F7F6FB; }
+.px-toolbar select:focus, .px-toolbar input:focus { border-color:rgba(245,197,24,0.5); }
 .px-chip-label { font-size:11px; color:var(--muted); font-weight:600; letter-spacing:1px; margin:4px 0 6px; }
 .px-chips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
 .px-chip { padding:6px 14px; border-radius:99px; border:1px solid var(--border-soft); background:transparent; color:var(--muted); font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; transition:all 0.15s; }
 .px-chip:hover { color:var(--off-white); }
-.px-chip.on { border-color:var(--gold); color:var(--gold); background:rgba(240,192,64,0.08); }
+.px-chip.on { border-color:var(--gold); color:var(--purple, #5B3FA6); background:rgba(245,197,24,0.08); }
 .px-chip .n { opacity:0.6; font-weight:500; margin-left:4px; }
 .px-group { margin-top:20px; }
 .px-group-h { font-size:13.5px; font-weight:700; color:var(--off-white); margin-bottom:8px; display:flex; gap:8px; align-items:baseline; }
 .px-group-h small { color:var(--muted); font-weight:500; font-size:12px; }
 .px-files { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:6px; }
-.px-file { display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:8px; background:rgba(255,255,255,0.03); border:1px solid var(--border-soft); color:var(--off-white); font-size:13px; font-family:inherit; cursor:pointer; text-align:left; min-width:0; transition:border-color 0.15s, color 0.15s; }
-.px-file:hover { border-color:rgba(240,192,64,0.45); color:var(--gold); }
+.px-file { display:flex; align-items:center; gap:8px; padding:10px 12px; border-radius:8px; background:rgba(30,24,56,0.03); border:1px solid var(--border-soft); color:var(--off-white); font-size:13px; font-family:inherit; cursor:pointer; text-align:left; min-width:0; transition:border-color 0.15s, color 0.15s; }
+.px-file:hover { border-color:rgba(245,197,24,0.45); color:var(--purple, #5B3FA6); }
 .px-file span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.px-rows { border:1px solid var(--border-soft); border-radius:10px; background:rgba(255,255,255,0.025); padding:4px 10px; }
+.px-rows { border:1px solid var(--border-soft); border-radius:10px; background:rgba(30,24,56,0.025); padding:4px 10px; }
 .px-empty { color:var(--muted); font-size:13px; padding:24px 0; text-align:center; }
 .px-meta { font-size:12px; color:var(--muted); margin-bottom:6px; }
 /* ── 📘 시중교재 ── */
 .tb-sub-chips { margin-top:-2px; }
-.tb-book { border:1px solid var(--border-soft); border-radius:10px; background:rgba(255,255,255,0.025); margin-bottom:8px; overflow:hidden; }
+.tb-book { border:1px solid var(--border-soft); border-radius:10px; background:rgba(30,24,56,0.025); margin-bottom:8px; overflow:hidden; }
 .tb-book > summary { list-style:none; cursor:pointer; padding:13px 16px; display:flex; align-items:center; gap:10px; font-size:14.5px; font-weight:600; color:var(--off-white); }
 .tb-book > summary::-webkit-details-marker { display:none; }
 .tb-book > summary::after { content:'›'; margin-left:auto; color:var(--muted); transition:transform 0.15s; font-size:18px; line-height:1; }
@@ -62,16 +62,16 @@
 .tb-book > summary small { color:var(--muted); font-weight:500; font-size:12px; }
 .tb-book > summary .tb-path { color:var(--muted); font-weight:500; font-size:12px; }
 .tb-body { padding:6px 10px 10px; }
-.tb-subh { font-size:11.5px; font-weight:700; color:var(--gold); letter-spacing:0.5px; margin:10px 6px 4px; }
+.tb-subh { font-size:11.5px; font-weight:700; color:var(--purple, #5B3FA6); letter-spacing:0.5px; margin:10px 6px 4px; }
 .tb-row { display:flex; align-items:center; gap:10px; padding:8px 6px; border-radius:8px; }
-.tb-row + .tb-row { border-top:1px solid rgba(255,255,255,0.04); }
-.tb-row:hover { background:rgba(255,255,255,0.03); }
+.tb-row + .tb-row { border-top:1px solid rgba(30,24,56,0.04); }
+.tb-row:hover { background:rgba(30,24,56,0.03); }
 .tb-name { flex:1; min-width:0; font-size:13.5px; color:var(--off-white); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .tb-acts { display:flex; gap:6px; flex-shrink:0; }
 .tb-btn { padding:6px 12px; border-radius:7px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; border:1px solid var(--border-soft); background:transparent; color:var(--off-white); white-space:nowrap; transition:all 0.15s; }
-.tb-btn:hover { border-color:var(--gold); color:var(--gold); }
-.tb-btn.dl { background:rgba(240,192,64,0.12); border-color:rgba(240,192,64,0.4); color:var(--gold); }
-.tb-btn.dl:hover { background:rgba(240,192,64,0.22); }
+.tb-btn:hover { border-color:var(--gold); color:var(--purple, #5B3FA6); }
+.tb-btn.dl { background:rgba(245,197,24,0.12); border-color:rgba(245,197,24,0.4); color:var(--purple, #5B3FA6); }
+.tb-btn.dl:hover { background:rgba(245,197,24,0.22); }
 .tb-btn:disabled { opacity:0.55; cursor:wait; }
 @media (max-width:560px) { .tb-btn { padding:6px 9px; } .tb-name { font-size:13px; } }
 /* ── 📅 일정 / 오늘 할 일 ── */
@@ -80,54 +80,54 @@
 .cal-head { display:flex; align-items:center; gap:8px; margin-bottom:14px; }
 .cal-head h4 { font-size:18px; font-weight:700; flex:1; color:var(--off-white); margin:0; }
 .cal-nav { padding:6px 12px; border-radius:8px; border:1px solid var(--border-soft); background:transparent; color:var(--off-white); cursor:pointer; font-family:inherit; font-size:13px; }
-.cal-nav:hover { border-color:var(--gold); color:var(--gold); }
+.cal-nav:hover { border-color:var(--gold); color:var(--purple, #5B3FA6); }
 .cal-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px; }
 .cal-dow { text-align:center; font-size:11px; color:var(--muted); padding:4px 0; font-weight:600; }
-.cal-dow.sun { color:#ff7a7a; } .cal-dow.sat { color:#7ab8ff; }
-.cal-cell { min-height:92px; padding:6px; border-radius:8px; background:rgba(255,255,255,0.025); border:1px solid transparent; cursor:pointer; overflow:hidden; transition:border-color 0.15s; }
-.cal-cell:hover { border-color:rgba(240,192,64,0.35); }
+.cal-dow.sun { color:#D64545; } .cal-dow.sat { color:#2F7FD6; }
+.cal-cell { min-height:92px; padding:6px; border-radius:8px; background:rgba(30,24,56,0.025); border:1px solid transparent; cursor:pointer; overflow:hidden; transition:border-color 0.15s; }
+.cal-cell:hover { border-color:rgba(245,197,24,0.35); }
 .cal-cell.other { opacity:0.35; }
-.cal-cell.sel { border-color:var(--gold); background:rgba(240,192,64,0.06); }
+.cal-cell.sel { border-color:var(--gold); background:rgba(245,197,24,0.06); }
 .cal-num { font-size:13px; font-weight:700; margin-bottom:3px; }
-.cal-cell.sun .cal-num { color:#ff7a7a; } .cal-cell.sat .cal-num { color:#7ab8ff; }
-.cal-cell.today .cal-num { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; background:var(--gold); color:var(--bg) !important; }
-.cal-hol { font-size:10px; color:#ff7a7a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px; }
-.cal-chip { font-size:10px; padding:1px 4px; border-left:3px solid; background:rgba(255,255,255,0.05); border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px; }
+.cal-cell.sun .cal-num { color:#D64545; } .cal-cell.sat .cal-num { color:#2F7FD6; }
+.cal-cell.today .cal-num { display:inline-flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; background:var(--gold); color:var(--on-gold, #2A1E55) !important; }
+.cal-hol { font-size:10px; color:#D64545; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px; }
+.cal-chip { font-size:10px; padding:1px 4px; border-left:3px solid; background:rgba(30,24,56,0.05); border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:2px; }
 .cal-more { font-size:10px; color:var(--muted); }
 .cal-deadline { font-size:9.5px; color:var(--muted); white-space:nowrap; }
-.cal-todo-dot { font-size:10px; color:var(--gold); }
+.cal-todo-dot { font-size:10px; color:var(--purple, #5B3FA6); }
 .cal-sec { font-size:11px; color:var(--muted); font-weight:600; letter-spacing:1px; margin:14px 0 6px; }
-.cal-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; background:rgba(255,255,255,0.03); border:1px solid var(--border-soft); margin-bottom:6px; cursor:pointer; }
-.cal-item:hover { border-color:rgba(240,192,64,0.35); }
+.cal-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; background:rgba(30,24,56,0.03); border:1px solid var(--border-soft); margin-bottom:6px; cursor:pointer; }
+.cal-item:hover { border-color:rgba(245,197,24,0.35); }
 .cal-item-title { font-size:13.5px; font-weight:600; color:var(--off-white); }
 .cal-item-sub { font-size:11.5px; color:var(--muted); margin-top:2px; }
 .cal-dot { width:8px; height:8px; border-radius:50%; background:var(--gold); flex-shrink:0; }
-.cal-overdue { border-color:rgba(255,100,100,0.45); background:rgba(255,80,80,0.07); }
-.cal-overdue .cal-dot { background:#ff6b6b; } .cal-overdue .cal-item-title { color:#ff9a9a; }
-.cal-due .cal-dot { background:#ffb35c; }
+.cal-overdue { border-color:rgba(255,100,100,0.45); background:rgba(214,69,69,0.07); }
+.cal-overdue .cal-dot { background:#ff6b6b; } .cal-overdue .cal-item-title { color:#D64545; }
+.cal-due .cal-dot { background:#D97B1A; }
 .cal-item.cal-due { border-color:rgba(255,179,92,0.45); background:rgba(255,179,92,0.07); }
-.cal-item.cal-due .cal-item-title { color:#ffc883; }
+.cal-item.cal-due .cal-item-title { color:#D97B1A; }
 .cal-soon .cal-dot { background:var(--gold); }
-.cal-go { font-size:11px; color:var(--gold); flex-shrink:0; }
+.cal-go { font-size:11px; color:var(--purple, #5B3FA6); flex-shrink:0; }
 .cal-type { font-size:10px; font-weight:600; margin-left:4px; }
-.cal-holiday { padding:8px 12px; border-radius:8px; background:rgba(255,100,100,0.08); border:1px solid rgba(255,100,100,0.3); color:#ff9a9a; font-size:13px; font-weight:600; margin-bottom:6px; }
+.cal-holiday { padding:8px 12px; border-radius:8px; background:rgba(255,100,100,0.08); border:1px solid rgba(255,100,100,0.3); color:#D64545; font-size:13px; font-weight:600; margin-bottom:6px; }
 .cal-empty { font-size:13px; color:var(--muted); padding:8px 2px; }
 .cal-x { background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; padding:2px 6px; }
-.cal-x:hover { color:#ff9090; }
+.cal-x:hover { color:#D64545; }
 /* 해야 할 업무 체크 (완료 = 가운데 줄) */
-.cal-chk { width:16px; height:16px; accent-color:#5fd98a; flex-shrink:0; cursor:pointer; margin:0; }
+.cal-chk { width:16px; height:16px; accent-color:#2E9E5B; flex-shrink:0; cursor:pointer; margin:0; }
 .cal-chk:disabled { cursor:default; }
-.cal-item.is-done { opacity:0.55; border-color:var(--border-soft) !important; background:rgba(255,255,255,0.02) !important; }
+.cal-item.is-done { opacity:0.55; border-color:var(--border-soft) !important; background:rgba(30,24,56,0.02) !important; }
 .cal-item.is-done .cal-item-title { text-decoration:line-through; color:var(--muted) !important; }
-.cal-item.is-done .cal-dot { background:#5fd98a !important; }
-.cal-done-tag { font-size:10px; font-weight:600; color:#5fd98a; margin-left:4px; text-decoration:none; display:inline-block; }
+.cal-item.is-done .cal-dot { background:#2E9E5B !important; }
+.cal-done-tag { font-size:10px; font-weight:600; color:#2E9E5B; margin-left:4px; text-decoration:none; display:inline-block; }
 .cal-sec-row { display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .cal-sec-row .cal-sec { margin-right:auto; }
 .cal-prog { font-size:11px; color:var(--muted); margin:14px 0 6px; white-space:nowrap; }
-.cal-prog b { color:#5fd98a; }
-.cal-prog-bar { height:4px; border-radius:2px; background:rgba(255,255,255,0.08); overflow:hidden; margin:-2px 0 8px; }
-.cal-prog-bar i { display:block; height:100%; background:#5fd98a; border-radius:2px; }
-.cal-done-dot { font-size:10px; color:#5fd98a; }
+.cal-prog b { color:#2E9E5B; }
+.cal-prog-bar { height:4px; border-radius:2px; background:rgba(30,24,56,0.08); overflow:hidden; margin:-2px 0 8px; }
+.cal-prog-bar i { display:block; height:100%; background:#2E9E5B; border-radius:2px; }
+.cal-done-dot { font-size:10px; color:#2E9E5B; }
 .cal-badge { display:none; align-items:center; justify-content:center; min-width:18px; height:18px; padding:0 5px; border-radius:9px; background:#ff6b6b; color:#fff; font-size:11px; font-weight:700; margin-left:4px; }
 @media (max-width:600px){ .cal-cell { min-height:62px; padding:4px; } .cal-chip, .cal-deadline, .cal-hol { display:none; } }
 .teacher-tab.active::after { transform:scaleX(1); }
@@ -139,7 +139,7 @@
   background:var(--bg-card); border:1px solid var(--border-soft);
   border-radius:14px; padding:28px; margin-bottom:20px;
 }
-.card-title { font-size:15px; font-weight:600; color:var(--gold); margin-bottom:20px; display:flex; align-items:center; gap:8px; }
+.card-title { font-size:15px; font-weight:600; color:var(--purple, #5B3FA6); margin-bottom:20px; display:flex; align-items:center; gap:8px; }
 
 /* ── 폼 공통 ── */
 .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
@@ -147,22 +147,22 @@
 .form-group { display:flex; flex-direction:column; gap:6px; }
 .form-group label { font-size:11px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; font-weight:500; }
 .form-group input, .form-group select, .form-group textarea {
-  padding:10px 13px; background:rgba(255,255,255,0.05);
-  border:1px solid rgba(255,255,255,0.1); border-radius:8px;
+  padding:10px 13px; background:rgba(30,24,56,0.05);
+  border:1px solid rgba(30,24,56,0.1); border-radius:8px;
   color:var(--off-white); font-size:14px; font-family:inherit; outline:none;
   transition:border-color 0.2s;
 }
-.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:rgba(240,192,64,0.5); }
-.form-group select option { background:#1A1230; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:rgba(245,197,24,0.5); }
+.form-group select option { background:#F7F6FB; }
 .form-group textarea { resize:vertical; min-height:90px; line-height:1.6; }
 
 /* ── 버튼 ── */
 .btn { padding:10px 22px; border:none; border-radius:8px; font-size:13px; font-weight:600; font-family:inherit; cursor:pointer; transition:all 0.2s; }
-.btn-gold { background:var(--gold); color:var(--bg); }
+.btn-gold { background:var(--gold); color:var(--on-gold, #2A1E55); }
 .btn-gold:hover { opacity:0.85; }
 .btn-outline { background:transparent; border:1px solid var(--border-soft); color:var(--off-white); }
-.btn-outline:hover { border-color:var(--gold); color:var(--gold); }
-.btn-danger { background:rgba(255,80,80,0.15); border:1px solid rgba(255,80,80,0.3); color:#ff9090; }
+.btn-outline:hover { border-color:var(--gold); color:var(--purple, #5B3FA6); }
+.btn-danger { background:rgba(214,69,69,0.15); border:1px solid rgba(214,69,69,0.3); color:#D64545; }
 .btn-sm { padding:6px 14px; font-size:12px; }
 .btn-row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
 
@@ -173,37 +173,37 @@
 .rating-row { display:flex; gap:8px; flex-wrap:wrap; }
 .rating-btn {
   padding:8px 16px; border:1px solid var(--border-soft); border-radius:8px;
-  background:rgba(255,255,255,0.03); color:var(--muted);
+  background:rgba(30,24,56,0.03); color:var(--muted);
   font-size:13px; font-weight:600; cursor:pointer; transition:all 0.18s; font-family:inherit;
 }
-.rating-btn:hover { border-color:var(--gold); color:var(--gold); }
-.rating-btn.selected { background:rgba(240,192,64,0.15); border-color:var(--gold); color:var(--gold); }
+.rating-btn:hover { border-color:var(--gold); color:var(--purple, #5B3FA6); }
+.rating-btn.selected { background:rgba(245,197,24,0.15); border-color:var(--gold); color:var(--purple, #5B3FA6); }
 
 /* ── 테스트 기록 테이블 ── */
 .test-table { width:100%; border-collapse:collapse; font-size:13px; }
 .test-table th { font-size:11px; color:var(--muted); letter-spacing:1px; text-transform:uppercase; padding:8px 10px; text-align:left; border-bottom:1px solid var(--border-soft); }
-.test-table td { padding:10px 10px; border-bottom:1px solid rgba(255,255,255,0.04); vertical-align:middle; }
+.test-table td { padding:10px 10px; border-bottom:1px solid rgba(30,24,56,0.04); vertical-align:middle; }
 .test-table tr:last-child td { border-bottom:none; }
-.test-table tr:hover td { background:rgba(255,255,255,0.02); }
+.test-table tr:hover td { background:rgba(30,24,56,0.02); }
 .score-badge { display:inline-block; padding:3px 10px; border-radius:12px; font-size:12px; font-weight:700; }
-.score-a { background:rgba(80,200,80,0.15); color:#90ee90; }
-.score-b { background:rgba(240,192,64,0.15); color:var(--gold); }
-.score-c { background:rgba(255,140,80,0.15); color:#ffb080; }
-.score-d { background:rgba(255,80,80,0.15); color:#ff9090; }
+.score-a { background:rgba(46,158,91,0.15); color:#2E9E5B; }
+.score-b { background:rgba(245,197,24,0.15); color:var(--purple, #5B3FA6); }
+.score-c { background:rgba(255,140,80,0.15); color:#D97B1A; }
+.score-d { background:rgba(214,69,69,0.15); color:#D64545; }
 
 /* ── 알림 ── */
 .alert { padding:12px 16px; border-radius:8px; font-size:13px; margin-bottom:16px; display:none; }
-.alert.ok  { background:rgba(80,200,80,0.1);  color:#90ff90; border:1px solid rgba(80,200,80,0.3); }
-.alert.err { background:rgba(255,80,80,0.1);  color:#ff9090; border:1px solid rgba(255,80,80,0.3); }
+.alert.ok  { background:rgba(46,158,91,0.1);  color:#2E9E5B; border:1px solid rgba(46,158,91,0.3); }
+.alert.err { background:rgba(214,69,69,0.1);  color:#D64545; border:1px solid rgba(214,69,69,0.3); }
 .alert.info{ background:rgba(100,160,255,0.1); color:#90c0ff; border:1px solid rgba(100,160,255,0.3); }
 
 /* ── 주간 이력 ── */
 .history-list { display:flex; flex-direction:column; gap:10px; }
 .history-item {
-  background:rgba(255,255,255,0.03); border:1px solid var(--border-soft);
+  background:rgba(30,24,56,0.03); border:1px solid var(--border-soft);
   border-radius:10px; padding:14px 16px; cursor:pointer; transition:border-color 0.2s;
 }
-.history-item:hover { border-color:rgba(240,192,64,0.3); }
+.history-item:hover { border-color:rgba(245,197,24,0.3); }
 .history-item-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
 .history-week { font-size:13px; font-weight:600; }
 .history-date { font-size:11px; color:var(--muted); }
@@ -228,28 +228,28 @@
 #loginScreen { display:none !important; } /* 로그인은 login.html 통합 로그인에서 */
 #portalScreen { display:none; }
 .login-card {
-  background:linear-gradient(145deg,#231848 0%,#1A1230 100%);
-  border:1px solid rgba(240,192,64,0.2);
+  background:linear-gradient(145deg,#F0EEF8 0%,#F7F6FB 100%);
+  border:1px solid rgba(245,197,24,0.2);
   border-radius:20px; padding:48px 40px; width:100%; max-width:400px;
-  box-shadow:0 1px 0 rgba(240,192,64,0.5), 0 24px 60px rgba(0,0,0,0.5);
+  box-shadow:0 1px 0 rgba(245,197,24,0.5), 0 24px 60px rgba(30,24,56,0.15);
   position:relative; overflow:hidden;
 }
 .login-card::before {
   content:''; position:absolute; top:0; left:10%; right:10%; height:1px;
-  background:linear-gradient(90deg,transparent,rgba(240,192,64,0.8),transparent);
+  background:linear-gradient(90deg,transparent,rgba(245,197,24,0.8),transparent);
 }
 .login-card-title { font-size:20px; font-weight:700; text-align:center; margin-bottom:4px; }
 .login-card-sub   { font-size:13px; color:var(--muted); text-align:center; margin-bottom:28px; }
-.btn-login-full { width:100%; padding:13px; background:var(--gold); color:var(--bg); font-size:15px; font-weight:700; border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
+.btn-login-full { width:100%; padding:13px; background:var(--gold); color:var(--on-gold, #2A1E55); font-size:15px; font-weight:700; border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
 .login-footer-link { text-align:center; margin-top:20px; font-size:12px; color:var(--muted); }
-.login-footer-link a { color:var(--gold); text-decoration:none; }
+.login-footer-link a { color:var(--purple, #5B3FA6); text-decoration:none; }
 /* ── 드롭다운 펼침 목록: 흰 배경에 흰 글씨 방지 ── */
-select { color-scheme:dark; }
-select option, select optgroup { background-color:#2D1F5E; color:#F2EFE8; }
-select optgroup { color:var(--gold, #F0C040); font-weight:700; }
+select { color-scheme:light; }
+select option, select optgroup { background-color:#FFFFFF; color:#1E1838; }
+select optgroup { color:var(--gold, #F5C518); font-weight:700; }
 select option:checked { background-color:#4A3A86; color:#FFFFFF; }
-select option:disabled { color:#9B94B3; }
-#tab-watchstatus select { background-color:#2D1F5E !important; }
+select option:disabled { color:#6B6489; }
+#tab-watchstatus select { background-color:#FFFFFF !important; }
 /* ══ 전임강사 매뉴얼 (검색 · 목차 · 단일 스크롤) ══ */
 .ad-main > #tab-manual { max-width:1200px; }
 .mn-layout { display:grid; grid-template-columns:240px minmax(0,1fr); gap:48px; align-items:start; }
@@ -262,41 +262,41 @@ select option:disabled { color:#9B94B3; }
 .mn-layout.no-toc .mn-main { max-width:960px; width:100%; margin:0 auto; }
 
 /* 좌측 목차 */
-.mn-toc { position:sticky; top:16px; max-height:calc(100vh - 32px); overflow-y:auto; padding:2px 4px 16px 0; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,0.12) transparent; }
+.mn-toc { position:sticky; top:16px; max-height:calc(100vh - 32px); overflow-y:auto; padding:2px 4px 16px 0; scrollbar-width:thin; scrollbar-color:rgba(30,24,56,0.12) transparent; }
 .mn-toc-head { font-size:12px; font-weight:600; color:var(--muted); padding:0 0 10px 12px; margin-bottom:8px; border-bottom:1px solid var(--border-soft); }
 .mn-toc-link { display:block; padding:7px 10px 7px 12px; font-size:13.5px; line-height:1.45; color:var(--muted); text-decoration:none; border-left:2px solid transparent; border-radius:0 6px 6px 0; word-break:keep-all; cursor:pointer; }
 .mn-toc-link.lv2 { padding-left:24px; font-size:12.5px; }
-.mn-toc-link:hover { color:var(--off-white); background:rgba(255,255,255,0.03); }
-.mn-toc-link.active { color:var(--gold); border-left-color:var(--gold); background:rgba(240,192,64,0.06); }
-.mn-toc-link:focus-visible, .mn-result:focus-visible, .mn-toc-toggle:focus-visible { outline:2px solid rgba(240,192,64,0.6); outline-offset:-2px; }
+.mn-toc-link:hover { color:var(--off-white); background:rgba(30,24,56,0.03); }
+.mn-toc-link.active { color:var(--purple, #5B3FA6); border-left-color:var(--gold); background:rgba(245,197,24,0.06); }
+.mn-toc-link:focus-visible, .mn-result:focus-visible, .mn-toc-toggle:focus-visible { outline:2px solid rgba(245,197,24,0.6); outline-offset:-2px; }
 
 /* 본문 + 고정 검색바 */
 .mn-main { min-width:0; position:relative; }
 .mn-bar { position:sticky; top:0; z-index:30; display:flex; gap:10px; align-items:center; padding:12px 0; margin-bottom:24px; background:var(--bg); border-bottom:1px solid var(--border-soft); }
-.mn-search { flex:1; min-width:0; position:relative; display:flex; align-items:center; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:8px; transition:border-color 0.2s; }
-.mn-search:focus-within { border-color:rgba(240,192,64,0.5); }
+.mn-search { flex:1; min-width:0; position:relative; display:flex; align-items:center; background:rgba(30,24,56,0.05); border:1px solid rgba(30,24,56,0.1); border-radius:8px; transition:border-color 0.2s; }
+.mn-search:focus-within { border-color:rgba(245,197,24,0.5); }
 .mn-search-icon { position:absolute; left:12px; font-size:13px; opacity:0.7; pointer-events:none; }
 .mn-search input { flex:1; min-width:0; padding:10px 38px 10px 36px; background:none; border:none; outline:none; color:var(--off-white); font-size:14px; font-family:inherit; }
 .mn-search input::placeholder { color:var(--muted); }
 .mn-search input:disabled { opacity:0.6; }
 .mn-clear { position:absolute; right:6px; width:28px; height:28px; border:none; border-radius:6px; background:none; color:var(--muted); font-size:13px; cursor:pointer; font-family:inherit; }
-.mn-clear:hover { color:var(--off-white); background:rgba(255,255,255,0.06); }
+.mn-clear:hover { color:var(--off-white); background:rgba(30,24,56,0.06); }
 .mn-nav { display:flex; gap:6px; align-items:center; flex-shrink:0; }
 .mn-count { font-size:12.5px; color:var(--muted); white-space:nowrap; font-variant-numeric:tabular-nums; padding:0 4px; }
-.mn-count.has { color:var(--gold); }
+.mn-count.has { color:var(--purple, #5B3FA6); }
 .mn-nav .btn { min-height:36px; }
 .mn-nav .btn:disabled { opacity:0.35; cursor:default; border-color:var(--border-soft); color:var(--off-white); }
 .mn-toc-toggle { display:none; align-items:center; gap:6px; max-width:46%; min-height:36px; padding:6px 12px; border:1px solid var(--border-soft); border-radius:8px; background:transparent; color:var(--off-white); font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; }
 .mn-toc-toggle span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted); font-weight:500; }
 
 /* 검색 결과 목록 / 모바일 목차 (드롭다운) */
-.mn-results, .mn-toc-drop { position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:31; max-height:min(56vh,480px); overflow-y:auto; padding:6px; background:var(--bg-card); border:1px solid var(--border-soft); border-radius:12px; box-shadow:0 18px 40px rgba(0,0,0,0.45); }
+.mn-results, .mn-toc-drop { position:absolute; top:calc(100% + 6px); left:0; right:0; z-index:31; max-height:min(56vh,480px); overflow-y:auto; padding:6px; background:var(--bg-card); border:1px solid var(--border-soft); border-radius:12px; box-shadow:0 18px 40px rgba(30,24,56,0.135); }
 .mn-results[hidden], .mn-toc-drop[hidden] { display:none; }
 .mn-result { display:block; width:100%; text-align:left; padding:10px 12px; border:none; border-radius:8px; background:none; color:var(--off-white); font-family:inherit; cursor:pointer; }
-.mn-result:hover, .mn-result.cur { background:rgba(240,192,64,0.08); }
-.mn-result-sec { font-size:11.5px; color:var(--gold); margin-bottom:3px; }
+.mn-result:hover, .mn-result.cur { background:rgba(245,197,24,0.08); }
+.mn-result-sec { font-size:11.5px; color:var(--purple, #5B3FA6); margin-bottom:3px; }
 .mn-result-txt { font-size:13px; line-height:1.6; color:var(--off-white); opacity:0.85; word-break:keep-all; overflow-wrap:anywhere; }
-.mn-result-txt mark { background:rgba(240,192,64,0.28); color:inherit; border-radius:3px; padding:0 1px; }
+.mn-result-txt mark { background:rgba(245,197,24,0.28); color:inherit; border-radius:3px; padding:0 1px; }
 .mn-results-empty { padding:18px 12px; font-size:13px; color:var(--muted); text-align:center; }
 .mn-results-more { padding:8px 12px 4px; font-size:12px; color:var(--muted); }
 
@@ -324,44 +324,44 @@ select option:disabled { color:#9B94B3; }
 }
 @media(prefers-reduced-motion:reduce) { .mn-search { transition:none; } }
 /* ── 보충강의실 영상 업로드·관리 ── */
-.mr-quota { border:1px solid var(--border-soft); border-radius:12px; padding:16px 18px; background:rgba(255,255,255,0.025); margin-bottom:18px; }
+.mr-quota { border:1px solid var(--border-soft); border-radius:12px; padding:16px 18px; background:rgba(30,24,56,0.025); margin-bottom:18px; }
 .mr-quota-top { display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:10px; }
 .mr-quota-top b { font-size:15px; color:var(--off-white); }
 .mr-quota-top span { font-size:12.5px; color:var(--muted); font-variant-numeric:tabular-nums; }
-.mr-bar { height:14px; border-radius:99px; background:rgba(255,255,255,0.07); overflow:hidden; }
+.mr-bar { height:14px; border-radius:99px; background:rgba(30,24,56,0.07); overflow:hidden; }
 .mr-bar-fill { height:100%; width:0; border-radius:99px; background:var(--gold); transition:width 0.4s ease, background 0.3s; }
-.mr-bar-fill.warn { background:#ffb35c; }
-.mr-bar-fill.full { background:#ff7a7a; }
+.mr-bar-fill.warn { background:#D97B1A; }
+.mr-bar-fill.full { background:#D64545; }
 .mr-quota-note { font-size:11.5px; color:var(--muted); margin-top:8px; line-height:1.6; }
-.mr-drop { border:1.5px dashed rgba(240,192,64,0.45); border-radius:12px; padding:26px 16px; text-align:center; cursor:pointer; transition:background 0.15s, border-color 0.15s; color:var(--muted); font-size:13px; line-height:1.7; }
-.mr-drop:hover, .mr-drop.over { background:rgba(240,192,64,0.06); border-color:var(--gold); color:var(--off-white); }
-.mr-drop b { color:var(--gold); font-size:14.5px; }
+.mr-drop { border:1.5px dashed rgba(245,197,24,0.45); border-radius:12px; padding:26px 16px; text-align:center; cursor:pointer; transition:background 0.15s, border-color 0.15s; color:var(--muted); font-size:13px; line-height:1.7; }
+.mr-drop:hover, .mr-drop.over { background:rgba(245,197,24,0.06); border-color:var(--gold); color:var(--off-white); }
+.mr-drop b { color:var(--purple, #5B3FA6); font-size:14.5px; }
 .mr-queue { margin-top:14px; display:flex; flex-direction:column; gap:8px; }
-.mr-q { border:1px solid var(--border-soft); border-radius:10px; padding:10px 12px; background:rgba(255,255,255,0.03); }
+.mr-q { border:1px solid var(--border-soft); border-radius:10px; padding:10px 12px; background:rgba(30,24,56,0.03); }
 .mr-q-row { display:flex; gap:8px; align-items:center; }
-.mr-q-row input { flex:1; min-width:0; padding:8px 11px; background:rgba(255,255,255,0.05); border:1px solid var(--border-soft); border-radius:7px; color:var(--off-white); font-size:13.5px; font-family:inherit; outline:none; }
-.mr-q-row input:focus { border-color:rgba(240,192,64,0.5); }
+.mr-q-row input { flex:1; min-width:0; padding:8px 11px; background:rgba(30,24,56,0.05); border:1px solid var(--border-soft); border-radius:7px; color:var(--off-white); font-size:13.5px; font-family:inherit; outline:none; }
+.mr-q-row input:focus { border-color:rgba(245,197,24,0.5); }
 .mr-q-meta { font-size:11.5px; color:var(--muted); margin-top:6px; display:flex; justify-content:space-between; gap:8px; font-variant-numeric:tabular-nums; }
-.mr-q-meta .err { color:#ff9090; }
-.mr-q-meta .ok { color:#5fd98a; }
-.mr-q-prog { height:6px; border-radius:99px; background:rgba(255,255,255,0.07); overflow:hidden; margin-top:7px; }
+.mr-q-meta .err { color:#D64545; }
+.mr-q-meta .ok { color:#2E9E5B; }
+.mr-q-prog { height:6px; border-radius:99px; background:rgba(30,24,56,0.07); overflow:hidden; margin-top:7px; }
 .mr-q-prog div { height:100%; width:0; background:var(--gold); transition:width 0.3s; }
 .mr-x { background:none; border:1px solid var(--border-soft); color:var(--muted); border-radius:7px; padding:6px 10px; font-size:12px; cursor:pointer; font-family:inherit; white-space:nowrap; }
-.mr-x:hover { color:#ff9090; border-color:rgba(255,80,80,0.4); }
+.mr-x:hover { color:#D64545; border-color:rgba(214,69,69,0.4); }
 .mr-list { display:flex; flex-direction:column; gap:6px; }
-.mr-item { display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--border-soft); border-radius:10px; background:rgba(255,255,255,0.025); }
-.mr-num { width:26px; text-align:center; font-size:12px; font-weight:700; color:var(--gold); flex-shrink:0; font-variant-numeric:tabular-nums; }
+.mr-item { display:flex; align-items:center; gap:10px; padding:8px 10px; border:1px solid var(--border-soft); border-radius:10px; background:rgba(30,24,56,0.025); }
+.mr-num { width:26px; text-align:center; font-size:12px; font-weight:700; color:var(--purple, #5B3FA6); flex-shrink:0; font-variant-numeric:tabular-nums; }
 .mr-thumb { width:92px; aspect-ratio:16/9; border-radius:6px; background:#000 center/cover no-repeat; flex-shrink:0; cursor:pointer; position:relative; }
 .mr-thumb::after { content:'▶'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; color:#fff; font-size:14px; opacity:0.75; }
 .mr-info { flex:1; min-width:0; }
 .mr-title { font-size:13.5px; font-weight:600; color:var(--off-white); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.mr-title-edit { width:100%; padding:6px 9px; background:rgba(255,255,255,0.06); border:1px solid rgba(240,192,64,0.5); border-radius:6px; color:var(--off-white); font-size:13.5px; font-family:inherit; outline:none; }
+.mr-title-edit { width:100%; padding:6px 9px; background:rgba(30,24,56,0.06); border:1px solid rgba(245,197,24,0.5); border-radius:6px; color:var(--off-white); font-size:13.5px; font-family:inherit; outline:none; }
 .mr-sub { font-size:11.5px; color:var(--muted); margin-top:3px; display:flex; gap:8px; flex-wrap:wrap; }
-.mr-sub .proc { color:#ffb35c; }
+.mr-sub .proc { color:#D97B1A; }
 .mr-acts { display:flex; gap:4px; flex-shrink:0; }
 .mr-ib { min-width:32px; padding:0 8px; height:32px; white-space:nowrap; font-size:12px; border-radius:7px; border:1px solid var(--border-soft); background:transparent; color:var(--off-white); cursor:pointer; font-size:13px; font-family:inherit; display:inline-flex; align-items:center; justify-content:center; }
-.mr-ib:hover:not(:disabled) { border-color:var(--gold); color:var(--gold); }
-.mr-ib.del:hover:not(:disabled) { border-color:rgba(255,80,80,0.5); color:#ff9090; }
+.mr-ib:hover:not(:disabled) { border-color:var(--gold); color:var(--purple, #5B3FA6); }
+.mr-ib.del:hover:not(:disabled) { border-color:rgba(214,69,69,0.5); color:#D64545; }
 .mr-ib:disabled { opacity:0.3; cursor:default; }
 .mr-empty { color:var(--muted); font-size:13px; padding:22px 0; text-align:center; }
 @media (max-width:600px) {
@@ -453,13 +453,13 @@ select option:disabled { color:#9B94B3; }
         </div>
         <div class="cal-grid" id="calGrid"></div>
         <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:11px;color:var(--muted);">
-          <span><b style="color:#ff7a7a;">●</b> 공휴일·휴무</span>
-          <span><b style="color:#7ab8ff;">●</b> 회의</span>
-          <span><b style="color:#c58bff;">●</b> 설명회</span>
-          <span><b style="color:#ffb35c;">●</b> 시험기간</span>
-          <span><b style="color:#5fd98a;">●</b> 행사</span>
-          <span><b style="color:var(--gold);">●</b> 할 일</span>
-          <span><b style="color:#5fd98a;">✓</b> 완료한 할 일</span>
+          <span><b style="color:#D64545;">●</b> 공휴일·휴무</span>
+          <span><b style="color:#2F7FD6;">●</b> 회의</span>
+          <span><b style="color:#6B4FBB;">●</b> 설명회</span>
+          <span><b style="color:#D97B1A;">●</b> 시험기간</span>
+          <span><b style="color:#2E9E5B;">●</b> 행사</span>
+          <span><b style="color:var(--purple, #5B3FA6);">●</b> 할 일</span>
+          <span><b style="color:#2E9E5B;">✓</b> 완료한 할 일</span>
         </div>
       </div>
       <div>
@@ -472,7 +472,7 @@ select option:disabled { color:#9B94B3; }
   <!-- ══ 오늘 할 일 팝업 ══ -->
   <div id="calTodayModal" onclick="if(event.target===this)closeTodayPopup()"
     style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9998;align-items:center;justify-content:center;padding:16px;">
-    <div style="width:100%;max-width:460px;max-height:86vh;overflow-y:auto;background:var(--bg-card);border:1px solid rgba(240,192,64,0.35);border-radius:16px;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+    <div style="width:100%;max-width:460px;max-height:86vh;overflow-y:auto;background:var(--bg-card);border:1px solid rgba(245,197,24,0.35);border-radius:16px;padding:24px;box-shadow:0 20px 60px rgba(30,24,56,0.15);">
       <div id="calPopupBody"></div>
       <div style="display:flex;gap:8px;margin-top:18px;">
         <button class="btn btn-outline btn-sm" style="flex:1;" onclick="closeTodayPopup(true)">오늘 하루 보지 않기</button>
@@ -488,10 +488,10 @@ select option:disabled { color:#9B94B3; }
     <!-- 설문 작성 -->
     <div class="card">
       <div class="card-title" style="flex-wrap:wrap;">✏️ 성취도 작성
-        <select id="weekOffsetSelect" onchange="onWeekOffsetChange()" style="font-size:13px;font-weight:600;padding:4px 8px;border-radius:6px;background:rgba(255,255,255,0.06);color:var(--gold);border:1px solid rgba(240,192,64,0.35);"></select>
+        <select id="weekOffsetSelect" onchange="onWeekOffsetChange()" style="font-size:13px;font-weight:600;padding:4px 8px;border-radius:6px;background:rgba(30,24,56,0.06);color:var(--purple, #5B3FA6);border:1px solid rgba(245,197,24,0.35);"></select>
         <span style="font-size:16px; color:var(--muted); font-weight:600;" id="weekLabel"></span>
       </div>
-      <div id="editBanner" style="display:none;margin-bottom:12px;padding:8px 12px;border-radius:8px;background:rgba(240,192,64,0.12);border:1px solid rgba(240,192,64,0.4);color:var(--gold);font-size:12px;">
+      <div id="editBanner" style="display:none;margin-bottom:12px;padding:8px 12px;border-radius:8px;background:rgba(245,197,24,0.12);border:1px solid rgba(245,197,24,0.4);color:var(--purple, #5B3FA6);font-size:12px;">
         ✏️ 이전 기록 수정 중 — 저장하면 해당 주 기록이 덮어써집니다.
       </div>
       <div class="alert ok" id="weekly-ok"></div>
@@ -520,7 +520,7 @@ select option:disabled { color:#9B94B3; }
       <!-- 이름 검색 -->
       <div style="margin-bottom:16px;">
         <input type="text" id="studentSearch" placeholder="🔍 이름 검색..." oninput="filterBySearch()"
-          style="width:100%;max-width:280px;padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
+          style="width:100%;max-width:280px;padding:8px 12px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
       </div>
 
       <!-- 학생 카드 목록 -->
@@ -575,7 +575,7 @@ select option:disabled { color:#9B94B3; }
       <div class="btn-row">
         <button class="btn btn-gold" id="weeklySubmitBtn" onclick="submitWeekly()">제출하기</button>
         <button class="btn btn-outline" onclick="resetWeekly()">초기화</button>
-        <button class="btn btn-outline" id="weeklyCancelEditBtn" style="display:none;color:#ff9090;border-color:rgba(255,80,80,0.3);" onclick="cancelEditWeekly()">수정 취소</button>
+        <button class="btn btn-outline" id="weeklyCancelEditBtn" style="display:none;color:#D64545;border-color:rgba(214,69,69,0.3);" onclick="cancelEditWeekly()">수정 취소</button>
       </div>
     </div>
 
@@ -612,7 +612,7 @@ select option:disabled { color:#9B94B3; }
       <div class="form-grid">
         <div class="form-group">
           <label>보고 월</label>
-          <input type="month" id="m-month" style="color-scheme:dark;">
+          <input type="month" id="m-month" style="color-scheme:light;">
         </div>
         <div class="form-group">
           <label>메모 (선택)</label>
@@ -622,11 +622,11 @@ select option:disabled { color:#9B94B3; }
 
       <!-- 드래그앤드롭 업로드 영역 -->
       <div id="pdfDrop" onclick="document.getElementById('pdfFileInput').click()"
-        style="border:2px dashed rgba(240,192,64,0.3);border-radius:12px;padding:36px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:16px;">
+        style="border:2px dashed rgba(245,197,24,0.3);border-radius:12px;padding:36px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:16px;">
         <div style="font-size:36px;margin-bottom:10px;">📄</div>
         <p style="font-size:14px;color:var(--off-white);margin-bottom:4px;">PDF 파일을 클릭하거나 드래그해서 올려주세요</p>
         <small style="font-size:12px;color:var(--muted);">.pdf 파일만 지원 · 여러 개 선택 가능 · 파일당 최대 20MB</small>
-        <div id="pdfFileName" style="margin-top:12px;font-size:13px;color:var(--gold);display:none;text-align:left;"></div>
+        <div id="pdfFileName" style="margin-top:12px;font-size:13px;color:var(--purple, #5B3FA6);display:none;text-align:left;"></div>
       </div>
       <input type="file" id="pdfFileInput" accept=".pdf" multiple style="display:none;">
 
@@ -635,7 +635,7 @@ select option:disabled { color:#9B94B3; }
         <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px;">
           <span id="uploadStatusText">업로드 중...</span><span id="uploadPct">0%</span>
         </div>
-        <div style="background:rgba(255,255,255,0.08);border-radius:99px;height:6px;">
+        <div style="background:rgba(30,24,56,0.08);border-radius:99px;height:6px;">
           <div id="uploadBar" style="background:var(--gold);height:6px;border-radius:99px;width:0;transition:width 0.2s;"></div>
         </div>
       </div>
@@ -672,7 +672,7 @@ select option:disabled { color:#9B94B3; }
         </div>
         <div class="form-group" style="flex:1; min-width:140px;">
           <label>시험 일자</label>
-          <input type="date" id="t-date" style="color-scheme:dark;">
+          <input type="date" id="t-date" style="color-scheme:light;">
         </div>
         <div class="form-group" style="flex:1; min-width:140px;">
           <label>시험 유형</label>
@@ -767,44 +767,44 @@ select option:disabled { color:#9B94B3; }
   <!-- ══ 일일테스트: 시험지 올리고 → 반 누르면 학생 뜨고 → 틀린 번호 칸에 적고 → 저장 (초·중등 월말보고서 원본 데이터) ══ -->
   <div class="tab-panel" id="tab-dailytest">
     <style>
-      .dt-step { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--gold); margin:4px 0 10px; }
-      .dt-step .n { width:22px; height:22px; border-radius:50%; background:rgba(240,192,64,0.15); border:1px solid rgba(240,192,64,0.5); display:inline-flex; align-items:center; justify-content:center; font-size:12px; }
+      .dt-step { display:flex; align-items:center; gap:8px; font-size:13px; font-weight:700; color:var(--purple, #5B3FA6); margin:4px 0 10px; }
+      .dt-step .n { width:22px; height:22px; border-radius:50%; background:rgba(245,197,24,0.15); border:1px solid rgba(245,197,24,0.5); display:inline-flex; align-items:center; justify-content:center; font-size:12px; }
       .dt-sel { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px; }
       .dt-sel .lb { font-size:12px; color:var(--muted); min-width:34px; }
       #dtClassBtns { display:flex; flex-direction:column; gap:6px; }
-      .dt-acc { border:1px solid var(--border-soft); border-radius:10px; overflow:hidden; background:rgba(255,255,255,0.02); }
-      .dt-acc.open { border-color:rgba(240,192,64,0.35); }
+      .dt-acc { border:1px solid var(--border-soft); border-radius:10px; overflow:hidden; background:rgba(30,24,56,0.02); }
+      .dt-acc.open { border-color:rgba(245,197,24,0.35); }
       .dt-acc-h { width:100%; display:flex; align-items:center; gap:10px; padding:10px 14px; background:transparent; border:none; color:var(--off-white); font-size:14px; font-family:inherit; cursor:pointer; text-align:left; }
-      .dt-acc-h:hover { background:rgba(255,255,255,0.04); }
-      .dt-acc-h .ar { color:var(--gold); width:12px; }
+      .dt-acc-h:hover { background:rgba(30,24,56,0.04); }
+      .dt-acc-h .ar { color:var(--purple, #5B3FA6); width:12px; }
       .dt-acc-h small { color:var(--muted); font-size:11.5px; }
-      .dt-acc-h .sel { margin-left:auto; font-size:11.5px; color:var(--gold); background:rgba(240,192,64,0.12); padding:2px 8px; border-radius:999px; }
+      .dt-acc-h .sel { margin-left:auto; font-size:11.5px; color:var(--purple, #5B3FA6); background:rgba(245,197,24,0.12); padding:2px 8px; border-radius:999px; }
       .dt-acc-b { display:flex; gap:8px; flex-wrap:wrap; padding:4px 14px 12px 36px; }
-      .dt-in { padding:7px 10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.12); border-radius:8px; color:var(--off-white); font-size:13px; font-family:inherit; outline:none; }
+      .dt-in { padding:7px 10px; background:rgba(30,24,56,0.05); border:1px solid rgba(30,24,56,0.12); border-radius:8px; color:var(--off-white); font-size:13px; font-family:inherit; outline:none; }
       .dt-in:focus { border-color:var(--gold); }
       .dt-grid { width:100%; border-collapse:separate; border-spacing:0; font-size:13px; }
       .dt-grid th { font-size:11px; color:var(--muted); letter-spacing:1px; padding:8px 10px; text-align:left; border-bottom:1px solid var(--border-soft); }
-      .dt-grid td { padding:6px 10px; border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:middle; }
+      .dt-grid td { padding:6px 10px; border-bottom:1px solid rgba(30,24,56,0.05); vertical-align:middle; }
       .dt-grid tr.absent td { opacity:0.45; }
       .dt-name { white-space:nowrap; font-weight:600; color:var(--off-white); }
       .dt-chips { display:flex; flex-wrap:wrap; gap:4px; }
-      .dt-chip { width:30px; height:26px; border-radius:6px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.03); color:var(--muted); font-size:11.5px; font-family:inherit; cursor:pointer; padding:0; line-height:1; }
-      .dt-chip:hover { border-color:rgba(255,120,120,0.6); color:#ff9a9a; }
-      .dt-chip.wrong { background:rgba(255,80,80,0.18); border-color:rgba(255,80,80,0.6); color:#ff9a9a; font-weight:700; }
+      .dt-chip { width:30px; height:26px; border-radius:6px; border:1px solid rgba(30,24,56,0.12); background:rgba(30,24,56,0.03); color:var(--muted); font-size:11.5px; font-family:inherit; cursor:pointer; padding:0; line-height:1; }
+      .dt-chip:hover { border-color:rgba(255,120,120,0.6); color:#D64545; }
+      .dt-chip.wrong { background:rgba(214,69,69,0.18); border-color:rgba(214,69,69,0.6); color:#D64545; font-weight:700; }
       @media (max-width:640px) { .dt-chip { width:28px; } }
       .dt-score { font-size:12px; white-space:nowrap; min-width:80px; text-align:right; color:var(--muted); }
-      .dt-abs { font-size:11px; padding:3px 8px; border-radius:6px; border:1px solid rgba(255,255,255,0.15); background:transparent; color:var(--muted); cursor:pointer; font-family:inherit; white-space:nowrap; }
-      .dt-abs.on { border-color:rgba(255,179,92,0.6); color:#ffc883; background:rgba(255,179,92,0.1); }
+      .dt-abs { font-size:11px; padding:3px 8px; border-radius:6px; border:1px solid rgba(30,24,56,0.15); background:transparent; color:var(--muted); cursor:pointer; font-family:inherit; white-space:nowrap; }
+      .dt-abs.on { border-color:rgba(255,179,92,0.6); color:#D97B1A; background:rgba(255,179,92,0.1); }
       .dt-x { font-size:12px; padding:3px 7px; border-radius:6px; border:1px solid transparent; background:transparent; color:var(--muted); cursor:pointer; font-family:inherit; margin-left:4px; }
-      .dt-x:hover { color:#ff9090; border-color:rgba(255,80,80,0.3); }
+      .dt-x:hover { color:#D64545; border-color:rgba(214,69,69,0.3); }
       .dt-list { display:flex; flex-direction:column; gap:6px; }
-      .dt-row { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px; border:1px solid var(--border-soft); background:rgba(255,255,255,0.03); cursor:pointer; }
-      .dt-row:hover { border-color:rgba(240,192,64,0.4); }
-      .dt-row.active { border-color:var(--gold); background:rgba(240,192,64,0.08); }
+      .dt-row { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:10px; border:1px solid var(--border-soft); background:rgba(30,24,56,0.03); cursor:pointer; }
+      .dt-row:hover { border-color:rgba(245,197,24,0.4); }
+      .dt-row.active { border-color:var(--gold); background:rgba(245,197,24,0.08); }
       .dt-row .dt-title { font-size:13.5px; font-weight:600; color:var(--off-white); flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-      .dt-tag { font-size:10.5px; padding:2px 7px; border-radius:6px; background:rgba(255,255,255,0.07); color:var(--muted); white-space:nowrap; }
-      .dt-tag.ok { background:rgba(95,217,138,0.12); color:#7fe0a3; }
-      .dt-tag.warn { background:rgba(255,179,92,0.12); color:#ffc883; }
+      .dt-tag { font-size:10.5px; padding:2px 7px; border-radius:6px; background:rgba(30,24,56,0.07); color:var(--muted); white-space:nowrap; }
+      .dt-tag.ok { background:rgba(46,158,91,0.12); color:#2E9E5B; }
+      .dt-tag.warn { background:rgba(255,179,92,0.12); color:#D97B1A; }
     </style>
 
     <div class="card">
@@ -815,15 +815,15 @@ select option:disabled { color:#9B94B3; }
       <!-- 1. 시험지 -->
       <div class="dt-step"><span class="n">1</span>시험지 올리기</div>
       <div id="dtDrop" onclick="document.getElementById('dtFileInput').click()"
-        style="border:2px dashed rgba(240,192,64,0.3);border-radius:12px;padding:18px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:8px;">
+        style="border:2px dashed rgba(245,197,24,0.3);border-radius:12px;padding:18px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:8px;">
         <p style="font-size:14px;color:var(--off-white);margin-bottom:2px;">📄 매쓰플랫에서 내려받은 PDF를 여기에 올려주세요</p>
         <small style="font-size:12px;color:var(--muted);">클릭 또는 드래그 · 날짜·학년·문항 수는 자동으로 읽습니다</small>
-        <div id="dtFileName" style="margin-top:8px;font-size:13px;color:var(--gold);display:none;"></div>
+        <div id="dtFileName" style="margin-top:8px;font-size:13px;color:var(--purple, #5B3FA6);display:none;"></div>
       </div>
       <input type="file" id="dtFileInput" accept=".pdf" style="display:none;">
       <div class="dt-sel" style="margin-bottom:16px;">
         <span class="lb">날짜</span>
-        <input type="date" id="dt-date" class="dt-in" style="color-scheme:dark;width:150px;">
+        <input type="date" id="dt-date" class="dt-in" style="color-scheme:light;width:150px;">
         <span class="lb" style="margin-left:6px;">문항 수</span>
         <input type="number" id="dt-count" class="dt-in" min="1" max="200" placeholder="자동" style="width:76px;" oninput="dtRenderGrid()">
         <input type="hidden" id="dt-grade"><input type="hidden" id="dt-title"><input type="hidden" id="dt-range">
@@ -847,13 +847,13 @@ select option:disabled { color:#9B94B3; }
         </table>
       </div>
       <div id="dtUploadWrap" style="display:none;margin-top:10px;">
-        <div style="height:6px;background:rgba(255,255,255,0.08);border-radius:3px;overflow:hidden;"><div id="dtUploadBar" style="height:100%;width:0;background:var(--gold);transition:width 0.2s;"></div></div>
+        <div style="height:6px;background:rgba(30,24,56,0.08);border-radius:3px;overflow:hidden;"><div id="dtUploadBar" style="height:100%;width:0;background:var(--gold);transition:width 0.2s;"></div></div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px;" id="dtUploadText">업로드 중...</div>
       </div>
       <div class="btn-row" style="margin-top:12px;">
         <button class="btn btn-gold" id="dtSaveBtn" onclick="dtSaveAll()">저장</button>
         <button class="btn btn-outline" onclick="dtResetAll()">새 시험지</button>
-        <button class="btn btn-outline" id="dtDeleteBtn" style="display:none;margin-left:auto;color:#ff9090;border-color:rgba(255,80,80,0.3);" onclick="dtDeleteTest()">이 시험지 삭제</button>
+        <button class="btn btn-outline" id="dtDeleteBtn" style="display:none;margin-left:auto;color:#D64545;border-color:rgba(214,69,69,0.3);" onclick="dtDeleteTest()">이 시험지 삭제</button>
       </div>
     </div>
 
@@ -878,22 +878,22 @@ select option:disabled { color:#9B94B3; }
       .rv-layout { display:grid; grid-template-columns:300px 1fr; gap:14px; }
       @media (max-width:900px) { .rv-layout { grid-template-columns:1fr; } }
       .rv-list { display:flex; flex-direction:column; gap:6px; max-height:70vh; overflow:auto; }
-      .rv-item { display:flex; align-items:center; gap:8px; padding:9px 12px; border-radius:10px; border:1px solid var(--border-soft); background:rgba(255,255,255,0.03); cursor:pointer; }
-      .rv-item:hover { border-color:rgba(240,192,64,0.4); }
-      .rv-item.active { border-color:var(--gold); background:rgba(240,192,64,0.08); }
+      .rv-item { display:flex; align-items:center; gap:8px; padding:9px 12px; border-radius:10px; border:1px solid var(--border-soft); background:rgba(30,24,56,0.03); cursor:pointer; }
+      .rv-item:hover { border-color:rgba(245,197,24,0.4); }
+      .rv-item.active { border-color:var(--gold); background:rgba(245,197,24,0.08); }
       .rv-item .nm { font-weight:600; color:var(--off-white); flex:1; font-size:13.5px; }
       .rv-item .nm small { color:var(--muted); font-weight:400; margin-left:4px; }
       .rv-item .pc { font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; }
       .rv-st { font-size:10.5px; padding:2px 7px; border-radius:999px; white-space:nowrap; }
-      .rv-st.draft { background:rgba(255,179,92,0.15); color:#ffc883; }
-      .rv-st.reviewed { background:rgba(95,217,138,0.15); color:#7fe0a3; }
+      .rv-st.draft { background:rgba(255,179,92,0.15); color:#D97B1A; }
+      .rv-st.reviewed { background:rgba(46,158,91,0.15); color:#2E9E5B; }
       .rv-st.sent { background:rgba(122,184,255,0.15); color:#9ccaff; }
       .rv-frame { width:100%; height:62vh; border:1px solid var(--border-soft); border-radius:12px; background:#F6F5FA; }
-      .rv-comment { width:100%; min-height:130px; padding:12px; border-radius:10px; border:1px solid rgba(240,192,64,0.35); background:rgba(255,255,255,0.04); color:var(--off-white); font-size:14px; line-height:1.7; font-family:inherit; resize:vertical; outline:none; }
+      .rv-comment { width:100%; min-height:130px; padding:12px; border-radius:10px; border:1px solid rgba(245,197,24,0.35); background:rgba(30,24,56,0.04); color:var(--off-white); font-size:14px; line-height:1.7; font-family:inherit; resize:vertical; outline:none; }
     </style>
     <div class="card">
       <div class="card-title" style="flex-wrap:wrap;">🧾 월간 학습보고서 검수
-        <input type="month" id="rvMonth" onchange="rvLoad()" style="color-scheme:dark;margin-left:8px;padding:5px 8px;background:rgba(255,255,255,0.06);border:1px solid rgba(240,192,64,0.35);border-radius:6px;color:var(--gold);font-size:13px;font-family:inherit;font-weight:600;">
+        <input type="month" id="rvMonth" onchange="rvLoad()" style="color-scheme:light;margin-left:8px;padding:5px 8px;background:rgba(30,24,56,0.06);border:1px solid rgba(245,197,24,0.35);border-radius:6px;color:var(--purple, #5B3FA6);font-size:13px;font-family:inherit;font-weight:600;">
         <span style="font-size:12px;color:var(--muted);font-weight:400;" id="rvStat"></span>
         <button class="btn btn-outline btn-sm" style="margin-left:auto;" onclick="rvLoad()">새로고침</button>
       </div>
@@ -924,18 +924,18 @@ select option:disabled { color:#9B94B3; }
   <!-- ══ 학부모 댓글: 주간성취도·월간보고서에 학부모가 남긴 댓글 확인 · 답글 ══ -->
   <div class="tab-panel" id="tab-parentcomments">
     <style>
-      .pc-thread { border:1px solid var(--border-soft); border-radius:12px; padding:12px 14px; margin-bottom:10px; background:rgba(255,255,255,0.02); }
+      .pc-thread { border:1px solid var(--border-soft); border-radius:12px; padding:12px 14px; margin-bottom:10px; background:rgba(30,24,56,0.02); }
       .pc-thread.unread { border-color:rgba(255,107,107,0.5); background:rgba(255,107,107,0.05); }
       .pc-head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:8px; }
       .pc-head .nm { font-weight:700; color:var(--off-white); font-size:14px; }
-      .pc-head .lb { font-size:12px; color:var(--gold); }
+      .pc-head .lb { font-size:12px; color:var(--purple, #5B3FA6); }
       .pc-head .nw { font-size:10.5px; background:#ff6b6b; color:#fff; padding:1px 7px; border-radius:999px; }
       .pc-msg { padding:8px 10px; border-radius:10px; margin-bottom:6px; font-size:13px; line-height:1.55; white-space:pre-wrap; color:var(--off-white); }
       .pc-msg.parent { background:rgba(122,184,255,0.1); margin-right:24px; }
-      .pc-msg.teacher { background:rgba(240,192,64,0.1); margin-left:24px; }
+      .pc-msg.teacher { background:rgba(245,197,24,0.1); margin-left:24px; }
       .pc-msg .who { font-size:11px; color:var(--muted); margin-bottom:2px; }
       .pc-form { display:flex; gap:6px; margin-top:6px; }
-      .pc-form textarea { flex:1; min-height:42px; padding:8px 10px; border-radius:10px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.04); color:var(--off-white); font-family:inherit; font-size:13px; resize:vertical; outline:none; }
+      .pc-form textarea { flex:1; min-height:42px; padding:8px 10px; border-radius:10px; border:1px solid rgba(30,24,56,0.12); background:rgba(30,24,56,0.04); color:var(--off-white); font-family:inherit; font-size:13px; resize:vertical; outline:none; }
       .pc-form textarea:focus { border-color:var(--gold); }
     </style>
     <div class="card">
@@ -968,7 +968,7 @@ select option:disabled { color:#9B94B3; }
       <div class="card-title">📍 반별 진도 입력
         <span style="font-size:12px; color:var(--muted); font-weight:400;" id="progressWeekLabel"></span>
       </div>
-      <div id="progressEditBanner" style="display:none;margin-bottom:12px;padding:8px 12px;border-radius:8px;background:rgba(240,192,64,0.12);border:1px solid rgba(240,192,64,0.4);color:var(--gold);font-size:12px;">
+      <div id="progressEditBanner" style="display:none;margin-bottom:12px;padding:8px 12px;border-radius:8px;background:rgba(245,197,24,0.12);border:1px solid rgba(245,197,24,0.4);color:var(--purple, #5B3FA6);font-size:12px;">
         ✏️ 이전 기록 수정 중 — 저장하면 해당 기록이 수정됩니다.
       </div>
       <div class="alert ok" id="progress-ok"></div>
@@ -976,15 +976,15 @@ select option:disabled { color:#9B94B3; }
 
       <div class="form-grid">
         <div class="form-group">
-          <label>반명 <span style="color:#ff9090;">*</span></label>
+          <label>반명 <span style="color:#D64545;">*</span></label>
           <input type="text" id="p-classname" placeholder="예: 고2 수학1반">
         </div>
         <div class="form-group">
-          <label>사용교재 <span style="color:#ff9090;">*</span></label>
+          <label>사용교재 <span style="color:#D64545;">*</span></label>
           <input type="text" id="p-textbook" placeholder="예: 수학의 정석 개념편">
         </div>
         <div class="form-group">
-          <label>현 진도 <span style="color:#ff9090;">*</span></label>
+          <label>현 진도 <span style="color:#D64545;">*</span></label>
           <input type="text" id="p-curprogress" placeholder="예: 수1 · 지수함수 3단원">
         </div>
         <div class="form-group">
@@ -1013,7 +1013,7 @@ select option:disabled { color:#9B94B3; }
       <div class="btn-row">
         <button class="btn btn-gold" id="progressSubmitBtn" onclick="submitProgress()">제출하기</button>
         <button class="btn btn-outline" onclick="resetProgress()">초기화</button>
-        <button class="btn btn-outline" id="progressCancelEditBtn" style="display:none;color:#ff9090;border-color:rgba(255,80,80,0.3);" onclick="cancelEditProgress()">수정 취소</button>
+        <button class="btn btn-outline" id="progressCancelEditBtn" style="display:none;color:#D64545;border-color:rgba(214,69,69,0.3);" onclick="cancelEditProgress()">수정 취소</button>
       </div>
     </div>
 
@@ -1039,17 +1039,17 @@ select option:disabled { color:#9B94B3; }
 
       <!-- 날짜 -->
       <div class="form-group" style="margin-bottom:16px;max-width:220px;">
-        <label>날짜 <span style="color:#ff9090;">*</span></label>
-        <input type="date" id="c-date" style="color-scheme:dark;width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+        <label>날짜 <span style="color:#D64545;">*</span></label>
+        <input type="date" id="c-date" style="color-scheme:light;width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
       </div>
 
       <!-- 학생 선택 -->
       <div class="form-group" style="margin-bottom:16px;">
-        <label>학생 <span style="color:#ff9090;">*</span></label>
+        <label>학생 <span style="color:#D64545;">*</span></label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;" id="clinicStudentChips"></div>
         <input type="text" id="clinicStudentSearch" placeholder="🔍 이름 검색..."
           oninput="filterClinicStudents()"
-          style="width:100%;max-width:280px;padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
+          style="width:100%;max-width:280px;padding:8px 12px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
         <input type="hidden" id="c-studentId">
         <input type="hidden" id="c-studentName">
       </div>
@@ -1057,18 +1057,18 @@ select option:disabled { color:#9B94B3; }
       <!-- 시간 / 지참교재 -->
       <div class="form-grid">
         <div class="form-group">
-          <label>시간 <span style="color:#ff9090;">*</span></label>
+          <label>시간 <span style="color:#D64545;">*</span></label>
           <input type="text" id="c-time" placeholder="예: 10:00 ~ 12:00">
         </div>
         <div class="form-group">
-          <label>지참교재 <span style="color:#ff9090;">*</span></label>
+          <label>지참교재 <span style="color:#D64545;">*</span></label>
           <input type="text" id="c-book" placeholder="예: 수학의 정석 심화편">
         </div>
       </div>
 
       <!-- 클리닉 내용 -->
       <div class="form-group" style="margin-bottom:20px;">
-        <label>클리닉 내용 <span style="color:#ff9090;">*</span></label>
+        <label>클리닉 내용 <span style="color:#D64545;">*</span></label>
         <textarea id="c-content" placeholder="이번 토요 클리닉에서 다룬 내용을 적어주세요." style="min-height:90px;"></textarea>
       </div>
 
@@ -1085,8 +1085,8 @@ select option:disabled { color:#9B94B3; }
         이번 주 토요일에 진행한 클리닉이 없는 경우, 아래 날짜를 확인하고 버튼을 눌러 제출해주세요.
       </div>
       <div class="form-group" style="margin-bottom:16px;max-width:220px;">
-        <label>날짜 <span style="color:#ff9090;">*</span></label>
-        <input type="date" id="c-none-date" style="color-scheme:dark;width:100%;padding:10px 13px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+        <label>날짜 <span style="color:#D64545;">*</span></label>
+        <input type="date" id="c-none-date" style="color-scheme:light;width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
       </div>
       <div class="alert ok" id="clinic-none-ok"></div>
       <div class="alert err" id="clinic-none-err"></div>
@@ -1114,21 +1114,21 @@ select option:disabled { color:#9B94B3; }
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px;">
         <select id="tws-course" onchange="twsSelectCourse(this.value)"
-          style="padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(240,192,64,0.6);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;font-weight:600;color-scheme:dark;max-width:260px;">
+          style="padding:8px 12px;background:rgba(30,24,56,0.05);border:1px solid rgba(245,197,24,0.6);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;font-weight:600;color-scheme:light;max-width:260px;">
           <option value="">전체 강의 (요약)</option>
         </select>
         <select id="tws-branch" onchange="renderTeacherWatchStatus()"
-          style="padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:dark;">
+          style="padding:8px 12px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:light;">
           <option value="">전체 관</option>
           <option value="평촌관">평촌관</option>
           <option value="산본관">산본관</option>
         </select>
         <input type="text" id="tws-student" placeholder="학생 이름 검색" oninput="renderTeacherWatchStatus()"
-          style="padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
+          style="padding:8px 12px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
         <input type="text" id="tws-video" placeholder="영상 제목/태그 검색" oninput="renderTeacherWatchStatus()"
-          style="padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
+          style="padding:8px 12px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
         <select id="tws-status" onchange="renderTeacherWatchStatus()"
-          style="padding:8px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:dark;">
+          style="padding:8px 12px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;color-scheme:light;">
           <option value="">전체 상태</option>
           <option value="unwatched">미시청</option>
           <option value="inprogress">시청중</option>
@@ -1525,8 +1525,8 @@ function renderWeeklyStudentSelect() {
   }
   cardList.innerHTML = filtered.map(s => `
     <button onclick="selectStudentCard('${s.id}', this)"
-      style="padding:7px 14px;border-radius:20px;border:1px solid rgba(255,255,255,0.15);
-      background:rgba(255,255,255,0.05);color:var(--off-white);font-size:13px;
+      style="padding:7px 14px;border-radius:20px;border:1px solid rgba(30,24,56,0.15);
+      background:rgba(30,24,56,0.05);color:var(--off-white);font-size:13px;
       font-family:inherit;cursor:pointer;transition:all 0.15s;"
       data-sid="${s.id}">
       ${s.name} <span style="font-size:11px;color:var(--muted);">${s.grade||''}</span>
@@ -1557,22 +1557,22 @@ window.selectStudentCard = function(sid, btn) {
   const already = btn.dataset.selected === 'true';
   document.querySelectorAll('#studentCardList button').forEach(b => {
     b.dataset.selected = 'false';
-    b.style.background = 'rgba(255,255,255,0.05)';
-    b.style.borderColor = 'rgba(255,255,255,0.15)';
+    b.style.background = 'rgba(30,24,56,0.05)';
+    b.style.borderColor = 'rgba(30,24,56,0.15)';
     b.style.color = 'var(--off-white)';
   });
   if (!already) {
     btn.dataset.selected = 'true';
-    btn.style.background = 'rgba(240,192,64,0.2)';
+    btn.style.background = 'rgba(245,197,24,0.2)';
     btn.style.borderColor = 'var(--gold)';
-    btn.style.color = 'var(--gold)';
+    btn.style.color = 'var(--purple, #5B3FA6)';
     document.getElementById('w-student').value = sid;
   } else {
     document.getElementById('w-student').value = '';
   document.querySelectorAll('#studentCardList button').forEach(b => {
     b.dataset.selected = 'false';
-    b.style.background = 'rgba(255,255,255,0.05)';
-    b.style.borderColor = 'rgba(255,255,255,0.15)';
+    b.style.background = 'rgba(30,24,56,0.05)';
+    b.style.borderColor = 'rgba(30,24,56,0.15)';
     b.style.color = 'var(--off-white)';
   });
   }
@@ -1662,8 +1662,8 @@ window.editWeeklyReport = function(docId) {
   document.querySelectorAll('#studentCardList button').forEach(b => {
     const sel = b.dataset.sid === data.studentId;
     b.dataset.selected = sel ? 'true' : 'false';
-    b.style.background = sel ? 'rgba(240,192,64,0.2)' : 'rgba(255,255,255,0.05)';
-    b.style.borderColor = sel ? 'var(--gold)' : 'rgba(255,255,255,0.15)';
+    b.style.background = sel ? 'rgba(245,197,24,0.2)' : 'rgba(30,24,56,0.05)';
+    b.style.borderColor = sel ? 'var(--gold)' : 'rgba(30,24,56,0.15)';
     b.style.color = sel ? 'var(--gold)' : 'var(--off-white)';
   });
 
@@ -1743,11 +1743,11 @@ window.loadWeeklyHistory = async function loadWeeklyHistory() {
           <span class="history-week">${data.weekLabel} — ${data.studentName} (${data.studentGrade||''})</span>
           <div style="display:flex;align-items:center;gap:8px;">
             <button onclick="editWeeklyReport('${docId}')"
-              style="padding:3px 10px;font-size:11px;border-radius:6px;border:1px solid rgba(240,192,64,0.4);background:rgba(240,192,64,0.1);color:var(--gold);cursor:pointer;font-family:inherit;">
+              style="padding:3px 10px;font-size:11px;border-radius:6px;border:1px solid rgba(245,197,24,0.4);background:rgba(245,197,24,0.1);color:var(--purple, #5B3FA6);cursor:pointer;font-family:inherit;">
               수정
             </button>
             <button onclick="deleteWeeklyReport('${docId}')"
-              style="padding:3px 10px;font-size:11px;border-radius:6px;border:1px solid rgba(255,80,80,0.3);background:rgba(255,80,80,0.1);color:#ff9090;cursor:pointer;font-family:inherit;">
+              style="padding:3px 10px;font-size:11px;border-radius:6px;border:1px solid rgba(214,69,69,0.3);background:rgba(214,69,69,0.1);color:#D64545;cursor:pointer;font-family:inherit;">
               삭제
             </button>
           </div>
@@ -1760,7 +1760,7 @@ window.loadWeeklyHistory = async function loadWeeklyHistory() {
       el.appendChild(div);
     });
   } catch(e) {
-    el.innerHTML = `<div class="empty-state" style="color:#ff9090;">오류: ${e.message}<br>Firestore 인덱스가 필요할 수 있습니다.</div>`;
+    el.innerHTML = `<div class="empty-state" style="color:#D64545;">오류: ${e.message}<br>Firestore 인덱스가 필요할 수 있습니다.</div>`;
   }
 };
 
@@ -1773,7 +1773,7 @@ function setupPdfDrop() {
   if (!input || !drop) return;
 
   input.addEventListener('change', e => setPdfFiles(e.target.files));
-  drop.addEventListener('dragover', e => { e.preventDefault(); drop.style.borderColor='var(--gold)'; drop.style.background='rgba(240,192,64,0.05)'; });
+  drop.addEventListener('dragover', e => { e.preventDefault(); drop.style.borderColor='var(--gold)'; drop.style.background='rgba(245,197,24,0.05)'; });
   drop.addEventListener('dragleave', () => { drop.style.borderColor=''; drop.style.background=''; });
   drop.addEventListener('drop', e => {
     e.preventDefault(); drop.style.borderColor=''; drop.style.background='';
@@ -1928,11 +1928,11 @@ async function loadMonthlyHistory() {
           <span>📄 ${data.fileName || ''} ${size}</span>
           <div style="display:flex;gap:8px;align-items:center;">
             <a href="${data.downloadURL}"
-              style="font-size:12px;color:var(--gold);text-decoration:none;padding:4px 10px;border:1px solid rgba(240,192,64,0.4);border-radius:6px;">
+              style="font-size:12px;color:var(--purple, #5B3FA6);text-decoration:none;padding:4px 10px;border:1px solid rgba(245,197,24,0.4);border-radius:6px;">
               열기 / 다운로드
             </a>
             <button onclick="deleteMonthlyReport('${d.id}', '${data.filePath||''}')"
-              style="padding:4px 10px;font-size:11px;border-radius:6px;border:1px solid rgba(255,80,80,0.3);background:rgba(255,80,80,0.1);color:#ff9090;cursor:pointer;font-family:inherit;">
+              style="padding:4px 10px;font-size:11px;border-radius:6px;border:1px solid rgba(214,69,69,0.3);background:rgba(214,69,69,0.1);color:#D64545;cursor:pointer;font-family:inherit;">
               삭제
             </button>
           </div>
@@ -1941,7 +1941,7 @@ async function loadMonthlyHistory() {
       el.appendChild(div);
     });
   } catch(e) {
-    el.innerHTML = `<div class="empty-state" style="color:#ff9090;">오류: ${e.message}</div>`;
+    el.innerHTML = `<div class="empty-state" style="color:#D64545;">오류: ${e.message}</div>`;
   }
 }
 
@@ -2036,15 +2036,15 @@ window.loadTestHistory = async function() {
       <tr>
         <td>${r.date || '-'}</td>
         <td>${r.studentName || '-'}</td>
-        <td><span style="font-size:12px; background:rgba(255,255,255,0.07); padding:3px 8px; border-radius:6px;">${r.type||'-'}</span></td>
+        <td><span style="font-size:12px; background:rgba(30,24,56,0.07); padding:3px 8px; border-radius:6px;">${r.type||'-'}</span></td>
         <td style="max-width:140px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${r.topic||''}">${r.topic||'-'}</td>
         <td>${scoreBadge(r.score, r.total)}</td>
-        <td style="font-size:12px; color:${r.percentage>=70?'var(--gold)':'#ff9090'};">${r.percentage}%</td>
+        <td style="font-size:12px; color:${r.percentage>=70?'var(--gold)':'#D64545'};">${r.percentage}%</td>
         <td style="max-width:180px; font-size:12px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;" title="${r.feedback||''}">${r.feedback||'-'}</td>
       </tr>
     `).join('');
   } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="color:#ff9090; padding:24px;">오류: ${e.message}<br>Firestore 인덱스가 필요할 수 있습니다.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-state" style="color:#D64545; padding:24px;">오류: ${e.message}<br>Firestore 인덱스가 필요할 수 있습니다.</td></tr>`;
   }
 };
 
@@ -2132,7 +2132,7 @@ function twsFormatDate(ts) {
 function twsBar(percent, color) {
   return `
     <div style="display:flex;align-items:center;gap:6px;">
-      <div style="flex:1;height:6px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;">
+      <div style="flex:1;height:6px;background:rgba(30,24,56,0.08);border-radius:4px;overflow:hidden;">
         <div style="width:${percent}%;height:100%;background:${color};"></div>
       </div>
       <span style="font-size:11px;color:var(--muted);min-width:32px;text-align:right;">${percent}%</span>
@@ -2212,7 +2212,7 @@ window.loadTeacherWatchStatus = async function(force) {
     twsLoaded = true;
     renderTeacherWatchStatus();
   } catch(e) {
-    el.innerHTML = `<div style="color:#ff9090;">오류: ${twsEsc(e.message)}</div>`;
+    el.innerHTML = `<div style="color:#D64545;">오류: ${twsEsc(e.message)}</div>`;
   }
 };
 
@@ -2273,7 +2273,7 @@ window.renderTeacherWatchStatus = function() {
     el.innerHTML = `
       <table style="width:100%;border-collapse:collapse;font-size:13px;">
         <thead>
-          <tr style="border-bottom:1px solid rgba(240,192,64,0.3);color:var(--gold);text-align:left;">
+          <tr style="border-bottom:1px solid rgba(245,197,24,0.3);color:var(--purple, #5B3FA6);text-align:left;">
             <th style="padding:8px 10px;">강의</th>
             <th style="padding:8px 10px;">접근 학생</th>
             <th style="padding:8px 10px;">영상</th>
@@ -2291,17 +2291,17 @@ window.renderTeacherWatchStatus = function() {
             const none = studentArr.filter(x => x.watched === 0).length;
             return `
             <tr data-tag="${twsEsc(c.tag)}" onclick="twsSelectCourse(this.dataset.tag)"
-              style="border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;"
-              onmouseover="this.style.background='rgba(240,192,64,0.06)'" onmouseout="this.style.background=''">
+              style="border-bottom:1px solid rgba(30,24,56,0.06);cursor:pointer;"
+              onmouseover="this.style.background='rgba(245,197,24,0.06)'" onmouseout="this.style.background=''">
               <td style="padding:10px;">
                 <div style="font-weight:600;">${twsEsc(c.label)}</div>
                 <div style="font-size:11px;color:var(--muted);">${twsEsc(c.cat)}</div>
               </td>
               <td style="padding:10px;">${studentArr.length}명</td>
               <td style="padding:10px;color:var(--muted);">${c.videoCount}개</td>
-              <td style="padding:10px;min-width:130px;">${twsBar(avg, avg >= 90 ? '#5FD98A' : 'var(--gold)')}</td>
-              <td style="padding:10px;color:#5FD98A;font-weight:600;">${allDone}명</td>
-              <td style="padding:10px;color:${none ? '#ff9090' : 'var(--muted)'};font-weight:600;">${none}명</td>
+              <td style="padding:10px;min-width:130px;">${twsBar(avg, avg >= 90 ? '#2E9E5B' : 'var(--gold)')}</td>
+              <td style="padding:10px;color:#2E9E5B;font-weight:600;">${allDone}명</td>
+              <td style="padding:10px;color:${none ? '#D64545' : 'var(--muted)'};font-weight:600;">${none}명</td>
             </tr>`;
           }).join('')}
         </tbody>
@@ -2349,7 +2349,7 @@ window.renderTeacherWatchStatus = function() {
   const head = `
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
       <button class="btn btn-outline btn-sm" onclick="twsSelectCourse('')">← 전체 강의</button>
-      <div style="font-size:15px;font-weight:700;color:var(--gold);">${twsEsc(course ? course.label : twsCourse)}</div>
+      <div style="font-size:15px;font-weight:700;color:var(--purple, #5B3FA6);">${twsEsc(course ? course.label : twsCourse)}</div>
       <div style="font-size:12px;color:var(--muted);">${twsEsc(course ? course.cat : '')}</div>
     </div>`;
 
@@ -2358,7 +2358,7 @@ window.renderTeacherWatchStatus = function() {
   el.innerHTML = head + `
     <table style="width:100%;border-collapse:collapse;font-size:13px;">
       <thead>
-        <tr style="border-bottom:1px solid rgba(240,192,64,0.3);color:var(--gold);text-align:left;">
+        <tr style="border-bottom:1px solid rgba(245,197,24,0.3);color:var(--purple, #5B3FA6);text-align:left;">
           <th style="padding:8px 10px;">학생</th>
           <th style="padding:8px 10px;">관</th>
           <th style="padding:8px 10px;">평균 시청률</th>
@@ -2370,13 +2370,13 @@ window.renderTeacherWatchStatus = function() {
       </thead>
       <tbody>
         ${students.map((st, i) => {
-          const barColor = st.state === 'completed' ? '#5FD98A' : (st.avg > 0 ? 'var(--gold)' : 'rgba(255,255,255,0.15)');
+          const barColor = st.state === 'completed' ? '#2E9E5B' : (st.avg > 0 ? 'var(--gold)' : 'rgba(30,24,56,0.15)');
           const statusLabel = st.state === 'completed' ? '✅ 완료' : (st.state === 'inprogress' ? '⏳ 시청중' : '⚠️ 미시청');
-          const statusColor = st.state === 'completed' ? '#5FD98A' : (st.state === 'inprogress' ? 'var(--gold)' : '#ff9090');
+          const statusColor = st.state === 'completed' ? '#2E9E5B' : (st.state === 'inprogress' ? 'var(--gold)' : '#D64545');
           const videos = [...st.videos].sort((a, b) => a.videoTitle.localeCompare(b.videoTitle, 'ko', { numeric: true }));
           return `
-          <tr onclick="twsToggleDetail(${i})" style="border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer;"
-            onmouseover="this.style.background='rgba(240,192,64,0.06)'" onmouseout="this.style.background=''">
+          <tr onclick="twsToggleDetail(${i})" style="border-bottom:1px solid rgba(30,24,56,0.06);cursor:pointer;"
+            onmouseover="this.style.background='rgba(245,197,24,0.06)'" onmouseout="this.style.background=''">
             <td style="padding:9px 10px;font-weight:600;">${twsEsc(st.name)}${st.grade ? `<span style="font-size:11px;color:var(--muted);font-weight:400;margin-left:6px;">${twsEsc(st.grade)}</span>` : ''}</td>
             <td style="padding:9px 10px;color:var(--muted);">${twsEsc(st.branch)}</td>
             <td style="padding:9px 10px;min-width:130px;">${twsBar(st.avg, barColor)}</td>
@@ -2386,14 +2386,14 @@ window.renderTeacherWatchStatus = function() {
             <td style="padding:9px 10px;color:var(--muted);" id="tws-arrow-${i}">▸</td>
           </tr>
           <tr id="tws-detail-${i}" style="display:none;">
-            <td colspan="7" style="padding:4px 10px 14px 24px;background:rgba(255,255,255,0.02);">
+            <td colspan="7" style="padding:4px 10px 14px 24px;background:rgba(30,24,56,0.02);">
               <table style="width:100%;border-collapse:collapse;font-size:12px;">
                 ${videos.map(v => {
-                  const c = v.completed ? '#5FD98A' : (v.percent > 0 ? 'var(--gold)' : 'rgba(255,255,255,0.15)');
+                  const c = v.completed ? '#2E9E5B' : (v.percent > 0 ? 'var(--gold)' : 'rgba(30,24,56,0.15)');
                   const lbl = v.completed ? '완료' : (v.percent > 0 ? '시청중' : '미시청');
-                  const lc = v.completed ? '#5FD98A' : (v.percent > 0 ? 'var(--gold)' : '#ff9090');
+                  const lc = v.completed ? '#2E9E5B' : (v.percent > 0 ? 'var(--gold)' : '#D64545');
                   return `
-                  <tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+                  <tr style="border-bottom:1px solid rgba(30,24,56,0.04);">
                     <td style="padding:7px 8px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${twsEsc(v.videoTitle)}</td>
                     <td style="padding:7px 8px;min-width:120px;">${twsBar(v.percent, c)}</td>
                     <td style="padding:7px 8px;color:${lc};font-weight:600;">${lbl}</td>
@@ -2430,7 +2430,7 @@ window.loadTeacherVideos = async function() {
     videosLoaded = true;
     renderTeacherVideos();
   } catch(e) {
-    el.innerHTML = `<div style="color:#ff9090;">오류: ${e.message}</div>`;
+    el.innerHTML = `<div style="color:#D64545;">오류: ${e.message}</div>`;
   }
 };
 
@@ -2446,10 +2446,10 @@ function renderTeacherVideos() {
   el.innerHTML = filtered.map(v => `
     <div onclick="openVideoModal('${v.vimeoId}','${(v.title||'').replace(/'/g,"\\'")}')"
       style="display:flex;align-items:center;gap:14px;padding:14px 16px;
-      background:rgba(255,255,255,0.03);border:1px solid var(--border-soft);
+      background:rgba(30,24,56,0.03);border:1px solid var(--border-soft);
       border-radius:10px;margin-bottom:8px;cursor:pointer;transition:all 0.18s;"
-      onmouseover="this.style.borderColor='rgba(240,192,64,0.4)';this.style.background='rgba(240,192,64,0.05)'"
-      onmouseout="this.style.borderColor='var(--border-soft)';this.style.background='rgba(255,255,255,0.03)'">
+      onmouseover="this.style.borderColor='rgba(245,197,24,0.4)';this.style.background='rgba(245,197,24,0.05)'"
+      onmouseout="this.style.borderColor='var(--border-soft)';this.style.background='rgba(30,24,56,0.03)'">
       <div style="width:48px;height:48px;border-radius:8px;overflow:hidden;flex-shrink:0;background:#000;">
         <img src="https://vumbnail.com/${v.vimeoId}.jpg" alt=""
           style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
@@ -2458,13 +2458,13 @@ function renderTeacherVideos() {
         <div style="font-size:14px;font-weight:600;color:var(--off-white);margin-bottom:4px;
           overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${v.title || '-'}</div>
         <div style="display:flex;gap:8px;align-items:center;">
-          <span style="font-size:11px;background:rgba(240,192,64,0.1);color:var(--gold);
+          <span style="font-size:11px;background:rgba(245,197,24,0.1);color:var(--purple, #5B3FA6);
             padding:2px 8px;border-radius:4px;">${v.tag || ''}</span>
-          ${v.code ? `<span style="font-size:11px;color:var(--gold);font-family:'SF Mono',Menlo,Consolas,monospace;" title="영상 고유 코드">${v.code}</span>` : ''}
+          ${v.code ? `<span style="font-size:11px;color:var(--purple, #5B3FA6);font-family:'SF Mono',Menlo,Consolas,monospace;" title="영상 고유 코드">${v.code}</span>` : ''}
           ${v.date ? `<span style="font-size:11px;color:var(--muted);">${v.date}</span>` : ''}
         </div>
       </div>
-      <div style="color:var(--gold);font-size:20px;flex-shrink:0;">▶</div>
+      <div style="color:var(--purple, #5B3FA6);font-size:20px;flex-shrink:0;">▶</div>
     </div>`).join('');
 }
 
@@ -2622,7 +2622,7 @@ async function loadClinicHistory() {
     el.innerHTML = [...snap.docs].map(d => {
       const r = d.data();
       if (r.isNone) {
-        return `<div class="history-item" style="padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.05);">
+        return `<div class="history-item" style="padding:14px 16px;border-bottom:1px solid rgba(30,24,56,0.05);">
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
             <div>
               <span style="font-weight:700;color:var(--muted);">🚫 클리닉 없음</span>
@@ -2632,10 +2632,10 @@ async function loadClinicHistory() {
           </div>
         </div>`;
       }
-      return `<div class="history-item" style="padding:14px 16px;border-bottom:1px solid rgba(255,255,255,0.05);">
+      return `<div class="history-item" style="padding:14px 16px;border-bottom:1px solid rgba(30,24,56,0.05);">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
           <div>
-            <span style="font-weight:700;color:var(--gold);">${r.studentName}</span>
+            <span style="font-weight:700;color:var(--purple, #5B3FA6);">${r.studentName}</span>
             <span style="font-size:12px;color:var(--muted);margin-left:8px;">${r.date} · ${r.time}</span>
             <div style="font-size:12px;color:var(--muted);margin-top:4px;">지참교재: ${r.book}</div>
             <div style="font-size:13px;margin-top:4px;">${r.content}</div>
@@ -2645,7 +2645,7 @@ async function loadClinicHistory() {
       </div>`;
     }).join('');
   } catch(e) {
-    el.innerHTML = `<div class="empty-state" style="color:#ff9090;">오류: ${e.message}</div>`;
+    el.innerHTML = `<div class="empty-state" style="color:#D64545;">오류: ${e.message}</div>`;
   }
 }
 
@@ -2822,16 +2822,16 @@ async function loadProgressHistory() {
             <span>📌 현 진도: <b style="color:var(--off-white);">${r.curprogress||'-'}</b></span>
             ${r.newprogress ? `<span>➡ 새 진도: <b style="color:var(--off-white);">${r.newprogress}</b></span>` : ''}
             ${r.repeatstep ? `<span>🔁 반복 단계: <b style="color:var(--off-white);">${r.repeatstep}</b></span>` : ''}
-            <span>📊 성취도: <b style="color:var(--gold);">${r.classAchieveLabel||'-'}</b></span>
+            <span>📊 성취도: <b style="color:var(--purple, #5B3FA6);">${r.classAchieveLabel||'-'}</b></span>
           </div>
         </div>
         <div style="text-align:right;margin-top:4px;display:flex;justify-content:flex-end;gap:8px;">
           <button onclick="editProgressReport('${d.id}')"
-            style="padding:4px 10px;font-size:11px;border-radius:6px;border:1px solid rgba(240,192,64,0.4);background:rgba(240,192,64,0.1);color:var(--gold);cursor:pointer;font-family:inherit;">
+            style="padding:4px 10px;font-size:11px;border-radius:6px;border:1px solid rgba(245,197,24,0.4);background:rgba(245,197,24,0.1);color:var(--purple, #5B3FA6);cursor:pointer;font-family:inherit;">
             수정
           </button>
           <button onclick="deleteProgressReport('${d.id}')"
-            style="padding:4px 10px;font-size:11px;border-radius:6px;border:1px solid rgba(255,80,80,0.3);background:rgba(255,80,80,0.1);color:#ff9090;cursor:pointer;font-family:inherit;">
+            style="padding:4px 10px;font-size:11px;border-radius:6px;border:1px solid rgba(214,69,69,0.3);background:rgba(214,69,69,0.1);color:#D64545;cursor:pointer;font-family:inherit;">
             삭제
           </button>
         </div>
@@ -2839,7 +2839,7 @@ async function loadProgressHistory() {
       el.appendChild(div);
     });
   } catch(e) {
-    el.innerHTML = `<div class="empty-state" style="color:#ff9090;">오류: ${e.message}</div>`;
+    el.innerHTML = `<div class="empty-state" style="color:#D64545;">오류: ${e.message}</div>`;
   }
 }
 
@@ -2894,7 +2894,7 @@ const KR_HOLIDAYS = {
 };
 
 const CAL_TYPE_COLOR = {
-  '휴무':'#ff7a7a', '회의':'#7ab8ff', '설명회':'#c58bff', '시험기간':'#ffb35c', '행사':'#5fd98a', '할 일':'#f0c040', '기타':'#b9b2cf',
+  '휴무':'#D64545', '회의':'#2F7FD6', '설명회':'#6B4FBB', '시험기간':'#D97B1A', '행사':'#2E9E5B', '할 일':'#F5C518', '기타':'#6B6489',
 };
 const CAL_DOW = ['일','월','화','수','목','금','토'];
 
@@ -3164,7 +3164,7 @@ function calEventsHtml(dateStr) {
     <div class="cal-item" style="cursor:default;">
       <span class="cal-dot" style="background:${CAL_TYPE_COLOR[e.type] || CAL_TYPE_COLOR['기타']};"></span>
       <div style="flex:1;min-width:0;">
-        <div class="cal-item-title">${calEsc(e.title)} <span class="cal-type" style="color:${CAL_TYPE_COLOR[e.type] || '#b9b2cf'};">${calEsc(e.type || '기타')}</span></div>
+        <div class="cal-item-title">${calEsc(e.title)} <span class="cal-type" style="color:${CAL_TYPE_COLOR[e.type] || '#6B6489'};">${calEsc(e.type || '기타')}</span></div>
         <div class="cal-item-sub">${e.end && e.end !== e.start ? `${calMD(calParse(e.start))} ~ ${calMD(calParse(e.end))}` : ''}${e.time ? ` ${calEsc(e.time)}` : ''}${e.memo ? ` · ${calEsc(e.memo)}` : ''}</div>
       </div>
     </div>`).join('');
@@ -3234,7 +3234,7 @@ function calRenderMonth() {
       <div class="${cls}" onclick="calSelectDay('${ds}')">
         <div class="cal-num">${d.getDate()}</div>
         ${hol ? `<div class="cal-hol">${calEsc(hol)}</div>` : ''}
-        ${evs.slice(0, 2).map(e => `<div class="cal-chip" style="border-left-color:${CAL_TYPE_COLOR[e.type] || '#b9b2cf'};">${calEsc(e.title)}</div>`).join('')}
+        ${evs.slice(0, 2).map(e => `<div class="cal-chip" style="border-left-color:${CAL_TYPE_COLOR[e.type] || '#6B6489'};">${calEsc(e.title)}</div>`).join('')}
         ${evs.length > 2 ? `<div class="cal-more">+${evs.length - 2}</div>` : ''}
         ${dueChips.map(c => `<div class="cal-deadline">${c}</div>`).join('')}
         ${(tds.length || tdsDone) ? `<div>${tds.length ? `<span class="cal-todo-dot">● ${tds.length}</span>` : ''}${tds.length && tdsDone ? ' ' : ''}${tdsDone ? `<span class="cal-done-dot">✓ ${tdsDone}</span>` : ''}</div>` : ''}
@@ -3257,7 +3257,7 @@ function calRenderDay() {
     <div style="display:flex;gap:8px;margin-top:12px;">
       <input id="calTodoInput" type="text" placeholder="이 날짜에 내 할 일 추가 (Enter)"
         onkeydown="if(event.key==='Enter'){event.preventDefault();calAddTodo();}"
-        style="flex:1;padding:9px 12px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
+        style="flex:1;padding:9px 12px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.12);border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;">
       <button class="btn btn-gold btn-sm" onclick="calAddTodo()">추가</button>
     </div>`;
 }
@@ -3648,8 +3648,8 @@ window.pxOpen = async function (path) {
     var ps = getComputedStyle(document.documentElement), bs = getComputedStyle(document.body);
     var v = function (n, f) { var x = (ps.getPropertyValue(n) || '').trim(); return x || f; };
     return {
-      bg: v('--bg', '#120C24'), card: v('--bg-card', '#1A1230'), border: v('--border-soft', 'rgba(255,255,255,0.08)'),
-      muted: v('--muted', '#9B94B3'), gold: v('--gold', '#F0C040'), text: v('--off-white', '#F2EFE8'),
+      bg: v('--bg', '#F7F6FB'), card: v('--bg-card', '#F7F6FB'), border: v('--border-soft', 'rgba(30,24,56,0.08)'),
+      muted: v('--muted', '#6B6489'), gold: v('--purple', '#5B3FA6'), text: v('--off-white', '#1E1838'),
       font: bs.fontFamily || 'sans-serif'
     };
   }
@@ -3703,27 +3703,27 @@ window.pxOpen = async function (path) {
       'html.tp-themed body li>:is(ul,ol){margin:8px 0 4px;}',
       'html.tp-themed body ol>li::marker{color:var(--tp-gold);font-weight:700;}',
       'html.tp-themed body ul>li::marker{color:var(--tp-muted);}',
-      'html.tp-themed body :is(strong,b){color:#fff!important;font-weight:700;}',
+      'html.tp-themed body :is(strong,b){color:var(--tp-text)!important;font-weight:700;}',
       'html.tp-themed body a{color:var(--tp-gold)!important;text-underline-offset:3px;}',
       'html.tp-themed body hr{border:0;border-top:1px solid var(--tp-border);margin:40px 0;}',
-      'html.tp-themed body blockquote{margin:0 0 16px;padding:12px 16px;border-left:3px solid var(--tp-muted);background:rgba(255,255,255,0.03)!important;border-radius:0 8px 8px 0;color:var(--tp-text)!important;}',
-      'html.tp-themed body :is(code,kbd){font-size:.92em;background:rgba(255,255,255,0.07)!important;padding:1px 6px;border-radius:5px;}',
+      'html.tp-themed body blockquote{margin:0 0 16px;padding:12px 16px;border-left:3px solid var(--tp-muted);background:rgba(30,24,56,0.03)!important;border-radius:0 8px 8px 0;color:var(--tp-text)!important;}',
+      'html.tp-themed body :is(code,kbd){font-size:.92em;background:rgba(30,24,56,0.07)!important;padding:1px 6px;border-radius:5px;}',
       'html.tp-themed body img{max-width:100%;height:auto;}',
       'html.tp-themed body details{margin:0 0 14px;}',
       'html.tp-themed body summary{cursor:pointer;font-weight:600;padding:4px 0;}',
       '.tp-table-wrap{overflow-x:auto;margin:0 0 20px;border:1px solid var(--tp-border);border-radius:10px;-webkit-overflow-scrolling:touch;}',
       'html.tp-themed body table{border-collapse:collapse;width:100%;font-size:14.5px;line-height:1.6;margin:0;background:transparent!important;}',
       'html.tp-themed body :is(th,td){padding:10px 14px;border:0;border-bottom:1px solid var(--tp-border)!important;text-align:left;vertical-align:top;color:var(--tp-text)!important;}',
-      'html.tp-themed body th{font-size:13px;font-weight:600;color:var(--tp-muted)!important;background:rgba(255,255,255,0.04)!important;}',
+      'html.tp-themed body th{font-size:13px;font-weight:600;color:var(--tp-muted)!important;background:rgba(30,24,56,0.04)!important;}',
       'html.tp-themed body tr:last-child>td{border-bottom:0!important;}',
       'html.tp-themed body .tp-callout{padding:12px 16px!important;margin:0 0 16px!important;border-radius:0 8px 8px 0;border-left:3px solid;}',
-      'html.tp-themed body .tp-warn{background:rgba(255,140,80,0.08)!important;border-left-color:#ffb080!important;}',
-      'html.tp-themed body .tp-tip{background:rgba(240,192,64,0.07)!important;border-left-color:var(--tp-gold)!important;}',
-      'html.tp-themed body .tp-check{background:rgba(80,200,80,0.07)!important;border-left-color:#90ee90!important;}',
+      'html.tp-themed body .tp-warn{background:rgba(255,140,80,0.08)!important;border-left-color:#D97B1A!important;}',
+      'html.tp-themed body .tp-tip{background:rgba(245,197,24,0.07)!important;border-left-color:var(--tp-gold)!important;}',
+      'html.tp-themed body .tp-check{background:rgba(46,158,91,0.07)!important;border-left-color:#2E9E5B!important;}',
       'html.tp-themed body .tp-callout>:last-child{margin-bottom:0;}',
-      'mark.tp-hit{background:rgba(240,192,64,0.3)!important;color:inherit!important;border-radius:3px;padding:0;box-shadow:0 0 0 1px rgba(240,192,64,0.25);cursor:pointer;}',
-      'mark.tp-hit.tp-cur{background:var(--tp-gold)!important;color:var(--tp-bg)!important;box-shadow:0 0 0 2px rgba(240,192,64,0.45);}',
-      'html.tp-themed ::selection{background:rgba(240,192,64,0.35);}',
+      'mark.tp-hit{background:rgba(245,197,24,0.3)!important;color:inherit!important;border-radius:3px;padding:0;box-shadow:0 0 0 1px rgba(245,197,24,0.25);cursor:pointer;}',
+      'mark.tp-hit.tp-cur{background:var(--tp-gold)!important;color:var(--tp-bg)!important;box-shadow:0 0 0 2px rgba(245,197,24,0.45);}',
+      'html.tp-themed ::selection{background:rgba(245,197,24,0.35);}',
       '@media(max-width:600px){html.tp-themed body h1{font-size:22px;}html.tp-themed body h2{font-size:19px;margin-top:44px;}html.tp-themed body h3{font-size:17px;margin-top:30px;}html.tp-themed body :is(th,td){padding:8px 10px;}html.tp-themed body table{font-size:14px;}}'
     ].join('\n');
     var st = doc.createElement('style'); st.id = 'tp-theme'; st.textContent = css;
@@ -3832,7 +3832,7 @@ window.pxOpen = async function (path) {
       var bg = parseRGB(cs.backgroundColor);
       if (bg && bg.a > 0.35 && lum(bg) > 0.45) {
         var hb = hsl(bg);
-        imp(el, 'background-color', hb.s > 0.25 ? 'hsla(' + hb.h + ',70%,60%,0.10)' : 'rgba(255,255,255,0.035)');
+        imp(el, 'background-color', hb.s > 0.25 ? 'hsla(' + hb.h + ',70%,60%,0.10)' : 'rgba(30,24,56,0.035)');
       }
       if (parseFloat(cs.borderTopWidth) || parseFloat(cs.borderLeftWidth) || parseFloat(cs.borderBottomWidth)) {
         ['top', 'right', 'bottom', 'left'].forEach(function (side) {
@@ -4280,7 +4280,7 @@ window.mrLoad = async function (force) {
     mr.loadedFor = u.uid;
     mrRender();
   } catch (e) {
-    $('mrList').innerHTML = `<div class="mr-empty" style="color:#ff9090;">불러오기 실패: ${esc(errMsg(e))}</div>`;
+    $('mrList').innerHTML = `<div class="mr-empty" style="color:#D64545;">불러오기 실패: ${esc(errMsg(e))}</div>`;
     $('mrQuotaText').textContent = '-';
   } finally { mr.loading = false; }
 };
@@ -4302,8 +4302,8 @@ function mrRenderQuota() {
   fill.style.width = pct.toFixed(1) + '%';
   fill.classList.toggle('warn', pct >= 80 && pct < 95);
   fill.classList.toggle('full', pct >= 95);
-  $('mrQuotaText').innerHTML = `${(used / GB).toFixed(1)}GB / ${(quota / GB).toFixed(0)}GB 사용 · 남은 용량 <b style="font-size:13px;color:var(--gold);">${Math.max(0, (quota - used) / GB).toFixed(1)}GB</b>`
-    + (pending ? ` · 업로드 대기 ${fmtSize(pending)}${used + pending > quota ? ' <span style="color:#ff9090;">(용량 초과)</span>' : ''}` : '');
+  $('mrQuotaText').innerHTML = `${(used / GB).toFixed(1)}GB / ${(quota / GB).toFixed(0)}GB 사용 · 남은 용량 <b style="font-size:13px;color:var(--purple, #5B3FA6);">${Math.max(0, (quota - used) / GB).toFixed(1)}GB</b>`
+    + (pending ? ` · 업로드 대기 ${fmtSize(pending)}${used + pending > quota ? ' <span style="color:#D64545;">(용량 초과)</span>' : ''}` : '');
 }
 
 function mrRender() {
@@ -4588,7 +4588,7 @@ const dtGradeKey = (g) => { const m = String(g).match(/^(초|중|고)(\d)/); ret
 function dtRenderClassBtns() {
   const el = $('dtClassBtns');
   const list = dtClassList();
-  if (!list.length) { el.innerHTML = '<span style="font-size:12px;color:#ffc883;">내 담당으로 등록된 초·중등 학생이 없습니다. 관리자 페이지 학생 정보에서 담당 선생님과 반명을 지정해 주세요.</span>'; return; }
+  if (!list.length) { el.innerHTML = '<span style="font-size:12px;color:#D97B1A;">내 담당으로 등록된 초·중등 학생이 없습니다. 관리자 페이지 학생 정보에서 담당 선생님과 반명을 지정해 주세요.</span>'; return; }
   // 학년별 아코디언: 학년 줄이 세로로 쌓이고, 누르면 그 아래로 반 버튼이 펼쳐짐
   const byGrade = new Map();
   list.forEach(([c, n]) => { const g = dtGradeOf(c); if (!byGrade.has(g)) byGrade.set(g, []); byGrade.get(g).push([c, n]); });
@@ -4887,7 +4887,7 @@ window.dtLoadTests = async function () {
     dtTests.forEach((t) => { t.resultCount = cnt[t.id] || 0; });
     dtRenderTests();
   } catch (e) {
-    el.innerHTML = `<div class="empty-state" style="color:#ff9090;">오류: ${esc(e.message)}</div>`;
+    el.innerHTML = `<div class="empty-state" style="color:#D64545;">오류: ${esc(e.message)}</div>`;
   }
 };
 function dtRenderTests() {
@@ -4903,7 +4903,7 @@ function dtRenderTests() {
   el.innerHTML = rows.map((t) => `
     <div class="dt-row ${dtCurrent && dtCurrent.id === t.id ? 'active' : ''}" onclick="dtOpenTest('${t.id}')">
       <span style="font-size:12px;color:var(--muted);">${esc(t.date)}</span>
-      <span class="dt-tag" style="color:var(--gold);background:rgba(240,192,64,0.12);">${esc(t.classGroup || t.grade || '')}</span>
+      <span class="dt-tag" style="color:var(--purple, #5B3FA6);background:rgba(245,197,24,0.12);">${esc(t.classGroup || t.grade || '')}</span>
       <span class="dt-title">${esc(t.title)}${t.range ? ` <span style="font-weight:400;color:var(--muted);">· ${esc(t.range)}</span>` : ''}</span>
       <span class="dt-tag">${t.questionCount}문항</span>
       <span class="dt-tag ${t.resultCount ? 'ok' : 'warn'}">${t.resultCount ? `${t.resultCount}명 입력` : '미입력'}</span>
@@ -4981,7 +4981,7 @@ window.rvLoad = async function () {
         <span class="rv-st ${r.status}">${stLabel[r.status] || r.status}</span>
       </div>`).join('');
   } catch (e) {
-    el.innerHTML = `<div class="empty-state" style="color:#ff9090;">오류: ${esc(e.message)}<br>Firestore 인덱스가 필요할 수 있습니다.</div>`;
+    el.innerHTML = `<div class="empty-state" style="color:#D64545;">오류: ${esc(e.message)}<br>Firestore 인덱스가 필요할 수 있습니다.</div>`;
   }
 };
 window.rvOpenReport = function (id) {
@@ -5054,10 +5054,10 @@ function pcShowPopup(n) {
   const div = document.createElement('div');
   div.id = 'pcPopup';
   div.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
-  div.innerHTML = `<div style="width:100%;max-width:440px;background:var(--bg-card);border:1px solid rgba(255,107,107,0.5);border-radius:16px;padding:22px;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+  div.innerHTML = `<div style="width:100%;max-width:440px;background:var(--bg-card);border:1px solid rgba(255,107,107,0.5);border-radius:16px;padding:22px;box-shadow:0 20px 60px rgba(30,24,56,0.15);">
       <div style="font-size:16px;font-weight:800;color:var(--off-white);margin-bottom:6px;">💬 학부모 댓글 ${n}건이 답글을 기다리고 있어요</div>
       <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">주간성취도·월간보고서에 학부모님이 남긴 글입니다.</div>
-      ${th.map((x) => `<div style="padding:8px 10px;border-radius:8px;background:rgba(255,255,255,0.04);margin-bottom:6px;font-size:13px;"><b style="color:var(--off-white);">${esc(x.c.studentName)}</b> <span style="color:var(--gold);font-size:11px;">${esc(x.c.targetLabel || '')}</span><div style="color:var(--muted);font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(x.last.text)}</div></div>`).join('')}
+      ${th.map((x) => `<div style="padding:8px 10px;border-radius:8px;background:rgba(30,24,56,0.04);margin-bottom:6px;font-size:13px;"><b style="color:var(--off-white);">${esc(x.c.studentName)}</b> <span style="color:var(--purple, #5B3FA6);font-size:11px;">${esc(x.c.targetLabel || '')}</span><div style="color:var(--muted);font-size:12px;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(x.last.text)}</div></div>`).join('')}
       <div style="display:flex;gap:8px;margin-top:14px;">
         <button class="btn btn-outline btn-sm" style="flex:1;" onclick="document.getElementById('pcPopup').remove()">나중에</button>
         <button class="btn btn-gold btn-sm" style="flex:1;" onclick="document.getElementById('pcPopup').remove();teacherOpenMenu('parentcomments')">답글 쓰기</button>

@@ -24,8 +24,8 @@
   padding-top: 48px;
 }
 .breadcrumb a { color: var(--muted); text-decoration: none; }
-.breadcrumb a:hover { color: var(--gold); }
-.breadcrumb span { color: var(--gold); }
+.breadcrumb a:hover { color: var(--purple, #5B3FA6); }
+.breadcrumb span { color: var(--purple, #5B3FA6); }
 
 /* ── 원장 섹션 공통 ── */
 .principal-section {
@@ -35,15 +35,15 @@
   padding: 56px 60px;
   margin-bottom: 36px;
   background:
-    linear-gradient(145deg, rgba(58,38,110,0.9) 0%, rgba(26,18,48,0.98) 50%, rgba(18,10,32,1) 100%);
+    linear-gradient(145deg, #EFE9FB 0%, #FFFFFF 50%, #F3F0FA 100%);
   border-radius: 24px;
-  border: 1px solid rgba(240,192,64,0.15);
+  border: 1px solid rgba(245,197,24,0.15);
   box-shadow:
-    0 0 0 1px rgba(255,255,255,0.05) inset,
-    0 1px 0 rgba(240,192,64,0.7),
-    0 2px 4px rgba(240,192,64,0.08),
-    0 20px 60px rgba(0,0,0,0.6),
-    0 40px 80px rgba(0,0,0,0.3);
+    0 0 0 1px rgba(30,24,56,0.05) inset,
+    0 1px 0 rgba(245,197,24,0.7),
+    0 2px 4px rgba(245,197,24,0.08),
+    0 20px 60px rgba(30,24,56,0.18),
+    0 40px 80px rgba(30,24,56,0.09);
   position: relative;
   overflow: hidden;
   backdrop-filter: blur(2px);
@@ -56,9 +56,9 @@
   height: 1px;
   background: linear-gradient(90deg,
     transparent 0%,
-    rgba(240,192,64,0.4) 20%,
-    rgba(240,192,64,1) 50%,
-    rgba(240,192,64,0.4) 80%,
+    rgba(245,197,24,0.4) 20%,
+    rgba(245,197,24,1) 50%,
+    rgba(245,197,24,0.4) 80%,
     transparent 100%);
   filter: blur(0.3px);
 }
@@ -68,7 +68,7 @@
   position: absolute;
   top: -120px; right: -60px;
   width: 340px; height: 340px;
-  background: radial-gradient(circle, rgba(124,111,160,0.1) 0%, rgba(240,192,64,0.03) 40%, transparent 70%);
+  background: radial-gradient(circle, rgba(123,92,201,0.1) 0%, rgba(245,197,24,0.03) 40%, transparent 70%);
   pointer-events: none;
 }
 
@@ -90,12 +90,12 @@
   width: 260px;
   height: 330px;
   border-radius: 16px;
-  background: linear-gradient(160deg, #2D2050 0%, #1A1230 100%);
-  border: 1px solid rgba(240,192,64,0.25);
+  background: linear-gradient(160deg, #E9E3F6 0%, #F7F6FB 100%);
+  border: 1px solid rgba(245,197,24,0.25);
   box-shadow:
-    0 1px 0 rgba(240,192,64,0.5),
-    0 20px 50px rgba(0,0,0,0.6),
-    0 4px 16px rgba(240,192,64,0.06);
+    0 1px 0 rgba(245,197,24,0.5),
+    0 20px 50px rgba(30,24,56,0.18),
+    0 4px 16px rgba(245,197,24,0.06);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -129,7 +129,7 @@
 }
 
 .photo-name-tag .role {
-  font-size: 12px; color: var(--gold);
+  font-size: 12px; color: var(--purple, #5B3FA6);
   letter-spacing: 0.5px;
 }
 
@@ -139,7 +139,7 @@
 .greeting-eyebrow {
   font-size: 11px; font-weight: 500;
   letter-spacing: 2.5px; text-transform: uppercase;
-  color: var(--gold); margin-bottom: 14px;
+  color: var(--purple, #5B3FA6); margin-bottom: 14px;
 }
 
 .greeting-title {
@@ -151,18 +151,18 @@
 
 .greeting-title em {
   font-style: normal;
-  color: var(--gold);
+  color: var(--purple, #5B3FA6);
 }
 
 .greeting-divider {
   width: 32px; height: 2px;
-  background: #C49A28;
+  background: #E0B010;
   margin-bottom: 28px;
   opacity: 0.7;
 }
 
 .greeting-body {
-  font-size: 15px; color: #C4BAD8;
+  font-size: 15px; color: #6B6489;
   line-height: 2.1; word-break: keep-all;
   white-space: pre-line;
 }
@@ -170,13 +170,13 @@
 .greeting-sig {
   margin-top: 36px;
   padding-top: 28px;
-  border-top: 1px solid rgba(240,192,64,0.2);
+  border-top: 1px solid rgba(245,197,24,0.2);
   font-size: 14px; color: var(--muted);
   display: flex; align-items: center; gap: 12px;
 }
 
 .sig-label { font-size: 12px; color: var(--purple-soft); letter-spacing: 0.5px; }
-.sig-name  { font-size: 16px; font-weight: 700; color: var(--gold); letter-spacing: -0.3px; }
+.sig-name  { font-size: 16px; font-weight: 700; color: var(--purple, #5B3FA6); letter-spacing: -0.3px; }
 
 
 
@@ -220,14 +220,14 @@
   transition: transform 0.2s ease;
 }
 .nav-links a:hover {
-  color: var(--gold) !important;
+  color: var(--purple, #5B3FA6) !important;
   transform: translateY(-1px);
 }
 .nav-links a:hover::after {
   transform: scaleX(1);
 }
 .nav-links a.active {
-  color: var(--gold) !important;
+  color: var(--purple, #5B3FA6) !important;
 }
 .nav-links a.active::after {
   transform: scaleX(1);
@@ -237,9 +237,9 @@
 <body>
 
 <nav>
-  <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#F0EDF8;flex-shrink:0;overflow:hidden;max-width:100%;">
+  <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#1E1838;flex-shrink:0;overflow:hidden;max-width:100%;">
     <img src="swc-logo.svg" style="height:30px;width:30px;object-fit:contain;flex-shrink:0;display:block;" alt="SWC">
-    <span style="font-size:13px;font-weight:600;color:#F0EDF8;white-space:nowrap;letter-spacing:-0.3px;overflow:hidden;text-overflow:ellipsis;">송우찬수학학원</span>
+    <span style="font-size:13px;font-weight:600;color:#1E1838;white-space:nowrap;letter-spacing:-0.3px;overflow:hidden;text-overflow:ellipsis;">송우찬수학학원</span>
   </a>
     <ul class="nav-links" style="white-space:nowrap;flex-shrink:0;">
     <li><a href="about.html">학원소개</a></li>
@@ -253,10 +253,10 @@
   </ul>
 
   <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;"><div id="navUserArea" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-    <a href="login.html" id="navLoginBtn" style="font-size:13px;color:var(--gold);text-decoration:none;padding:7px 16px;border:1px solid var(--border);border-radius:6px;white-space:nowrap;display:none;">로그인</a>
+    <a href="login.html" id="navLoginBtn" style="font-size:13px;color:var(--purple, #5B3FA6);text-decoration:none;padding:7px 16px;border:1px solid var(--border);border-radius:6px;white-space:nowrap;display:none;">로그인</a>
     <span id="navUserName" style="font-size:13px;color:var(--muted);white-space:nowrap;display:none;"></span>
-    <a id="navAdminBtn" href="admin.html" style="font-size:12px;color:var(--gold);text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:6px;white-space:nowrap;display:none;">관리자 페이지</a>
-    <button id="navLogoutBtn" onclick="doNavLogout()" style="font-size:12px;color:var(--muted);background:rgba(255,255,255,0.06);border:1px solid var(--border-soft);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:inherit;white-space:nowrap;display:none;">로그아웃</button>
+    <a id="navAdminBtn" href="admin.html" style="font-size:12px;color:var(--purple, #5B3FA6);text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:6px;white-space:nowrap;display:none;">관리자 페이지</a>
+    <button id="navLogoutBtn" onclick="doNavLogout()" style="font-size:12px;color:var(--muted);background:rgba(30,24,56,0.06);border:1px solid var(--border-soft);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:inherit;white-space:nowrap;display:none;">로그아웃</button>
   </div><button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="메뉴">
     <span></span><span></span><span></span>
   </button></div>
@@ -312,23 +312,23 @@
 
 감사합니다.</p>
         
-          <div style="margin-top:28px;padding-top:24px;border-top:1px solid rgba(240,192,64,0.15);">
-            <div style="font-size:10px;font-weight:600;letter-spacing:2px;color:var(--gold);margin-bottom:14px;">CAREER</div>
+          <div style="margin-top:28px;padding-top:24px;border-top:1px solid rgba(245,197,24,0.15);">
+            <div style="font-size:10px;font-weight:600;letter-spacing:2px;color:var(--purple, #5B3FA6);margin-bottom:14px;">CAREER</div>
             <ul style="list-style:none;display:flex;flex-direction:column;gap:9px;">
-              <li style="font-size:13px;color:#C4BAD8;display:flex;gap:10px;align-items:flex-start;">
-                <span style="color:var(--gold);flex-shrink:0;margin-top:1px;">―</span>
+              <li style="font-size:13px;color:#6B6489;display:flex;gap:10px;align-items:flex-start;">
+                <span style="color:var(--purple, #5B3FA6);flex-shrink:0;margin-top:1px;">―</span>
                 <span>연세대학교 교육대학원 수학교육 전공</span>
               </li>
-              <li style="font-size:13px;color:#C4BAD8;display:flex;gap:10px;align-items:flex-start;">
+              <li style="font-size:13px;color:#6B6489;display:flex;gap:10px;align-items:flex-start;">
                 <span style="color:var(--muted);flex-shrink:0;margin-top:1px;">―</span>
                 <span style="color:#888;">전) 이투스 교재 검토위원</span>
               </li>
-              <li style="font-size:13px;color:#C4BAD8;display:flex;gap:10px;align-items:flex-start;">
-                <span style="color:var(--gold);flex-shrink:0;margin-top:1px;">―</span>
+              <li style="font-size:13px;color:#6B6489;display:flex;gap:10px;align-items:flex-start;">
+                <span style="color:var(--purple, #5B3FA6);flex-shrink:0;margin-top:1px;">―</span>
                 <span>현) 비상교육 2022개정 교육과정 검토위원</span>
               </li>
-              <li style="font-size:13px;color:#C4BAD8;display:flex;gap:10px;align-items:flex-start;">
-                <span style="color:var(--gold);flex-shrink:0;margin-top:1px;">―</span>
+              <li style="font-size:13px;color:#6B6489;display:flex;gap:10px;align-items:flex-start;">
+                <span style="color:var(--purple, #5B3FA6);flex-shrink:0;margin-top:1px;">―</span>
                 <span>현) 세쌍둥이 트리플렛 저자</span>
               </li>
             </ul>
@@ -379,19 +379,19 @@
 평촌관에서 최선을 다해 함께하겠습니다.
 
 감사합니다.</p>
-        <div <div style="margin-top:28px;padding-top:24px;border-top:1px solid rgba(240,192,64,0.15);">
-            <div style="font-size:10px;font-weight:600;letter-spacing:2px;color:var(--gold);margin-bottom:14px;">CAREER</div>
+        <div <div style="margin-top:28px;padding-top:24px;border-top:1px solid rgba(245,197,24,0.15);">
+            <div style="font-size:10px;font-weight:600;letter-spacing:2px;color:var(--purple, #5B3FA6);margin-bottom:14px;">CAREER</div>
             <ul style="list-style:none;display:flex;flex-direction:column;gap:9px;">
-              <li style="font-size:13px;color:#C4BAD8;display:flex;gap:10px;align-items:flex-start;">
-                <span style="color:var(--gold);flex-shrink:0;margin-top:1px;">―</span>
+              <li style="font-size:13px;color:#6B6489;display:flex;gap:10px;align-items:flex-start;">
+                <span style="color:var(--purple, #5B3FA6);flex-shrink:0;margin-top:1px;">―</span>
                 <span>연세대학교 교육대학원 수학교육 전공</span>
               </li>
-              <li style="font-size:13px;color:#C4BAD8;display:flex;gap:10px;align-items:flex-start;">
-                <span style="color:var(--gold);flex-shrink:0;margin-top:1px;">―</span>
+              <li style="font-size:13px;color:#6B6489;display:flex;gap:10px;align-items:flex-start;">
+                <span style="color:var(--purple, #5B3FA6);flex-shrink:0;margin-top:1px;">―</span>
                 <span>현) 비상교육 2022개정 교육과정 검토위원</span>
               </li>
-              <li style="font-size:13px;color:#C4BAD8;display:flex;gap:10px;align-items:flex-start;">
-                <span style="color:var(--gold);flex-shrink:0;margin-top:1px;">―</span>
+              <li style="font-size:13px;color:#6B6489;display:flex;gap:10px;align-items:flex-start;">
+                <span style="color:var(--purple, #5B3FA6);flex-shrink:0;margin-top:1px;">―</span>
                 <span>현) 세쌍둥이 트리플렛 저자</span>
               </li>
             </ul>
@@ -416,15 +416,15 @@
 <footer>
   <div class="footer-logo">
     <img src="swc-logo.svg" style="height:26px;width:26px;object-fit:contain;flex-shrink:0;display:block;opacity:0.8;" alt="SWC">
-    <span style="color:#F0EDF8;"><b>송우찬수학학원</b></span>
+    <span style="color:#1E1838;"><b>송우찬수학학원</b></span>
   </div>
     <div class="footer-info">
-    <span style="color:var(--gold);font-weight:600;">평촌관</span> 경기도 안양시 동안구 평촌대로 117 맵시프라자 4층 &nbsp;|&nbsp; <a href="tel:031-386-8899" style="color:inherit;text-decoration:none;">031-386-8899</a><br>
-    <span style="color:var(--gold);font-weight:600;">산본관</span> 경기도 군포시 산본로 390 5층 &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:inherit;text-decoration:none;">031-346-8899</a><br>
+    <span style="color:var(--purple, #5B3FA6);font-weight:600;">평촌관</span> 경기도 안양시 동안구 평촌대로 117 맵시프라자 4층 &nbsp;|&nbsp; <a href="tel:031-386-8899" style="color:inherit;text-decoration:none;">031-386-8899</a><br>
+    <span style="color:var(--purple, #5B3FA6);font-weight:600;">산본관</span> 경기도 군포시 산본로 390 5층 &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:inherit;text-decoration:none;">031-346-8899</a><br>
     <span style="font-size:11px;opacity:0.55;">(주) 판수학 &nbsp;|&nbsp; 대표 조현주 &nbsp;|&nbsp; 사업자등록번호 828-86-01755</span><br>
     <span style="font-size:11px;opacity:0.55;">평촌관 : 제 99-079호 &nbsp;|&nbsp; 산본관 : 제 1928-2호</span><br>
     <span style="font-size:11px;opacity:0.45;">© Copyright 2026 송우찬수학학원. All Rights Reserved.</span><br>
-    <span style="font-size:12px;opacity:0.7;"><a href="tel:031-386-8899" style="color:var(--gold);text-decoration:none;">평촌관 031-386-8899</a> &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:var(--gold);text-decoration:none;">산본관 031-346-8899</a></span>
+    <span style="font-size:12px;opacity:0.7;"><a href="tel:031-386-8899" style="color:var(--purple, #5B3FA6);text-decoration:none;">평촌관 031-386-8899</a> &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:var(--purple, #5B3FA6);text-decoration:none;">산본관 031-346-8899</a></span>
   </div>
   <a href="https://pf.kakao.com/_KxaxdlX" target="_blank" class="kakao-footer-link"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3C6.477 3 2 6.477 2 10.8c0 2.7 1.47 5.08 3.72 6.56l-.95 3.54a.3.3 0 0 0 .44.33l4.07-2.72A11.5 11.5 0 0 0 12 18.6c5.523 0 10-3.477 10-7.8S17.523 3 12 3Z"/></svg> 카카오톡 문의</a>
 </footer>

@@ -63,9 +63,9 @@ window.previewPromotion = async function() {
         <td>${s.name}</td>
         <td>${s.branch||''}</td>
         <td>${s.grade}</td>
-        <td style="color:var(--gold);font-weight:600;">${s.newGrade}</td>
+        <td style="color:var(--purple, #5B3FA6);font-weight:600;">${s.newGrade}</td>
         <td style="color:var(--muted);">${s.classGroup||'-'}</td>
-        <td style="color:var(--gold);">${s.newClassGroup||'-'}</td>
+        <td style="color:var(--purple, #5B3FA6);">${s.newClassGroup||'-'}</td>
         <td>${s.teacherName||''}</td>
       </tr>`).join('')}`;
 

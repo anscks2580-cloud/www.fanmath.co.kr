@@ -11,7 +11,7 @@
 let schedEvents = [];
 let schedTeachers = [];
 let schedEditingId = null;
-const SCHED_TYPE_COLOR = { '휴무':'#ff7a7a', '회의':'#7ab8ff', '설명회':'#c58bff', '시험기간':'#ffb35c', '행사':'#5fd98a', '할 일':'#f0c040', '기타':'#b9b2cf' };
+const SCHED_TYPE_COLOR = { '휴무':'#D64545', '회의':'#2F7FD6', '설명회':'#6B4FBB', '시험기간':'#D97B1A', '행사':'#2E9E5B', '할 일':'#F5C518', '기타':'#6B6489' };
 
 function schedYmd(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function schedEsc(t) { return String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
@@ -58,7 +58,7 @@ async function loadScheduleEvents() {
     schedEvents = [];
     snap.forEach(d => schedEvents.push({ id: d.id, ...d.data() }));
   } catch (e) {
-    document.getElementById('sc-list').innerHTML = `<div style="color:#ff9090;font-size:13px;">불러오기 실패: ${schedEsc(e.message)}<br>Firestore 규칙에 scheduleEvents 컬렉션이 추가됐는지 확인해주세요.</div>`;
+    document.getElementById('sc-list').innerHTML = `<div style="color:#D64545;font-size:13px;">불러오기 실패: ${schedEsc(e.message)}<br>Firestore 규칙에 scheduleEvents 컬렉션이 추가됐는지 확인해주세요.</div>`;
     return;
   }
   renderScheduleList();
@@ -77,10 +77,10 @@ window.renderScheduleList = function () {
     const past = (e.end || e.start) < today;
     return `
       <div style="display:flex;align-items:center;gap:12px;padding:11px 14px;border:1px solid var(--border-soft);border-radius:8px;margin-bottom:6px;${past ? 'opacity:0.5;' : ''}">
-        <span style="width:4px;align-self:stretch;border-radius:2px;background:${SCHED_TYPE_COLOR[e.type] || '#b9b2cf'};flex-shrink:0;"></span>
+        <span style="width:4px;align-self:stretch;border-radius:2px;background:${SCHED_TYPE_COLOR[e.type] || '#6B6489'};flex-shrink:0;"></span>
         <div style="min-width:110px;font-size:13px;font-weight:600;white-space:nowrap;">${schedFmt(e.start)}${e.end && e.end !== e.start ? ` ~ ${schedFmt(e.end)}` : ''}${e.time ? `<div style="font-size:11px;color:var(--muted);font-weight:400;">${schedEsc(e.time)}</div>` : ''}</div>
         <div style="flex:1;min-width:0;">
-          <div style="font-size:14px;font-weight:600;">${schedEsc(e.title)} <span style="font-size:11px;color:${SCHED_TYPE_COLOR[e.type] || '#b9b2cf'};margin-left:4px;">${schedEsc(e.type || '기타')}</span></div>
+          <div style="font-size:14px;font-weight:600;">${schedEsc(e.title)} <span style="font-size:11px;color:${SCHED_TYPE_COLOR[e.type] || '#6B6489'};margin-left:4px;">${schedEsc(e.type || '기타')}</span></div>
           <div style="font-size:12px;color:var(--muted);margin-top:2px;">대상: ${schedEsc(target)}${e.memo ? ` · ${schedEsc(e.memo)}` : ''}</div>
         </div>
         <button class="btn btn-secondary btn-sm" onclick="editScheduleEvent('${e.id}')">수정</button>

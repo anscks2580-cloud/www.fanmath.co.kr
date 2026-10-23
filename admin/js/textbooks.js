@@ -64,7 +64,7 @@ function tbaRenderPreview(bad = []) {
   const box = document.getElementById('tba-preview');
   if (!tbaQueue.length) {
     box.innerHTML = bad.length
-      ? `<div style="color:#ff9090;font-size:13px;margin-bottom:8px;">올릴 수 있는 PDF가 없습니다.</div>${pxaBadList(bad)}`
+      ? `<div style="color:#D64545;font-size:13px;margin-bottom:8px;">올릴 수 있는 PDF가 없습니다.</div>${pxaBadList(bad)}`
       : '<div style="color:var(--muted);font-size:13px;">선택한 폴더에 PDF가 없습니다.</div>';
     return;
   }
@@ -84,7 +84,7 @@ function tbaRenderPreview(bad = []) {
         `📘 ${pxaEsc(b)} <span style="opacity:.7;">(${items.filter(x => x.book === b).length})</span>`).join('<br>')}</div></details>`;
   }).join('');
   box.innerHTML = `<div style="font-size:14px;font-weight:700;color:var(--off-white);margin-bottom:10px;">
-      총 <span style="color:var(--gold);">${tbaQueue.length}개</span> · ${tbaFmtSize(total)}</div>
+      총 <span style="color:var(--purple, #5B3FA6);">${tbaQueue.length}개</span> · ${tbaFmtSize(total)}</div>
     ${rows}${bad.length ? pxaBadList(bad) : ''}
     ${dup ? `<label style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--off-white);margin:10px 0;cursor:pointer;">
       <input type="checkbox" id="tba-skip-dup" checked> 이미 올라간 파일 ${dup}개는 건너뛰기 (해제하면 덮어씀)</label>` : ''}
@@ -205,7 +205,7 @@ window.tbaLoadList = async () => {
     await Promise.all(res.prefixes.map(walk));
   }
   try { await walk(ref(storage, 'textbooks')); }
-  catch (e) { box.innerHTML = `<div style="color:#ff9090;font-size:13px;">불러오지 못했습니다 (${pxaEsc(e.code || e.message)})</div>`; return; }
+  catch (e) { box.innerHTML = `<div style="color:#D64545;font-size:13px;">불러오지 못했습니다 (${pxaEsc(e.code || e.message)})</div>`; return; }
   files.sort(tbaSortFiles);
   tbaFiles = files;
   // 개별 추가용 경로 자동완성: 지금 있는 교재 폴더들
@@ -225,7 +225,7 @@ window.tbaLoadList = async () => {
       <div style="font-size:14px;font-weight:700;color:var(--off-white);margin-bottom:8px;">${pxaEsc(g)} <span style="color:var(--muted);font-weight:500;font-size:12.5px;">교재 ${books.length}종</span></div>
       ${books.map(k => {
         const fs = groups[g][k], f0 = fs[0];
-        return `<details style="border:1px solid var(--border-soft);border-radius:10px;padding:10px 14px;margin-bottom:8px;background:rgba(255,255,255,0.02);">
+        return `<details style="border:1px solid var(--border-soft);border-radius:10px;padding:10px 14px;margin-bottom:8px;background:rgba(30,24,56,0.02);">
           <summary style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;">
             <span style="color:var(--off-white);font-size:13.5px;font-weight:600;">📘 ${pxaEsc(f0.book)} <span style="color:var(--muted);font-weight:500;font-size:12px;">${fs.length}개 파일</span></span>
             <button class="btn btn-danger btn-sm" data-key="${pxaEsc(k)}" onclick="event.preventDefault();tbaDeleteBook(this.dataset.key)">교재 삭제</button>

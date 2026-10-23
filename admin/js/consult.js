@@ -32,7 +32,7 @@ window.initConsultTab = async function() {
     consultRows = [];
     snap.forEach((d) => { const data = d.data(); window._consultData[d.id] = data; consultRows.push({ id: d.id, data }); });
   } catch(e) {
-    el.innerHTML = `<div style="color:#ff9090;font-size:13px;">오류: ${escapeConsultHtml(e.message)}</div>`;
+    el.innerHTML = `<div style="color:#D64545;font-size:13px;">오류: ${escapeConsultHtml(e.message)}</div>`;
     return;
   }
   consultLegacyProfiles = {};
@@ -322,7 +322,7 @@ window.saveConsultImage = async function(cid) {
     sb.hidden = !canShare; sb.disabled = !canShare;
   } catch (e) {
     console.error('[상담 결과 이미지]', e);
-    prev.innerHTML = `<div class="ci-wait" style="color:#ff9090;">${escapeConsultHtml(e.message || '이미지를 만들지 못했습니다.')}</div>`;
+    prev.innerHTML = `<div class="ci-wait" style="color:#D64545;">${escapeConsultHtml(e.message || '이미지를 만들지 못했습니다.')}</div>`;
   } finally { if (host) host.remove(); }
 };
 window.closeConsultImage = function() {
@@ -399,8 +399,8 @@ window.ciPrint = async function() {
       .pg > img { display:block; width:${imgW}mm; height:${imgH}mm; flex:none; ${side ? '' : 'align-self:center;'} }
       .ba { flex:1; min-width:0; min-height:0; display:flex; flex-direction:column; border:1.4px solid #1A1230; border-radius:4mm; padding:4.5mm 5mm; }
       .ba-h { display:flex; align-items:center; gap:2mm; font-size:13pt; font-weight:800; padding-bottom:2.5mm; border-bottom:1px solid rgba(30,23,54,.15); }
-      .ba-h i { width:1.2mm; height:4.5mm; border-radius:1mm; background:#F0C040; }
-      .ba-h em { margin-left:auto; font-style:normal; font-size:8.5pt; font-weight:600; color:#8A84A0; }
+      .ba-h i { width:1.2mm; height:4.5mm; border-radius:1mm; background:#F5C518; }
+      .ba-h em { margin-left:auto; font-style:normal; font-size:8.5pt; font-weight:600; color:#7A7496; }
       .ba-f { display:grid; grid-template-columns:${side ? '1fr' : '1fr 1fr'}; column-gap:6mm; }
       .ba-f > div { display:flex; align-items:flex-end; gap:2.5mm; padding:2.6mm 0 1.6mm; border-bottom:1px solid rgba(30,23,54,.25); min-height:10mm; }
       .ba-f > div.f { grid-column:1 / -1; }
@@ -470,7 +470,7 @@ function crSurveyCol(cid, role, d, p, err, CF) {
   if (!done) {
     const why = role === 'student' && d.visitWith === 'parent' ? '학생 미방문 · 학부모만 상담' : role === 'student' ? '아직 진행하지 않았습니다' : '아직 진행하지 않았습니다';
     return `<div class="cr-col" id="cr-sec-${role}"><h5>${label}</h5>
-      <div class="cr-empty"><b>미실시</b>${why}${err ? `<br><span style="color:#ff9090">응답 조회 오류: ${e(err)}</span>` : ''}
+      <div class="cr-empty"><b>미실시</b>${why}${err ? `<br><span style="color:#D64545">응답 조회 오류: ${e(err)}</span>` : ''}
       <div style="margin-top:14px"><button class="btn btn-primary btn-sm" onclick="startConsultSurvey('${cid}','${role}')">${role === 'student' ? '학생 설문 시작' : '학부모 설문 진행'}</button></div></div></div>`;
   }
   const src = p || sum;
@@ -654,23 +654,23 @@ function cvReadForm() {
 window.saveConsultVideoSetting = async function() {
   const msg = document.getElementById('cvMsg');
   const { data, error } = cvReadForm();
-  if (error) { msg.style.color = '#ff9090'; msg.textContent = error; return; }
+  if (error) { msg.style.color = '#D64545'; msg.textContent = error; return; }
   msg.style.color = ''; msg.textContent = '저장 중...';
   try {
     await setDoc(doc(db, 'consultConfig', 'video'), { ...data, updatedAt: Timestamp.now(), updatedBy: auth.currentUser?.email || '' });
     msg.textContent = '✓ 저장했습니다. 다음 상담부터 적용됩니다.';
     showToast('상담 안내 영상 설정을 저장했습니다');
     loadConsultVideoSetting();
-  } catch(e) { msg.style.color = '#ff9090'; msg.textContent = '저장하지 못했습니다: ' + e.message; }
+  } catch(e) { msg.style.color = '#D64545'; msg.textContent = '저장하지 못했습니다: ' + e.message; }
 };
 window.previewConsultVideo = async function() {
   const msg = document.getElementById('cvMsg');
   const { data, error } = cvReadForm();
-  if (error) { msg.style.color = '#ff9090'; msg.textContent = error; return; }
+  if (error) { msg.style.color = '#D64545'; msg.textContent = error; return; }
   if (!data.enabled) { msg.style.color = ''; msg.textContent = '영상을 사용하지 않도록 설정되어 있습니다.'; return; }
   const CF = await consultFlowModule();
   const src = CF ? CF.parseVideoSource(data) : null;
-  if (!src) { msg.style.color = '#ff9090'; msg.textContent = '영상 주소를 확인해 주세요.'; return; }
+  if (!src) { msg.style.color = '#D64545'; msg.textContent = '영상 주소를 확인해 주세요.'; return; }
   const url = src.kind === 'vimeo' ? `https://vimeo.com/${src.id}${src.hash ? '/' + src.hash : ''}${src.start ? '#t=' + Math.floor(src.start) + 's' : ''}`
     : src.kind === 'youtube' ? `https://www.youtube.com/watch?v=${src.id}${src.start ? '&t=' + Math.floor(src.start) + 's' : ''}` : src.url;
   window.open(url, '_blank');
@@ -755,7 +755,7 @@ async function lgLoad() {
 window.lgMarkDirty = function() {
   lgDirty = true;
   const m = document.getElementById('lgMsg');
-  if (m) { m.style.color = 'var(--gold)'; m.textContent = '저장하지 않은 변경 사항이 있습니다'; }
+  if (m) { m.style.color = 'var(--purple, #5B3FA6)'; m.textContent = '저장하지 않은 변경 사항이 있습니다'; }
 };
 function lgRenderList() {
   const box = document.getElementById('lgList');
@@ -799,7 +799,7 @@ window.loadLoungeSources = async function() {
     if (ap) ap.forEach(x => { const v = x.data(); if (v.vimeoId) lgSources.push({ vimeoId: String(v.vimeoId), title: v.title || '', tag: v.category || '', from: '에이펙스관', desc: v.description || '' }); });
   } catch (e) {
     lgSources = null;
-    box.innerHTML = `<div class="lg-empty" style="color:#ff9090;">강의 목록을 불러오지 못했습니다: ${escapeConsultHtml(e.message)}</div>`;
+    box.innerHTML = `<div class="lg-empty" style="color:#D64545;">강의 목록을 불러오지 못했습니다: ${escapeConsultHtml(e.message)}</div>`;
     return;
   }
   box.innerHTML = '';
@@ -833,8 +833,8 @@ window.addLoungeManual = function() {
   const raw = document.getElementById('lgManualId').value.trim();
   const m = raw.match(/vimeo\.com\/(?:video\/)?(\d+)/) || raw.match(/^(\d{5,})$/);
   const msg = document.getElementById('lgMsg');
-  if (!m) { msg.style.color = '#ff9090'; msg.textContent = 'Vimeo 주소 또는 숫자 ID를 확인해 주세요.'; return; }
-  if (lgState.videos.some(x => x.vimeoId === m[1])) { msg.style.color = '#ff9090'; msg.textContent = '이미 추가된 영상입니다.'; return; }
+  if (!m) { msg.style.color = '#D64545'; msg.textContent = 'Vimeo 주소 또는 숫자 ID를 확인해 주세요.'; return; }
+  if (lgState.videos.some(x => x.vimeoId === m[1])) { msg.style.color = '#D64545'; msg.textContent = '이미 추가된 영상입니다.'; return; }
   lgState.videos.push({ vimeoId: m[1], title: document.getElementById('lgManualTitle').value.trim(), desc: '', from: '직접 입력' });
   document.getElementById('lgManualId').value = '';
   document.getElementById('lgManualTitle').value = '';
@@ -848,7 +848,7 @@ window.saveLoungeConfig = async function() {
     desc: (v.desc || '').trim().slice(0, 200),
     from: v.from || ''
   })).filter(v => v.vimeoId);
-  if (videos.some(v => !v.title)) { msg.style.color = '#ff9090'; msg.textContent = '제목이 비어 있는 영상이 있습니다.'; return; }
+  if (videos.some(v => !v.title)) { msg.style.color = '#D64545'; msg.textContent = '제목이 비어 있는 영상이 있습니다.'; return; }
   const data = {
     enabled: document.getElementById('lgEnabled').checked,
     intro: document.getElementById('lgIntro').value.trim().slice(0, 300),
@@ -861,6 +861,6 @@ window.saveLoungeConfig = async function() {
     msg.textContent = '✓ 저장했습니다. 상담 화면에 바로 반영됩니다.';
     showToast('수업 미리보기 구성을 저장했습니다');
     lgLoad();
-  } catch (e) { msg.style.color = '#ff9090'; msg.textContent = '저장하지 못했습니다: ' + e.message; }
+  } catch (e) { msg.style.color = '#D64545'; msg.textContent = '저장하지 못했습니다: ' + e.message; }
 };
 

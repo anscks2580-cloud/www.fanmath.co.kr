@@ -20,8 +20,8 @@
 .page-hero { padding: 72px 0 48px; border-bottom: 1px solid var(--border-soft); margin-bottom: 52px; }
 .breadcrumb { font-size:12px; color:var(--muted); margin-bottom:20px; display:flex; align-items:center; gap:6px; }
 .breadcrumb a { color:var(--muted); text-decoration:none; }
-.breadcrumb a:hover { color:var(--gold); }
-.breadcrumb span { color:var(--gold); }
+.breadcrumb a:hover { color:var(--purple, #5B3FA6); }
+.breadcrumb span { color:var(--purple, #5B3FA6); }
 
 .iv-list { display:flex; flex-direction:column; gap:12px; }
 
@@ -31,7 +31,7 @@
   border-radius:14px; overflow:hidden;
   transition:border-color 0.2s;
 }
-.iv-card:has(.iv-header[aria-expanded="true"]) { border-color:rgba(240,192,64,0.35); }
+.iv-card:has(.iv-header[aria-expanded="true"]) { border-color:rgba(245,197,24,0.35); }
 
 .iv-header {
   width:100%; display:flex; align-items:center; justify-content:space-between;
@@ -39,7 +39,7 @@
   font-family:inherit; text-align:left; gap:16px;
   transition:background 0.15s;
 }
-.iv-header:hover { background:rgba(255,255,255,0.03); }
+.iv-header:hover { background:rgba(30,24,56,0.03); }
 
 .iv-header-left { display:flex; align-items:flex-start; gap:0; flex:1; min-width:0; }
 
@@ -49,7 +49,7 @@
 .iv-summary { font-size:12px; color:var(--muted); line-height:1.5; }
 
 .iv-arrow {
-  font-size:20px; color:var(--gold); flex-shrink:0;
+  font-size:20px; color:var(--purple, #5B3FA6); flex-shrink:0;
   transition:transform 0.25s; line-height:1;
 }
 .iv-header[aria-expanded="true"] .iv-arrow { transform:rotate(45deg); }
@@ -83,14 +83,14 @@
   transition: transform 0.2s ease;
 }
 .nav-links a:hover {
-  color: var(--gold) !important;
+  color: var(--purple, #5B3FA6) !important;
   transform: translateY(-1px);
 }
 .nav-links a:hover::after {
   transform: scaleX(1);
 }
 .nav-links a.active {
-  color: var(--gold) !important;
+  color: var(--purple, #5B3FA6) !important;
 }
 .nav-links a.active::after {
   transform: scaleX(1);
@@ -99,9 +99,9 @@
 </head>
 <body>
 <nav>
-  <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#F0EDF8;flex-shrink:0;overflow:hidden;max-width:100%;">
+  <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#1E1838;flex-shrink:0;overflow:hidden;max-width:100%;">
     <img src="swc-logo.svg" style="height:30px;width:30px;object-fit:contain;flex-shrink:0;display:block;" alt="SWC">
-    <span style="font-size:13px;font-weight:600;color:#F0EDF8;white-space:nowrap;letter-spacing:-0.3px;">송우찬수학학원</span>
+    <span style="font-size:13px;font-weight:600;color:#1E1838;white-space:nowrap;letter-spacing:-0.3px;">송우찬수학학원</span>
   </a>
     <ul class="nav-links" style="white-space:nowrap;flex-shrink:0;">
     <li><a href="about.html">학원소개</a></li>
@@ -114,10 +114,10 @@
     
   </ul>
   <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;"><div id="navUserArea" style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-    <a href="login.html" id="navLoginBtn" style="font-size:13px;color:var(--gold);text-decoration:none;padding:7px 16px;border:1px solid var(--border);border-radius:6px;white-space:nowrap;display:none;">로그인</a>
+    <a href="login.html" id="navLoginBtn" style="font-size:13px;color:var(--purple, #5B3FA6);text-decoration:none;padding:7px 16px;border:1px solid var(--border);border-radius:6px;white-space:nowrap;display:none;">로그인</a>
     <span id="navUserName" style="font-size:13px;color:var(--muted);white-space:nowrap;display:none;"></span>
-    <a id="navAdminBtn" href="admin.html" style="font-size:12px;color:var(--gold);text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:6px;white-space:nowrap;display:none;">관리자 페이지</a>
-    <button id="navLogoutBtn" onclick="doNavLogout()" style="font-size:12px;color:var(--muted);background:rgba(255,255,255,0.06);border:1px solid var(--border-soft);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:inherit;white-space:nowrap;display:none;">로그아웃</button>
+    <a id="navAdminBtn" href="admin.html" style="font-size:12px;color:var(--purple, #5B3FA6);text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:6px;white-space:nowrap;display:none;">관리자 페이지</a>
+    <button id="navLogoutBtn" onclick="doNavLogout()" style="font-size:12px;color:var(--muted);background:rgba(30,24,56,0.06);border:1px solid var(--border-soft);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:inherit;white-space:nowrap;display:none;">로그아웃</button>
   </div><button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="메뉴">
     <span></span><span></span><span></span>
   </button></div>
@@ -174,23 +174,23 @@
     <div class="iv-body" id="ivBody1" hidden>
       <div class="iv-body-inner">
         <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>수리논술을 준비해야겠다고 결심한 이유는 무엇인가요?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>수리논술을 준비해야겠다고 결심한 이유는 무엇인가요?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 내신 성적이나 비교과 활동으로 경쟁력을 갖추기 어려운 상황에서, 수리논술이 가장 현실적인 선택이었습니다. 수학에 대한 자신감이 있었기 때문에 논술을 통해 제 강점을 최대한 살려야겠다고 생각했습니다.</div>
         </div>
 <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>기본 개념 공부와 논술 답안 작성 연습은 어떻게 했나요?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>기본 개념 공부와 논술 답안 작성 연습은 어떻게 했나요?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 기본 개념 공부는 수능을 준비하면서 자연스럽게 병행했습니다. 논술 답안 작성은 학원에서 정해진 시간 내에 문제를 풀고 답안을 작성하는 연습을 꾸준히 했습니다. 선생님들의 조언에 따라 논리적인 흐름과 답안 구성 방식까지 세세하게 신경 쓰면서 연습했습니다.</div>
         </div>
 <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>수리논술을 준비하면서 가장 중요하게 생각했던 부분은?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>수리논술을 준비하면서 가장 중요하게 생각했던 부분은?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 제한된 시간 안에 문제를 전부 풀고, 논리적으로 정리된 답안을 제출하는 것이 가장 중요하다고 생각했습니다. 아무리 문제를 잘 풀어도 답안 작성이 미흡하면 점수를 받을 수 없기 때문에 시간 관리와 답안 작성 연습을 동시에 신경 쓰려고 노력했습니다.</div>
         </div>
 <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>가장 어려웠던 점과 극복 방법은?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>가장 어려웠던 점과 극복 방법은?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 문제 풀이 방식이 내신·수능과 달라 처음에는 접근 방법을 몰랐습니다. 학원의 논술 첨삭 수업을 통해 문제풀이 개요를 작성하는 방법을 익혔고, 선생님의 피드백을 통해 논리적인 흐름을 잡는 법을 배운 것이 큰 도움이 되었습니다.</div>
         </div>
 <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>학원의 가장 큰 강점은?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>학원의 가장 큰 강점은?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 소수 정예 수업으로 세심하게 지도해 주신다는 점입니다. 수업을 진행한 선생님께 직접 첨삭을 받을 수 있어 답안을 작성하는 능력이 많이 향상되었습니다. 저 혼자 공부할 때보다 훨씬 빠르게 실력이 늘었습니다.</div>
         </div>
       </div>
@@ -209,19 +209,19 @@
     <div class="iv-body" id="ivBody2" hidden>
       <div class="iv-body-inner">
         <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>수리논술을 준비하게 된 계기는?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>수리논술을 준비하게 된 계기는?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 다른 과목에 비해 수학 성적이 상대적으로 우수했기 때문에 수리논술 전형이 더 유리할 것이라고 판단했습니다. 논리적으로 사고하는 것을 좋아하는 편이라 논술을 통해 제 강점을 더욱 살릴 수 있을 것 같아 준비를 결심하게 되었습니다.</div>
         </div>
 <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>기본 개념 및 답안 작성 연습은 어떻게 했나요?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>기본 개념 및 답안 작성 연습은 어떻게 했나요?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 기본 개념은 수능 준비를 하면서 자연스럽게 익혔고, 수능에서 선택하지 않은 과목의 개념은 학원 특강으로 보완했습니다. 처음에는 해설지를 꼼꼼히 분석하는 방식으로 연습했고, 이후에는 학원 첨삭을 중심으로 실전 감각을 키워나갔습니다.</div>
         </div>
 <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>가장 어려웠던 점과 극복 방법은?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>가장 어려웠던 점과 극복 방법은?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 풀이와 서술 속도가 느린 편이어서 시간 안에 모든 문제를 해결하는 것이 가장 큰 어려움이었습니다. 학원 첨삭과 수업을 통해 서술에서 어떤 부분을 강조해야 하는지 명확히 알게 되면서 답안 작성 시간이 점차 단축되었습니다.</div>
         </div>
 <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>학원 수업이 어떻게 도움이 되었나요?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>학원 수업이 어떻게 도움이 되었나요?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 첨삭과 논술 해설 수업이 큰 도움이 되었습니다. 학원에서 논술 학습을 체계적으로 관리해 주었기 때문에 수능과 논술을 병행할 때 학습 계획을 세우기가 훨씬 수월했습니다. 스스로 공부했다면 체계적이지 못했을 텐데 학원 커리큘럼을 따라가면서 효율적으로 준비할 수 있었습니다.</div>
         </div>
       </div>
@@ -240,23 +240,23 @@
     <div class="iv-body" id="ivBody3" hidden>
       <div class="iv-body-inner">
         <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>수리논술을 결심한 이유는?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>수리논술을 결심한 이유는?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 고등학교 내신 등급보다 높은 대학 진학을 원했기 때문에 정시모집을 준비했습니다. 그런데 수시모집에서도 내신 등급보다 좋은 대학을 갈 수 있는 수리논술 전형이 있다는 걸 알게 되었습니다. 처음에는 막막했지만, 송문찬 원장님의 "수능 준비가 확실하면 수리논술에서도 결과를 만들 수 있다"는 말씀에 용기를 얻어 도전하게 되었습니다.</div>
         </div>
 <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>수리논술은 어떻게 준비했나요?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>수리논술은 어떻게 준비했나요?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 매주 일요일, 논술 수업 전 학원에서 문제를 풀어보고 이후 수업을 들으며 풀이를 익혔습니다. 고3 초반에는 다양한 대학의 기출 문제를 풀었고, 시험이 가까워질수록 지원 대학의 기출을 집중적으로 풀었습니다. 제가 어려워하는 문제는 개인 첨삭을 통해 피드백을 받아 점점 답안 작성 능력이 향상되었습니다.</div>
         </div>
 <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>가장 힘들었던 점은?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>가장 힘들었던 점은?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 수리논술을 시작하기 전엔 높은 경쟁률 때문에 걱정이 많았습니다. 하지만 막상 시작해 보니 수능 공부와 병행하면서도 충분히 준비 가능하다는 걸 알게 되었습니다. 꾸준히 수업을 들으며 논술 답안을 작성하는 방법을 익히면서 점점 자신감이 생겼습니다.</div>
         </div>
 <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>가장 좋았던 점은?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>가장 좋았던 점은?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. "수업 전에 미리 문제를 풀어보고, 수업에서 해설을 듣는 방식"이 가장 좋았습니다. 충분한 사고 시간을 갖고 문제를 고민한 후 수업을 듣다 보니 문제 해결 능력이 향상되었습니다. 추가 논술 학원에 다니지 않아도 될 정도로 체계적인 커리큘럼 덕분에 부담 없이 1년간 준비할 수 있었습니다.</div>
         </div>
 <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>준비하는 학생들에게 해주고 싶은 말</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>준비하는 학생들에게 해주고 싶은 말</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 너무 경쟁률에 겁먹지 말고 꾸준히 하면 다 할 수 있습니다. 최대한 문제를 오래 고민해 보고 풀이를 시작해 보세요. 처음엔 문제들이 어려워 보이겠지만 나중엔 정말 괜찮아질 것입니다. 포기하지 않고 끝까지 도전한다면 좋은 결과가 있을 것입니다.</div>
         </div>
       </div>
@@ -275,23 +275,23 @@
     <div class="iv-body" id="ivBody4" hidden>
       <div class="iv-body-inner">
         <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>수리논술을 준비하게 된 계기는?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>수리논술을 준비하게 된 계기는?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 고1 중간고사에서 충격적인 점수를 받고 문과 과목에 흥미를 잃어 수학을 집중적으로 공부하기 시작했습니다. 하지만 국어·영어를 소홀히 한 결과 원하는 대학과 점점 멀어지던 중, 학원에서 수리논술을 권유받아 고3부터 본격적으로 준비했습니다.</div>
         </div>
 <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>수업 방식은 어떻게 진행되었나요?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>수업 방식은 어떻게 진행되었나요?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 수능 전에는 송문찬 원장님의 단독 강의로 진행했습니다. 미리 받은 기출 문제를 강의 전에 풀고, 강의를 들은 후 답안을 스스로 첨삭해 원장님께 제출하는 과정을 반복했습니다. 수능 이후에는 일주일에 네 번 강의가 진행되었으며, 두 분 원장님께서 번갈아 수업해주셨습니다.</div>
         </div>
 <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>처음 시작했을 때 어려운 점은?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>처음 시작했을 때 어려운 점은?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 답안을 봐도 엉망이라 이렇게 쓰면 무조건 탈락하겠다는 생각이 들 정도였습니다. 풀이 과정 서술이 너무 어려웠고, 문제를 어떻게 시작하고 마무리해야 할지 감이 잡히지 않았습니다. 하지만 답안을 두 번 첨삭하는 과정을 반복하다 보니 점점 서술 실력이 향상되었습니다.</div>
         </div>
 <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>학원의 가장 큰 장점은?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>학원의 가장 큰 장점은?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 가장 큰 장점은 이중 첨삭입니다. 제가 먼저 첨삭하고, 이후 원장님께서 다시 한 번 첨삭하는 과정이 진행됩니다. 인강은 첨삭이 불가능하거나 시간이 오래 걸리는데, 학원에서는 바로 바로 피드백을 주셔서 '풀이 쓰기의 어려움'이라는 수리논술 입문의 벽을 쉽게 넘을 수 있었습니다.</div>
         </div>
 <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>준비하려는 학생들에게 한마디</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>준비하려는 학생들에게 한마디</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 수리논술은 처음에는 어렵게 느껴질 수 있지만 꾸준히 연습하면 충분히 좋은 결과를 얻을 수 있습니다. 서술력이 부족해도 반복적인 첨삭을 통해 발전할 수 있고, 모든 문제를 완벽하게 풀 필요도 없었습니다. 수학에 대한 흥미와 열정이 있다면 도전할 가치가 있습니다!</div>
         </div>
       </div>
@@ -310,27 +310,27 @@
     <div class="iv-body" id="ivBody5" hidden>
       <div class="iv-body-inner">
         <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>수리논술을 시작하게 된 계기는?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>수리논술을 시작하게 된 계기는?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 고1 때 통합사회에서 충격적인 점수를 받고 수학에 집중하기 시작했습니다. 국어·영어를 소홀히 한 결과 내신·모의고사 성적으로는 원하는 대학과 멀어졌고, 고3이 된 2022년 학원의 추천으로 수리논술 수업을 시작했습니다.</div>
         </div>
 <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>수능 전 수업 방식은?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>수능 전 수업 방식은?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 일주일에 한 번, 미리 받은 기출 문제를 강의 전에 풀어보고, 강의를 들은 후 자신의 답안을 스스로 첨삭한 후 선생님께 제출해 강의에서 놓쳤던 빈틈을 메우는 것을 반복했습니다.</div>
         </div>
 <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>처음 답안 작성이 어려웠던 점은?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>처음 답안 작성이 어려웠던 점은?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 눈앞만 굴려도 풀리는 문제를 오류 없는 풀이로 서술하자니 어떻게 시작하고 끝내야 하는지, 어떻게 개념을 풀이에 녹여내야 하는지 처음부터 끝까지 쉬운 부분이 없었습니다. 하지만 답안을 두 번 첨삭하다 보니 수능 직전에는 첨삭하지 않은 답안도 꽤 잘 쓴 것처럼 느껴질 정도로 성장했습니다.</div>
         </div>
 <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>학원 수리논술의 최대 장점은?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>학원 수리논술의 최대 장점은?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 답안 하나를 본인 스스로 한 번, 강사의 눈에서 다시 한 번, 총 두 번의 첨삭을 할 수 있다는 것입니다. 인강은 첨삭이 불가능하거나 시간이 오래 걸리는 경우가 많은데, 이 이중 첨삭이 '풀이 쓰기의 어려움'이라는 수리논술 입문의 벽을 가장 쉽게 부술 수 있다고 생각합니다.</div>
         </div>
 <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>수능 이후 강의는 어떻게 달라졌나요?</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>수능 이후 강의는 어떻게 달라졌나요?</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 일주일에 네 번으로 횟수가 늘었고, 두 분 원장님이 번갈아 강의하셨습니다. 수능이 끝난 만큼 수리논술에 집중할 수 있었고, 이 시기에는 정석적인 풀이 외에도 다양한 접근법을 시도하면서 첨삭으로 오류 여부를 확인하는 연습도 할 수 있었습니다.</div>
         </div>
 <div style="margin-bottom:20px;">
-          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--gold);flex-shrink:0;">Q.</span><span>수리논술을 도전하려는 학생들에게</span></div>
+          <div style="font-size:13px;font-weight:600;color:var(--off-white);margin-bottom:6px;display:flex;gap:8px;"><span style="color:var(--purple, #5B3FA6);flex-shrink:0;">Q.</span><span>수리논술을 도전하려는 학생들에게</span></div>
           <div style="font-size:13px;color:var(--muted);line-height:1.8;padding-left:22px;">A. 수학 I·II·미적분을 중심으로 준비하되, 확률·기하는 교과 개념 위주로 훑어보고 나머지 시간은 미적분에 전념하며 자신의 풀이를 연마하면 실제 시험에서 충분히 만족스러운 답안을 완성할 수 있습니다. 수학에 흥미와 열정이 있는 학생이라면 수리논술의 가능성을 믿고 도전하시길 바랍니다.</div>
         </div>
       </div>
@@ -344,15 +344,15 @@
 <footer>
   <div class="footer-logo">
     <img src="swc-logo.svg" style="height:26px;width:26px;object-fit:contain;flex-shrink:0;display:block;opacity:0.8;" alt="SWC">
-    <span style="color:#F0EDF8;"><b>송우찬수학학원</b></span>
+    <span style="color:#1E1838;"><b>송우찬수학학원</b></span>
   </div>
     <div class="footer-info">
-    <span style="color:var(--gold);font-weight:600;">평촌관</span> 경기도 안양시 동안구 평촌대로 117 맵시프라자 4층 &nbsp;|&nbsp; <a href="tel:031-386-8899" style="color:inherit;text-decoration:none;">031-386-8899</a><br>
-    <span style="color:var(--gold);font-weight:600;">산본관</span> 경기도 군포시 산본로 390 5층 &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:inherit;text-decoration:none;">031-346-8899</a><br>
+    <span style="color:var(--purple, #5B3FA6);font-weight:600;">평촌관</span> 경기도 안양시 동안구 평촌대로 117 맵시프라자 4층 &nbsp;|&nbsp; <a href="tel:031-386-8899" style="color:inherit;text-decoration:none;">031-386-8899</a><br>
+    <span style="color:var(--purple, #5B3FA6);font-weight:600;">산본관</span> 경기도 군포시 산본로 390 5층 &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:inherit;text-decoration:none;">031-346-8899</a><br>
     <span style="font-size:11px;opacity:0.55;">(주) 판수학 &nbsp;|&nbsp; 대표 조현주 &nbsp;|&nbsp; 사업자등록번호 828-86-01755</span><br>
     <span style="font-size:11px;opacity:0.55;">평촌관 : 제 99-079호 &nbsp;|&nbsp; 산본관 : 제 1928-2호</span><br>
     <span style="font-size:11px;opacity:0.45;">© Copyright 2026 송우찬수학학원. All Rights Reserved.</span><br>
-    <span style="font-size:12px;opacity:0.7;"><a href="tel:031-386-8899" style="color:var(--gold);text-decoration:none;">평촌관 031-386-8899</a> &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:var(--gold);text-decoration:none;">산본관 031-346-8899</a></span>
+    <span style="font-size:12px;opacity:0.7;"><a href="tel:031-386-8899" style="color:var(--purple, #5B3FA6);text-decoration:none;">평촌관 031-386-8899</a> &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:var(--purple, #5B3FA6);text-decoration:none;">산본관 031-346-8899</a></span>
   </div>
   <a href="https://pf.kakao.com/_KxaxdlX" target="_blank" class="kakao-footer-link"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3C6.477 3 2 6.477 2 10.8c0 2.7 1.47 5.08 3.72 6.56l-.95 3.54a.3.3 0 0 0 .44.33l4.07-2.72A11.5 11.5 0 0 0 12 18.6c5.523 0 10-3.477 10-7.8S17.523 3 12 3Z"/></svg> 카카오톡 문의</a>
 </footer>

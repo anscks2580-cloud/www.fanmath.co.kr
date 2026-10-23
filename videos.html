@@ -30,8 +30,8 @@
   margin-bottom: 20px; display: flex; align-items: center; gap: 6px;
 }
 .breadcrumb a { color: var(--muted); text-decoration: none; }
-.breadcrumb a:hover { color: var(--gold); }
-.breadcrumb span { color: var(--gold); }
+.breadcrumb a:hover { color: var(--purple, #5B3FA6); }
+.breadcrumb span { color: var(--purple, #5B3FA6); }
 
 /* ── 필터 ── */
 .filter-wrap { margin-bottom: 36px; }
@@ -44,7 +44,7 @@
 .filter-sub {
   display: none; gap: 8px; flex-wrap: wrap;
   padding: 12px 16px;
-  background: rgba(255,255,255,0.03);
+  background: rgba(30,24,56,0.03);
   border: 1px solid var(--border-soft);
   border-radius: 12px;
 }
@@ -64,7 +64,7 @@
 .filter-btn:hover,
 .filter-btn.active {
   background: var(--gold);
-  color: var(--bg);
+  color: var(--on-gold, #2A1E55);
   border-color: var(--gold);
   font-weight: 600;
 }
@@ -85,9 +85,9 @@
 .video-group-header {
   font-size: 11px; font-weight: 700;
   letter-spacing: 1.2px; text-transform: uppercase;
-  color: var(--gold);
+  color: var(--purple, #5B3FA6);
   padding: 20px 0 8px;
-  border-bottom: 1px solid rgba(240,192,64,0.2);
+  border-bottom: 1px solid rgba(245,197,24,0.2);
   margin-bottom: 2px;
 }
 
@@ -96,20 +96,20 @@
   align-items: center;
   gap: 16px;
   padding: 13px 16px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(30,24,56,0.05);
   cursor: pointer;
   transition: background 0.15s;
   border-radius: 6px;
 }
 
 .video-card:hover {
-  background: rgba(240,192,64,0.06);
+  background: rgba(245,197,24,0.06);
 }
 
 /* 순서 번호 */
 .video-order {
   font-size: 12px; font-weight: 700;
-  color: var(--gold);
+  color: var(--purple, #5B3FA6);
   min-width: 24px;
   text-align: right;
   flex-shrink: 0;
@@ -119,8 +119,8 @@
 /* 재생 아이콘 */
 .video-play-icon {
   width: 30px; height: 30px;
-  background: rgba(240,192,64,0.12);
-  border: 1px solid rgba(240,192,64,0.3);
+  background: rgba(245,197,24,0.12);
+  border: 1px solid rgba(245,197,24,0.3);
   border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
@@ -142,7 +142,7 @@
   display: inline-block;
   font-size: 10px; font-weight: 600;
   letter-spacing: 1px; text-transform: uppercase;
-  color: var(--gold);
+  color: var(--purple, #5B3FA6);
   background: var(--gold-glow);
   padding: 2px 7px; border-radius: 4px;
   margin-bottom: 4px;
@@ -184,7 +184,7 @@
 
 .modal-close {
   width: 32px; height: 32px; border-radius: 50%;
-  background: rgba(255,255,255,0.06);
+  background: rgba(30,24,56,0.06);
   border: none; color: var(--off-white);
   font-size: 16px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
@@ -192,7 +192,7 @@
   transition: background 0.2s;
 }
 
-.modal-close:hover { background: rgba(255,255,255,0.14); }
+.modal-close:hover { background: rgba(30,24,56,0.14); }
 
 .modal-video {
   position: relative; padding-bottom: 56.25%;
@@ -220,15 +220,15 @@
   text-align: center;
 }
 .resume-q { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
-.resume-time { font-size: 26px; font-weight: 700; color: var(--gold); margin-bottom: 18px; letter-spacing: 0.5px; }
+.resume-time { font-size: 26px; font-weight: 700; color: var(--purple, #5B3FA6); margin-bottom: 18px; letter-spacing: 0.5px; }
 .resume-btns { display: flex; gap: 8px; }
 .resume-btns button {
   flex: 1; padding: 11px 0; border-radius: 10px;
   font-size: 14px; font-weight: 600; cursor: pointer; font-family: inherit;
   border: 1px solid var(--border);
 }
-.resume-yes { background: var(--gold); color: var(--bg); border-color: var(--gold) !important; }
-.resume-no  { background: rgba(255,255,255,0.06); color: var(--off-white); }
+.resume-yes { background: var(--gold); color: var(--on-gold, #2A1E55); border-color: var(--gold) !important; }
+.resume-no  { background: rgba(30,24,56,0.06); color: var(--off-white); }
 .resume-yes:hover, .resume-no:hover { opacity: 0.85; }
 
 .modal-footer {
@@ -238,7 +238,7 @@
 }
 
 .modal-yt-link {
-  font-size: 13px; color: var(--gold);
+  font-size: 13px; color: var(--purple, #5B3FA6);
   text-decoration: none;
   display: flex; align-items: center; gap: 6px;
 }
@@ -294,14 +294,14 @@
   transition: transform 0.2s ease;
 }
 .nav-links a:hover {
-  color: var(--gold) !important;
+  color: var(--purple, #5B3FA6) !important;
   transform: translateY(-1px);
 }
 .nav-links a:hover::after {
   transform: scaleX(1);
 }
 .nav-links a.active {
-  color: var(--gold) !important;
+  color: var(--purple, #5B3FA6) !important;
 }
 .nav-links a.active::after {
   transform: scaleX(1);
@@ -311,9 +311,9 @@
 <body>
 
 <nav>
-  <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#F0EDF8;flex-shrink:0;overflow:hidden;max-width:100%;">
+  <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#1E1838;flex-shrink:0;overflow:hidden;max-width:100%;">
     <img src="swc-logo.svg" style="height:30px;width:30px;object-fit:contain;flex-shrink:0;display:block;" alt="SWC">
-    <span style="font-size:13px;font-weight:600;color:#F0EDF8;white-space:nowrap;letter-spacing:-0.3px;overflow:hidden;text-overflow:ellipsis;">송우찬수학학원</span>
+    <span style="font-size:13px;font-weight:600;color:#1E1838;white-space:nowrap;letter-spacing:-0.3px;overflow:hidden;text-overflow:ellipsis;">송우찬수학학원</span>
   </a>
     <ul class="nav-links" style="white-space:nowrap;flex-shrink:0;">
     <li><a href="about.html">학원소개</a></li>
@@ -326,7 +326,7 @@
     
   </ul>
 
-  <a href="login.html" id="navLoginBtn" style="font-size:13px;color:var(--gold);text-decoration:none;padding:7px 16px;border:1px solid var(--border);border-radius:6px;white-space:nowrap;">로그인</a>
+  <a href="login.html" id="navLoginBtn" style="font-size:13px;color:var(--purple, #5B3FA6);text-decoration:none;padding:7px 16px;border:1px solid var(--border);border-radius:6px;white-space:nowrap;">로그인</a>
   <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;"><div id="navUserArea" style="display:flex;align-items:center;gap:10px;flex-shrink:0;"></div><button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="메뉴">
     <span></span><span></span><span></span>
   </button></div>
@@ -356,36 +356,36 @@
     <!-- 강의 시청 방법 안내 -->
     <div id="howtoGuide" style="margin-bottom:28px;">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;cursor:pointer;" onclick="toggleHowto()">
-        <span style="font-size:12px;font-weight:600;color:var(--gold);letter-spacing:1px;text-transform:uppercase;">강의 시청 방법</span>
+        <span style="font-size:12px;font-weight:600;color:var(--purple, #5B3FA6);letter-spacing:1px;text-transform:uppercase;">강의 시청 방법</span>
         <span id="howtoArrow" style="font-size:11px;color:var(--muted);">▲ 접기</span>
       </div>
       <div id="howtoBody" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
         <div style="background:var(--bg-card);border:1px solid var(--border-soft);border-radius:10px;padding:14px 16px;display:flex;gap:10px;align-items:flex-start;">
-          <span style="font-size:15px;font-weight:700;color:var(--gold);flex-shrink:0;">1</span>
+          <span style="font-size:15px;font-weight:700;color:var(--purple, #5B3FA6);flex-shrink:0;">1</span>
           <div>
             <div style="font-size:12px;font-weight:600;margin-bottom:3px;">로그인</div>
             <div style="font-size:11px;color:var(--muted);line-height:1.5;">우측 상단 로그인 버튼을 눌러주세요.</div>
           </div>
         </div>
         <div style="background:var(--bg-card);border:1px solid var(--border-soft);border-radius:10px;padding:14px 16px;display:flex;gap:10px;align-items:flex-start;">
-          <span style="font-size:15px;font-weight:700;color:var(--gold);flex-shrink:0;">2</span>
+          <span style="font-size:15px;font-weight:700;color:var(--purple, #5B3FA6);flex-shrink:0;">2</span>
           <div>
             <div style="font-size:12px;font-weight:600;margin-bottom:3px;">카테고리 선택</div>
             <div style="font-size:11px;color:var(--muted);line-height:1.5;">중등 / 고등 / 기출해설 / 수리논술</div>
           </div>
         </div>
         <div style="background:var(--bg-card);border:1px solid var(--border-soft);border-radius:10px;padding:14px 16px;display:flex;gap:10px;align-items:flex-start;">
-          <span style="font-size:15px;font-weight:700;color:var(--gold);flex-shrink:0;">3</span>
+          <span style="font-size:15px;font-weight:700;color:var(--purple, #5B3FA6);flex-shrink:0;">3</span>
           <div>
             <div style="font-size:12px;font-weight:600;margin-bottom:3px;">강의 카드 클릭</div>
             <div style="font-size:11px;color:var(--muted);line-height:1.5;">썸네일 클릭 → 팝업 플레이어 바로 재생</div>
           </div>
         </div>
         <div style="background:var(--bg-card);border:1px solid var(--border-soft);border-radius:10px;padding:14px 16px;display:flex;gap:10px;align-items:flex-start;">
-          <span style="font-size:15px;font-weight:700;color:var(--gold);flex-shrink:0;">4</span>
+          <span style="font-size:15px;font-weight:700;color:var(--purple, #5B3FA6);flex-shrink:0;">4</span>
           <div>
             <div style="font-size:12px;font-weight:600;margin-bottom:3px;">문의</div>
-            <div style="font-size:11px;color:var(--muted);line-height:1.5;"><a href="tel:031-386-8899" style="color:var(--gold);text-decoration:none;">031-386-8899</a> (평촌관)</div>
+            <div style="font-size:11px;color:var(--muted);line-height:1.5;"><a href="tel:031-386-8899" style="color:var(--purple, #5B3FA6);text-decoration:none;">031-386-8899</a> (평촌관)</div>
           </div>
         </div>
       </div>
@@ -403,25 +403,25 @@
           style="
             width:100%; box-sizing:border-box;
             padding:11px 38px 11px 40px;
-            background:rgba(240,192,64,0.07);
+            background:rgba(245,197,24,0.07);
             border:1.5px solid var(--gold);
             border-radius:100px;
             color:var(--off-white);
             font-size:14px; font-family:inherit;
             outline:none; transition:all 0.2s;
-            box-shadow:0 0 0 3px rgba(240,192,64,0.08);
+            box-shadow:0 0 0 3px rgba(245,197,24,0.08);
           "
-          onfocus="this.style.boxShadow='0 0 0 4px rgba(240,192,64,0.18)'"
-          onblur="this.style.boxShadow='0 0 0 3px rgba(240,192,64,0.08)'"
+          onfocus="this.style.boxShadow='0 0 0 4px rgba(245,197,24,0.18)'"
+          onblur="this.style.boxShadow='0 0 0 3px rgba(245,197,24,0.08)'"
         >
         <span id="searchClearBtn" onclick="clearSearch()" style="
           display:none; position:absolute; right:14px; top:50%; transform:translateY(-50%);
-          color:var(--gold); cursor:pointer; font-size:14px; line-height:1;
+          color:var(--purple, #5B3FA6); cursor:pointer; font-size:14px; line-height:1;
         ">✕</span>
       </div>
     </div>
     <!-- 검색 결과 안내 -->
-    <div id="searchResultInfo" style="display:none;font-size:12px;color:var(--gold);margin-bottom:12px;padding:0 4px;"></div>
+    <div id="searchResultInfo" style="display:none;font-size:12px;color:var(--purple, #5B3FA6);margin-bottom:12px;padding:0 4px;"></div>
 
     <div class="filter-wrap">
       <!-- 1단계: 메인 카테고리 -->
@@ -721,15 +721,15 @@
 <footer>
   <div class="footer-logo">
     <img src="swc-logo.svg" style="height:26px;width:26px;object-fit:contain;flex-shrink:0;display:block;opacity:0.8;" alt="SWC">
-    <span style="color:#F0EDF8;"><b>송우찬수학학원</b></span>
+    <span style="color:#1E1838;"><b>송우찬수학학원</b></span>
   </div>
     <div class="footer-info">
-    <span style="color:var(--gold);font-weight:600;">평촌관</span> 경기도 안양시 동안구 평촌대로 117 맵시프라자 4층 &nbsp;|&nbsp; <a href="tel:031-386-8899" style="color:inherit;text-decoration:none;">031-386-8899</a><br>
-    <span style="color:var(--gold);font-weight:600;">산본관</span> 경기도 군포시 산본로 390 5층 &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:inherit;text-decoration:none;">031-346-8899</a><br>
+    <span style="color:var(--purple, #5B3FA6);font-weight:600;">평촌관</span> 경기도 안양시 동안구 평촌대로 117 맵시프라자 4층 &nbsp;|&nbsp; <a href="tel:031-386-8899" style="color:inherit;text-decoration:none;">031-386-8899</a><br>
+    <span style="color:var(--purple, #5B3FA6);font-weight:600;">산본관</span> 경기도 군포시 산본로 390 5층 &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:inherit;text-decoration:none;">031-346-8899</a><br>
     <span style="font-size:11px;opacity:0.55;">(주) 판수학 &nbsp;|&nbsp; 대표 조현주 &nbsp;|&nbsp; 사업자등록번호 828-86-01755</span><br>
     <span style="font-size:11px;opacity:0.55;">평촌관 : 제 99-079호 &nbsp;|&nbsp; 산본관 : 제 1928-2호</span><br>
     <span style="font-size:11px;opacity:0.45;">© Copyright 2026 송우찬수학학원. All Rights Reserved.</span><br>
-    <span style="font-size:12px;opacity:0.7;"><a href="tel:031-386-8899" style="color:var(--gold);text-decoration:none;">평촌관 031-386-8899</a> &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:var(--gold);text-decoration:none;">산본관 031-346-8899</a></span>
+    <span style="font-size:12px;opacity:0.7;"><a href="tel:031-386-8899" style="color:var(--purple, #5B3FA6);text-decoration:none;">평촌관 031-386-8899</a> &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:var(--purple, #5B3FA6);text-decoration:none;">산본관 031-346-8899</a></span>
   </div>
 
   <a href="https://pf.kakao.com/_KxaxdlX" target="_blank" class="kakao-footer-link"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3C6.477 3 2 6.477 2 10.8c0 2.7 1.47 5.08 3.72 6.56l-.95 3.54a.3.3 0 0 0 .44.33l4.07-2.72A11.5 11.5 0 0 0 12 18.6c5.523 0 10-3.477 10-7.8S17.523 3 12 3Z"/></svg> 카카오톡 문의</a>
@@ -1107,9 +1107,9 @@ function updateNavUser(name, isAdmin, isTeacher) {
   if (!navEl) return;
   navEl.innerHTML = `
     <span style="font-size:13px;color:var(--muted);">${name} 님</span>
-    ${isAdmin   ? '<a href="admin.html"   style="font-size:12px;color:var(--gold);text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:6px;">관리자</a>' : ''}
-    ${isTeacher ? '<a href="teacher.html" style="font-size:12px;color:var(--gold);text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:6px;">선생님 포털</a>' : ''}
-    <button onclick="doLogout()" style="font-size:12px;color:var(--muted);background:rgba(255,255,255,0.06);border:1px solid var(--border-soft);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:inherit;">로그아웃</button>
+    ${isAdmin   ? '<a href="admin.html"   style="font-size:12px;color:var(--purple, #5B3FA6);text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:6px;">관리자</a>' : ''}
+    ${isTeacher ? '<a href="teacher.html" style="font-size:12px;color:var(--purple, #5B3FA6);text-decoration:none;padding:6px 12px;border:1px solid var(--border);border-radius:6px;">선생님 포털</a>' : ''}
+    <button onclick="doLogout()" style="font-size:12px;color:var(--muted);background:rgba(30,24,56,0.06);border:1px solid var(--border-soft);border-radius:6px;padding:6px 12px;cursor:pointer;font-family:inherit;">로그아웃</button>
   `;
 }
 
@@ -1125,7 +1125,7 @@ function showLoginPrompt() {
       <div style="font-size:40px;margin-bottom:20px;">🔒</div>
       <div style="font-size:20px;font-weight:700;margin-bottom:10px;">로그인이 필요합니다</div>
       <div style="font-size:14px;color:var(--muted);margin-bottom:32px;">배정된 강의를 시청하려면 로그인해 주세요.</div>
-      <a href="login.html" style="display:inline-block;padding:13px 32px;background:var(--gold);color:var(--bg);font-weight:700;border-radius:8px;text-decoration:none;font-size:15px;">로그인하기</a>
+      <a href="login.html" style="display:inline-block;padding:13px 32px;background:var(--gold);color:var(--on-gold, #2A1E55);font-weight:700;border-radius:8px;text-decoration:none;font-size:15px;">로그인하기</a>
     </div>
   `;
 }
@@ -1471,7 +1471,7 @@ function renderVideos() {
     const idx = text.toLowerCase().indexOf(q);
     if (idx === -1) return text;
     return text.slice(0,idx)
-      + `<mark style="background:rgba(240,192,64,0.35);color:var(--gold);border-radius:2px;padding:0 1px;">${text.slice(idx, idx+q.length)}</mark>`
+      + `<mark style="background:rgba(245,197,24,0.35);color:var(--purple, #5B3FA6);border-radius:2px;padding:0 1px;">${text.slice(idx, idx+q.length)}</mark>`
       + text.slice(idx+q.length);
   }
 
@@ -1526,16 +1526,16 @@ function renderVideos() {
         const items = [...tagMap.values()][0];
         const label = getGroupLabel(subject);
         html += `
-          <div style="border:1px solid rgba(255,255,255,0.08);border-radius:10px;margin-bottom:8px;overflow:hidden;">
+          <div style="border:1px solid rgba(30,24,56,0.08);border-radius:10px;margin-bottom:8px;overflow:hidden;">
             <div onclick="toggleGroup('${outerId}')" style="display:flex;align-items:center;justify-content:space-between;
-              padding:14px 18px;cursor:pointer;background:rgba(255,255,255,0.03);transition:background 0.15s;"
-              onmouseover="this.style.background='rgba(240,192,64,0.06)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+              padding:14px 18px;cursor:pointer;background:rgba(30,24,56,0.03);transition:background 0.15s;"
+              onmouseover="this.style.background='rgba(245,197,24,0.06)'" onmouseout="this.style.background='rgba(30,24,56,0.03)'">
               <div style="display:flex;align-items:center;gap:12px;">
                 <div style="width:8px;height:8px;background:var(--gold);border-radius:50%;flex-shrink:0;"></div>
                 <span style="font-size:14px;font-weight:600;">${label}</span>
                 <span style="font-size:11px;color:var(--muted);">${items.length}강</span>
               </div>
-              <span id="arrow-${outerId}" style="color:var(--gold);font-size:12px;transition:transform 0.2s;">▼</span>
+              <span id="arrow-${outerId}" style="color:var(--purple, #5B3FA6);font-size:12px;transition:transform 0.2s;">▼</span>
             </div>
             <div id="${outerId}" style="display:none;">
               ${items.map((v,i) => renderRow(v, i+1, highlight)).join('')}
@@ -1544,16 +1544,16 @@ function renderVideos() {
       } else {
         // 2단계 아코디언: 과목 대그룹 → 교재/선생님 소그룹
         html += `
-          <div style="border:1px solid rgba(240,192,64,0.2);border-radius:10px;margin-bottom:10px;overflow:hidden;">
+          <div style="border:1px solid rgba(245,197,24,0.2);border-radius:10px;margin-bottom:10px;overflow:hidden;">
             <div onclick="toggleGroup('${outerId}')" style="display:flex;align-items:center;justify-content:space-between;
-              padding:14px 18px;cursor:pointer;background:rgba(240,192,64,0.04);transition:background 0.15s;"
-              onmouseover="this.style.background='rgba(240,192,64,0.09)'" onmouseout="this.style.background='rgba(240,192,64,0.04)'">
+              padding:14px 18px;cursor:pointer;background:rgba(245,197,24,0.04);transition:background 0.15s;"
+              onmouseover="this.style.background='rgba(245,197,24,0.09)'" onmouseout="this.style.background='rgba(245,197,24,0.04)'">
               <div style="display:flex;align-items:center;gap:12px;">
                 <div style="width:8px;height:8px;background:var(--gold);border-radius:50%;flex-shrink:0;"></div>
-                <span style="font-size:15px;font-weight:700;color:var(--gold);">${subject}</span>
+                <span style="font-size:15px;font-weight:700;color:var(--purple, #5B3FA6);">${subject}</span>
                 <span style="font-size:11px;color:var(--muted);">${totalCount}강</span>
               </div>
-              <span id="arrow-${outerId}" style="color:var(--gold);font-size:12px;transition:transform 0.2s;">▼</span>
+              <span id="arrow-${outerId}" style="color:var(--purple, #5B3FA6);font-size:12px;transition:transform 0.2s;">▼</span>
             </div>
             <div id="${outerId}" style="display:none;padding:8px;">`;
 
@@ -1562,16 +1562,16 @@ function renderVideos() {
           const innerId    = outerId + 'i' + (innerIdx++);
           const groupLabel = getGroupLabel(tag);
           html += `
-              <div style="border:1px solid rgba(255,255,255,0.07);border-radius:8px;margin-bottom:6px;overflow:hidden;">
+              <div style="border:1px solid rgba(30,24,56,0.07);border-radius:8px;margin-bottom:6px;overflow:hidden;">
                 <div onclick="toggleGroup('${innerId}')" style="display:flex;align-items:center;justify-content:space-between;
-                  padding:11px 16px;cursor:pointer;background:rgba(255,255,255,0.02);transition:background 0.15s;"
-                  onmouseover="this.style.background='rgba(240,192,64,0.05)'" onmouseout="this.style.background='rgba(255,255,255,0.02)'">
+                  padding:11px 16px;cursor:pointer;background:rgba(30,24,56,0.02);transition:background 0.15s;"
+                  onmouseover="this.style.background='rgba(245,197,24,0.05)'" onmouseout="this.style.background='rgba(30,24,56,0.02)'">
                   <div style="display:flex;align-items:center;gap:10px;">
-                    <div style="width:6px;height:6px;background:rgba(240,192,64,0.5);border-radius:50%;flex-shrink:0;"></div>
+                    <div style="width:6px;height:6px;background:rgba(245,197,24,0.5);border-radius:50%;flex-shrink:0;"></div>
                     <span style="font-size:13px;font-weight:600;">${groupLabel}</span>
                     <span style="font-size:11px;color:var(--muted);">${items.length}강</span>
                   </div>
-                  <span id="arrow-${innerId}" style="color:var(--gold);font-size:11px;transition:transform 0.2s;">▼</span>
+                  <span id="arrow-${innerId}" style="color:var(--purple, #5B3FA6);font-size:11px;transition:transform 0.2s;">▼</span>
                 </div>
                 <div id="${innerId}" style="display:none;">
                   ${items.map((v,i) => renderRow(v, i+1, highlight)).join('')}
@@ -1630,10 +1630,10 @@ function renderRow(v, idx, highlight) {
   const percent = prog ? prog.percent : 0;
   const progressHtml = myProfile ? `
       <div style="display:flex;align-items:center;gap:6px;min-width:86px;flex-shrink:0;" title="시청률 ${percent}%">
-        <div style="flex:1;width:52px;height:5px;background:rgba(255,255,255,0.1);border-radius:4px;overflow:hidden;">
-          <div style="width:${percent}%;height:100%;background:${prog && prog.completed ? '#5FD98A' : 'var(--gold)'};"></div>
+        <div style="flex:1;width:52px;height:5px;background:rgba(30,24,56,0.1);border-radius:4px;overflow:hidden;">
+          <div style="width:${percent}%;height:100%;background:${prog && prog.completed ? '#2E9E5B' : 'var(--gold)'};"></div>
         </div>
-        <span style="font-size:11px;color:${prog && prog.completed ? '#5FD98A' : 'var(--muted)'};font-weight:600;min-width:30px;">${prog && prog.completed ? '✅' : percent + '%'}</span>
+        <span style="font-size:11px;color:${prog && prog.completed ? '#2E9E5B' : 'var(--muted)'};font-weight:600;min-width:30px;">${prog && prog.completed ? '✅' : percent + '%'}</span>
       </div>` : '';
   return `
     <div class="video-card" onclick="openModal('${v.vimeoId}','${(v.title||'').replace(/'/g,"\\'")}','${v.id}','${(v.tag||'').replace(/'/g,"\\'")}')">

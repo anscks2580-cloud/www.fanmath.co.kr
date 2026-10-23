@@ -255,7 +255,7 @@ window.loadWeeklyPreview = async () => {
   const teacherUid = document.getElementById('excelTeacher').value;
 
   if (!fromVal || !toVal) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;">시작일과 종료일을 선택해주세요.</div>'; return; }
-  if (fromVal > toVal)    { el.innerHTML = '<div style="color:#ff9090;font-size:13px;">시작일이 종료일보다 늦습니다.</div>'; return; }
+  if (fromVal > toVal)    { el.innerHTML = '<div style="color:#D64545;font-size:13px;">시작일이 종료일보다 늦습니다.</div>'; return; }
 
   el.innerHTML = '<div style="color:var(--muted);font-size:13px;">불러오는 중...</div>';
 
@@ -294,7 +294,7 @@ window.loadWeeklyPreview = async () => {
       const list = byTeacher[tname].sort((a,b) => (a.studentName||'').localeCompare(b.studentName||'','ko'));
       html += `
         <div>
-          <div style="font-weight:700;color:var(--gold);margin-bottom:8px;font-size:14px;">
+          <div style="font-weight:700;color:var(--purple, #5B3FA6);margin-bottom:8px;font-size:14px;">
             👤 ${tname} 선생님 <span style="color:var(--muted);font-weight:400;font-size:12px;">(${list.length}건)</span>
           </div>
           <div style="display:flex;flex-direction:column;gap:8px;">
@@ -318,7 +318,7 @@ window.loadWeeklyPreview = async () => {
 
     el.innerHTML = html;
   } catch(e) {
-    el.innerHTML = `<div style="color:#ff9090;font-size:13px;">오류: ${e.message}</div>`;
+    el.innerHTML = `<div style="color:#D64545;font-size:13px;">오류: ${e.message}</div>`;
   }
 };
 
@@ -415,7 +415,7 @@ window.loadMonthlyAdmin = async () => {
 
     renderMonthlyResult();
   } catch(e) {
-    resultEl.innerHTML = `<div style="color:#ff9090;font-size:13px;">오류: ${e.message}</div>`;
+    resultEl.innerHTML = `<div style="color:#D64545;font-size:13px;">오류: ${e.message}</div>`;
   }
 };
 
@@ -462,7 +462,7 @@ function renderMonthlyResult() {
             <div class="file-label">📄 ${d.fileName||''} ${size ? `· ${size}` : ''} ${d.memo ? `· ${d.memo}` : ''}</div>
           </div>
           <button onclick="downloadPDF('${safeURL}','${safeTeacherName}','${safeMonth}','${safeFileName}')"
-            style="flex-shrink:0;font-size:12px;color:var(--gold);background:none;padding:6px 14px;border:1px solid rgba(240,192,64,0.4);border-radius:6px;white-space:nowrap;cursor:pointer;font-family:inherit;">
+            style="flex-shrink:0;font-size:12px;color:var(--purple, #5B3FA6);background:none;padding:6px 14px;border:1px solid rgba(245,197,24,0.4);border-radius:6px;white-space:nowrap;cursor:pointer;font-family:inherit;">
             ⬇ 다운로드
           </button>
         </div>`;
@@ -474,11 +474,11 @@ function renderMonthlyResult() {
       <div class="card monthly-teacher-section">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
           <div>
-            <span style="font-size:15px;font-weight:700;color:var(--gold);">👤 ${teacherName} T</span>
+            <span style="font-size:15px;font-weight:700;color:var(--purple, #5B3FA6);">👤 ${teacherName} T</span>
             <span style="font-size:12px;color:var(--muted);margin-left:10px;">${count}개 보고서</span>
           </div>
           <button onclick="downloadTeacherZip('${teacherUidKey}','${safeTeacherName}')"
-            style="font-size:12px;color:var(--off-white);background:rgba(255,255,255,0.07);padding:6px 14px;border:1px solid var(--border-soft);border-radius:6px;cursor:pointer;font-family:inherit;white-space:nowrap;">
+            style="font-size:12px;color:var(--off-white);background:rgba(30,24,56,0.07);padding:6px 14px;border:1px solid var(--border-soft);border-radius:6px;cursor:pointer;font-family:inherit;white-space:nowrap;">
             📦 ${teacherName} T 전체 ZIP
           </button>
         </div>

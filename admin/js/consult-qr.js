@@ -95,7 +95,7 @@ window.openConsultQr = async function() {
           const item = document.createElement('div');
           item.className = 'cq-live-item';
           item.dataset.cq = ch.doc.id;
-          item.innerHTML = `<span>✅ <b>${escapeConsultHtml(d.studentName || '')}</b> · ${escapeConsultHtml(d.schoolGrade || '')} · ${escapeConsultHtml(d.level || '')}부 <span style="color:var(--muted);font-size:11.5px;">${t}</span> <span class="cq-flow" style="color:var(--gold);font-size:11.5px;">${escapeConsultHtml(flowTxt(d))}</span></span>
+          item.innerHTML = `<span>✅ <b>${escapeConsultHtml(d.studentName || '')}</b> · ${escapeConsultHtml(d.schoolGrade || '')} · ${escapeConsultHtml(d.level || '')}부 <span style="color:var(--muted);font-size:11.5px;">${t}</span> <span class="cq-flow" style="color:var(--purple, #5B3FA6);font-size:11.5px;">${escapeConsultHtml(flowTxt(d))}</span></span>
             <span style="display:flex;gap:6px;"><button class="btn btn-secondary btn-sm" onclick="closeConsultQr();openConsultRecord('${ch.doc.id}')">상담 기록</button></span>`;
           live.prepend(item);
           if (!initial) showToast(`📱 ${d.studentName || ''} 상담지가 접수되었습니다`);

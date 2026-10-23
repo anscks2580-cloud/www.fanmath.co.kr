@@ -119,7 +119,7 @@ function renderTagChecklist(containerId, checkedTags) {
   const checked = new Set(checkedTags || []);
   el.innerHTML = getTagCategories().map(cat => `
     <div style="margin-bottom:10px;">
-      <div style="font-size:11px;font-weight:700;color:var(--gold);margin-bottom:4px;">${cat.label}</div>
+      <div style="font-size:11px;font-weight:700;color:var(--purple, #5B3FA6);margin-bottom:4px;">${cat.label}</div>
       <div style="display:flex;flex-wrap:wrap;gap:10px;">
         ${cat.tags.map(t => `
           <label style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--off-white);cursor:pointer;text-transform:none;letter-spacing:0;">

@@ -18,8 +18,9 @@
 <style>
 /* ── APEX 전용 변수 ── */
 :root {
-  --apex-gold: #C9A84C;
-  --apex-cream: #F5F0E8;
+  --apex-gold: #A8873A;
+  --apex-gold-fill: #D4B560;
+  --apex-cream: #FBF7EC;
   --apex-dark: #1A1820;
   --apex-purple: #7C6FA0;
   --apex-border: rgba(201,168,76,0.25);
@@ -33,14 +34,14 @@
   text-align: center;
   padding: 80px 24px 60px;
   position: relative; overflow: hidden;
-  background: var(--apex-dark);
+  background: var(--apex-cream);
 }
 
 .apex-hero-bg {
   position: absolute; inset: 0; pointer-events: none;
   background:
     radial-gradient(ellipse 60% 45% at 30% 40%, rgba(201,168,76,0.10) 0%, transparent 65%),
-    radial-gradient(ellipse 50% 40% at 75% 60%, rgba(124,111,160,0.14) 0%, transparent 65%);
+    radial-gradient(ellipse 50% 40% at 75% 60%, rgba(123,92,201,0.14) 0%, transparent 65%);
 }
 
 /* 콜라보 로고 배지 */
@@ -64,7 +65,7 @@
 }
 
 .logo-name {
-  font-size: 11px; color: rgba(240,237,248,0.55); letter-spacing: 0.5px;
+  font-size: 11px; color: rgba(30,24,56,0.55); letter-spacing: 0.5px;
 }
 
 .x-divider {
@@ -93,20 +94,20 @@
 .apex-title {
   font-size: clamp(28px, 5vw, 58px);
   font-weight: 700; letter-spacing: -2px; line-height: 1.15;
-  color: #F0EDF8;
+  color: #1E1838;
   margin-bottom: 16px;
 }
 .apex-title .gold { color: var(--apex-gold); }
 
 .apex-sub {
   font-size: clamp(14px, 2vw, 17px);
-  color: rgba(240,237,248,0.55);
+  color: rgba(30,24,56,0.55);
   line-height: 1.7; margin-bottom: 48px;
 }
 
 /* ── 인증 카드 ── */
 .auth-card {
-  background: rgba(255,255,255,0.04);
+  background: rgba(30,24,56,0.04);
   border: 1px solid var(--apex-border);
   border-radius: 16px;
   padding: 36px 40px;
@@ -116,11 +117,11 @@
 }
 
 .auth-card-title {
-  font-size: 15px; font-weight: 600; color: #F0EDF8;
+  font-size: 15px; font-weight: 600; color: #1E1838;
   margin-bottom: 6px;
 }
 .auth-card-sub {
-  font-size: 12px; color: rgba(240,237,248,0.45);
+  font-size: 12px; color: rgba(30,24,56,0.45);
   margin-bottom: 20px; line-height: 1.6;
 }
 
@@ -129,20 +130,20 @@
 }
 .auth-input {
   width: 100%; box-sizing: border-box;
-  background: rgba(255,255,255,0.06);
+  background: rgba(30,24,56,0.06);
   border: 1px solid rgba(201,168,76,0.3);
   border-radius: 10px;
   padding: 14px 48px 14px 16px;
-  font-size: 15px; color: #F0EDF8;
+  font-size: 15px; color: #1E1838;
   font-family: inherit; letter-spacing: 2px;
   outline: none; transition: border-color 0.2s;
 }
 .auth-input:focus { border-color: var(--apex-gold); }
-.auth-input::placeholder { letter-spacing: 0; color: rgba(240,237,248,0.25); font-size:13px; }
+.auth-input::placeholder { letter-spacing: 0; color: rgba(30,24,56,0.25); font-size:13px; }
 
 .auth-btn {
   width: 100%;
-  background: var(--apex-gold);
+  background: var(--apex-gold-fill);
   color: #1A1820;
   border: none; border-radius: 10px;
   padding: 14px;
@@ -154,7 +155,7 @@
 .auth-btn:active { transform: translateY(0); }
 
 .auth-error {
-  font-size: 12px; color: #E57373;
+  font-size: 12px; color: #D64545;
   margin-top: 10px; display: none;
 }
 
@@ -168,7 +169,7 @@
 
 /* 혜택 배너 */
 .benefit-banner {
-  background: linear-gradient(135deg, rgba(201,168,76,0.12) 0%, rgba(124,111,160,0.10) 100%);
+  background: linear-gradient(135deg, rgba(201,168,76,0.12) 0%, rgba(123,92,201,0.1) 100%);
   border: 1px solid var(--apex-border);
   border-radius: 16px;
   padding: 32px 40px;
@@ -177,10 +178,10 @@
   margin-bottom: 60px;
 }
 .benefit-text h2 {
-  font-size: 22px; font-weight: 700; color: #F0EDF8;
+  font-size: 22px; font-weight: 700; color: #1E1838;
   margin-bottom: 8px; letter-spacing: -0.5px;
 }
-.benefit-text p { font-size: 14px; color: rgba(240,237,248,0.55); line-height: 1.6; }
+.benefit-text p { font-size: 14px; color: rgba(30,24,56,0.55); line-height: 1.6; }
 .benefit-highlight {
   text-align: center; flex-shrink: 0;
 }
@@ -189,7 +190,7 @@
   line-height: 1; letter-spacing: -2px;
 }
 .benefit-highlight .pct-label {
-  font-size: 13px; color: rgba(240,237,248,0.5); margin-top: 4px;
+  font-size: 13px; color: rgba(30,24,56,0.5); margin-top: 4px;
 }
 
 /* 섹션 헤더 */
@@ -202,7 +203,7 @@
 }
 .sec-title {
   font-size: clamp(22px, 3vw, 30px); font-weight: 700;
-  color: #F0EDF8; letter-spacing: -1px;
+  color: #1E1838; letter-spacing: -1px;
 }
 
 /* 비메오 카테고리 필터 */
@@ -212,34 +213,34 @@
 }
 .cat-btn {
   padding: 7px 16px; border-radius: 100px;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: 1px solid rgba(30,24,56,0.12);
   background: transparent;
-  font-size: 13px; color: rgba(240,237,248,0.6);
+  font-size: 13px; color: rgba(30,24,56,0.6);
   cursor: pointer; font-family: inherit;
   transition: all 0.18s;
 }
 .cat-btn:hover { border-color: var(--apex-gold); color: var(--apex-gold); }
 .cat-btn.active {
-  background: var(--apex-gold); color: #1A1820;
+  background: var(--apex-gold-fill); color: #1A1820;
   border-color: var(--apex-gold); font-weight: 600;
 }
 
 /* 영상 그리드 */
 /* ── 아코디언 ── */
-.acc-group { margin-bottom: 10px; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); }
+.acc-group { margin-bottom: 10px; border-radius: 10px; overflow: hidden; border: 1px solid rgba(30,24,56,0.08); }
 .acc-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 13px 18px; cursor: pointer;
-  background: rgba(255,255,255,0.04);
+  background: rgba(30,24,56,0.04);
   transition: background 0.15s;
 }
 .acc-header:hover { background: rgba(201,168,76,0.08); }
 .acc-header-left { display: flex; align-items: center; gap: 10px; }
 .acc-label { font-size: 14px; font-weight: 700; color: var(--off-white); }
 .acc-count { font-size: 11px; color: var(--muted); }
-.acc-arrow { color: var(--gold); font-size: 11px; transition: transform 0.2s; }
+.acc-arrow { color: var(--purple, #5B3FA6); font-size: 11px; transition: transform 0.2s; }
 .acc-arrow.open { transform: rotate(180deg); }
-.acc-body { display: none; padding: 12px; background: rgba(0,0,0,0.15); }
+.acc-body { display: none; padding: 12px; background: rgba(30,24,56,0.045); }
 .acc-body.open { display: block; }
 
 /* 아코디언 내부 목록 */
@@ -247,8 +248,8 @@
 .acc-video-item {
   display: flex; align-items: center; gap: 12px;
   padding: 10px 12px; border-radius: 8px; cursor: pointer;
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(30,24,56,0.03);
+  border: 1px solid rgba(30,24,56,0.06);
   transition: background 0.15s, border-color 0.15s;
 }
 .acc-video-item:hover { background: rgba(201,168,76,0.08); border-color: rgba(201,168,76,0.25); }
@@ -259,15 +260,15 @@
 .acc-thumb img { width: 100%; height: 100%; object-fit: cover; }
 .acc-play {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  background: rgba(0,0,0,0.35);
+  background: rgba(30,24,56,0.105);
 }
 .acc-play svg { fill: rgba(201,168,76,0.9); width: 16px; height: 16px; margin-left: 2px; }
 .acc-video-title { font-size: 13px; color: var(--off-white); line-height: 1.4; }
 .acc-video-meta  { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
 .video-card {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.07);
+  background: rgba(30,24,56,0.03);
+  border: 1px solid rgba(30,24,56,0.07);
   border-radius: 12px; overflow: hidden;
   transition: border-color 0.2s, transform 0.2s;
   cursor: pointer;
@@ -289,7 +290,7 @@
 .video-thumb-overlay {
   position: absolute; inset: 0;
   display: flex; align-items: center; justify-content: center;
-  background: rgba(0,0,0,0.3);
+  background: rgba(30,24,56,0.09);
   transition: opacity 0.2s;
 }
 .video-card:hover .video-thumb-overlay { opacity: 0; }
@@ -306,17 +307,17 @@
   margin-bottom: 6px;
 }
 .video-title {
-  font-size: 14px; font-weight: 600; color: #F0EDF8;
+  font-size: 14px; font-weight: 600; color: #1E1838;
   line-height: 1.4; margin-bottom: 6px;
 }
 .video-meta {
-  font-size: 12px; color: rgba(240,237,248,0.35);
+  font-size: 12px; color: rgba(30,24,56,0.35);
 }
 
 /* 로딩 */
 .loading-msg {
   text-align: center; padding: 60px 0;
-  color: rgba(240,237,248,0.35); font-size: 14px;
+  color: rgba(30,24,56,0.35); font-size: 14px;
 }
 
 /* 모달 */
@@ -329,22 +330,22 @@
 .video-modal.open { display: flex; }
 .modal-inner {
   width: 100%; max-width: 900px;
-  background: #1A1820;
+  background: #FFFFFF;
   border: 1px solid var(--apex-border);
   border-radius: 16px; overflow: hidden;
 }
 .modal-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px 20px;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
+  border-bottom: 1px solid rgba(30,24,56,0.07);
 }
-.modal-title { font-size: 15px; font-weight: 600; color: #F0EDF8; }
+.modal-title { font-size: 15px; font-weight: 600; color: #1E1838; }
 .modal-close {
-  background: none; border: none; color: rgba(240,237,248,0.5);
+  background: none; border: none; color: rgba(30,24,56,0.5);
   font-size: 22px; cursor: pointer; line-height: 1; padding: 0 4px;
   transition: color 0.15s;
 }
-.modal-close:hover { color: #F0EDF8; }
+.modal-close:hover { color: #1E1838; }
 .modal-video { aspect-ratio: 16/9; }
 .modal-video iframe { width: 100%; height: 100%; border: none; display: block; }
 
@@ -358,7 +359,7 @@
 <body>
 
 <nav>
-  <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#F0EDF8;flex-shrink:0;">
+  <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#1E1838;flex-shrink:0;">
     <img src="swc-logo.svg" style="height:30px;width:30px;object-fit:contain;" alt="SWC">
     <span style="font-size:13px;font-weight:600;">송우찬수학학원</span>
   </a>
@@ -369,7 +370,7 @@
     <li><a href="textbook.html">교재소개</a></li>
     <li><a href="curriculum.html">커리큘럼</a></li>
     <li><a href="interview.html">졸업생 인터뷰</a></li>
-    <li><a href="apex.html" style="color:var(--gold);">Apex관</a></li>
+    <li><a href="apex.html" style="color:var(--purple, #5B3FA6);">Apex관</a></li>
   </ul>
   <div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">
     <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="메뉴">
@@ -384,7 +385,7 @@
   <a href="textbook.html">교재소개</a>
   <a href="curriculum.html">커리큘럼</a>
   <a href="interview.html">졸업생 인터뷰</a>
-  <a href="apex.html" style="color:var(--gold);">Apex관</a>
+  <a href="apex.html" style="color:var(--purple, #5B3FA6);">Apex관</a>
 </div>
 
 <!-- ── 히어로 (인증 전) ── -->
@@ -456,7 +457,7 @@
       <div class="sec-header">
         <div class="sec-eyebrow">MATH LECTURE</div>
         <div class="sec-title">기출해설 강의</div>
-        <p style="font-size:13px;color:rgba(240,237,248,0.5);margin-top:8px;">송우찬수학학원 기출해설 영상 중 Apex 전용 공개 강의입니다.</p>
+        <p style="font-size:13px;color:rgba(30,24,56,0.5);margin-top:8px;">송우찬수학학원 기출해설 영상 중 Apex 전용 공개 강의입니다.</p>
       </div>
       <!-- 기출해설: 아코디언 -->
       <div id="videoGrid1"></div>
@@ -467,7 +468,7 @@
       <div class="sec-header">
         <div class="sec-eyebrow">APEX LECTURE</div>
         <div class="sec-title">Apex 영어 강의</div>
-        <p style="font-size:13px;color:rgba(240,237,248,0.5);margin-top:8px;">Apex영어학원에서 직접 제공하는 전용 영상 강의입니다.</p>
+        <p style="font-size:13px;color:rgba(30,24,56,0.5);margin-top:8px;">Apex영어학원에서 직접 제공하는 전용 영상 강의입니다.</p>
       </div>
       <div class="cat-filter" id="catFilter2">
         <button class="cat-btn active" data-cat="all" onclick="filterCat2(this,'all')">전체</button>
@@ -480,11 +481,11 @@
     <footer>
       <div class="footer-logo">
         <img src="swc-logo.svg" style="height:26px;width:26px;object-fit:contain;opacity:0.8;" alt="SWC">
-        <span style="color:#F0EDF8;"><b>송우찬수학학원</b></span>
+        <span style="color:#1E1838;"><b>송우찬수학학원</b></span>
       </div>
       <div class="footer-info">
-        <span style="color:var(--gold);font-weight:600;">평촌관</span> 경기도 안양시 동안구 평촌대로 117 맵시프라자 4층 &nbsp;|&nbsp; <a href="tel:031-386-8899" style="color:inherit;text-decoration:none;">031-386-8899</a><br>
-        <span style="color:var(--gold);font-weight:600;">산본관</span> 경기도 군포시 산본로 390 5층 &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:inherit;text-decoration:none;">031-346-8899</a><br>
+        <span style="color:var(--purple, #5B3FA6);font-weight:600;">평촌관</span> 경기도 안양시 동안구 평촌대로 117 맵시프라자 4층 &nbsp;|&nbsp; <a href="tel:031-386-8899" style="color:inherit;text-decoration:none;">031-386-8899</a><br>
+        <span style="color:var(--purple, #5B3FA6);font-weight:600;">산본관</span> 경기도 군포시 산본로 390 5층 &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:inherit;text-decoration:none;">031-346-8899</a><br>
         <span style="font-size:11px;opacity:0.55;">(주) 판수학 &nbsp;|&nbsp; 대표 조현주 &nbsp;|&nbsp; 사업자등록번호 828-86-01755</span><br>
         <span style="font-size:11px;opacity:0.45;">© Copyright 2026 송우찬수학학원. All Rights Reserved.</span>
       </div>
