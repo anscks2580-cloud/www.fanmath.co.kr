@@ -53,6 +53,7 @@
     { id: 'notice', label: '공지 · 일정', icon: '📢', items: [
       { id: 'notice',    label: '공지사항',      desc: '학부모 앱 공지 발송', keywords: ['공지', '공지사항', '안내', '알림', '학부모', '앱'] },
       { id: 'schedule',  label: '학원 일정',     desc: '휴무 · 시험기간 · 선생님 할 일', keywords: ['일정', '달력', '캘린더', '스케줄', '회의', '휴무', '휴강', '설명회', '시험기간', '할일', '할 일', '선생님 일정', '공휴일'] },
+      { id: 'meetingdocs', label: '회의 자료',   desc: 'PDF 업로드 → 선생님 포털 미리보기', keywords: ['회의', '회의자료', '회의 자료', '회의록', '전체회의', '교무회의', '선생님 회의', 'pdf', '자료'] },
       { id: 'homepopup', label: '홈페이지 팝업', desc: '홈페이지 첫 화면 팝업', keywords: ['팝업', '홈페이지', '메인', '배너', 'popup', '공지팝업', '이벤트'] },
     ] },
     { id: 'settings', label: '설정', icon: '⚙️', items: [

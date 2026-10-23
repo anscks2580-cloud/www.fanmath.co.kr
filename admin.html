@@ -102,6 +102,7 @@
     <button class="admin-tab" onclick="switchTab('seminar',this);initSeminarTab()">🎓 설명회 신청</button>
     <button class="admin-tab" onclick="switchTab('notice',this);initNoticeTab()">📢 공지사항</button>
     <button class="admin-tab" onclick="switchTab('schedule',this);initScheduleTab()">📅 학원 일정</button>
+    <button class="admin-tab" onclick="switchTab('meetingdocs',this);initMeetingDocsTab()">🗒 회의 자료</button>
     <button class="admin-tab" onclick="switchTab('homepopup',this);initHomePopupTab()">🪟 홈페이지 팝업</button>
   </div>
 
@@ -528,6 +529,32 @@
     <div class="card">
       <h3>🎬 등록된 홍보영상 (<span id="promoVideoCount">0</span>개) <span style="font-size:12px;font-weight:400;color:var(--muted);">— 위에서부터 순서대로 재생됩니다</span></h3>
       <div id="promoVideoList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <!-- ══ 🗒 회의 자료 (선생님 포털 미리보기 전용 · Firestore meetingDocs + Storage meetingDocs/{id}.pdf) ══ -->
+  <div class="tab-panel" id="tab-meetingdocs">
+    <div class="card">
+      <h3>+ 회의 자료 올리기</h3>
+      <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:14px;">
+        PDF로 올리면 선생님 포털 <span style="color:var(--off-white);">자료실 › 회의 자료</span>에서 화면 안 미리보기로만 볼 수 있습니다 (다운로드 버튼 없음).
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>회의 날짜</label><input type="date" id="mta-date" style="color-scheme:light;"></div>
+        <div class="form-group"><label>제목</label><input type="text" id="mta-title" placeholder="예: 10월 전체 회의"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px;"><label>메모 (선택)</label><textarea id="mta-memo" rows="2" placeholder="선생님들께 함께 보여줄 짧은 안내"></textarea></div>
+      <input type="file" id="mta-file" accept=".pdf,application/pdf" onchange="mtaOnFile(this)" style="margin-bottom:12px;color:var(--muted);font-size:13px;">
+      <div><button class="btn btn-primary" id="mta-btn" onclick="mtaUpload()">업로드</button></div>
+      <div class="msg" id="mta-msg"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <span>🗒 올라간 회의 자료</span>
+        <button class="btn btn-secondary btn-sm" onclick="mtaLoadList()">새로고침</button>
+      </h3>
+      <div id="mta-list"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
     </div>
   </div>
 
@@ -2301,6 +2328,7 @@
 <script defer src="admin/js/seminar.js"></script>
 <script defer src="admin/js/videocode.js"></script>
 <script defer src="admin/js/schedule.js"></script>
+<script defer src="admin/js/meetings.js"></script>
 <script defer src="admin/js/pastexams.js"></script>
 <script defer src="admin/js/textbooks.js"></script>
 <script defer src="admin/js/vimeo-upload.js"></script>

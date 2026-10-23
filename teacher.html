@@ -49,6 +49,26 @@
 .px-file:hover { border-color:rgba(245,197,24,0.45); color:var(--purple, #5B3FA6); }
 .px-file span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .px-rows { border:1px solid var(--border-soft); border-radius:10px; background:rgba(30,24,56,0.025); padding:4px 10px; }
+/* ── 회의 자료 ── */
+.mt-row { display:flex; align-items:flex-start; gap:12px; padding:14px 6px; border-radius:10px; }
+.mt-row + .mt-row { border-top:1px solid var(--border-soft); }
+.mt-row:hover { background:rgba(30,24,56,0.03); }
+.mt-info { flex:1; min-width:0; }
+.mt-date { font-size:12px; font-weight:600; color:var(--purple, #5B3FA6); margin-bottom:2px; }
+.mt-title { font-size:15px; font-weight:700; color:var(--off-white); word-break:keep-all; }
+.mt-memo { font-size:13px; color:var(--muted); margin-top:4px; white-space:pre-wrap; line-height:1.6; }
+.mt-new { display:inline-block; margin-left:6px; font-size:10.5px; font-weight:700; padding:1px 7px; border-radius:999px; background:var(--gold); color:var(--on-gold, #2A1E55); vertical-align:2px; }
+.mt-view { position:fixed; inset:0; z-index:2000; background:rgba(30,24,56,0.72); display:none; flex-direction:column; }
+.mt-view.open { display:flex; }
+.mt-bar { display:flex; align-items:center; gap:10px; padding:10px 16px; background:#fff; border-bottom:1px solid var(--border-soft); flex-shrink:0; }
+.mt-bar .t { flex:1; min-width:0; font-size:14px; font-weight:700; color:var(--off-white); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mt-bar .pg { font-size:12px; color:var(--muted); white-space:nowrap; }
+.mt-bar button { min-width:34px; height:34px; padding:0 10px; border-radius:8px; border:1px solid var(--border-soft); background:#fff; color:var(--off-white); font-size:15px; font-family:inherit; cursor:pointer; }
+.mt-bar button:hover { border-color:var(--gold); }
+.mt-pages { flex:1; overflow:auto; padding:18px 12px 40px; -webkit-overflow-scrolling:touch; }
+.mt-pages canvas { display:block; margin:0 auto 14px; background:#fff; box-shadow:0 4px 18px rgba(30,24,56,0.25); max-width:none; -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+.mt-wait { color:#fff; text-align:center; font-size:14px; padding:40px 0; }
+@media print { .mt-view { display:none !important; } }
 .px-empty { color:var(--muted); font-size:13px; padding:24px 0; text-align:center; }
 .px-meta { font-size:12px; color:var(--muted); margin-bottom:6px; }
 /* ── 📘 시중교재 ── */
@@ -435,6 +455,7 @@ select option:disabled { color:#6B6489; }
     <button class="teacher-tab" onclick="switchTab('clinic',this);initClinicTab()">토요클리닉</button>
     <button class="teacher-tab" onclick="switchTab('videos',this);loadTeacherVideos()">강의 목록</button>
     <button class="teacher-tab" onclick="switchTab('myroom',this);mrLoad()">보충강의실 영상 업로드</button>
+    <button class="teacher-tab" onclick="switchTab('meetingdocs',this);initMeetingDocsTab()">회의 자료</button>
     <button class="teacher-tab" onclick="switchTab('pastexams',this);initPastExamsTab()">기출문제</button>
     <button class="teacher-tab" onclick="switchTab('textbooks',this);initTextbooksTab()">시중교재</button>
     <button class="teacher-tab" onclick="switchTab('watchstatus',this);initTeacherWatchStatus()">학생 시청현황</button>
@@ -1213,6 +1234,17 @@ select option:disabled { color:#6B6489; }
   </div>
 
   <!-- ══ 탭: 전임강사 매뉴얼 ══ -->
+  <!-- ══ 🗒 회의 자료 (관리자가 올린 PDF · 미리보기 전용) ══ -->
+  <div class="tab-panel" id="tab-meetingdocs">
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;">
+        <span>🗒 회의 자료</span>
+        <button class="btn btn-outline btn-sm" onclick="initMeetingDocsTab(true)">새로고침</button>
+      </div>
+      <div id="mtList"><div class="px-empty">불러오는 중...</div></div>
+    </div>
+  </div>
+
   <!-- ══ 📚 기출문제 ══ -->
   <div class="tab-panel" id="tab-pastexams">
     <div class="card">
@@ -1278,6 +1310,154 @@ select option:disabled { color:#6B6489; }
 
 </main>
 </div><!-- /portalScreen -->
+
+<!-- ══════════ 🗒 회의 자료 미리보기 (다운로드 없음) ══════════ -->
+<div class="mt-view" id="mtView" oncontextmenu="return false">
+  <div class="mt-bar">
+    <div class="t" id="mtViewTitle"></div>
+    <span class="pg" id="mtViewPg"></span>
+    <button type="button" onclick="mtZoom(-1)" aria-label="축소">－</button>
+    <button type="button" onclick="mtZoom(1)" aria-label="확대">＋</button>
+    <button type="button" onclick="mtClose()" aria-label="닫기">✕</button>
+  </div>
+  <div class="mt-pages" id="mtPages"></div>
+</div>
+<script type="module">
+// ══════════════════════════════════════
+// 🗒 회의 자료 — Firestore meetingDocs + Storage meetingDocs/{id}.pdf
+// (업로드·수정·삭제는 admin.html "회의 자료", 선생님은 화면 안 미리보기만)
+// ══════════════════════════════════════
+import { getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+// 앱 초기화는 아래 본 스크립트에서 하므로, 쓸 때 가져옴
+const fdb = () => getFirestore(getApp());
+const fst = () => getStorage(getApp());
+const $ = (id) => document.getElementById(id);
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+let list = null;
+
+function dateLabel(ymd) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd || '')) return ymd || '';
+  const [y, m, d] = ymd.split('-').map(Number);
+  return `${y}. ${m}. ${d}. (${'일월화수목금토'[new Date(y, m - 1, d).getDay()]})`;
+}
+
+window.initMeetingDocsTab = async function (force = false) {
+  const box = $('mtList');
+  if (list && !force) { render(); return; }
+  box.innerHTML = '<div class="px-empty">불러오는 중...</div>';
+  try {
+    const snap = await getDocs(collection(fdb(), 'meetingDocs'));
+    list = [];
+    snap.forEach((d) => list.push({ id: d.id, ...d.data() }));
+  } catch (e) {
+    list = null;
+    box.innerHTML = `<div class="px-empty">불러오지 못했습니다 (${esc(e.code || e.message)})</div>`;
+    return;
+  }
+  list.sort((a, b) => (b.date || '').localeCompare(a.date || '') || ((b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0)));
+  render();
+};
+
+function render() {
+  const box = $('mtList');
+  if (!list.length) { box.innerHTML = '<div class="px-empty">아직 올라온 회의 자료가 없습니다.</div>'; return; }
+  const weekAgo = Date.now() / 1000 - 7 * 86400;
+  box.innerHTML = `<div class="px-meta">총 ${list.length}개</div>` + list.map((m) => `
+    <div class="mt-row">
+      <div class="mt-info">
+        <div class="mt-date">${esc(dateLabel(m.date))}</div>
+        <div class="mt-title">📄 ${esc(m.title)}${(m.createdAt?.seconds || 0) > weekAgo ? '<span class="mt-new">NEW</span>' : ''}</div>
+        ${m.memo ? `<div class="mt-memo">${esc(m.memo)}</div>` : ''}
+      </div>
+      <button class="tb-btn dl" data-id="${esc(m.id)}" onclick="mtOpen(this.dataset.id)">미리보기</button>
+    </div>`).join('');
+}
+
+// ── 미리보기: pdf.js로 페이지를 그림으로 그려서 보여줌 (파일 주소·다운로드 버튼 노출 없음) ──
+let pdfjsPromise = null;
+function loadPdfjs() {
+  if (!pdfjsPromise) {
+    pdfjsPromise = import('https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs').then((lib) => {
+      lib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
+      return lib;
+    });
+  }
+  return pdfjsPromise;
+}
+let cur = null;      // { pdf, scale, token }
+let token = 0;
+
+async function drawAll() {
+  const my = ++token;
+  const box = $('mtPages');
+  const keep = box.scrollHeight ? box.scrollTop / box.scrollHeight : 0;
+  box.innerHTML = '';
+  const width = Math.min(box.clientWidth - 24, 1000);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  for (let p = 1; p <= cur.pdf.numPages; p++) {
+    if (my !== token) return;
+    const page = await cur.pdf.getPage(p);
+    const base = page.getViewport({ scale: 1 });
+    const scale = (width / base.width) * cur.scale;
+    const vp = page.getViewport({ scale: scale * dpr });
+    const c = document.createElement('canvas');
+    c.width = vp.width; c.height = vp.height;
+    c.style.width = (vp.width / dpr) + 'px'; c.style.height = (vp.height / dpr) + 'px';
+    box.appendChild(c);
+    await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    if (p === 1 && keep) box.scrollTop = keep * box.scrollHeight;
+  }
+}
+
+window.mtOpen = async function (id) {
+  const m = (list || []).find((x) => x.id === id);
+  if (!m) return;
+  $('mtViewTitle').textContent = m.title || '';
+  $('mtViewPg').textContent = '';
+  $('mtPages').innerHTML = '<div class="mt-wait">불러오는 중...</div>';
+  $('mtView').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  try {
+    const [lib, url] = await Promise.all([loadPdfjs(), getDownloadURL(ref(fst(), m.path))]);
+    let data;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      data = new Uint8Array(await res.arrayBuffer());
+    } catch (fe) {
+      // 파일을 직접 받지 못하는 환경이면 브라우저 기본 보기로 (도구 막대 숨김)
+      if (!$('mtView').classList.contains('open')) return;
+      $('mtViewPg').textContent = '';
+      $('mtPages').innerHTML = `<iframe src="${esc(url)}#toolbar=0&navpanes=0" style="width:100%;height:100%;border:0;background:#fff;border-radius:8px;"></iframe>`;
+      return;
+    }
+    const CDN = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/';
+    const pdf = await lib.getDocument({ data, cMapUrl: CDN + 'cmaps/', cMapPacked: true, standardFontDataUrl: CDN + 'standard_fonts/' }).promise;
+    if (!$('mtView').classList.contains('open')) return;
+    cur = { pdf, scale: 1 };
+    $('mtViewPg').textContent = `${pdf.numPages}쪽`;
+    await drawAll();
+  } catch (e) {
+    $('mtPages').innerHTML = `<div class="mt-wait">자료를 열지 못했습니다 (${esc(e.code || e.message)})</div>`;
+  }
+};
+window.mtZoom = function (d) {
+  if (!cur) return;
+  cur.scale = Math.min(3, Math.max(0.5, +(cur.scale + d * 0.25).toFixed(2)));
+  drawAll();
+};
+window.mtClose = function () {
+  token++;
+  $('mtView').classList.remove('open');
+  $('mtPages').innerHTML = '';
+  document.body.style.overflow = '';
+  if (cur) { try { cur.pdf.destroy(); } catch (_) {} cur = null; }
+};
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('mtView').classList.contains('open')) mtClose(); });
+</script>
 
 <!-- ══════════ Firebase + 로직 ══════════ -->
 <script type="module">
@@ -5115,6 +5295,7 @@ window.addEventListener('message', (e) => { if (e.data && e.data.type === 'pcRea
       { id: 'watchstatus', label: '학생 시청현황',    desc: '담당 학생 시청 기록' },
     ] },
     { id: 'library', label: '자료실', icon: '📚', items: [
+      { id: 'meetingdocs', label: '회의 자료', desc: '관리자가 올린 회의 PDF (미리보기)' },
       { id: 'pastexams', label: '기출문제', desc: '시험명 › 학년 › 지역 PDF' },
       { id: 'textbooks', label: '시중교재', desc: '학교급 › 학년 › 교재 PDF' },
     ] },
