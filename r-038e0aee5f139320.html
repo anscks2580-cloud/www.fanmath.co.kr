@@ -11,14 +11,12 @@
 /* ═══════════════════════════════════════════════════════════
    원장 페이지 — 학원 마감·보고를 한눈에 (보기 전용)
    - 링크로만 들어오는 비공개 페이지: 어디에도 연결하지 않음. 지정된 원장 계정(DR_ALLOW)만 입장,
-     그 외(로그아웃 상태·다른 관리자·선생님 등)에게는 '페이지 없음' 화면만 보임
+     이 페이지 자체에 로그인 화면이 있고, 지정 이메일(DR_ALLOW)만 로그인 가능
    - 고치기는 각 항목의 "관리자 화면에서 고치기" → admin.html#메뉴
    ═══════════════════════════════════════════════════════════ */
 :root { --red:#D64545; --red-bg:rgba(214,69,69,0.08); --green:#2E9E5B; --green-bg:rgba(46,158,91,0.08); --amber:#D97B1A; --amber-bg:rgba(217,123,26,0.09); }
 body { background:var(--bg); }
 body.dr-locked nav.dr-top { display:none; }
-.dr-404 { min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; color:#555; background:#fff; }
-.dr-404 b { font-size:64px; color:#ccc; font-weight:300; line-height:1; }
 nav.dr-top { padding:0 20px; gap:14px; justify-content:flex-start; }
 .dr-brand { display:inline-flex; align-items:center; gap:9px; text-decoration:none; color:var(--off-white); flex-shrink:0; }
 .dr-brand img { height:30px; width:30px; object-fit:contain; }
@@ -176,6 +174,11 @@ a.lk:hover { text-decoration:underline; }
 .gate { max-width:420px; margin:140px auto; background:#fff; border:1px solid var(--border-soft); border-radius:16px; padding:36px 28px; text-align:center; }
 .gate h2 { font-size:18px; margin-bottom:8px; }
 .gate p { font-size:13.5px; color:var(--muted); margin-bottom:18px; }
+.dr-login input { width:100%; padding:12px 14px; margin-bottom:10px; border:1px solid var(--border-soft, rgba(30,24,56,0.15)); border-radius:10px; font-size:14px; font-family:inherit; background:#fff; color:#1E1838; outline:none; }
+.dr-login input:focus { border-color:var(--purple, #5B3FA6); }
+.dr-login button { width:100%; padding:12px; border:0; border-radius:10px; background:var(--purple, #5B3FA6); color:#fff; font-size:14px; font-weight:700; font-family:inherit; cursor:pointer; }
+.dr-login button:disabled { opacity:.6; }
+.dr-login .err { min-height:18px; font-size:12.5px; color:#D64545; margin:2px 0 8px; text-align:left; }
 .holiday { background:var(--amber-bg); color:var(--amber); border:1px solid rgba(217,123,26,0.25); border-radius:10px; padding:10px 14px; font-size:13px; font-weight:600; margin-bottom:14px; }
 
 @media (max-width:640px){
@@ -276,7 +279,7 @@ a.lk:hover { text-decoration:underline; }
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, signOut, onAuthStateChanged, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, doc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const app = initializeApp({
@@ -355,7 +358,7 @@ window.drDayMove = (n) => { S.day = ymd(addDays(parseYmd(S.day), n)); renderDay(
 window.drDaySet = (v) => { if (v) { S.day = v; renderDay(); } };
 window.drWeekMove = (n) => { S.weekMon = addDays(S.weekMon, 7 * n); renderWeek(); };
 window.drMonthMove = (n) => { const [y, m] = S.month.split('-').map(Number); S.month = monthKey(new Date(y, m - 1 + n, 1)); renderMonth(); };
-window.drLogout = async () => { await signOut(auth); location.replace('login.html'); };
+window.drLogout = async () => { await signOut(auth); location.reload(); };
 window.drJump = (tab, anchor) => { drTab(tab); if (anchor) setTimeout(() => { const el = $(anchor); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60); };
 
 // ── 기본 데이터 ──
@@ -762,17 +765,42 @@ async function renderAll() {
 // 원장이 쓰는 관리자 계정 2개(로그인 이메일 기준) — 추가하려면 여기에 이메일을 넣으면 됨
 const DR_ALLOW = ['smc1823@nate.com', 'dncksfly@naver.com'];
 function gate(html) { $('drMain').style.display = 'none'; const g = $('drGate'); g.innerHTML = html; g.style.display = 'block'; }
-function notFound() {
-  document.title = '404';
-  document.body.className = '';
-  document.body.innerHTML = '<div class="dr-404"><b>404</b><div>페이지를 찾을 수 없습니다.</div></div>';
+// 로그인 화면 — 지정된 원장 계정 이메일만 로그인 가능
+function showLogin(msg) {
+  document.title = '로그인 | 송우찬수학학원';
+  document.body.classList.add('dr-locked');
+  $('drMain').style.display = 'none';
+  gate(`<h2>로그인</h2><p>관리자 계정으로 로그인해 주세요.</p>
+    <form class="dr-login" id="drLoginForm" autocomplete="on">
+      <input type="email" id="drEmail" placeholder="이메일" autocomplete="username" required>
+      <input type="password" id="drPw" placeholder="비밀번호" autocomplete="current-password" required>
+      <div class="err" id="drLoginErr">${esc(msg || '')}</div>
+      <button type="submit" id="drLoginBtn">로그인</button>
+    </form>`);
+  const form = $('drLoginForm');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = $('drEmail').value.trim().toLowerCase(), pw = $('drPw').value;
+    const err = $('drLoginErr'), btn = $('drLoginBtn');
+    if (!DR_ALLOW.includes(email)) { err.textContent = '이메일 또는 비밀번호를 확인해 주세요.'; return; }
+    btn.disabled = true; btn.textContent = '로그인 중...';
+    try {
+      await setPersistence(auth, browserLocalPersistence);
+      await signInWithEmailAndPassword(auth, email, pw);   // 성공하면 아래 onAuthStateChanged가 화면을 엶
+    } catch (e2) {
+      err.textContent = '이메일 또는 비밀번호를 확인해 주세요.';
+      btn.disabled = false; btn.textContent = '로그인';
+    }
+  });
+  setTimeout(() => $('drEmail')?.focus(), 50);
 }
 onAuthStateChanged(auth, async (user) => {
-  if (!user || !DR_ALLOW.includes(String(user.email || '').toLowerCase())) { notFound(); return; }
+  // 로그아웃 상태이거나 지정 계정이 아니면 로그인 화면 (다른 계정 로그인 상태는 건드리지 않음)
+  if (!user || !DR_ALLOW.includes(String(user.email || '').toLowerCase())) { showLogin(); return; }
   let a;
   try { const s = await getDoc(doc(db, 'admins', user.uid)); a = s.exists() ? s.data() : null; }
-  catch (e) { notFound(); return; }
-  if (!a) { notFound(); return; }
+  catch (e) { showLogin('확인 중 오류가 났습니다. 다시 시도해 주세요.'); return; }
+  if (!a) { await signOut(auth); showLogin('이메일 또는 비밀번호를 확인해 주세요.'); return; }
   document.body.classList.remove('dr-locked');
   document.title = '원장 페이지 | 송우찬수학학원';
   $('drWho').textContent = (a.name || user.email) + ' 원장';
