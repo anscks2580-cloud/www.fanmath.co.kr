@@ -2931,7 +2931,7 @@ let clinicStudentsAll = [];
 let clinicSelectedId   = '';
 let clinicSelectedName = '';
 
-// 토요일 목록: 오늘 기준 가장 최근 토요일부터 8주 — 선생님이 어느 토요일인지 직접 고름
+// 토요일 목록: 이번 주 토요일(기본 선택) ~ 2주 뒤 토요일, 아래에 지난 토요일 2개(늦게 입력할 때)
 const CLINIC_DOW = ['일','월','화','수','목','금','토'];
 function clinicYmd(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function clinicSatLabel(ymd) {
@@ -2943,22 +2943,18 @@ function fillClinicSaturdays(sel) {
   if (!sel) return;
   const keep = sel.value;
   const today = new Date(); today.setHours(0,0,0,0);
-  const isSat = today.getDay() === 6;
-  const last = new Date(today); last.setDate(today.getDate() - ((today.getDay() + 1) % 7));
-  let html = '<option value="">토요일 선택...</option>';
-  for (let i = 0; i < 8; i++) {
-    const d = new Date(last); d.setDate(last.getDate() - 7 * i);
-    const w = i + (isSat ? 0 : 1);
-    const tag = w === 0 ? '오늘' : w === 1 ? '지난 토요일' : `${w}주 전`;
-    const ymd = clinicYmd(d);
-    html += `<option value="${ymd}">${clinicSatLabel(ymd)} · ${tag}</option>`;
-  }
+  const thisSat = new Date(today); thisSat.setDate(today.getDate() + ((6 - today.getDay() + 7) % 7));   // 오늘이 토요일이면 오늘
+  const satAt = (w) => { const d = new Date(thisSat); d.setDate(thisSat.getDate() + 7 * w); return clinicYmd(d); };
+  const isToday = clinicYmd(thisSat) === clinicYmd(today);
+  const opt = (ymd, tag) => `<option value="${ymd}">${clinicSatLabel(ymd)} · ${tag}</option>`;
+  let html = opt(satAt(0), isToday ? '이번 주 (오늘)' : '이번 주') + opt(satAt(1), '다음 주') + opt(satAt(2), '2주 뒤');
+  html += '<optgroup label="지난 토요일 (늦게 입력할 때)">' + opt(satAt(-1), '지난주') + opt(satAt(-2), '2주 전') + '</optgroup>';
   sel.innerHTML = html;
-  if (keep && [...sel.options].some(o => o.value === keep)) sel.value = keep;
+  sel.value = (keep && [...sel.options].some(o => o.value === keep)) ? keep : satAt(0);
 }
 
 window.initClinicTab = function() {
-  // 어느 토요일인지 매번 직접 고르도록 — 기본 선택 없음
+  // 토요일 선택: 기본은 이번 주 토요일
   fillClinicSaturdays(document.getElementById('c-date'));
   fillClinicSaturdays(document.getElementById('c-none-date'));
 
