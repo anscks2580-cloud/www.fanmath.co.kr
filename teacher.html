@@ -2757,7 +2757,15 @@ const hwClsKey = (c) => { const m = String(c || '').match(/^(초|중|고)\s*(\d)
 const hwYmd = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const hwLabel = (ymd) => { const d = new Date(ymd + 'T00:00:00'); return `${d.getMonth()+1}월 ${d.getDate()}일 (${HW_DOW[d.getDay()]})`; };
 let hwCls = '';
-let hwRows = [];      // 내 숙제 기록 전체 (teacherUid == 나)
+let hwRows = [];
+// 관: 숙제 받는 학생들이 속한 관(다수) — 관리부 숙제표가 평촌관·산본관 따로 나뉨
+function hwBranchOf(ids) {
+  const cnt = {};
+  ids.forEach(id => { const b = studentsCache.find(s => s.id === id)?.branch; if (b) cnt[b] = (cnt[b] || 0) + 1; });
+  const top = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0];
+  return top ? top[0] : (currentTeacher?.branch || '');
+}
+const hwMultiBranch = () => new Set(myStudents.map(s => s.branch).filter(Boolean)).size > 1;      // 내 숙제 기록 전체 (teacherUid == 나)
 let hwEditing = null; // 수정 중인 문서 ID
 
 window.hwInit = async function () {
@@ -2786,14 +2794,16 @@ function hwRenderClasses() {
   const m = new Map();
   myStudents.forEach(s => {
     const c = hwClsOf(s);
-    const o = m.get(c) || { n: 0, today: false };
+    const o = m.get(c) || { n: 0, today: false, br: new Set() };
     o.n++; if ((s.days || []).includes(dayName)) o.today = true;
+    if (s.branch) o.br.add(s.branch);
     m.set(c, o);
   });
+  const multi = hwMultiBranch();
   const list = [...m.entries()].sort((a, b) => hwClsKey(a[0]) - hwClsKey(b[0]) || a[0].localeCompare(b[0], 'ko'));
   if (!list.length) { el.innerHTML = '<span style="font-size:12px;color:var(--muted);">담당 학생이 없습니다.</span>'; return; }
   const done = new Set(hwRows.filter(r => r.date === date).map(r => String(r.classGroup || '').trim() || '(반 미배정)'));
-  el.innerHTML = list.map(([c, o]) => `<button type="button" class="rating-btn${hwCls === c ? ' selected' : ''}" data-cls="${hwEsc(c)}" onclick="hwPick(this.dataset.cls)">${o.today ? '<span style="color:#D97B1A;">●</span> ' : ''}${hwEsc(c)} <small style="opacity:.7;">${o.n}명</small>${done.has(c) ? ' <b style="color:#2E9E5B;">✓</b>' : ''}</button>`).join('');
+  el.innerHTML = list.map(([c, o]) => `<button type="button" class="rating-btn${hwCls === c ? ' selected' : ''}" data-cls="${hwEsc(c)}" onclick="hwPick(this.dataset.cls)">${o.today ? '<span style="color:#D97B1A;">●</span> ' : ''}${multi && o.br.size ? `<small style="opacity:.75;">[${[...o.br].map(b => b.replace('관', '')).join('·')}]</small> ` : ''}${hwEsc(c)} <small style="opacity:.7;">${o.n}명</small>${done.has(c) ? ' <b style="color:#2E9E5B;">✓</b>' : ''}</button>`).join('');
 }
 
 window.hwPick = function (c) {
@@ -2831,7 +2841,7 @@ window.hwSave = async function () {
   if (!content)     { showAlert(err, '숙제 내용을 적어주세요.', 'err'); return; }
   const names = ids.map(id => studentsCache.find(s => s.id === id)?.name || '');
   const data = {
-    date, teacherUid: currentTeacher.uid, teacherName: currentTeacher.name || '',
+    date, branch: hwBranchOf(ids), teacherUid: currentTeacher.uid, teacherName: currentTeacher.name || '',
     classGroup: hwCls, studentIds: ids, studentNames: names, content,
     updatedAt: new Date().toISOString(), updatedBy: (currentTeacher.name || '') + ' 선생님',
   };
@@ -2896,7 +2906,7 @@ function hwRenderList() {
     return head + `<div class="history-item" style="padding:12px 16px;border-bottom:1px solid rgba(30,24,56,0.05);">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
         <div style="min-width:0;">
-          <span style="font-weight:700;color:var(--purple, #5B3FA6);">${hwEsc(r.classGroup)}</span>${by}
+          ${hwMultiBranch() ? `<span style="font-size:11px;color:var(--muted);margin-right:4px;">[${hwEsc(r.branch || hwBranchOf(r.studentIds || []))}]</span>` : ''}<span style="font-weight:700;color:var(--purple, #5B3FA6);">${hwEsc(r.classGroup)}</span>${by}
           <span style="font-size:12px;color:var(--muted);margin-left:6px;">${(r.studentNames || []).length}명</span>
           <div style="font-size:13px;margin-top:4px;white-space:pre-wrap;">${hwEsc(r.content)}</div>
           <div style="font-size:11.5px;color:var(--muted);margin-top:3px;">${(r.studentNames || []).map(hwEsc).join(', ')}</div>

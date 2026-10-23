@@ -5,12 +5,51 @@
    - homeworkLogs/{자동ID}: { date, teacherUid, teacherName, classGroup, studentIds[], studentNames[], content }
    - 학부모 페이지 "숙제" 탭에서 자기 아이가 포함된 기록만 날짜순으로 보임
    - 선생님 페이지 「숙제 입력」에서도 본인 반 숙제를 같은 컬렉션에 저장(source:'teacher') → 이 표에 날짜별로 자동 반영
+   - 관 구분(평촌관/산본관): 숙제를 받는 학생들이 속한 관 기준. 저장 시 branch 필드로 기록,
+     branch가 없는 예전 기록은 학생 명단(studentIds)의 관으로 판정 → 관별로 따로 조회·마감 이미지
    ═══════════════════════════════════════════════════════════ */
 const hlEsc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const hlClsKey = (c) => { const m = String(c || '').match(/^(초|중|고)\s*(\d)/); return m ? ({ 초: 0, 중: 1, 고: 2 }[m[1]] * 10 + parseInt(m[2], 10)) : 99; };
 const hlClsCmp = (a, b) => hlClsKey(a) - hlClsKey(b) || String(a || '').localeCompare(String(b || ''), 'ko');
 const hlToday = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; };
 let hlSel = { teacherUid: '', cls: '' };
+let hlBranch = '평촌관';
+try { const b = localStorage.getItem('swc_hl_branch'); if (b === '평촌관' || b === '산본관') hlBranch = b; } catch (e) {}
+// 숙제 기록의 관: 저장된 branch → 학생들의 관(다수) → 담당 선생님의 관
+function hlLogBranch(r) {
+  if (r.branch) return r.branch;
+  const cnt = {};
+  (r.studentIds || []).forEach((id) => { const b = studentsCache.find((s) => s.id === id)?.branch; if (b) cnt[b] = (cnt[b] || 0) + 1; });
+  const top = Object.entries(cnt).sort((a, b) => b[1] - a[1])[0];
+  if (top) return top[0];
+  return teachersCache.find((t) => t.id === r.teacherUid)?.branch || '';
+}
+// 이 관 학생이 있는 선생님 (담당 학생이 없으면 선생님 소속 관 기준)
+function hlTeachersOfBranch() {
+  return teachersCache.filter((t) => t.role !== 'ta')
+    .filter((t) => studentsCache.some((s) => s.teacherUid === t.id && s.branch === hlBranch) || (t.branch === hlBranch && !studentsCache.some((s) => s.teacherUid === t.id)))
+    .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
+}
+function hlFillTeachers() {
+  const sel = document.getElementById('hlTeacher');
+  const ts = hlTeachersOfBranch();
+  sel.innerHTML = '<option value="">선생님 선택...</option>' + ts.map((t) => `<option value="${t.id}">${hlEsc(t.name)}</option>`).join('');
+  if (hlSel.teacherUid && ts.some((t) => t.id === hlSel.teacherUid)) sel.value = hlSel.teacherUid;
+  else hlSel.teacherUid = '';
+}
+window.hlOnBranch = function () {
+  hlBranch = document.getElementById('hlBranch').value;
+  try { localStorage.setItem('swc_hl_branch', hlBranch); } catch (e) {}
+  hlEditing = null;
+  document.getElementById('hlContent').value = '';
+  document.getElementById('hlSaveBtn').textContent = '저장';
+  document.getElementById('hlCancelBtn').style.display = 'none';
+  hlSel.cls = ''; hlOpenGrade = '';
+  hlFillTeachers();
+  hlRenderClasses();
+  hlRenderStudents();
+  hlLoad();
+};
 let hlRows = [];       // 선택한 날짜의 기록
 let hlEditing = null;  // 수정 중인 문서 ID
 let hlInited = false;
@@ -20,10 +59,9 @@ window.initHomeworkLogTab = async function () {
   if (!hlInited) {
     hlInited = true;
     document.getElementById('hlDate').value = hlToday();
-    const sel = document.getElementById('hlTeacher');
-    const ts = teachersCache.filter((t) => t.role !== 'ta').slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
-    sel.innerHTML = '<option value="">선생님 선택...</option>' + ts.map((t) => `<option value="${t.id}">${hlEsc(t.name)}</option>`).join('');
+    document.getElementById('hlBranch').value = hlBranch;
   }
+  hlFillTeachers();
   hlRenderClasses();
   hlLoad();
 };
@@ -36,7 +74,7 @@ window.hlOnTeacher = function () {
   hlRenderStudents();
 };
 function hlClassesOf(teacherUid) {
-  const pool = teacherUid ? studentsCache.filter((s) => s.teacherUid === teacherUid) : studentsCache;
+  const pool = studentsCache.filter((s) => s.branch === hlBranch && (!teacherUid || s.teacherUid === teacherUid));
   const m = new Map();
   pool.forEach((s) => { const c = String(s.classGroup || '').trim() || '(반 미배정)'; m.set(c, (m.get(c) || 0) + 1); });
   return [...m.entries()].sort((a, b) => hlClsCmp(a[0], b[0]));
@@ -46,7 +84,7 @@ const hlGradeOf = (c) => { const m = String(c || '').match(/^(초|중|고)\s*(\d
 function hlRenderClasses() {
   const el = document.getElementById('hlClasses');
   const list = hlClassesOf(hlSel.teacherUid);
-  if (!list.length) { el.innerHTML = '<span style="font-size:12px;color:var(--muted);">이 선생님 담당 학생이 없습니다.</span>'; return; }
+  if (!list.length) { el.innerHTML = `<span style="font-size:12px;color:var(--muted);">${hlEsc(hlBranch)}에 이 선생님 담당 학생이 없습니다.</span>`; return; }
   // 학년별 아코디언: 학년 줄이 세로로 쌓이고, 누르면 그 아래로 반 버튼이 펼쳐짐
   const byGrade = new Map();
   list.forEach(([c, n]) => { const g = hlGradeOf(c); if (!byGrade.has(g)) byGrade.set(g, []); byGrade.get(g).push([c, n]); });
@@ -69,7 +107,7 @@ window.hlPickClass = function (c) {
 };
 function hlStudentsOf() {
   if (!hlSel.cls) return [];
-  return studentsCache.filter((s) => (String(s.classGroup || '').trim() || '(반 미배정)') === hlSel.cls && (!hlSel.teacherUid || s.teacherUid === hlSel.teacherUid))
+  return studentsCache.filter((s) => s.branch === hlBranch && (String(s.classGroup || '').trim() || '(반 미배정)') === hlSel.cls && (!hlSel.teacherUid || s.teacherUid === hlSel.teacherUid))
     .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
 }
 function hlRenderStudents(checkedIds) {
@@ -92,11 +130,11 @@ window.hlSave = async function () {
   if (!ids.length) { showMsg('hlMsg', '학생을 한 명 이상 체크해주세요.', 'error'); return; }
   if (!content) { showMsg('hlMsg', '숙제 내용을 적어주세요.', 'error'); return; }
   const names = ids.map((id) => studentsCache.find((s) => s.id === id)?.name || '');
-  const data = { date, teacherUid, teacherName, classGroup: hlSel.cls, studentIds: ids, studentNames: names, content, updatedAt: new Date().toISOString(), updatedBy: window.currentAdmin?.name || '' };
+  const data = { date, branch: hlBranch, teacherUid, teacherName, classGroup: hlSel.cls, studentIds: ids, studentNames: names, content, updatedAt: new Date().toISOString(), updatedBy: window.currentAdmin?.name || '' };
   try {
     if (hlEditing) await updateDoc(doc(db, 'homeworkLogs', hlEditing), data);
     else await addDoc(collection(db, 'homeworkLogs'), { ...data, createdAt: new Date().toISOString() });
-    showMsg('hlMsg', hlEditing ? '✅ 수정했습니다.' : `✅ ${hlSel.cls} 숙제를 저장했습니다. (${ids.length}명) — 다음 반을 골라주세요`, 'success');
+    showMsg('hlMsg', hlEditing ? '✅ 수정했습니다.' : `✅ ${hlBranch} ${hlSel.cls} 숙제를 저장했습니다. (${ids.length}명) — 다음 반을 골라주세요`, 'success');
     hlCancelEdit(true);   // 반·학생·내용 모두 비움 (날짜·선생님은 유지)
     hlLoad();
   } catch (e) { showMsg('hlMsg', '저장 오류: ' + e.message, 'error'); }
@@ -117,11 +155,11 @@ window.hlLoad = async function () {
   if (!date) return;
   try {
     const snap = await getDocs(query(collection(db, 'homeworkLogs'), where('date', '==', date)));
-    hlRows = []; snap.forEach((d) => hlRows.push({ id: d.id, ...d.data() }));
+    hlRows = []; snap.forEach((d) => { const r = { id: d.id, ...d.data() }; if (hlLogBranch(r) === hlBranch) hlRows.push(r); });
     hlRows.sort((a, b) => (a.teacherName || '').localeCompare(b.teacherName || '', 'ko') || hlClsCmp(a.classGroup, b.classGroup));
     const d = new Date(date + 'T00:00:00');
-    document.getElementById('hlTableTitle').textContent = `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 ${['일', '월', '화', '수', '목', '금', '토'][d.getDay()]}요일 · ${hlRows.length}건`;
-    if (!hlRows.length) { el.innerHTML = '<tr><td colspan="5" style="color:var(--muted);padding:20px;text-align:center;">이 날짜에 입력된 숙제가 없습니다.</td></tr>'; return; }
+    document.getElementById('hlTableTitle').textContent = `${hlBranch} · ${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 ${['일', '월', '화', '수', '목', '금', '토'][d.getDay()]}요일 · ${hlRows.length}건`;
+    if (!hlRows.length) { el.innerHTML = `<tr><td colspan="5" style="color:var(--muted);padding:20px;text-align:center;">이 날짜에 입력된 ${hlEsc(hlBranch)} 숙제가 없습니다.</td></tr>`; return; }
     let prevT = null;
     el.innerHTML = hlRows.map((r) => {
       const showT = r.teacherName !== prevT; prevT = r.teacherName;
@@ -138,8 +176,9 @@ window.hlLoad = async function () {
 window.hlEdit = function (id) {
   const r = hlRows.find((x) => x.id === id); if (!r) return;
   hlEditing = id;
-  document.getElementById('hlTeacher').value = r.teacherUid || '';
   hlSel.teacherUid = r.teacherUid || ''; hlSel.cls = r.classGroup || '';
+  hlFillTeachers();
+  document.getElementById('hlTeacher').value = r.teacherUid || '';
   hlRenderClasses();
   hlRenderStudents(r.studentIds || []);
   document.getElementById('hlContent').value = r.content || '';
@@ -155,14 +194,14 @@ window.hlDelete = async function (id) {
 window.hlCopyPrev = async function () {
   const date = document.getElementById('hlDate').value; if (!date) return;
   const snap = await getDocs(query(collection(db, 'homeworkLogs'), where('date', '<', date)));
-  let rows = []; snap.forEach((d) => rows.push({ id: d.id, ...d.data() }));
-  if (!rows.length) { showMsg('hlMsg', '이전 기록이 없습니다.', 'error'); return; }
+  let rows = []; snap.forEach((d) => { const r = { id: d.id, ...d.data() }; if (hlLogBranch(r) === hlBranch) rows.push(r); });
+  if (!rows.length) { showMsg('hlMsg', `${hlBranch} 이전 기록이 없습니다.`, 'error'); return; }
   const last = rows.map((r) => r.date).sort().pop();
   rows = rows.filter((r) => r.date === last);
-  if (!confirm(`${last} 기록 ${rows.length}건을 ${date}로 복사할까요? (내용은 그대로 복사되니 수정해 주세요)`)) return;
+  if (!confirm(`${hlBranch} ${last} 기록 ${rows.length}건을 ${date}로 복사할까요? (내용은 그대로 복사되니 수정해 주세요)`)) return;
   for (const r of rows) {
     const { id, ...rest } = r;
-    await addDoc(collection(db, 'homeworkLogs'), { ...rest, date, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), copiedFrom: last });
+    await addDoc(collection(db, 'homeworkLogs'), { ...rest, branch: hlBranch, date, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), copiedFrom: last });
   }
   showMsg('hlMsg', `✅ ${rows.length}건 복사했습니다. 내용을 고쳐주세요.`, 'success');
   hlLoad();
@@ -172,7 +211,7 @@ window.hlCopyPrev = async function () {
 function hlDrawImage() {
   const date = document.getElementById('hlDate').value;
   const d = new Date(date + 'T00:00:00');
-  const title = `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 ${['일', '월', '화', '수', '목', '금', '토'][d.getDay()]}요일`;
+  const title = `${hlBranch} 숙제 · ${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 ${['일', '월', '화', '수', '목', '금', '토'][d.getDay()]}요일`;
   const S = 2; // 선명하게 2배
   const W = 500, colW = [70, 80, 90, 260];       // 담당 · 반 · 학생 · 내용
   const rowH = 22, titleH = 32, headH = 24, pad = 4;
@@ -245,7 +284,7 @@ window.hlDownloadImage = function () {
   const canvas = hlDrawImage();
   document.getElementById('hlCanvasWrap').style.display = 'block';
   const a = document.createElement('a');
-  a.download = `숙제_${document.getElementById('hlDate').value}.png`;
+  a.download = `숙제_${hlBranch}_${document.getElementById('hlDate').value}.png`;
   a.href = canvas.toDataURL('image/png'); a.click();
 };
 window.hlCopyImage = async function () {
