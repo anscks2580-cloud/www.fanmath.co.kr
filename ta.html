@@ -53,6 +53,41 @@
 
 @media(max-width:640px){ .admin-tabs{ overflow-x:auto; flex-wrap:nowrap; } }
 
+/* ── 📘 답지(시중교재) — 선생님 페이지 시중교재 탭과 같은 화면 ── */
+.px-toolbar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+.px-toolbar input { flex:1 1 200px; padding:10px 13px; background:rgba(30,24,56,0.05); border:1px solid var(--border-soft); border-radius:8px; color:var(--off-white); font-size:14px; font-family:inherit; outline:none; min-width:0; }
+.px-toolbar input:focus { border-color:rgba(245,197,24,0.5); }
+.px-chips { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px; }
+.px-chip { padding:6px 14px; border-radius:99px; border:1px solid var(--border-soft); background:transparent; color:var(--muted); font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; transition:all 0.15s; }
+.px-chip:hover { color:var(--off-white); }
+.px-chip.on { border-color:var(--gold); color:var(--purple, #5B3FA6); background:rgba(245,197,24,0.08); }
+.px-chip .n { opacity:0.6; font-weight:500; margin-left:4px; }
+.px-empty { color:var(--muted); font-size:13px; padding:24px 0; text-align:center; }
+.px-meta { font-size:12px; color:var(--muted); margin-bottom:6px; }
+.tb-sub-chips { margin-top:-2px; }
+.tb-book { border:1px solid var(--border-soft); border-radius:10px; background:rgba(30,24,56,0.025); margin-bottom:8px; overflow:hidden; }
+.tb-book > summary { list-style:none; cursor:pointer; padding:13px 16px; display:flex; align-items:center; gap:10px; font-size:14.5px; font-weight:600; color:var(--off-white); }
+.tb-book > summary::-webkit-details-marker { display:none; }
+.tb-book > summary::after { content:'›'; margin-left:auto; color:var(--muted); transition:transform 0.15s; font-size:18px; line-height:1; }
+.tb-book[open] > summary { border-bottom:1px solid var(--border-soft); }
+.tb-book[open] > summary::after { transform:rotate(90deg); }
+.tb-book > summary small { color:var(--muted); font-weight:500; font-size:12px; }
+.tb-book > summary .tb-path { color:var(--muted); font-weight:500; font-size:12px; }
+.tb-body { padding:6px 10px 10px; }
+.tb-subh { font-size:11.5px; font-weight:700; color:var(--purple, #5B3FA6); letter-spacing:0.5px; margin:10px 6px 4px; }
+.tb-row { display:flex; align-items:center; gap:10px; padding:8px 6px; border-radius:8px; }
+.tb-row + .tb-row { border-top:1px solid rgba(30,24,56,0.04); }
+.tb-row:hover { background:rgba(30,24,56,0.03); }
+.tb-name { flex:1; min-width:0; font-size:13.5px; color:var(--off-white); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.tb-acts { display:flex; gap:6px; flex-shrink:0; }
+.tb-btn { padding:6px 12px; border-radius:7px; font-size:12px; font-weight:600; font-family:inherit; cursor:pointer; border:1px solid var(--border-soft); background:transparent; color:var(--off-white); white-space:nowrap; transition:all 0.15s; }
+.tb-btn:hover { border-color:var(--gold); color:var(--purple, #5B3FA6); }
+.tb-btn.dl { background:rgba(245,197,24,0.12); border-color:rgba(245,197,24,0.4); color:var(--purple, #5B3FA6); }
+.tb-btn.dl:hover { background:rgba(245,197,24,0.22); }
+.tb-btn:disabled { opacity:0.55; cursor:wait; }
+@media (max-width:560px) { .tb-btn { padding:6px 9px; } .tb-name { font-size:13px; } }
+
+
 /* ── 로그인 화면 ── */
 #loginScreen { display:none !important; } /* 로그인은 login.html 통합 로그인에서 */
 #portalScreen { display:none; }
@@ -111,7 +146,7 @@
   <div class="admin-tabs">
     <button class="admin-tab active" onclick="switchTab('clinicroom',this)">🏥 클리닉실 현황</button>
     <button class="admin-tab" onclick="switchTab('homework',this)">📚 숙제 확인</button>
-    <button class="admin-tab" onclick="switchTab('answerkeys',this)">🗂 답지</button>
+    <button class="admin-tab" onclick="switchTab('answerkeys',this);initTextbooksTab()">🗂 답지</button>
     <button class="admin-tab" onclick="switchTab('tasks',this)">📝 작업물</button>
   </div>
 
@@ -141,8 +176,16 @@
   <!-- 답지 -->
   <div class="tab-panel" id="tab-answerkeys">
     <div class="card">
-      <h3>🗂 채점용 답지 (네이버 마이박스 · Vimeo)</h3>
-      <div id="akList"><div class="empty">불러오는 중...</div></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+        <h3 style="margin:0;">🗂 채점용 답지 (시중교재)</h3>
+        <button class="btn btn-secondary btn-sm" onclick="initTextbooksTab(true)">🔄 새로고침</button>
+      </div>
+      <div class="px-toolbar">
+        <input type="search" id="tbSearch" placeholder="교재·파일 이름으로 찾기 (예: 쎈, 블랙라벨, 해설)" oninput="tbSetQuery(this.value)">
+      </div>
+      <div class="px-chips" id="tbLevelChips"></div>
+      <div class="px-chips tb-sub-chips" id="tbGradeChips"></div>
+      <div id="tbList"><div class="px-empty">답지 탭을 누르면 불러옵니다.</div></div>
     </div>
   </div>
 
@@ -164,6 +207,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, doc, getDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
@@ -177,6 +221,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
 window.switchTab = function(id, btn) {
   document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
@@ -360,19 +405,164 @@ window.loadHomework = async function() {
     </div>`).join('');
 };
 
-// 답지
-window.loadAnswerKeys = async function() {
-  const el = document.getElementById('akList');
-  el.innerHTML = '<div class="empty">불러오는 중...</div>';
-  const snap = await getDocs(query(collection(db, 'answerKeys'), orderBy('createdAt', 'desc')));
-  const rows = [];
-  snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
-  if (!rows.length) { el.innerHTML = '<div class="empty">등록된 답지 링크가 없습니다.</div>'; return; }
-  el.innerHTML = rows.map(r => `
-    <div class="item">
-      <a href="${r.link}" target="_blank" class="btn btn-secondary btn-sm">🔗 링크를 눌러주세요</a>
-    </div>`).join('');
+// ══════════════════════════════════════
+// 🗂 답지 = 시중교재 — 선생님 페이지 "시중교재" 탭과 같은 자료·같은 화면
+// Firebase Storage 경로: textbooks/학교급/(학년/)교재/(하위폴더/)파일.pdf
+// (업로드·삭제는 관리자 페이지 "시중교재" 탭, 조교는 열람만)
+// ══════════════════════════════════════
+const TB_LEVEL_ORDER = ['초등', '중등', '고등'];
+const TB_GRADE_RE = /^(초|중|고)\s*[1-6]/;
+const PX_GRADE_ORDER = ['중1','중2','중3','고1','고2','고3'];
+let tbFiles = null;   // [{ level, grade, book, sub, name, path }]
+const tbState = { level: '', grade: '', q: '' };
+
+function pxOrderSort(order) {
+  return (a, b) => {
+    const ia = order.indexOf(a), ib = order.indexOf(b);
+    if (ia !== -1 || ib !== -1) return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+    return a.localeCompare(b, 'ko');
+  };
+}
+function pxEsc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+function tbParse(fullPath) {
+  const parts = fullPath.split('/').slice(1);   // 'textbooks' 제거
+  const name = parts.pop();
+  const level = parts[0] || '기타';
+  let grade = '', rest = parts.slice(1);
+  if (rest.length && TB_GRADE_RE.test(rest[0])) { grade = rest[0]; rest = rest.slice(1); }
+  return { level, grade, book: rest[0] || '(분류 없음)', sub: rest.slice(1).join(' / '), name, path: fullPath };
+}
+
+window.initTextbooksTab = async function (force = false) {
+  const list = document.getElementById('tbList');
+  if (tbFiles && !force) { tbRender(); return; }
+  list.innerHTML = '<div class="px-empty">불러오는 중...</div>';
+  const files = [];
+  async function walk(r) {
+    const res = await listAll(r);
+    res.items.forEach(it => { if (/\.pdf$/i.test(it.name)) files.push(tbParse(it.fullPath)); });
+    await Promise.all(res.prefixes.map(walk));
+  }
+  try { await walk(ref(storage, 'textbooks')); }
+  catch (e) {
+    tbFiles = null;
+    list.innerHTML = `<div class="px-empty">목록을 불러오지 못했습니다 (${pxEsc(e.code || e.message)})</div>`;
+    return;
+  }
+  tbFiles = files;
+  tbRender();
 };
+window.tbSetLevel = function (lv) { tbState.level = lv; tbState.grade = ''; tbRender(); };
+window.tbSetGrade = function (g) { tbState.grade = g; tbRender(); };
+window.tbSetQuery = function (q) { tbState.q = q.trim().toLowerCase(); if (tbFiles) tbRender(); };
+
+function tbSortName(a, b) { return a.localeCompare(b, 'ko', { numeric: true }); }
+
+function tbRender() {
+  const list = document.getElementById('tbList');
+  const lvBox = document.getElementById('tbLevelChips');
+  const gBox = document.getElementById('tbGradeChips');
+  if (!tbFiles) return;
+  if (!tbFiles.length) { lvBox.innerHTML = gBox.innerHTML = ''; list.innerHTML = '<div class="px-empty">아직 올라온 교재가 없습니다.</div>'; return; }
+
+  const bookKey = f => f.level + '\u0000' + f.grade + '\u0000' + f.book;
+  const countBooks = arr => new Set(arr.map(bookKey)).size;
+  const chip = (label, active, onclick, n) =>
+    `<button class="px-chip${active ? ' on' : ''}" onclick="${onclick}">${pxEsc(label)}<span class="n">${n}</span></button>`;
+
+  // ① 학교급
+  const levels = [...new Set(tbFiles.map(f => f.level))].sort(pxOrderSort(TB_LEVEL_ORDER));
+  if (!levels.includes(tbState.level)) tbState.level = levels.includes('중등') ? '중등' : levels[0];
+  lvBox.innerHTML = levels.map(lv => chip(lv, tbState.level === lv, `tbSetLevel('${pxEsc(lv)}')`, countBooks(tbFiles.filter(f => f.level === lv)))).join('');
+
+  // ② 학년 (학교급 아래에 학년 폴더가 있는 경우만)
+  const inLevel = tbFiles.filter(f => f.level === tbState.level);
+  const grades = [...new Set(inLevel.map(f => f.grade).filter(Boolean))].sort(pxOrderSort(PX_GRADE_ORDER.concat(['초1','초2','초3','초4','초5','초6'])));
+  if (grades.length) {
+    if (!grades.includes(tbState.grade)) tbState.grade = grades[0];
+    gBox.style.display = '';
+    gBox.innerHTML = grades.map(g => chip(g, tbState.grade === g, `tbSetGrade('${pxEsc(g)}')`, countBooks(inLevel.filter(f => f.grade === g)))).join('');
+  } else { tbState.grade = ''; gBox.style.display = 'none'; gBox.innerHTML = ''; }
+
+  // ③ 교재 목록 (검색 중이면 전체에서 찾기)
+  const q = tbState.q;
+  let shown, searching = !!q;
+  if (searching) {
+    shown = tbFiles.filter(f => (f.book + ' ' + f.sub + ' ' + f.name).toLowerCase().includes(q));
+    lvBox.style.opacity = gBox.style.opacity = '0.45';
+  } else {
+    shown = inLevel.filter(f => !grades.length || f.grade === tbState.grade);
+    lvBox.style.opacity = gBox.style.opacity = '';
+  }
+  if (!shown.length) { list.innerHTML = `<div class="px-empty">${searching ? '검색 결과가 없습니다.' : '교재가 없습니다.'}</div>`; return; }
+
+  const books = {};
+  shown.forEach(f => { (books[bookKey(f)] = books[bookKey(f)] || []).push(f); });
+  const keys = Object.keys(books).sort((a, b) => {
+    const [la, ga, ba] = a.split('\u0000'), [lb, gb, bb] = b.split('\u0000');
+    return pxOrderSort(TB_LEVEL_ORDER)(la, lb) || pxOrderSort(PX_GRADE_ORDER)(ga, gb) || tbSortName(ba, bb);
+  });
+  const head = searching
+    ? `<div class="px-meta">검색 결과 · 교재 ${keys.length}종 · 파일 ${shown.length}개</div>`
+    : `<div class="px-meta">${pxEsc(tbState.level)}${tbState.grade ? ' · ' + pxEsc(tbState.grade) : ''} · 교재 ${keys.length}종 · 교재를 누르면 파일이 펼쳐집니다</div>`;
+  list.innerHTML = head + keys.map(k => {
+    const fs = books[k];
+    const f0 = fs[0];
+    const subs = {};
+    fs.forEach(f => { (subs[f.sub] = subs[f.sub] || []).push(f); });
+    const subKeys = Object.keys(subs).sort(tbSortName);
+    const row = f => `<div class="tb-row">
+        <span class="tb-name" title="${pxEsc(f.name)}">📄 ${pxEsc(f.name.replace(/\.pdf$/i, ''))}</span>
+        <span class="tb-acts">
+          <button class="tb-btn" data-path="${pxEsc(f.path)}" onclick="pxOpen(this.dataset.path)">미리보기</button>
+          <button class="tb-btn dl" data-path="${pxEsc(f.path)}" onclick="tbDownload(this)">다운로드</button>
+        </span></div>`;
+    const body = subKeys.map(s => (s ? `<div class="tb-subh">${pxEsc(s)}</div>` : '') +
+      subs[s].sort((a, b) => tbSortName(a.name, b.name)).map(row).join('')).join('');
+    const where = searching ? `<span class="tb-path">${pxEsc(f0.level)}${f0.grade ? ' · ' + pxEsc(f0.grade) : ''}</span>` : '';
+    return `<details class="tb-book"${searching ? ' open' : ''}><summary>📘 ${pxEsc(f0.book)} <small>${fs.length}개</small>${where}</summary>
+      <div class="tb-body">${body}</div></details>`;
+  }).join('');
+}
+
+// 미리보기: 새 창에서 PDF 열기
+window.pxOpen = async function (path) {
+  const w = window.open('', '_blank');
+  try {
+    const url = await getDownloadURL(ref(storage, path));
+    if (w) w.location.href = url; else location.href = url;
+  } catch (e) {
+    if (w) w.close();
+    alert('파일을 열지 못했습니다 (' + (e.code || e.message) + ')');
+  }
+};
+
+// 다운로드: 원래 파일명으로 저장. 브라우저가 막으면 버튼이 "눌러서 열기"로 바뀜
+window.tbDownload = async function (btn) {
+  if (btn.dataset.url) { window.open(btn.dataset.url, '_blank'); return; }
+  const path = btn.dataset.path;
+  const name = path.split('/').pop();
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = '받는 중...';
+  let url = '';
+  try {
+    url = await getDownloadURL(ref(storage, path));
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+    btn.textContent = label;
+  } catch (e) {
+    if (url) { btn.dataset.url = url; btn.textContent = '눌러서 열기'; }
+    else { btn.textContent = label; alert('파일을 받지 못했습니다 (' + (e.code || e.message) + ')'); }
+  } finally { btn.disabled = false; }
+};
+
 // 조교 작업물: 고정 마이박스 링크
 window.loadTaMyboxLink = async function() {
   const el = document.getElementById('ttLinkArea');
@@ -420,7 +610,7 @@ onAuthStateChanged(auth, async (user) => {
   }
   document.getElementById('taName').textContent = `${tDoc.data().name} 조교님 · ${tDoc.data().branch || ''}`;
   showPortal();
-  await Promise.all([loadClinicRoom(), loadHomework(), loadAnswerKeys(), loadTasks(), loadTaMyboxLink()]);
+  await Promise.all([loadClinicRoom(), loadHomework(), loadTasks(), loadTaMyboxLink()]);
 });
 </script>
 </body>

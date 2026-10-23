@@ -4,13 +4,13 @@
    (admin.html에서 분리 — 원본 5892~6121줄. 모든 파일은 같은 전역 범위를 공유합니다)
    ═══════════════════════════════════════════════════════════ */
 // ══════════════════════════════════════════
-// 📎 조교 자료: 숙제 업로드 · 답지 링크 · 조교 작업물 링크
+// 📎 조교 자료: 숙제 업로드 · 조교 작업물 링크 (답지는 시중교재로 통일)
 // ══════════════════════════════════════════
 let taMaterialsInited = false;
 window.initTaMaterialsTab = async () => {
-  if (taMaterialsInited) { await Promise.all([loadHomeworks(), loadAnswerKeys(), loadTaTasks(), loadTaMyboxLink()]); return; }
+  if (taMaterialsInited) { await Promise.all([loadHomeworks(), loadTaTasks(), loadTaMyboxLink()]); return; }
   taMaterialsInited = true;
-  await Promise.all([loadHomeworks(), loadAnswerKeys(), loadTaTasks(), loadTaMyboxLink()]);
+  await Promise.all([loadHomeworks(), loadTaTasks(), loadTaMyboxLink()]);
 };
 
 // 숙제
@@ -75,35 +75,7 @@ window.deleteHomework = async (id) => {
   await loadHomeworks();
 };
 
-// 답지 링크
-async function loadAnswerKeys() {
-  const snap = await getDocs(query(collection(db, 'answerKeys'), orderBy('createdAt', 'desc')));
-  const rows = [];
-  snap.forEach(d => rows.push({ id: d.id, ...d.data() }));
-  document.getElementById('akCount').textContent = rows.length;
-  const el = document.getElementById('akList');
-  if (!rows.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;">등록된 답지 링크가 없습니다.</div>'; return; }
-  el.innerHTML = rows.map(r => `
-    <div class="student-item">
-      <div class="student-name">${r.createdAt ? new Date(r.createdAt).toLocaleDateString('ko-KR') : ''}</div>
-      <a href="${r.link}" target="_blank" class="btn btn-secondary btn-sm">열기</a>
-      <button class="btn btn-danger btn-sm" onclick="deleteAnswerKey('${r.id}')">삭제</button>
-    </div>`).join('');
-}
-
-window.addAnswerKey = async () => {
-  const link = document.getElementById('ak-link').value.trim();
-  if (!link) { showMsg('akMsg', '링크를 입력해주세요.', 'error'); return; }
-  await addDoc(collection(db, 'answerKeys'), { link, createdAt: new Date().toISOString() });
-  showMsg('akMsg', '답지 링크 등록 완료!', 'success');
-  document.getElementById('ak-link').value = '';
-  await loadAnswerKeys();
-};
-
-window.deleteAnswerKey = async (id) => {
-  await deleteDoc(doc(db, 'answerKeys', id));
-  await loadAnswerKeys();
-};
+// 답지: 마이박스 링크 방식은 없애고, 조교 페이지에서 시중교재(textbooks)를 그대로 보여줌
 
 // 조교 작업물: 고정 마이박스 링크
 async function loadTaMyboxLink() {

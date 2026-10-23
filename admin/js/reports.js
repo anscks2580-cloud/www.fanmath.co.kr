@@ -295,7 +295,7 @@ let monthlySelectedUid = '';  // 현재 선택된 선생님 UID
 window.initWeeklyTab = () => {
   const sel = document.getElementById('excelTeacher');
   if (sel && sel.options.length <= 1) {
-    teachersCache.forEach(t => {
+    teachingTeachers().forEach(t => {
       const opt = document.createElement('option');
       opt.value = t.id; opt.textContent = t.name + ' T';
       sel.appendChild(opt);
@@ -408,7 +408,7 @@ window.loadWeeklyPreview = async () => {
 window.initProgressTab = () => {
   const sel = document.getElementById('progressTeacher');
   if (sel && sel.options.length <= 1) {
-    teachersCache.forEach(t => {
+    teachingTeachers().forEach(t => {
       const opt = document.createElement('option');
       opt.value = t.id; opt.textContent = t.name + ' T';
       sel.appendChild(opt);
@@ -429,9 +429,9 @@ window.initMonthlyTab = () => {
   const wrap = document.getElementById('monthlyTeacherBtns');
   if (!wrap) return;
   // 이미 모든 선생님 버튼이 렌더링된 경우 중복 방지
-  if (wrap.children.length >= teachersCache.length + 1) return;
+  if (wrap.children.length >= teachingTeachers().length + 1) return;
   wrap.innerHTML = '<button class="monthly-filter-btn active" data-uid="" onclick="selectMonthlyTeacher(this)">전체</button>';
-  teachersCache.forEach(t => {
+  teachingTeachers().forEach(t => {
     const btn = document.createElement('button');
     btn.className = 'monthly-filter-btn';
     btn.dataset.uid = t.id;

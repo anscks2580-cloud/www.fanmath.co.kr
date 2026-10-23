@@ -27,8 +27,8 @@ window.initSatClinicTab = function() {
 
   // 선생님 필터 드롭다운 채우기
   const sel = document.getElementById('clinicTeacherFilter');
-  if (sel.options.length <= 1 && teachersCache.length > 0) {
-    teachersCache.forEach(t => {
+  if (sel.options.length <= 1 && teachingTeachers().length > 0) {
+    teachingTeachers().forEach(t => {
       const opt = document.createElement('option');
       opt.value = t.id; opt.textContent = t.name;
       sel.appendChild(opt);

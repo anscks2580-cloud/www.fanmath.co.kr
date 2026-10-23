@@ -5,6 +5,8 @@
    ═══════════════════════════════════════════════════════════ */
 // ══ 선생님 관리 ══
 let teachersCache = [];
+// 수업 담당 선생님만 (조교 제외) — 학생 담당 배정·주간성취도·월말보고서·반별 진도·토요클리닉 선택 목록용
+function teachingTeachers() { return teachersCache.filter(t => t.role !== 'ta'); }
 
 async function loadTeachers() {
   const snap = await getDocs(collection(db, 'teachers'));
@@ -36,25 +38,25 @@ function renderTeacherSelect() {
   const sel = document.getElementById('reportTeacher');
   if (sel) {
     sel.innerHTML = '<option value="">선생님을 선택하세요</option>' +
-      teachersCache.map(t => `<option value="${t.id}">${t.name} (${t.branch || ''})</option>`).join('');
+      teachingTeachers().map(t => `<option value="${t.id}">${t.name} (${t.branch || ''})</option>`).join('');
   }
   // 학생 등록용
   const nSel = document.getElementById('n-teacher');
   if (nSel) {
     nSel.innerHTML = '<option value="">선생님 선택...</option>' +
-      teachersCache.map(t => `<option value="${t.id}">${t.name} (${t.branch || ''})</option>`).join('');
+      teachingTeachers().map(t => `<option value="${t.id}">${t.name} (${t.branch || ''})</option>`).join('');
   }
   // 주간성취도 엑셀 다운로드용
   const exSel = document.getElementById('excelTeacher');
   if (exSel) {
     exSel.innerHTML = '<option value="">전체 선생님</option>' +
-      teachersCache.map(t => `<option value="${t.id}">${t.name} (${t.branch || ''})</option>`).join('');
+      teachingTeachers().map(t => `<option value="${t.id}">${t.name} (${t.branch || ''})</option>`).join('');
   }
   // 반별 진도 엑셀 다운로드용
   const prSel = document.getElementById('progressTeacher');
   if (prSel) {
     prSel.innerHTML = '<option value="">전체 선생님</option>' +
-      teachersCache.map(t => `<option value="${t.id}">${t.name} (${t.branch || ''})</option>`).join('');
+      teachingTeachers().map(t => `<option value="${t.id}">${t.name} (${t.branch || ''})</option>`).join('');
   }
   // 이번 주 기본값 설정 (공통 유틸)
   function setThisWeek(inputId) {

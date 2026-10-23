@@ -1603,6 +1603,8 @@ onAuthStateChanged(auth, async user => {
   if (user) {
     const tDoc = await getDoc(doc(db, 'teachers', user.uid));
     if (!tDoc.exists()) { await signOut(auth); showLogin(); return; }
+    // 조교는 주간성취도·월말보고서 등 선생님 업무와 무관 → 조교 페이지로 보냄
+    if (tDoc.data().role === 'ta') { location.replace('ta.html'); return; }
     currentTeacher = { uid: user.uid, ...tDoc.data() };
     showPortal();
   } else {

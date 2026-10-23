@@ -32,7 +32,7 @@ window.initStudyReportTab = async function () {
     try {
       const ts = await getDocs(collection(db, 'teachers'));
       const sel = document.getElementById('srTeacher');
-      const opts = []; ts.forEach((t) => opts.push({ id: t.id, name: t.data().name || '' }));
+      const opts = []; ts.forEach((t) => { if (t.data().role !== 'ta') opts.push({ id: t.id, name: t.data().name || '' }); });  // 조교 제외
       opts.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
       sel.innerHTML = '<option value="">전체</option>' + opts.map((t) => `<option value="${t.id}">${srEsc(t.name)}</option>`).join('');
     } catch (e) { /* 무시 */ }

@@ -129,7 +129,7 @@ window.openEditModal = function(uid) {
   // 선생님 드롭다운 채우기
   const tSel = document.getElementById('edit-teacher');
   tSel.innerHTML = '<option value="">선생님 선택...</option>' +
-    teachersCache.map(t => `<option value="${t.id}" ${t.id === s.teacherUid ? 'selected' : ''}>${t.name} (${t.branch||''})</option>`).join('');
+    teachingTeachers().map(t => `<option value="${t.id}" ${t.id === s.teacherUid ? 'selected' : ''}>${t.name} (${t.branch||''})</option>`).join('');
 
   // 요일 체크박스
   document.querySelectorAll('.edit-day').forEach(cb => {
@@ -395,7 +395,7 @@ function parseExcel(file) {
       const dayMap = {'월':'월','화':'화','수':'수','목':'목','금':'금','토':'토'};
       const days = dayStr.split('').filter(ch => dayMap[ch]);
       // 선생님 UID 매칭
-      const teacher = teachersCache.find(t => t.name === teacherName);
+      const teacher = teachingTeachers().find(t => t.name === teacherName);
       return {
         name: String(r[0]||'').trim(),
         phone: String(r[1]||'').trim().replace(/-/g,''),
