@@ -380,8 +380,8 @@ async function loadComments() {
 // 하루 마감 — 관리부 마감(dailyDrafts dr_관_날짜) · 출결(att_관_날짜) · 상담(consultForms) · 숙제(homeworkLogs)
 // ══════════════════════════════════════
 const DR_FIELDS = [
-  ['author', '작성자'], ['classes', '수업반'], ['consult', '상담 및 테스트'], ['receipt', '현금영수증 발행'],
-  ['absent', '출결 (결석자)'], ['textbook', '교재 입·출고'], ['note', '비고 (신규·퇴원)'], ['phone', '전화문의'], ['nextday', '익일 상담·신규원생'],
+  ['author', '작성자'], ['classes', '수업반'], ['consult', '상담 및 테스트'], ['phone', '전화문의'],
+  ['absent', '출결 (결석자)'], ['textbook', '교재 입·출고'], ['note', '비고 (신규·퇴원)'], ['receipt', '현금영수증 발행'], ['nextday', '익일 상담·신규원생'],
 ];
 function branchesInScope() {
   if (S.branch) return [S.branch];

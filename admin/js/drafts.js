@@ -55,6 +55,7 @@ function setDrData(d) {
   if (d.note !== undefined)     document.getElementById('dr-note').value     = d.note;
   if (d.phone !== undefined)    document.getElementById('dr-phone').value    = d.phone;
   if (d.nextday !== undefined)  document.getElementById('dr-nextday').value  = d.nextday;
+  if (typeof drSyncFromText === 'function') drSyncFromText();   // 요일별 수업반 체크 맞추기
 }
 
 function getWlData() {

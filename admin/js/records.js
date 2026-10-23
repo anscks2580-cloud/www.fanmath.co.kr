@@ -97,9 +97,9 @@ function recRenderDetail(type, d) {
     const fields = [
       ['날짜', d.date], ['관', d.branch], ['작성자', d.author],
       ['금일 수업 반', d.classes], ['상담 및 테스트', d.consult],
-      ['현금영수증 발행', d.receipt], ['출결(결석자)', d.absent],
+      ['전화문의', d.phone], ['출결(결석자)', d.absent],
       ['교재 입출고', d.textbook], ['비고(신규/퇴원)', d.note],
-      ['전화문의', d.phone], ['익일 상담 및 신규원생', d.nextday],
+      ['현금영수증 발행', d.receipt], ['익일 상담 및 신규원생', d.nextday],
     ];
     return `<table style="width:100%;border-collapse:collapse;">` +
       fields.map(([k,v]) => `

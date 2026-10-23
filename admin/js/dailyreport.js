@@ -7,14 +7,22 @@
 // 관리부 마감 (일일업무보고서 이미지 생성)
 // ══════════════════════════════════════════
 
+let drInited = false;
 window.initDailyReportTab = function() {
-  const today = new Date().toISOString().slice(0, 10);
+  const n = new Date();
+  const today = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
   if (!document.getElementById('dr-date').value) {
     document.getElementById('dr-date').value = today;
   }
-  // 관 변경 시 아코디언 갱신
-  document.getElementById('dr-branch').addEventListener('change', renderDrClassAccordion);
-  renderDrClassAccordion();
+  if (!drInited) {
+    drInited = true;
+    // 관·날짜를 바꾸면 그 날짜 요일의 수업반을 자동 선택
+    document.getElementById('dr-branch').addEventListener('change', drAutoSelectByDate);
+    document.getElementById('dr-date').addEventListener('change', drAutoSelectByDate);
+  }
+  // 이미 적어 둔 수업반이 있으면(불러오기 등) 그대로 두고 체크만 맞춤, 비어 있으면 자동 선택
+  if (document.getElementById('dr-classes').value.trim()) drSyncFromText();
+  else drAutoSelectByDate();
 };
 
 // ── 수업반 데이터 ──
@@ -40,25 +48,51 @@ const DAY_ORDER = ['월','화','수','목','금','토'];
 let drActiveDayTab = '';        // 현재 선택된 요일 탭
 let drChecked = new Set();      // 선택된 반 (요일_반명 키)
 
-function renderDrClassAccordion() {
-  drChecked.clear();
-  document.getElementById('dr-classes').value = '';
-  drActiveDayTab = '';
+// 날짜의 요일 ('월'~'일')
+function drDayOfDate() {
+  const v = document.getElementById('dr-date').value;
+  if (!v) return '';
+  return ['일','월','화','수','목','금','토'][new Date(v + 'T00:00:00').getDay()];
+}
 
+// 요일 탭만 그림 (선택 상태는 유지)
+function renderDrDayTabs() {
   const branch = document.getElementById('dr-branch').value;
   const days = Object.keys(DR_CLASSES[branch] || {}).sort((a,b) => DAY_ORDER.indexOf(a) - DAY_ORDER.indexOf(b));
-
-  // 요일 탭 렌더
   const tabWrap = document.getElementById('drClassDayTabs');
   tabWrap.innerHTML = days.map(d => `
     <button class="btn btn-sm btn-secondary" id="drTab-${d}"
       onclick="drSwitchDay('${d}')"
       style="border-radius:20px;">${d}요일</button>
   `).join('');
-
-  // 첫 번째 요일 기본 선택
-  if (days.length) drSwitchDay(days[0]);
+  const want = days.includes(drActiveDayTab) ? drActiveDayTab : (days.includes(drDayOfDate()) ? drDayOfDate() : days[0]);
+  if (want) drSwitchDay(want);
 }
+
+// 날짜 요일에 맞춰 그 요일 수업반 전체를 자동 선택 (일요일 등 수업 없는 날은 비움)
+window.drAutoSelectByDate = function() {
+  const branch = document.getElementById('dr-branch').value;
+  const day = drDayOfDate();
+  drChecked.clear();
+  (DR_CLASSES[branch]?.[day] || []).forEach(cls => drChecked.add(day + '_' + cls));
+  drActiveDayTab = DR_CLASSES[branch]?.[day] ? day : '';
+  renderDrDayTabs();
+  updateDrClassInput();
+};
+
+// 적혀 있는 수업반 글자 → 날짜 요일 체크박스에 반영 (불러오기 후)
+window.drSyncFromText = function() {
+  const branch = document.getElementById('dr-branch').value;
+  const day = drDayOfDate();
+  const tokens = new Set(document.getElementById('dr-classes').value.split(/\s*[\/,]\s*/).map(t => t.trim()).filter(Boolean));
+  drChecked.clear();
+  (DR_CLASSES[branch]?.[day] || []).forEach(cls => { if (tokens.has(cls)) drChecked.add(day + '_' + cls); });
+  drActiveDayTab = DR_CLASSES[branch]?.[day] ? day : '';
+  renderDrDayTabs();
+};
+
+// 예전 이름 유지 (다른 곳에서 부를 수 있음)
+function renderDrClassAccordion() { drAutoSelectByDate(); }
 
 window.drSwitchDay = function(day) {
   drActiveDayTab = day;
@@ -135,7 +169,7 @@ window.toggleDrClassAccordion = function() {
   const open = body.style.display !== 'none';
   body.style.display = open ? 'none' : 'block';
   arrow.style.transform = open ? '' : 'rotate(180deg)';
-  if (!open) renderDrClassAccordion();
+  if (!open) renderDrDayTabs();   // 펼칠 때 선택 상태는 그대로
 };
 
 function getDRValues() {
@@ -264,7 +298,7 @@ function drawDailyReport(canvas, data) {
     y += rowH;
   }
 
-  twoColRow('상담 및\n테스트',    data.consult,  '현금영수증\n발행 현황', data.receipt,  row3H);
+  twoColRow('상담 및\n테스트',    data.consult,  '전화문의',             data.phone,    row3H);
   twoColRow('출결 현황\n<결석자>', data.absent,  '교재\n입/출고',        data.textbook, row4H);
 
   // 결석자 수 (출결 셀 하단 우측)
@@ -277,7 +311,7 @@ function drawDailyReport(canvas, data) {
     ctx.textAlign = 'left';
   }
 
-  twoColRow('비고\n(신규/ 퇴원)', data.note,    '전화문의',             data.phone,    row5H);
+  twoColRow('비고\n(신규/ 퇴원)', data.note,    '현금영수증\n발행 현황', data.receipt,  row5H);
 
   // === Row 6: 익일 상담 및 신규원생 ===
   rect(tl,          y, labelW,             row6H, headerBg);
