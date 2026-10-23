@@ -4,6 +4,7 @@
    - 날짜별로 담당 선생님 › 반 › 학생 › 숙제 내용을 기록 (기존 엑셀 취합표 그대로)
    - homeworkLogs/{자동ID}: { date, teacherUid, teacherName, classGroup, studentIds[], studentNames[], content }
    - 학부모 페이지 "숙제" 탭에서 자기 아이가 포함된 기록만 날짜순으로 보임
+   - 선생님 페이지 「숙제 입력」에서도 본인 반 숙제를 같은 컬렉션에 저장(source:'teacher') → 이 표에 날짜별로 자동 반영
    ═══════════════════════════════════════════════════════════ */
 const hlEsc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const hlClsKey = (c) => { const m = String(c || '').match(/^(초|중|고)\s*(\d)/); return m ? ({ 초: 0, 중: 1, 고: 2 }[m[1]] * 10 + parseInt(m[2], 10)) : 99; };
@@ -128,7 +129,7 @@ window.hlLoad = async function () {
         <td style="font-weight:700;color:var(--purple, #5B3FA6);">${showT ? hlEsc(r.teacherName) + 'T' : ''}</td>
         <td style="white-space:nowrap;">${hlEsc(r.classGroup)}</td>
         <td style="font-size:12.5px;color:var(--muted);">${(r.studentNames || []).map(hlEsc).join(', ')}</td>
-        <td style="color:var(--off-white);white-space:pre-wrap;">${hlEsc(r.content)}</td>
+        <td style="color:var(--off-white);white-space:pre-wrap;">${hlEsc(r.content)}${r.source === 'teacher' ? '<div style="font-size:11px;color:#2E9E5B;margin-top:3px;">✎ 선생님 직접 입력</div>' : ''}</td>
         <td style="white-space:nowrap;"><button class="btn btn-sm btn-secondary" onclick="hlEdit('${r.id}')">수정</button> <button class="btn btn-sm btn-danger" onclick="hlDelete('${r.id}')">삭제</button></td>
       </tr>`;
     }).join('');

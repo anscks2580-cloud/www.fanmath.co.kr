@@ -451,6 +451,7 @@ select option:disabled { color:#6B6489; }
        사이드바·오늘 할 일 바로가기(calGoTab)는 이 버튼들을 클릭해 메뉴를 엽니다. ══ -->
   <div class="teacher-tabs" id="tnavLegacy" hidden>
     <button class="teacher-tab active" onclick="switchTab('calendar',this);refreshTeacherCalendar()">📅 일정</button>
+    <button class="teacher-tab" onclick="switchTab('hwlog',this);hwInit()">숙제 입력</button>
     <button class="teacher-tab" onclick="switchTab('weekly',this)">주간성취도</button>
     <button class="teacher-tab" onclick="switchTab('monthly',this)">월말보고서</button>
     <button class="teacher-tab" onclick="switchTab('tests',this)">누적테스트</button>
@@ -505,6 +506,53 @@ select option:disabled { color:#6B6489; }
         <button class="btn btn-outline btn-sm" style="flex:1;" onclick="closeTodayPopup(true)">오늘 하루 보지 않기</button>
         <button class="btn btn-outline btn-sm" style="flex:1;" onclick="calGoTab('calendar','refreshTeacherCalendar')">📅 달력 보기</button>
         <button class="btn btn-gold btn-sm" style="flex:1;" onclick="closeTodayPopup()">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 숙제 입력 — 관리부 「숙제 입력」과 같은 homeworkLogs에 저장 (날짜별 자동 연동) ══ -->
+  <div class="tab-panel" id="tab-hwlog">
+    <div class="card">
+      <div class="card-title" style="flex-wrap:wrap;">📒 내 반 숙제 입력
+        <span style="font-size:12px;color:var(--muted);font-weight:400;" id="hwDateLabel"></span>
+      </div>
+      <div style="font-size:12.5px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
+        여기서 저장한 숙제는 관리부 「숙제 입력」 화면의 <b>같은 날짜</b>에 바로 들어가고, 학부모 페이지 숙제 탭에도 함께 보입니다.<br>
+        관리부가 대신 입력한 내 반 숙제도 여기서 보이고 고칠 수 있어요.
+      </div>
+      <div class="alert ok" id="hw-ok"></div>
+      <div class="alert err" id="hw-err"></div>
+
+      <div class="form-group" style="margin-bottom:16px;max-width:220px;">
+        <label>날짜 <span style="color:#D64545;">*</span></label>
+        <input type="date" id="hwDate" onchange="hwOnDate()" style="color-scheme:light;width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px;">
+        <label>반 <span style="color:#D64545;">*</span> <small style="color:var(--muted);font-weight:400;">· 오늘 수업 있는 반은 ●, 이미 입력한 반은 ✓</small></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;" id="hwClasses"></div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px;">
+        <label>학생 <small style="color:var(--muted);font-weight:400;">· 숙제 대상이 아닌 학생은 체크 해제</small></label>
+        <div style="display:flex;gap:6px 14px;flex-wrap:wrap;font-size:13.5px;" id="hwStudents"><span style="font-size:12px;color:var(--muted);">반을 고르면 학생이 나옵니다.</span></div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:20px;">
+        <label>숙제 내용 <span style="color:#D64545;">*</span></label>
+        <textarea id="hwContent" placeholder="예: 쎈 B단계 120~135번 / 개념원리 확인문제 p.88~92" style="min-height:90px;"></textarea>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-gold" id="hwSaveBtn" onclick="hwSave()">저장</button>
+        <button class="btn btn-outline" id="hwCancelBtn" style="display:none;color:#D64545;border-color:rgba(214,69,69,0.3);" onclick="hwCancel()">수정 취소</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🗂 내 숙제 기록 <span style="font-size:12px;color:var(--muted);font-weight:400;">최근 30일</span></div>
+      <div id="hwList" class="history-list">
+        <div class="empty-state"><div class="icon">📭</div>불러오는 중...</div>
       </div>
     </div>
   </div>
@@ -1064,10 +1112,10 @@ select option:disabled { color:#6B6489; }
       <div class="alert ok" id="clinic-ok"></div>
       <div class="alert err" id="clinic-err"></div>
 
-      <!-- 날짜 -->
-      <div class="form-group" style="margin-bottom:16px;max-width:220px;">
-        <label>날짜 <span style="color:#D64545;">*</span></label>
-        <input type="date" id="c-date" style="color-scheme:light;width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+      <!-- 어느 토요일인지 -->
+      <div class="form-group" style="margin-bottom:16px;max-width:300px;">
+        <label>어느 토요일 클리닉인가요? <span style="color:#D64545;">*</span></label>
+        <select id="c-date" style="color-scheme:light;width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;"></select>
       </div>
 
       <!-- 학생 선택 -->
@@ -1107,18 +1155,18 @@ select option:disabled { color:#6B6489; }
 
     <!-- 이번 주 클리닉 없음 -->
     <div class="card">
-      <div class="card-title">🚫 이번 주 토요클리닉 없음</div>
+      <div class="card-title">🚫 토요클리닉 없음</div>
       <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
-        이번 주 토요일에 진행한 클리닉이 없는 경우, 아래 날짜를 확인하고 버튼을 눌러 제출해주세요.
+        진행한 클리닉이 없었던 토요일을 고르고 버튼을 눌러 제출해주세요.
       </div>
-      <div class="form-group" style="margin-bottom:16px;max-width:220px;">
-        <label>날짜 <span style="color:#D64545;">*</span></label>
-        <input type="date" id="c-none-date" style="color-scheme:light;width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+      <div class="form-group" style="margin-bottom:16px;max-width:300px;">
+        <label>어느 토요일인가요? <span style="color:#D64545;">*</span></label>
+        <select id="c-none-date" style="color-scheme:light;width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;"></select>
       </div>
       <div class="alert ok" id="clinic-none-ok"></div>
       <div class="alert err" id="clinic-none-err"></div>
       <div class="btn-row">
-        <button class="btn btn-outline" onclick="submitNoClinic()">🚫 이번 주 클리닉 없음 제출</button>
+        <button class="btn btn-outline" onclick="submitNoClinic()">🚫 이 토요일 클리닉 없음 제출</button>
       </div>
     </div>
 
@@ -2699,23 +2747,206 @@ window.openVideoModal = function(vimeoId, title) {
 };
 
 // ══════════════════════════════════════════
+// 숙제 입력 — homeworkLogs (관리부 숙제 입력과 같은 데이터)
+//   { date, teacherUid, teacherName, classGroup, studentIds[], studentNames[], content, source:'teacher' }
+// ══════════════════════════════════════════
+const HW_DOW = ['일','월','화','수','목','금','토'];
+const hwEsc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+const hwClsOf = (s) => String(s?.classGroup || '').trim() || '(반 미배정)';
+const hwClsKey = (c) => { const m = String(c || '').match(/^(초|중|고)\s*(\d)/); return m ? ({ 초:0, 중:1, 고:2 }[m[1]] * 10 + parseInt(m[2], 10)) : 99; };
+const hwYmd = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const hwLabel = (ymd) => { const d = new Date(ymd + 'T00:00:00'); return `${d.getMonth()+1}월 ${d.getDate()}일 (${HW_DOW[d.getDay()]})`; };
+let hwCls = '';
+let hwRows = [];      // 내 숙제 기록 전체 (teacherUid == 나)
+let hwEditing = null; // 수정 중인 문서 ID
+
+window.hwInit = async function () {
+  if (!currentTeacher) return;
+  const dt = document.getElementById('hwDate');
+  if (!dt.value) dt.value = hwYmd(new Date());
+  await hwLoad();
+};
+window.hwOnDate = function () { hwCancel(); hwRenderClasses(); hwRenderList(); };
+
+async function hwLoad() {
+  try {
+    const snap = await getDocs(query(collection(db, 'homeworkLogs'), where('teacherUid', '==', currentTeacher.uid)));
+    hwRows = []; snap.forEach(d => hwRows.push({ id: d.id, ...d.data() }));
+  } catch (e) { showAlert(document.getElementById('hw-err'), '불러오기 오류: ' + e.message, 'err'); }
+  hwRenderClasses();
+  hwRenderStudents(hwEditing ? (hwRows.find(r => r.id === hwEditing)?.studentIds || null) : null);
+  hwRenderList();
+}
+
+function hwRenderClasses() {
+  const el = document.getElementById('hwClasses');
+  const date = document.getElementById('hwDate').value;
+  const dayName = date ? HW_DOW[new Date(date + 'T00:00:00').getDay()] : '';
+  document.getElementById('hwDateLabel').textContent = date ? hwLabel(date) : '';
+  const m = new Map();
+  myStudents.forEach(s => {
+    const c = hwClsOf(s);
+    const o = m.get(c) || { n: 0, today: false };
+    o.n++; if ((s.days || []).includes(dayName)) o.today = true;
+    m.set(c, o);
+  });
+  const list = [...m.entries()].sort((a, b) => hwClsKey(a[0]) - hwClsKey(b[0]) || a[0].localeCompare(b[0], 'ko'));
+  if (!list.length) { el.innerHTML = '<span style="font-size:12px;color:var(--muted);">담당 학생이 없습니다.</span>'; return; }
+  const done = new Set(hwRows.filter(r => r.date === date).map(r => String(r.classGroup || '').trim() || '(반 미배정)'));
+  el.innerHTML = list.map(([c, o]) => `<button type="button" class="rating-btn${hwCls === c ? ' selected' : ''}" data-cls="${hwEsc(c)}" onclick="hwPick(this.dataset.cls)">${o.today ? '<span style="color:#D97B1A;">●</span> ' : ''}${hwEsc(c)} <small style="opacity:.7;">${o.n}명</small>${done.has(c) ? ' <b style="color:#2E9E5B;">✓</b>' : ''}</button>`).join('');
+}
+
+window.hwPick = function (c) {
+  const date = document.getElementById('hwDate').value;
+  hwCls = c;
+  // 같은 날짜·같은 반에 이미 기록이 있으면 불러와서 수정 모드로 (중복 입력 방지)
+  const exist = hwRows.find(r => r.date === date && (String(r.classGroup || '').trim() || '(반 미배정)') === c);
+  if (exist) { hwEdit(exist.id, true); return; }
+  hwEditing = null;
+  document.getElementById('hwSaveBtn').textContent = '저장';
+  document.getElementById('hwCancelBtn').style.display = 'none';
+  hwRenderClasses();
+  hwRenderStudents(null);
+};
+
+function hwRenderStudents(checkedIds) {
+  const el = document.getElementById('hwStudents');
+  if (!hwCls) { el.innerHTML = '<span style="font-size:12px;color:var(--muted);">반을 고르면 학생이 나옵니다.</span>'; return; }
+  const list = myStudents.filter(s => hwClsOf(s) === hwCls).sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
+  // 수정 중인 기록에 내 담당이 아닌 학생이 들어 있으면 그대로 유지되도록 함께 표시
+  const extra = (checkedIds || []).filter(id => !list.some(s => s.id === id)).map(id => studentsCache.find(s => s.id === id)).filter(Boolean);
+  const all = list.concat(extra);
+  if (!all.length) { el.innerHTML = '<span style="font-size:12px;color:var(--muted);">이 반 학생이 없습니다.</span>'; return; }
+  el.innerHTML = all.map(s => `<label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" value="${s.id}" ${!checkedIds || checkedIds.includes(s.id) ? 'checked' : ''}> ${hwEsc(s.name)}</label>`).join('');
+}
+
+window.hwSave = async function () {
+  const ok = document.getElementById('hw-ok'), err = document.getElementById('hw-err');
+  const date = document.getElementById('hwDate').value;
+  const content = document.getElementById('hwContent').value.trim();
+  const ids = [...document.querySelectorAll('#hwStudents input:checked')].map(c => c.value);
+  if (!date)        { showAlert(err, '날짜를 골라주세요.', 'err'); return; }
+  if (!hwCls)       { showAlert(err, '반을 골라주세요.', 'err'); return; }
+  if (!ids.length)  { showAlert(err, '학생을 한 명 이상 체크해주세요.', 'err'); return; }
+  if (!content)     { showAlert(err, '숙제 내용을 적어주세요.', 'err'); return; }
+  const names = ids.map(id => studentsCache.find(s => s.id === id)?.name || '');
+  const data = {
+    date, teacherUid: currentTeacher.uid, teacherName: currentTeacher.name || '',
+    classGroup: hwCls, studentIds: ids, studentNames: names, content,
+    updatedAt: new Date().toISOString(), updatedBy: (currentTeacher.name || '') + ' 선생님',
+  };
+  const btn = document.getElementById('hwSaveBtn'); btn.disabled = true;
+  try {
+    if (hwEditing) await updateDoc(doc(db, 'homeworkLogs', hwEditing), data);
+    else await addDoc(collection(db, 'homeworkLogs'), { ...data, source: 'teacher', createdAt: new Date().toISOString() });
+    showAlert(ok, hwEditing ? `✅ ${hwCls} 숙제를 수정했습니다.` : `✅ ${hwLabel(date)} ${hwCls} 숙제를 저장했습니다. (${ids.length}명) — 관리부 숙제표에 반영됨`, 'ok');
+    hwCancel();
+    await hwLoad();
+    if (typeof refreshTeacherCalendar === 'function') refreshTeacherCalendar();
+  } catch (e) { showAlert(err, '저장 오류: ' + e.message, 'err'); }
+  finally { btn.disabled = false; }
+};
+
+window.hwCancel = function () {
+  hwEditing = null; hwCls = '';
+  document.getElementById('hwContent').value = '';
+  document.getElementById('hwSaveBtn').textContent = '저장';
+  document.getElementById('hwCancelBtn').style.display = 'none';
+  hwRenderClasses();
+  hwRenderStudents(null);
+};
+
+window.hwEdit = function (id, fromPick) {
+  const r = hwRows.find(x => x.id === id); if (!r) return;
+  hwEditing = id;
+  hwCls = String(r.classGroup || '').trim() || '(반 미배정)';
+  document.getElementById('hwDate').value = r.date;
+  hwRenderClasses();
+  hwRenderStudents(r.studentIds || []);
+  document.getElementById('hwContent').value = r.content || '';
+  document.getElementById('hwSaveBtn').textContent = '수정 저장';
+  document.getElementById('hwCancelBtn').style.display = '';
+  if (fromPick) showAlert(document.getElementById('hw-ok'), '이 날짜에 이미 입력된 숙제를 불러왔어요. 고쳐서 저장하면 수정됩니다.', 'ok');
+  else document.getElementById('hwContent').scrollIntoView({ behavior: 'smooth', block: 'center' });
+};
+
+window.hwDelete = async function (id) {
+  const r = hwRows.find(x => x.id === id); if (!r) return;
+  if (!confirm(`${hwLabel(r.date)} ${r.classGroup} 숙제를 삭제할까요?\n(관리부 숙제표에서도 함께 지워집니다)`)) return;
+  try {
+    await deleteDoc(doc(db, 'homeworkLogs', id));
+    if (hwEditing === id) hwCancel();
+    await hwLoad();
+  } catch (e) { alert('삭제 오류: ' + e.message); }
+};
+
+function hwRenderList() {
+  const el = document.getElementById('hwList');
+  const from = new Date(); from.setDate(from.getDate() - 30);
+  const fromStr = hwYmd(from);
+  const sel = document.getElementById('hwDate').value;
+  const rows = hwRows.filter(r => r.date >= fromStr || r.date === sel)
+    .sort((a, b) => b.date.localeCompare(a.date) || hwClsKey(a.classGroup) - hwClsKey(b.classGroup) || String(a.classGroup || '').localeCompare(String(b.classGroup || ''), 'ko'));
+  if (!rows.length) { el.innerHTML = '<div class="empty-state"><div class="icon">📭</div>아직 입력한 숙제가 없습니다.</div>'; return; }
+  let prev = '';
+  el.innerHTML = rows.map(r => {
+    const head = r.date !== prev ? `<div style="padding:10px 16px 6px;font-size:12.5px;font-weight:700;color:${r.date === sel ? 'var(--purple, #5B3FA6)' : 'var(--muted)'};background:${r.date === sel ? 'rgba(245,197,24,0.12)' : 'transparent'};">${hwLabel(r.date)}${r.date === sel ? ' · 선택한 날짜' : ''}</div>` : '';
+    prev = r.date;
+    const by = r.source === 'teacher' ? '' : '<span style="font-size:11px;color:#2F7FD6;margin-left:6px;">관리부 입력</span>';
+    return head + `<div class="history-item" style="padding:12px 16px;border-bottom:1px solid rgba(30,24,56,0.05);">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
+        <div style="min-width:0;">
+          <span style="font-weight:700;color:var(--purple, #5B3FA6);">${hwEsc(r.classGroup)}</span>${by}
+          <span style="font-size:12px;color:var(--muted);margin-left:6px;">${(r.studentNames || []).length}명</span>
+          <div style="font-size:13px;margin-top:4px;white-space:pre-wrap;">${hwEsc(r.content)}</div>
+          <div style="font-size:11.5px;color:var(--muted);margin-top:3px;">${(r.studentNames || []).map(hwEsc).join(', ')}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;">
+          <button class="btn btn-outline btn-sm" onclick="hwEdit('${r.id}')">수정</button>
+          <button class="btn btn-danger btn-sm" onclick="hwDelete('${r.id}')">삭제</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
 // 토요 추가클리닉
 // ══════════════════════════════════════════
 let clinicStudentsAll = [];
 let clinicSelectedId   = '';
 let clinicSelectedName = '';
 
+// 토요일 목록: 오늘 기준 가장 최근 토요일부터 8주 — 선생님이 어느 토요일인지 직접 고름
+const CLINIC_DOW = ['일','월','화','수','목','금','토'];
+function clinicYmd(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function clinicSatLabel(ymd) {
+  if (!ymd) return '';
+  const d = new Date(ymd + 'T00:00:00');
+  return `${d.getMonth()+1}월 ${d.getDate()}일 (${CLINIC_DOW[d.getDay()]})`;
+}
+function fillClinicSaturdays(sel) {
+  if (!sel) return;
+  const keep = sel.value;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const isSat = today.getDay() === 6;
+  const last = new Date(today); last.setDate(today.getDate() - ((today.getDay() + 1) % 7));
+  let html = '<option value="">토요일 선택...</option>';
+  for (let i = 0; i < 8; i++) {
+    const d = new Date(last); d.setDate(last.getDate() - 7 * i);
+    const w = i + (isSat ? 0 : 1);
+    const tag = w === 0 ? '오늘' : w === 1 ? '지난 토요일' : `${w}주 전`;
+    const ymd = clinicYmd(d);
+    html += `<option value="${ymd}">${clinicSatLabel(ymd)} · ${tag}</option>`;
+  }
+  sel.innerHTML = html;
+  if (keep && [...sel.options].some(o => o.value === keep)) sel.value = keep;
+}
+
 window.initClinicTab = function() {
-  // 날짜 기본값: 오늘
-  const today = new Date();
-  const yyyy  = today.getFullYear();
-  const mm    = String(today.getMonth()+1).padStart(2,'0');
-  const dd    = String(today.getDate()).padStart(2,'0');
-  const todayStr = `${yyyy}-${mm}-${dd}`;
-  const dateInput = document.getElementById('c-date');
-  if (!dateInput.value) dateInput.value = todayStr;
-  const noneDateInput = document.getElementById('c-none-date');
-  if (noneDateInput && !noneDateInput.value) noneDateInput.value = todayStr;
+  // 어느 토요일인지 매번 직접 고르도록 — 기본 선택 없음
+  fillClinicSaturdays(document.getElementById('c-date'));
+  fillClinicSaturdays(document.getElementById('c-none-date'));
 
   // 내 학생 목록 렌더
   clinicStudentsAll = studentsCache.filter(s => s.teacherUid === currentTeacher.uid);
@@ -2761,7 +2992,7 @@ window.submitClinic = async function() {
   const ok  = document.getElementById('clinic-ok');
   const err = document.getElementById('clinic-err');
 
-  if (!dateVal)    { showAlert(err, '날짜를 입력해주세요.', 'err'); return; }
+  if (!dateVal)    { showAlert(err, '어느 토요일 클리닉인지 골라주세요.', 'err'); return; }
   if (!studentId)  { showAlert(err, '학생을 선택해주세요.', 'err'); return; }
   if (!time)       { showAlert(err, '시간을 입력해주세요.', 'err'); return; }
   if (!book)       { showAlert(err, '지참교재를 입력해주세요.', 'err'); return; }
@@ -2779,7 +3010,7 @@ window.submitClinic = async function() {
       content,
       submittedAt:  serverTimestamp()
     });
-    showAlert(ok, `✅ ${stuName} 학생의 토요클리닉이 제출되었습니다.`, 'ok');
+    showAlert(ok, `✅ ${clinicSatLabel(dateVal)} ${stuName} 학생의 토요클리닉이 제출되었습니다.`, 'ok');
     resetClinic();
     loadClinicHistory();
   } catch(e) {
@@ -2792,9 +3023,9 @@ window.submitNoClinic = async function() {
   const ok  = document.getElementById('clinic-none-ok');
   const err = document.getElementById('clinic-none-err');
 
-  if (!dateVal) { showAlert(err, '날짜를 입력해주세요.', 'err'); return; }
+  if (!dateVal) { showAlert(err, '어느 토요일인지 골라주세요.', 'err'); return; }
 
-  if (!confirm(`${dateVal} 토요클리닉이 없었던 것으로 제출할까요?`)) return;
+  if (!confirm(`${clinicSatLabel(dateVal)} 토요클리닉이 없었던 것으로 제출할까요?`)) return;
 
   try {
     await addDoc(collection(db, 'satClinicReports'), {
@@ -2809,7 +3040,7 @@ window.submitNoClinic = async function() {
       isNone:       true,
       submittedAt:  serverTimestamp()
     });
-    showAlert(ok, `✅ ${dateVal} 토요클리닉 없음이 제출되었습니다.`, 'ok');
+    showAlert(ok, `✅ ${clinicSatLabel(dateVal)} 토요클리닉 없음이 제출되었습니다.`, 'ok');
     loadClinicHistory();
   } catch(e) {
     showAlert(err, '제출 오류: ' + e.message, 'err');
@@ -2848,7 +3079,7 @@ async function loadClinicHistory() {
           <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
             <div>
               <span style="font-weight:700;color:var(--muted);">🚫 클리닉 없음</span>
-              <span style="font-size:12px;color:var(--muted);margin-left:8px;">${r.date}</span>
+              <span style="font-size:12px;color:var(--muted);margin-left:8px;">${clinicSatLabel(r.date)}</span>
             </div>
             <button class="btn btn-danger btn-sm" onclick="deleteClinic('${d.id}','(없음)')">삭제</button>
           </div>
@@ -2858,7 +3089,7 @@ async function loadClinicHistory() {
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;">
           <div>
             <span style="font-weight:700;color:var(--purple, #5B3FA6);">${r.studentName}</span>
-            <span style="font-size:12px;color:var(--muted);margin-left:8px;">${r.date} · ${r.time}</span>
+            <span style="font-size:12px;color:var(--muted);margin-left:8px;">${clinicSatLabel(r.date)} · ${r.time}</span>
             <div style="font-size:12px;color:var(--muted);margin-top:4px;">지참교재: ${r.book}</div>
             <div style="font-size:13px;margin-top:4px;">${r.content}</div>
           </div>
@@ -3272,6 +3503,28 @@ async function calBuildAutoTodos() {
       });
     }
   } catch (e) { console.warn('[일정] 토요클리닉 확인 실패:', e.message); }
+
+  // ⑤ 숙제 입력 — 오늘 수업 있는 내 반 중 숙제 기록 없는 반 (원장 페이지 빨간불과 같은 기준)
+  try {
+    if (!calIsOff(todayStr)) {
+      const dayName = CAL_DOW[dow];
+      const clsMap = new Map();
+      my.forEach(s => { if ((s.days || []).includes(dayName)) { const c = String(s.classGroup || '').trim() || '(반 미배정)'; clsMap.set(c, (clsMap.get(c) || 0) + 1); } });
+      if (clsMap.size) {
+        const hs = await getDocs(query(collection(db, 'homeworkLogs'), where('teacherUid', '==', currentTeacher.uid)));
+        const doneCls = new Set();
+        hs.forEach(d => { const r = d.data(); if (r.date === todayStr) doneCls.add(String(r.classGroup || '').trim() || '(반 미배정)'); });
+        const left = [...clsMap.keys()].filter(c => !doneCls.has(c));
+        list.push(left.length ? {
+          key: `hwlog:${todayStr}`, level: 'due', tab: 'hwlog', tabInit: 'hwInit',
+          title: `숙제 입력 — ${left.length}개 반 남음`, detail: `오늘 수업 반 · ${left.join(', ')}`,
+        } : {
+          key: `hwlog:${todayStr}`, level: 'soon', tab: 'hwlog', tabInit: 'hwInit', sysDone: true,
+          title: '숙제 입력 — 오늘 반 모두 입력', detail: `${clsMap.size}개 반 입력 완료`,
+        });
+      }
+    }
+  } catch (e) { console.warn('[일정] 숙제 확인 실패:', e.message); }
 
   calAutoTodos = list;
   calSortAuto();
@@ -5322,6 +5575,7 @@ window.addEventListener('message', (e) => { if (e.data && e.data.type === 'pcRea
   const GROUPS = [
     { id: 'home',    label: '홈',     icon: '📅', items: [{ id: 'calendar', label: '일정 · 오늘 할 일', desc: '달력 · 할 일 · 마감' }] },
     { id: 'reports', label: '보고서', icon: '📝', items: [
+      { id: 'hwlog',    label: '숙제 입력', desc: '내 반 숙제 · 관리부 숙제표에 날짜별 자동 연동' },
       { id: 'weekly',   label: '주간성취도', desc: '중등부 · 금요일까지', middleOnly: true },
       { id: 'dailytest', label: '일일테스트', desc: '초·중등 · 시험지 등록 · 오답 입력', middleOnly: true },
       { id: 'reportreview', label: '보고서 검수', desc: '월간 학습보고서 의견 확인 · 확정', middleOnly: true },
