@@ -699,3 +699,4 @@ body.ck-lock { overflow:hidden; }
 .sm-check input { accent-color:#4caf50; width:15px; height:15px; cursor:pointer; }
 .sm-memo { cursor:pointer; min-width:120px; max-width:260px; font-size:12px; line-height:1.4; }
 .sm-memo:hover { color:var(--purple, #5B3FA6); }
+@media (max-width:520px){ .ad-top-right a[href="index.html"] { display:none; } }

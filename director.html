@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>원장 페이지 | 송우찬수학학원</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="style.css">
+<style>
+/* ═══════════════════════════════════════════════════════════
+   원장 페이지 — 학원 마감·보고를 한눈에 (보기 전용)
+   - 원장(admins.role != 'office')만 입장
+   - 고치기는 각 항목의 "관리자 화면에서 고치기" → admin.html#메뉴
+   ═══════════════════════════════════════════════════════════ */
+:root { --red:#D64545; --red-bg:rgba(214,69,69,0.08); --green:#2E9E5B; --green-bg:rgba(46,158,91,0.08); --amber:#D97B1A; --amber-bg:rgba(217,123,26,0.09); }
+body { background:var(--bg); }
+nav.dr-top { padding:0 20px; gap:14px; justify-content:flex-start; }
+.dr-brand { display:inline-flex; align-items:center; gap:9px; text-decoration:none; color:var(--off-white); flex-shrink:0; }
+.dr-brand img { height:30px; width:30px; object-fit:contain; }
+.dr-brand span { font-size:14px; font-weight:700; white-space:nowrap; }
+.dr-brand b { color:var(--purple); }
+.dr-top-right { margin-left:auto; display:flex; gap:8px; align-items:center; flex-shrink:0; }
+.dr-who { font-size:12.5px; color:var(--muted); white-space:nowrap; }
+.btn { display:inline-flex; align-items:center; gap:6px; padding:8px 14px; border-radius:8px; font-size:12.5px; font-weight:600; font-family:inherit; cursor:pointer; border:1px solid var(--border-soft); background:#fff; color:var(--off-white); text-decoration:none; white-space:nowrap; transition:all .15s; }
+.btn:hover { border-color:var(--gold); color:var(--purple); }
+.btn-gold { background:var(--gold); border-color:var(--gold); color:var(--on-gold); }
+.btn-gold:hover { background:var(--gold-dim); color:var(--on-gold); }
+.btn-xs { padding:5px 10px; font-size:11.5px; border-radius:7px; }
+
+.dr-wrap { max-width:1120px; margin:0 auto; padding:88px 20px 80px; }
+.dr-head { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:18px; }
+.dr-head h1 { font-size:24px; font-weight:800; letter-spacing:-0.5px; }
+.dr-head h1 small { display:block; font-size:13px; font-weight:500; color:var(--muted); letter-spacing:0; margin-top:2px; }
+.dr-head-ctrl { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.dr-select { padding:8px 12px; border-radius:8px; border:1px solid var(--border-soft); background:#fff; font-size:13px; font-family:inherit; color:var(--off-white); outline:none; }
+
+/* 확인 필요 (빨간불 모음) */
+.dr-alerts { background:#fff; border:1px solid var(--border-soft); border-radius:14px; padding:14px 16px; margin-bottom:18px; display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+.dr-alerts .lb { font-size:12px; font-weight:700; color:var(--muted); margin-right:4px; }
+.dr-alert { display:inline-flex; align-items:center; gap:6px; padding:6px 12px; border-radius:99px; font-size:12.5px; font-weight:600; cursor:pointer; border:1px solid rgba(214,69,69,0.25); background:var(--red-bg); color:var(--red); font-family:inherit; }
+.dr-alert:hover { background:rgba(214,69,69,0.14); }
+.dr-alert.ok { border-color:rgba(46,158,91,0.25); background:var(--green-bg); color:var(--green); cursor:default; }
+.dr-alert i { width:8px; height:8px; border-radius:50%; background:currentColor; display:inline-block; }
+
+/* 탭 */
+.dr-tabs { display:flex; gap:4px; border-bottom:2px solid var(--border-soft); margin-bottom:18px; overflow-x:auto; }
+.dr-tab { padding:11px 20px; background:none; border:none; font-size:14px; font-weight:700; font-family:inherit; color:var(--muted); cursor:pointer; position:relative; white-space:nowrap; }
+.dr-tab::after { content:''; position:absolute; left:0; right:0; bottom:-2px; height:2px; background:var(--gold); transform:scaleX(0); transition:transform .2s; }
+.dr-tab.on { color:var(--purple); }
+.dr-tab.on::after { transform:scaleX(1); }
+.dr-tab .cnt { display:inline-block; min-width:18px; padding:0 6px; margin-left:6px; border-radius:99px; background:var(--red); color:#fff; font-size:11px; line-height:18px; text-align:center; }
+.dr-panel { display:none; }
+.dr-panel.on { display:block; }
+
+/* 기간 이동 */
+.dr-period { display:flex; align-items:center; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
+.dr-period .nav-btn { width:34px; height:34px; border-radius:8px; border:1px solid var(--border-soft); background:#fff; cursor:pointer; font-size:15px; color:var(--off-white); }
+.dr-period .nav-btn:hover { border-color:var(--gold); }
+.dr-period .label { font-size:16px; font-weight:800; min-width:0; }
+.dr-period .sub { font-size:12.5px; color:var(--muted); }
+.dr-period input[type=date], .dr-period input[type=month] { padding:7px 10px; border-radius:8px; border:1px solid var(--border-soft); font-family:inherit; font-size:13px; color-scheme:light; }
+
+/* 카드 */
+.dr-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+@media (max-width:900px){ .dr-grid { grid-template-columns:1fr; } }
+.card { background:#fff; border:1px solid var(--border-soft); border-radius:14px; padding:20px; margin-bottom:16px; min-width:0; }
+.dr-grid .card { margin-bottom:0; }
+.day-top { align-items:start; }
+.day-side { display:flex; flex-direction:column; gap:16px; min-width:0; }
+#dayClosing { display:flex; flex-direction:column; gap:16px; min-width:0; }
+.card-hd { display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+.card-hd h3 { font-size:15.5px; font-weight:800; color:var(--off-white); }
+.card-hd .r { margin-left:auto; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.st { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:700; padding:3px 10px; border-radius:99px; white-space:nowrap; }
+.st::before { content:''; width:7px; height:7px; border-radius:50%; background:currentColor; }
+.st.ok { color:var(--green); background:var(--green-bg); }
+.st.bad { color:var(--red); background:var(--red-bg); }
+.st.warn { color:var(--amber); background:var(--amber-bg); }
+.st.mute { color:var(--muted); background:rgba(30,24,56,0.05); }
+.fix { font-size:11.5px; color:var(--purple); text-decoration:none; border:1px solid var(--border); padding:4px 10px; border-radius:7px; font-weight:600; white-space:nowrap; }
+.fix:hover { background:var(--gold-glow); border-color:var(--gold); }
+.empty { color:var(--muted); font-size:13px; padding:10px 0; }
+.err { color:var(--red); font-size:13px; padding:10px 0; }
+.note { font-size:11.5px; color:var(--muted); margin-top:10px; line-height:1.6; }
+
+/* 관리부 마감 */
+.mg-fields { display:grid; grid-template-columns:136px minmax(0,1fr); border:1px solid var(--border-soft); border-radius:10px; overflow:hidden; }
+.mg-fields > div { padding:9px 12px; font-size:13px; border-bottom:1px solid var(--border-soft); white-space:pre-wrap; word-break:break-word; }
+.mg-fields > div:nth-last-child(-n+2) { border-bottom:none; }
+.mg-fields .k { background:rgba(91,63,166,0.05); color:var(--purple); font-weight:700; font-size:12px; }
+.mg-fields .v.dim { color:var(--muted); }
+.mg-meta { font-size:12px; color:var(--muted); margin-bottom:10px; }
+
+/* 숫자 상자 */
+.stat-row { display:flex; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+.stat { flex:1 1 90px; background:rgba(30,24,56,0.03); border:1px solid var(--border-soft); border-radius:10px; padding:10px 12px; }
+.stat b { display:block; font-size:22px; font-weight:800; line-height:1.2; }
+.stat span { font-size:11.5px; color:var(--muted); }
+.stat.red b { color:var(--red); } .stat.green b { color:var(--green); }
+
+/* 목록 */
+.row { display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--border-soft); border-radius:10px; margin-bottom:6px; background:rgba(30,24,56,0.015); min-width:0; }
+.row .t { flex:1; min-width:0; font-size:13.5px; }
+.row .t b { font-weight:700; }
+.row .t small { display:block; font-size:11.5px; color:var(--muted); }
+.row .r { font-size:12px; color:var(--muted); white-space:nowrap; }
+.dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+.dot.ok { background:var(--green); } .dot.bad { background:var(--red); } .dot.warn { background:var(--amber); } .dot.mute { background:#bbb; }
+
+/* 선생님 묶음 (펼치기) */
+.tg { border:1px solid var(--border-soft); border-radius:12px; margin-bottom:10px; overflow:hidden; background:#fff; }
+.tg > summary { list-style:none; cursor:pointer; padding:13px 16px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.tg > summary::-webkit-details-marker { display:none; }
+.tg > summary::after { content:'›'; margin-left:6px; color:var(--muted); font-size:18px; line-height:1; transition:transform .15s; }
+.tg[open] > summary::after { transform:rotate(90deg); }
+.tg[open] > summary { border-bottom:1px solid var(--border-soft); }
+.tg .nm { font-weight:800; font-size:14.5px; }
+.tg .sm { font-size:12px; color:var(--muted); }
+.tg .rt { margin-left:auto; display:flex; align-items:center; gap:8px; }
+.tg-body { padding:10px 14px 12px; }
+.bar { width:120px; height:7px; border-radius:99px; background:rgba(30,24,56,0.08); overflow:hidden; }
+.bar i { display:block; height:100%; background:var(--red); border-radius:99px; }
+.bar i.full { background:var(--green); }
+
+/* 숙제 */
+.hw { border:1px solid var(--border-soft); border-radius:10px; margin-bottom:6px; overflow:hidden; }
+.hw > summary { list-style:none; cursor:pointer; padding:10px 12px; display:flex; align-items:center; gap:10px; font-size:13.5px; }
+.hw > summary::-webkit-details-marker { display:none; }
+.hw.miss { background:var(--red-bg); border-color:rgba(214,69,69,0.25); }
+.hw.miss > summary { cursor:default; }
+.hw .cls { font-weight:700; min-width:76px; }
+.hw .pv { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--muted); font-size:12.5px; }
+.hw.miss .pv { color:var(--red); font-weight:700; }
+.hw-body { padding:4px 14px 12px 33px; font-size:13px; white-space:pre-wrap; word-break:break-word; }
+.hw-body small { display:block; color:var(--muted); font-size:11.5px; margin-top:6px; white-space:normal; }
+
+/* 표 (주간성취도·클리닉·보고서) */
+.tbl { width:100%; border-collapse:collapse; font-size:12.5px; }
+.tbl th { text-align:left; font-size:11.5px; color:var(--muted); font-weight:700; padding:7px 8px; border-bottom:1px solid var(--border-soft); white-space:nowrap; }
+.tbl td { padding:8px; border-bottom:1px solid rgba(30,24,56,0.05); vertical-align:top; }
+.tbl tr.miss td { background:var(--red-bg); }
+.tbl tr.miss td.nm { color:var(--red); font-weight:700; }
+.tbl td.memo { white-space:pre-wrap; word-break:break-word; color:var(--off-white); min-width:180px; }
+.tbl-wrap { overflow-x:auto; }
+.chip { display:inline-block; font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; white-space:nowrap; }
+.chip.ok { color:var(--green); background:var(--green-bg); }
+.chip.bad { color:var(--red); background:var(--red-bg); }
+.chip.warn { color:var(--amber); background:var(--amber-bg); }
+.chip.mute { color:var(--muted); background:rgba(30,24,56,0.05); }
+.chip.pur { color:var(--purple); background:rgba(91,63,166,0.08); }
+a.lk { color:var(--purple); font-weight:600; text-decoration:none; }
+a.lk:hover { text-decoration:underline; }
+
+/* 댓글 */
+.th { border:1px solid var(--border-soft); border-radius:12px; padding:14px 16px; margin-bottom:10px; background:#fff; }
+.th.wait { border-color:rgba(214,69,69,0.35); box-shadow:inset 3px 0 0 var(--red); }
+.th-hd { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
+.th-hd b { font-size:14px; }
+.th-hd .sm { font-size:12px; color:var(--muted); }
+.th-hd .r { margin-left:auto; display:flex; gap:6px; align-items:center; }
+.msg { padding:9px 12px; border-radius:10px; font-size:13px; margin-bottom:6px; max-width:88%; white-space:pre-wrap; word-break:break-word; }
+.msg.p { background:rgba(245,197,24,0.13); }
+.msg.t { background:rgba(91,63,166,0.07); margin-left:auto; }
+.msg small { display:block; font-size:11px; color:var(--muted); margin-bottom:2px; white-space:normal; }
+.msgs { display:flex; flex-direction:column; }
+.flt { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; align-items:center; }
+.pill { padding:6px 14px; border-radius:99px; border:1px solid var(--border-soft); background:#fff; font-size:12.5px; font-weight:600; font-family:inherit; color:var(--muted); cursor:pointer; }
+.pill.on { border-color:var(--gold); color:var(--purple); background:var(--gold-glow); }
+
+/* 입장 불가 / 로딩 */
+.gate { max-width:420px; margin:140px auto; background:#fff; border:1px solid var(--border-soft); border-radius:16px; padding:36px 28px; text-align:center; }
+.gate h2 { font-size:18px; margin-bottom:8px; }
+.gate p { font-size:13.5px; color:var(--muted); margin-bottom:18px; }
+.holiday { background:var(--amber-bg); color:var(--amber); border:1px solid rgba(217,123,26,0.25); border-radius:10px; padding:10px 14px; font-size:13px; font-weight:600; margin-bottom:14px; }
+
+@media (max-width:640px){
+  nav.dr-top { padding:0 12px; }
+  .dr-brand span, .dr-who { display:none; }
+  .dr-wrap { padding:80px 14px 60px; }
+  .mg-fields { grid-template-columns:96px minmax(0,1fr); }
+  .bar { width:70px; }
+  .tg .rt { margin-left:0; width:100%; }
+  .stat { flex-basis:64px; padding:8px 10px; }
+  .stat b { font-size:19px; }
+}
+</style>
+</head>
+<body>
+
+<nav class="dr-top">
+  <a href="index.html" class="dr-brand"><img src="swc-logo.svg" alt="SWC"><span>송우찬수학학원 <b>원장 페이지</b></span></a>
+  <div class="dr-top-right">
+    <span class="dr-who" id="drWho"></span>
+    <a href="admin.html" class="btn">⚙️ 관리자 페이지</a>
+    <button class="btn" onclick="drLogout()">로그아웃</button>
+  </div>
+</nav>
+
+<div id="drGate" class="gate" style="display:none"></div>
+
+<div class="dr-wrap" id="drMain" style="display:none">
+  <div class="dr-head">
+    <h1>원장 보고<small id="drToday"></small></h1>
+    <div class="dr-head-ctrl">
+      <select class="dr-select" id="drBranch" onchange="drSetBranch(this.value)">
+        <option value="">전체 관</option>
+        <option value="평촌관">평촌관</option>
+        <option value="산본관">산본관</option>
+      </select>
+      <button class="btn" onclick="drReload()">🔄 새로고침</button>
+    </div>
+  </div>
+
+  <div class="dr-alerts" id="drAlerts"><span class="lb">확인 필요</span><span class="empty" style="padding:0">불러오는 중...</span></div>
+
+  <div class="dr-tabs" id="drTabs">
+    <button class="dr-tab on" data-tab="day" onclick="drTab('day')">오늘 · 하루 마감</button>
+    <button class="dr-tab" data-tab="week" onclick="drTab('week')">이번 주 · 주간</button>
+    <button class="dr-tab" data-tab="month" onclick="drTab('month')">이번 달 · 월말보고서</button>
+    <button class="dr-tab" data-tab="comment" onclick="drTab('comment')">학부모 댓글</button>
+  </div>
+
+  <!-- ══ 하루 ══ -->
+  <section class="dr-panel on" id="pn-day">
+    <div class="dr-period">
+      <button class="nav-btn" onclick="drDayMove(-1)" aria-label="전날">‹</button>
+      <span class="label" id="dayLabel"></span>
+      <button class="nav-btn" onclick="drDayMove(1)" aria-label="다음날">›</button>
+      <input type="date" id="dayPick" onchange="drDaySet(this.value)">
+      <button class="btn btn-xs" onclick="drDaySet(drYmd(new Date()))">오늘</button>
+    </div>
+    <div id="dayHoliday"></div>
+    <div class="dr-grid day-top">
+      <div id="dayClosing"></div>
+      <div class="day-side">
+        <div class="card" id="dayAtt"></div>
+        <div class="card" id="dayConsult"></div>
+      </div>
+    </div>
+    <div class="card" id="dayHw" style="margin-top:16px"></div>
+  </section>
+
+  <!-- ══ 주간 ══ -->
+  <section class="dr-panel" id="pn-week">
+    <div class="dr-period">
+      <button class="nav-btn" onclick="drWeekMove(-1)" aria-label="지난주">‹</button>
+      <span class="label" id="weekLabel"></span>
+      <button class="nav-btn" onclick="drWeekMove(1)" aria-label="다음주">›</button>
+      <span class="sub" id="weekSub"></span>
+    </div>
+    <div class="card" id="weekWeekly"></div>
+    <div class="card" id="weekSat"></div>
+  </section>
+
+  <!-- ══ 월간 ══ -->
+  <section class="dr-panel" id="pn-month">
+    <div class="dr-period">
+      <button class="nav-btn" onclick="drMonthMove(-1)" aria-label="지난달">‹</button>
+      <span class="label" id="monthLabel"></span>
+      <button class="nav-btn" onclick="drMonthMove(1)" aria-label="다음달">›</button>
+      <span class="sub">매달 3일까지 검수 · 공개</span>
+    </div>
+    <div class="card" id="monthReport"></div>
+  </section>
+
+  <!-- ══ 댓글 ══ -->
+  <section class="dr-panel" id="pn-comment">
+    <div class="card" id="cmBox"></div>
+  </section>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const app = initializeApp({
+  apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
+  authDomain: "songmath.firebaseapp.com",
+  projectId: "songmath",
+  storageBucket: "songmath.firebasestorage.app",
+  messagingSenderId: "936295436575",
+  appId: "1:936295436575:web:d1e201508719850cfbe02a"
+});
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ── 공통 도구 ──
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const DOW = ['일', '월', '화', '수', '목', '금', '토'];
+const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+window.drYmd = ymd;
+const parseYmd = (s) => { const [y, m, d] = String(s).split('-').map(Number); return new Date(y, m - 1, d); };
+const md = (d) => `${d.getMonth() + 1}/${d.getDate()}(${DOW[d.getDay()]})`;
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const tsDate = (v) => v instanceof Date ? v : v?.toDate ? v.toDate() : (v?.seconds ? new Date(v.seconds * 1000) : (typeof v === 'string' ? new Date(v) : null));
+const hm = (d) => d ? `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}` : '';
+const fix = (menu, label = '관리자 화면에서 고치기') => `<a class="fix" href="admin.html#${menu}" target="_blank" rel="noopener">${esc(label)} ↗</a>`;
+const clsKey = (c) => { const m = String(c || '').match(/^(초|중|고)\s*(\d)/); return m ? ({ 초: 0, 중: 1, 고: 2 }[m[1]] * 10 + parseInt(m[2], 10)) : 99; };
+const clsCmp = (a, b) => clsKey(a) - clsKey(b) || String(a || '').localeCompare(String(b || ''), 'ko', { numeric: true });
+const koCmp = (a, b) => String(a || '').localeCompare(String(b || ''), 'ko');
+// 주간성취도·월말보고서 대상: 초·중등 (고등·N수 제외) — 관리자 홈·선생님 페이지와 같은 기준
+const isJunior = (s) => { const g = String(s?.grade || '').trim(); return !(g.startsWith('고') || /N수|재수|졸업/.test(g)); };
+function mondayOf(d) { const m = new Date(d); m.setHours(0, 0, 0, 0); const day = m.getDay(); m.setDate(m.getDate() - (day === 0 ? 6 : day - 1)); return m; }
+function weekKeyOf(monday) {   // 선생님 페이지 getWeekKey와 같은 계산
+  const y = monday.getFullYear(); const start = new Date(y, 0, 1);
+  const w = Math.ceil(((monday - start) / 86400000 + start.getDay() + 1) / 7);
+  return `${y}-W${String(w).padStart(2, '0')}`;
+}
+const monthKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+const RATING = { homework: '과제 충실도', attitude: '수업태도', clinic: '클리닉 참여도' };
+const ratingChip = (v) => { const c = v === '상' || v === '중상' ? 'ok' : v === '중' ? 'pur' : v ? 'warn' : 'mute'; return `<span class="chip ${c}">${esc(v || '-')}</span>`; };
+
+// ── 상태 ──
+const S = {
+  branch: '', students: [], teachers: [], events: [], comments: null,
+  day: ymd(new Date()),
+  weekMon: addDays(mondayOf(new Date()), -7),   // 주간성취도는 지난주분을 이번 주 금요일까지 → 기본은 지난주
+  month: (() => { const d = new Date(); return monthKey(new Date(d.getFullYear(), d.getMonth() - 1, 1)); })(),   // 지난달 (매달 3일 마감)
+  tab: 'day', alerts: {},
+};
+try { const b = localStorage.getItem('swc_director_branch'); if (b !== null) S.branch = b; } catch (e) {}
+
+const inScope = (s) => !S.branch || s.branch === S.branch;
+const scopeStudents = () => S.students.filter(inScope);
+const teacherMap = () => Object.fromEntries(S.teachers.map((t) => [t.id, t]));
+// 담당 학생이 있는(선택한 관 기준) 수업 선생님 — 조교 제외
+function activeTeachers(filterFn = () => true) {
+  const by = {};
+  scopeStudents().filter(filterFn).forEach((s) => { if (s.teacherUid) (by[s.teacherUid] = by[s.teacherUid] || []).push(s); });
+  return S.teachers.filter((t) => by[t.id]).map((t) => ({ ...t, students: by[t.id] })).sort((a, b) => koCmp(a.name, b.name));
+}
+function holidayOf(dateStr) {
+  return S.events.find((e) => e.type === '휴무' && e.start && e.start <= dateStr && (e.end || e.start) >= dateStr
+    && (e.target !== 'teachers') && (e.target !== 'branch' || !S.branch || e.branch === S.branch));
+}
+
+// ── 탭·이동 ──
+window.drTab = (t) => {
+  S.tab = t;
+  document.querySelectorAll('.dr-tab').forEach((b) => b.classList.toggle('on', b.dataset.tab === t));
+  document.querySelectorAll('.dr-panel').forEach((p) => p.classList.toggle('on', p.id === 'pn-' + t));
+  try { history.replaceState(null, '', '#' + t); } catch (e) {}
+  if (t === 'comment') renderComments();
+};
+window.drSetBranch = (b) => { S.branch = b; try { localStorage.setItem('swc_director_branch', b); } catch (e) {} renderAll(); };
+window.drReload = async () => { await loadBase(); S.comments = null; renderAll(); };
+window.drDayMove = (n) => { S.day = ymd(addDays(parseYmd(S.day), n)); renderDay(); };
+window.drDaySet = (v) => { if (v) { S.day = v; renderDay(); } };
+window.drWeekMove = (n) => { S.weekMon = addDays(S.weekMon, 7 * n); renderWeek(); };
+window.drMonthMove = (n) => { const [y, m] = S.month.split('-').map(Number); S.month = monthKey(new Date(y, m - 1 + n, 1)); renderMonth(); };
+window.drLogout = async () => { await signOut(auth); location.replace('login.html'); };
+window.drJump = (tab, anchor) => { drTab(tab); if (anchor) setTimeout(() => { const el = $(anchor); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 60); };
+
+// ── 기본 데이터 ──
+async function loadBase() {
+  const [st, te, ev] = await Promise.all([
+    getDocs(collection(db, 'students')),
+    getDocs(collection(db, 'teachers')),
+    getDocs(collection(db, 'scheduleEvents')).catch(() => null),
+  ]);
+  S.students = []; st.forEach((d) => S.students.push({ id: d.id, ...d.data() }));
+  S.teachers = []; te.forEach((d) => { const t = d.data(); if (t.role !== 'ta') S.teachers.push({ id: d.id, ...t }); });
+  S.events = []; if (ev) ev.forEach((d) => S.events.push(d.data()));
+}
+async function loadComments() {
+  if (S.comments) return S.comments;
+  const snap = await getDocs(collection(db, 'reportComments'));
+  S.comments = []; snap.forEach((d) => S.comments.push({ id: d.id, ...d.data() }));
+  return S.comments;
+}
+
+// ══════════════════════════════════════
+// 하루 마감 — 관리부 마감(dailyDrafts dr_관_날짜) · 출결(att_관_날짜) · 상담(consultForms) · 숙제(homeworkLogs)
+// ══════════════════════════════════════
+const DR_FIELDS = [
+  ['author', '작성자'], ['classes', '수업반'], ['consult', '상담 및 테스트'], ['receipt', '현금영수증 발행'],
+  ['absent', '출결 (결석자)'], ['textbook', '교재 입·출고'], ['note', '비고 (신규·퇴원)'], ['phone', '전화문의'], ['nextday', '익일 상담·신규원생'],
+];
+function branchesInScope() {
+  if (S.branch) return [S.branch];
+  const set = new Set(S.students.map((s) => s.branch).filter(Boolean));
+  const list = ['평촌관', '산본관'].filter((b) => set.has(b));
+  return list.length ? list : ['평촌관'];
+}
+
+async function fetchDay(dateStr) {
+  const brs = ['평촌관', '산본관'];
+  const ids = [...brs.map((b) => `dr_${b}_${dateStr}`), ...brs.map((b) => `att_${b}_${dateStr}`), `att_all_${dateStr}`];
+  const [docs, hl, cf] = await Promise.all([
+    Promise.all(ids.map((id) => getDoc(doc(db, 'dailyDrafts', id)).then((s) => [id, s.exists() ? s.data() : null]).catch(() => [id, null]))),
+    getDocs(query(collection(db, 'homeworkLogs'), where('date', '==', dateStr))),
+    getDocs(collection(db, 'consultForms')).catch(() => null),
+  ]);
+  const drafts = Object.fromEntries(docs);
+  const logs = []; hl.forEach((d) => logs.push({ id: d.id, ...d.data() }));
+  const consults = [];
+  if (cf) cf.forEach((d) => { const x = d.data(); const c = tsDate(x.createdAt); if (c && ymd(c) === dateStr) consults.push({ id: d.id, ...x, _c: c }); });
+  consults.sort((a, b) => a._c - b._c);
+  return { drafts, logs, consults };
+}
+
+// 출결: 관별 기록이 있으면 그것, 없으면 '전체'로 저장한 기록
+function attendanceOf(drafts, dateStr) {
+  const dayName = DOW[parseYmd(dateStr).getDay()];
+  const expected = scopeStudents().filter((s) => (s.days || []).includes(dayName));
+  const pick = (s) => {
+    const b = drafts[`att_${s.branch}_${dateStr}`];
+    if (b && b.status && b.status[s.id]) return { st: b.status[s.id], doc: b };
+    const a = drafts[`att_all_${dateStr}`];
+    if (a && a.status && a.status[s.id]) return { st: a.status[s.id], doc: a };
+    return null;
+  };
+  let present = 0, absent = 0, none = 0, recorded = 0; const absentList = []; let lastDoc = null;
+  expected.forEach((s) => {
+    const p = pick(s); if (!p) return;
+    recorded++; if (!lastDoc || (p.doc.savedAt || '') > (lastDoc.savedAt || '')) lastDoc = p.doc;
+    if (p.st === 'absent') { absent++; absentList.push(s); } else if (p.st === 'none') none++; else present++;
+  });
+  return { expected, present, absent, none, recorded, absentList, lastDoc };
+}
+
+// 숙제: 그날 수업이 있는 반(학생 수업 요일 기준) 중 숙제 기록이 없으면 빨간불
+function homeworkOf(logs, dateStr) {
+  const dayName = DOW[parseYmd(dateStr).getDay()];
+  const tm = teacherMap();
+  const classes = {};   // teacherUid|반 → { teacherUid, cls, students[], days:Set }
+  scopeStudents().forEach((s) => {
+    const cls = String(s.classGroup || '').trim();
+    if (!cls || !s.teacherUid || !tm[s.teacherUid]) return;
+    const k = s.teacherUid + '|' + cls;
+    const c = classes[k] = classes[k] || { teacherUid: s.teacherUid, cls, students: [], days: new Set() };
+    c.students.push(s); (s.days || []).forEach((d) => c.days.add(d));
+  });
+  const scopeIds = new Set(scopeStudents().map((s) => s.id));
+  const logsIn = logs.filter((l) => !S.branch || (l.studentIds || []).some((id) => scopeIds.has(id)) || classes[l.teacherUid + '|' + String(l.classGroup || '').trim()]);
+  const byTeacher = {};
+  const ensure = (uid, name) => (byTeacher[uid] = byTeacher[uid] || { uid, name: name || tm[uid]?.name || '(선생님)', rows: [] });
+  Object.values(classes).filter((c) => c.days.has(dayName)).forEach((c) => {
+    const ls = logsIn.filter((l) => l.teacherUid === c.teacherUid && String(l.classGroup || '').trim() === c.cls);
+    ensure(c.teacherUid).rows.push({ cls: c.cls, logs: ls, size: c.students.length, expected: true });
+  });
+  // 수업 요일이 아닌 반에 들어온 기록도 보여줌
+  logsIn.forEach((l) => {
+    const t = ensure(l.teacherUid, l.teacherName);
+    const cls = String(l.classGroup || '').trim() || '(반 미배정)';
+    if (!t.rows.some((r) => r.cls === cls)) t.rows.push({ cls, logs: logsIn.filter((x) => x.teacherUid === l.teacherUid && (String(x.classGroup || '').trim() || '(반 미배정)') === cls), size: (l.studentIds || []).length, expected: false });
+  });
+  const list = Object.values(byTeacher).sort((a, b) => koCmp(a.name, b.name));
+  list.forEach((t) => t.rows.sort((a, b) => clsCmp(a.cls, b.cls)));
+  const missing = list.reduce((n, t) => n + t.rows.filter((r) => !r.logs.length).length, 0);
+  return { list, missing };
+}
+
+function closingCard(branch, d, dateStr, isHoliday) {
+  const head = (st) => `<div class="card-hd"><h3>📋 관리부 마감 · ${esc(branch)}</h3><div class="r">${st}${fix('dailyreport')}</div></div>`;
+  if (!d) {
+    return `<div class="card">${head(isHoliday ? '<span class="st mute">휴무</span>' : `<span class="st bad">마감 기록 없음</span>`)}
+      <div class="empty">${isHoliday ? '휴무일입니다.' : '아직 관리부 마감(일일업무보고서)이 저장되지 않았습니다.'}</div>
+      <div class="note">관리부가 '관리부 마감'에서 이미지를 저장하면 내용이 자동으로 여기에 올라옵니다.</div></div>`;
+  }
+  const done = !!d.imageSavedAt;
+  const when = tsDate(d.imageSavedAt || d.savedAt);
+  const st = done ? `<span class="st ok">마감 완료 ${esc(hm(when))}</span>` : `<span class="st warn">임시저장만 됨</span>`;
+  const rows = DR_FIELDS.map(([k, label]) => { const v = String(d[k] ?? '').trim(); return `<div class="k">${esc(label)}</div><div class="v${!v || v === '-' ? ' dim' : ''}">${esc(v || '-')}</div>`; }).join('');
+  return `<div class="card">${head(st)}<div class="mg-meta">${done ? '이미지 저장' : '임시저장'} ${when ? esc(md(when) + ' ' + hm(when)) : ''}${d.savedBy ? ' · ' + esc(d.savedBy) : ''}</div><div class="mg-fields">${rows}</div></div>`;
+}
+
+let dayToken = 0;
+async function renderDay() {
+  const token = ++dayToken;
+  const dateStr = S.day, date = parseYmd(dateStr), today = ymd(new Date());
+  $('dayLabel').textContent = `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일 (${DOW[date.getDay()]})${dateStr === today ? ' · 오늘' : ''}`;
+  $('dayPick').value = dateStr;
+  ['dayAtt', 'dayConsult', 'dayHw'].forEach((id) => { $(id).innerHTML = '<div class="empty">불러오는 중...</div>'; });
+  $('dayClosing').innerHTML = '<div class="card"><div class="empty">불러오는 중...</div></div>';
+  const hol = holidayOf(dateStr);
+  $('dayHoliday').innerHTML = hol ? `<div class="holiday">🏖 휴무일 — ${esc(hol.title || '휴무')} (빨간불을 표시하지 않습니다)</div>` : '';
+  let data;
+  try { data = await fetchDay(dateStr); }
+  catch (e) { if (token === dayToken) $('dayClosing').innerHTML = `<div class="card"><div class="err">불러오지 못했습니다 (${esc(e.message)})</div></div>`; return; }
+  if (token !== dayToken) return;
+  const future = dateStr > today;
+
+  // 관리부 마감
+  $('dayClosing').innerHTML = branchesInScope().map((b) => closingCard(b, data.drafts[`dr_${b}_${dateStr}`], dateStr, !!hol || future)).join('');
+
+  // 출결
+  const at = attendanceOf(data.drafts, dateStr);
+  let attHtml;
+  if (!at.expected.length) attHtml = '<div class="empty">이 날 수업이 있는 학생이 없습니다.</div>';
+  else if (!at.recorded) attHtml = `<div class="stat-row"><div class="stat"><b>${at.expected.length}</b><span>수업 대상 학생</span></div></div><div class="empty">${hol || future ? '기록 없음' : '출결 마감 기록이 없습니다. 관리부가 출결 이미지를 저장하면 여기에 올라옵니다.'}</div>`;
+  else {
+    const byCls = {};
+    at.absentList.forEach((s) => { const c = s.classGroup || '(반 미배정)'; (byCls[c] = byCls[c] || []).push(s); });
+    const t = tsDate(at.lastDoc?.imageSavedAt || at.lastDoc?.savedAt);
+    attHtml = `<div class="stat-row">
+        <div class="stat green"><b>${at.present}</b><span>출석</span></div>
+        <div class="stat ${at.absent ? 'red' : ''}"><b>${at.absent}</b><span>결석</span></div>
+        <div class="stat"><b>${at.none}</b><span>해당 없음</span></div>
+        <div class="stat"><b>${at.expected.length}</b><span>수업 대상</span></div></div>
+      ${at.absentList.length ? Object.keys(byCls).sort(clsCmp).map((c) => `<div class="row"><span class="dot bad"></span><span class="t"><b>${esc(c)}</b><small>${byCls[c].map((s) => esc(s.name) + (s.teacherName ? ` (${esc(s.teacherName)})` : '')).join(', ')}</small></span><span class="r">${byCls[c].length}명</span></div>`).join('') : '<div class="empty">결석자가 없습니다.</div>'}
+      <div class="note">${at.lastDoc?.imageSavedAt ? '출결 이미지 저장' : '임시저장'} ${t ? esc(hm(t)) : ''}${at.lastDoc?.savedBy ? ' · ' + esc(at.lastDoc.savedBy) : ''}${at.recorded < at.expected.length ? ` · 기록 안 된 학생 ${at.expected.length - at.recorded}명` : ''}</div>`;
+  }
+  const attSt = !at.expected.length ? '<span class="st mute">수업 없음</span>' : at.recorded ? (at.lastDoc?.imageSavedAt ? '<span class="st ok">마감 완료</span>' : '<span class="st warn">임시저장만 됨</span>') : (hol || future ? '<span class="st mute">기록 없음</span>' : '<span class="st bad">마감 기록 없음</span>');
+  $('dayAtt').innerHTML = `<div class="card-hd"><h3>✅ 출결</h3><div class="r">${attSt}${fix('attendance')}</div></div>${attHtml}`;
+
+  // 상담 요청
+  const cs = data.consults;
+  $('dayConsult').innerHTML = `<div class="card-hd"><h3>📥 상담 요청</h3><div class="r"><span class="st ${cs.length ? 'warn' : 'mute'}">${cs.length}건</span>${fix('consult')}</div></div>` +
+    (cs.length ? cs.map((c) => { const done = c.stage === 'consultation_completed'; return `<div class="row"><span class="dot ${done ? 'ok' : 'warn'}"></span><span class="t"><b>${esc(c.studentName || '(이름 없음)')}</b> ${esc(c.grade || c.studentGrade || '')}<small>${esc(c.school || c.studentSchool || '')}${c.parentPhone ? ' · 학부모 ' + esc(c.parentPhone) : ''}</small></span><span class="r">${done ? '상담 완료' : '상담 전'} · ${esc(hm(c._c))}</span></div>`; }).join('')
+      : '<div class="empty">이 날 들어온 상담 요청이 없습니다.</div>');
+
+  // 숙제
+  const hw = homeworkOf(data.logs, dateStr);
+  const red = hw.missing && !hol && !future;
+  const hwSt = !hw.list.length ? '<span class="st mute">수업 없음</span>' : red ? `<span class="st bad">숙제 없음 ${hw.missing}반</span>` : hw.missing ? `<span class="st mute">미입력 ${hw.missing}반</span>` : '<span class="st ok">모든 반 입력</span>';
+  $('dayHw').innerHTML = `<div class="card-hd"><h3>📚 숙제</h3><div class="r">${hwSt}${fix('homeworklog')}</div></div>` +
+    (hw.list.length ? hw.list.map((t) => {
+      const miss = t.rows.filter((r) => !r.logs.length).length;
+      return `<details class="tg" open><summary><span class="nm">${esc(t.name)} 선생님</span><span class="sm">${t.rows.length}반</span><span class="rt">${miss && !hol && !future ? `<span class="chip bad">숙제 없음 ${miss}반</span>` : miss ? `<span class="chip mute">미입력 ${miss}반</span>` : '<span class="chip ok">모두 입력</span>'}</span></summary><div class="tg-body">` +
+        t.rows.map((r) => {
+          if (!r.logs.length) return `<details class="hw${hol || future ? '' : ' miss'}"><summary><span class="dot ${hol || future ? 'mute' : 'bad'}"></span><span class="cls">${esc(r.cls)}</span><span class="pv">${hol || future ? '기록 없음' : '숙제 없음 — 입력되지 않았습니다'}</span><span class="r" style="font-size:12px;color:var(--muted)">${r.size}명</span></summary></details>`;
+          const content = r.logs.map((l) => l.content || '').filter(Boolean).join('\n\n');
+          const names = [...new Set(r.logs.flatMap((l) => l.studentNames || []))];
+          return `<details class="hw"><summary><span class="dot ok"></span><span class="cls">${esc(r.cls)}</span><span class="pv">${esc(content.split('\n')[0] || '(내용 없음)')}</span><span class="r" style="font-size:12px;color:var(--muted)">${r.expected ? '' : '수업일 외 · '}${names.length || r.size}명</span></summary><div class="hw-body">${esc(content || '(내용 없음)')}${names.length ? `<small>대상: ${names.map(esc).join(', ')}</small>` : ''}</div></details>`;
+        }).join('') + '</div></details>';
+    }).join('') + '<div class="note">기준: 학생 정보의 수업 요일에 이 날이 들어 있는 반. 휴무일·앞으로의 날짜는 빨간불을 띄우지 않습니다. 줄을 누르면 숙제 내용이 펼쳐집니다.</div>'
+      : '<div class="empty">이 날 수업이 있는 반이 없습니다.</div>');
+
+}
+
+// 하루 마감 빨간불은 '어제'(일요일이면 토요일) 기준 — 오늘 마감은 저녁에 하므로 낮 동안 빨간불이 계속 뜨지 않게
+async function dayAlerts() {
+  let d = addDays(new Date(), -1); if (d.getDay() === 0) d = addDays(d, -1);
+  const dateStr = ymd(d), dayName = DOW[d.getDay()];
+  S.alerts.dayDate = dateStr;
+  if (holidayOf(dateStr)) { S.alerts.closing = S.alerts.att = S.alerts.hw = 0; renderAlerts(); return; }
+  let data; try { data = await fetchDay(dateStr); } catch (e) { return; }
+  const brs = branchesInScope().filter((b) => S.students.some((s) => s.branch === b && (s.days || []).includes(dayName)));
+  S.alerts.closing = brs.filter((b) => !data.drafts[`dr_${b}_${dateStr}`]?.imageSavedAt).length;
+  const at = attendanceOf(data.drafts, dateStr);
+  S.alerts.att = at.expected.length && !at.recorded ? 1 : 0;
+  S.alerts.hw = homeworkOf(data.logs, dateStr).missing;
+  renderAlerts();
+}
+window.drJumpDay = (anchor) => { if (S.alerts.dayDate) { S.day = S.alerts.dayDate; renderDay(); } drJump('day', anchor); };
+
+// ══════════════════════════════════════
+// 주간 — 주간성취도(weeklyReports, 중등) · 토요 추가 클리닉(satClinicReports)
+// ══════════════════════════════════════
+let weekToken = 0;
+async function renderWeek() {
+  const token = ++weekToken;
+  const mon = S.weekMon, sun = addDays(mon, 6), sat = addDays(mon, 5), due = addDays(mon, 11);
+  const key = weekKeyOf(mon), satStr = ymd(sat);
+  const thisMon = mondayOf(new Date());
+  const rel = Math.round((thisMon - mon) / (7 * 86400000));
+  $('weekLabel').textContent = `${mon.getMonth() + 1}/${mon.getDate()} ~ ${sun.getMonth() + 1}/${sun.getDate()}${rel === 1 ? ' · 지난주' : rel === 0 ? ' · 이번 주' : ''}`;
+  $('weekSub').textContent = `주간성취도 마감 ${md(due)} · 토요클리닉 ${md(sat)}`;
+  $('weekWeekly').innerHTML = $('weekSat').innerHTML = '<div class="empty">불러오는 중...</div>';
+  let wk, sc;
+  try {
+    [wk, sc] = await Promise.all([
+      getDocs(query(collection(db, 'weeklyReports'), where('weekKey', '==', key))),
+      getDocs(query(collection(db, 'satClinicReports'), where('date', '==', satStr))),
+    ]);
+  } catch (e) { if (token === weekToken) $('weekWeekly').innerHTML = `<div class="err">불러오지 못했습니다 (${esc(e.message)})</div>`; return; }
+  if (token !== weekToken) return;
+  const pastDue = new Date() > addDays(due, 1);
+
+  // 주간성취도
+  const reps = {}; wk.forEach((d) => { const r = d.data(); reps[r.teacherUid + '|' + r.studentId] = r; });
+  const ts = activeTeachers(isJunior);
+  let tot = 0, done = 0;
+  const blocks = ts.map((t) => {
+    const list = t.students.slice().sort((a, b) => clsCmp(a.classGroup, b.classGroup) || koCmp(a.name, b.name));
+    const n = list.filter((s) => reps[t.id + '|' + s.id]).length;
+    tot += list.length; done += n;
+    const pct = list.length ? Math.round(n / list.length * 100) : 100;
+    const full = n >= list.length;
+    const lastAt = Object.values(reps).filter((r) => r.teacherUid === t.id).map((r) => tsDate(r.submittedAt)).filter(Boolean).sort((a, b) => b - a)[0];
+    return `<details class="tg"><summary><span class="nm">${esc(t.name)} 선생님</span><span class="sm">${n} / ${list.length}명 입력${lastAt ? ` · 마지막 입력 ${esc(md(lastAt))}` : ''}</span><span class="rt"><span class="bar"><i class="${full ? 'full' : ''}" style="width:${pct}%"></i></span>${full ? '<span class="chip ok">전원 입력</span>' : `<span class="chip bad">${list.length - n}명 남음</span>`}</span></summary>
+      <div class="tg-body tbl-wrap"><table class="tbl"><thead><tr><th>학생</th><th>반</th>${Object.values(RATING).map((l) => `<th>${l}</th>`).join('')}<th>선생님 코멘트</th></tr></thead><tbody>` +
+      list.map((s) => { const r = reps[t.id + '|' + s.id]; const rl = r?.ratingsLabel || {};
+        return r ? `<tr><td class="nm"><b>${esc(s.name)}</b></td><td>${esc(s.classGroup || '')}</td>${Object.keys(RATING).map((k) => `<td>${ratingChip(rl[k])}</td>`).join('')}<td class="memo">${esc(r.memo || '')}</td></tr>`
+          : `<tr class="miss"><td class="nm">${esc(s.name)}</td><td>${esc(s.classGroup || '')}</td><td colspan="4">미입력</td></tr>`; }).join('') +
+      '</tbody></table></div></details>';
+  });
+  const wSt = !ts.length ? '<span class="st mute">대상 없음</span>' : done >= tot ? '<span class="st ok">전원 입력</span>' : `<span class="st ${pastDue ? 'bad' : 'warn'}">${tot - done}명분 남음${pastDue ? ' · 마감 지남' : ''}</span>`;
+  $('weekWeekly').innerHTML = `<div class="card-hd"><h3>📈 주간성취도 <span style="font-weight:500;font-size:13px;color:var(--muted)">(중등부)</span></h3><div class="r">${ts.length ? `<span class="sm" style="font-size:12.5px;color:var(--muted)">${done} / ${tot}명</span>` : ''}${wSt}${fix('weekly')}</div></div>` +
+    (ts.length ? blocks.join('') + '<div class="note">선생님 이름을 누르면 학생별로 입력한 내용을 볼 수 있습니다. 빨간 줄은 아직 입력하지 않은 학생입니다.</div>' : '<div class="empty">중등부 담당 학생이 있는 선생님이 없습니다.</div>');
+
+  // 토요 추가 클리닉
+  const scRows = []; sc.forEach((d) => scRows.push({ id: d.id, ...d.data() }));
+  const ats = activeTeachers();
+  const scopeIds = new Set(scopeStudents().map((s) => s.id));
+  let scMiss = 0;
+  const satPassed = new Date() >= sat;
+  const scBlocks = ats.map((t) => {
+    const mine = scRows.filter((r) => r.teacherUid === t.id && (r.isNone || !S.branch || scopeIds.has(r.studentId)));
+    const none = mine.some((r) => r.isNone);
+    const list = mine.filter((r) => !r.isNone).sort((a, b) => String(a.time || '').localeCompare(String(b.time || '')));
+    if (!mine.length) scMiss++;
+    const chip = !mine.length ? (satPassed ? '<span class="chip bad">미제출</span>' : '<span class="chip mute">토요일 전</span>') : none && !list.length ? '<span class="chip mute">클리닉 없음 제출</span>' : `<span class="chip ok">${list.length}명 진행</span>`;
+    return `<details class="tg"${list.length ? '' : ''}><summary><span class="nm">${esc(t.name)} 선생님</span><span class="rt">${chip}</span></summary><div class="tg-body">` +
+      (list.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>학생</th><th>시간</th><th>지참 교재</th><th>클리닉 내용</th></tr></thead><tbody>${list.map((r) => `<tr><td class="nm"><b>${esc(r.studentName)}</b></td><td>${esc(r.time || '')}</td><td>${esc(r.book || '')}</td><td class="memo">${esc(r.content || '')}</td></tr>`).join('')}</tbody></table></div>`
+        : `<div class="empty">${!mine.length ? '아직 제출하지 않았습니다.' : '이 날 토요클리닉이 없었다고 제출했습니다.'}</div>`) + '</div></details>';
+  });
+  const scSt = !ats.length ? '<span class="st mute">대상 없음</span>' : !satPassed ? '<span class="st mute">토요일 전</span>' : scMiss ? `<span class="st bad">미제출 ${scMiss}명</span>` : '<span class="st ok">전원 제출</span>';
+  $('weekSat').innerHTML = `<div class="card-hd"><h3>🗓 토요 추가 클리닉 · ${esc(md(sat))}</h3><div class="r">${scSt}${fix('satclinic')}</div></div>` +
+    (ats.length ? scBlocks.join('') + '<div class="note">선생님 이름을 누르면 학생별 클리닉 내용을 볼 수 있습니다.</div>' : '<div class="empty">담당 학생이 있는 선생님이 없습니다.</div>');
+
+  if (rel === 1) { S.alerts.weekly = pastDue || new Date() >= due ? tot - done : 0; S.alerts.weeklyLeft = tot - done; S.alerts.sat = satPassed ? scMiss : 0; renderAlerts(); }
+}
+
+// ══════════════════════════════════════
+// 월말보고서 — studentReports(월_학생uid): draft(초안) → reviewed(검수 완료) → sent(학부모 공개)
+// ══════════════════════════════════════
+const RP_ST = { draft: ['초안', 'warn'], reviewed: ['검수 완료', 'pur'], sent: ['학부모 공개', 'ok'] };
+let monthToken = 0;
+async function renderMonth() {
+  const token = ++monthToken;
+  const [y, m] = S.month.split('-').map(Number);
+  const now = new Date(); const prevKey = monthKey(new Date(now.getFullYear(), now.getMonth() - 1, 1));
+  $('monthLabel').textContent = `${y}년 ${m}월 보고서${S.month === prevKey ? ' · 지난달' : S.month === monthKey(now) ? ' · 이번 달' : ''}`;
+  $('monthReport').innerHTML = '<div class="empty">불러오는 중...</div>';
+  let snap;
+  try { snap = await getDocs(query(collection(db, 'studentReports'), where('month', '==', S.month))); }
+  catch (e) { if (token === monthToken) $('monthReport').innerHTML = `<div class="err">불러오지 못했습니다 (${esc(e.message)})</div>`; return; }
+  if (token !== monthToken) return;
+  const reps = {}; snap.forEach((d) => { const r = { id: d.id, ...d.data() }; reps[r.studentId] = r; });
+  const ts = activeTeachers(isJunior);
+  const anyReport = Object.keys(reps).length > 0;
+  const due = new Date(y, m, 3, 23, 59);   // 다음 달 3일
+  const pastDue = now > due;
+  let tot = 0, sent = 0, reviewed = 0, draft = 0, none = 0;
+  const blocks = ts.map((t) => {
+    const list = t.students.slice().sort((a, b) => clsCmp(a.classGroup, b.classGroup) || koCmp(a.name, b.name));
+    const c = { sent: 0, reviewed: 0, draft: 0, none: 0 };
+    list.forEach((s) => { const r = reps[s.id]; c[r ? (r.status || 'draft') : 'none'] = (c[r ? (r.status || 'draft') : 'none'] || 0) + 1; });
+    tot += list.length; sent += c.sent; reviewed += c.reviewed; draft += c.draft; none += c.none;
+    const pct = list.length ? Math.round(c.sent / list.length * 100) : 100;
+    const full = c.sent >= list.length;
+    return `<details class="tg"><summary><span class="nm">${esc(t.name)} 선생님</span><span class="sm">공개 ${c.sent} · 검수 ${c.reviewed} · 초안 ${c.draft}${c.none ? ` · 보고서 없음 ${c.none}` : ''} / ${list.length}명</span><span class="rt"><span class="bar"><i class="${full ? 'full' : ''}" style="width:${pct}%"></i></span>${full ? '<span class="chip ok">모두 공개</span>' : `<span class="chip ${anyReport ? 'bad' : 'mute'}">${list.length - c.sent}명 안 나감</span>`}</span></summary>
+      <div class="tg-body tbl-wrap"><table class="tbl"><thead><tr><th>학생</th><th>반</th><th>상태</th><th>학부모 열람</th><th>선생님 의견</th><th></th></tr></thead><tbody>` +
+      list.map((s) => { const r = reps[s.id];
+        if (!r) return `<tr class="${anyReport ? 'miss' : ''}"><td class="nm">${esc(s.name)}</td><td>${esc(s.classGroup || '')}</td><td><span class="chip ${anyReport ? 'bad' : 'mute'}">보고서 없음</span></td><td>-</td><td></td><td></td></tr>`;
+        const [lb, cl] = RP_ST[r.status] || [r.status || '-', 'mute'];
+        const viewed = tsDate(r.parentViewedAt), sentAt = tsDate(r.sentAt);
+        const cm = String(r.comment || r.teacherComment || '').trim();
+        return `<tr class="${r.status !== 'sent' && pastDue ? 'miss' : ''}"><td class="nm"><b>${esc(s.name)}</b></td><td>${esc(s.classGroup || '')}</td><td><span class="chip ${cl}">${esc(lb)}</span>${sentAt ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">${esc(md(sentAt))} 공개</div>` : ''}</td><td>${r.status === 'sent' ? (viewed ? `<span class="chip ok">열람 ${esc(md(viewed))}</span>` : '<span class="chip mute">아직 안 봄</span>') : '-'}</td><td class="memo" style="max-width:320px">${esc(cm.length > 120 ? cm.slice(0, 120) + '…' : cm)}</td><td><a class="lk" href="report.html?id=${encodeURIComponent(r.id)}" target="_blank" rel="noopener">보고서 보기</a></td></tr>`;
+      }).join('') + '</tbody></table></div></details>';
+  });
+  const st = !ts.length ? '<span class="st mute">대상 없음</span>' : !anyReport ? '<span class="st mute">아직 생성 전</span>' : sent >= tot ? '<span class="st ok">모두 공개</span>' : `<span class="st ${pastDue ? 'bad' : 'warn'}">${tot - sent}명 안 나감${pastDue ? ' · 마감 지남' : ''}</span>`;
+  $('monthReport').innerHTML = `<div class="card-hd"><h3>📑 월말보고서 <span style="font-weight:500;font-size:13px;color:var(--muted)">(초·중등)</span></h3><div class="r">${st}${fix('studyreport')}</div></div>` +
+    (ts.length ? `<div class="stat-row">
+        <div class="stat"><b>${tot}</b><span>대상 학생</span></div>
+        <div class="stat green"><b>${sent}</b><span>학부모 공개</span></div>
+        <div class="stat"><b>${reviewed}</b><span>검수 완료 (공개 전)</span></div>
+        <div class="stat"><b>${draft}</b><span>초안 (검수 전)</span></div>
+        <div class="stat ${none && anyReport ? 'red' : ''}"><b>${none}</b><span>보고서 없음</span></div></div>` +
+      (anyReport ? '' : `<div class="holiday" style="background:rgba(30,24,56,0.04);color:var(--muted);border-color:var(--border-soft)">이 달 보고서는 아직 만들어지지 않았습니다. 관리자 '학습보고서 생성'에서 만들면 여기에 나타납니다.</div>`) +
+      blocks.join('') + '<div class="note">선생님 이름을 누르면 학생별 상태·의견을 보고, "보고서 보기"로 학부모가 보는 화면을 그대로 열 수 있습니다. 마감(다음 달 3일)이 지나도 공개 안 된 학생은 빨간 줄로 표시됩니다.</div>'
+      : '<div class="empty">초·중등 담당 학생이 있는 선생님이 없습니다.</div>');
+
+  if (S.month === prevKey) { S.alerts.month = anyReport ? tot - sent : 0; S.alerts.monthPastDue = pastDue; renderAlerts(); }
+}
+
+// ══════════════════════════════════════
+// 학부모 댓글 — reportComments (주간성취도·월말보고서에 단 댓글과 선생님 답글)
+// ══════════════════════════════════════
+const CM = { filter: 'all', teacher: '' };
+window.cmSet = (k, v) => { CM[k] = v; renderComments(); };
+function threadsOf(comments) {
+  const scopeIds = new Set(scopeStudents().map((s) => s.id));
+  const g = {};
+  comments.forEach((c) => {
+    if (S.branch && !scopeIds.has(c.studentId)) return;
+    const k = `${c.targetType}|${c.targetId}`;
+    (g[k] = g[k] || []).push(c);
+  });
+  return Object.values(g).map((list) => {
+    list.sort((a, b) => (tsDate(a.createdAt) || 0) - (tsDate(b.createdAt) || 0));
+    const last = list[list.length - 1];
+    return { list, first: list[0], last, waiting: last.authorRole === 'parent', at: tsDate(last.createdAt) };
+  }).sort((a, b) => (b.waiting - a.waiting) || ((b.at || 0) - (a.at || 0)));
+}
+async function renderComments() {
+  const box = $('cmBox');
+  if (!S.comments) box.innerHTML = '<div class="empty">불러오는 중...</div>';
+  let comments;
+  try { comments = await loadComments(); } catch (e) { box.innerHTML = `<div class="err">불러오지 못했습니다 (${esc(e.message)})</div>`; return; }
+  const all = threadsOf(comments);
+  const wait = all.filter((t) => t.waiting).length;
+  S.alerts.comment = wait; renderAlerts();
+  const teachers = [...new Map(all.map((t) => [t.first.teacherUid, t.first.teacherName])).entries()].filter(([u]) => u).sort((a, b) => koCmp(a[1], b[1]));
+  let list = all;
+  if (CM.filter === 'wait') list = list.filter((t) => t.waiting);
+  if (CM.filter === 'done') list = list.filter((t) => !t.waiting);
+  if (CM.teacher) list = list.filter((t) => t.first.teacherUid === CM.teacher);
+  const label = (t) => t.first.targetLabel || (t.first.targetType === 'weekly' ? '주간성취도' : t.first.targetType === 'monthly' ? '월말보고서' : '');
+  const typeChip = (t) => t.first.targetType === 'monthly' ? '<span class="chip pur">월말보고서</span>' : t.first.targetType === 'weekly' ? '<span class="chip warn">주간성취도</span>' : '';
+  box.innerHTML = `<div class="card-hd"><h3>💬 학부모 댓글 · 선생님 답글</h3><div class="r">${wait ? `<span class="st bad">답글 대기 ${wait}건</span>` : '<span class="st ok">모두 답글 완료</span>'}</div></div>
+    <div class="flt">
+      <button class="pill${CM.filter === 'all' ? ' on' : ''}" onclick="cmSet('filter','all')">전체 ${all.length}</button>
+      <button class="pill${CM.filter === 'wait' ? ' on' : ''}" onclick="cmSet('filter','wait')">답글 대기 ${wait}</button>
+      <button class="pill${CM.filter === 'done' ? ' on' : ''}" onclick="cmSet('filter','done')">답글 완료 ${all.length - wait}</button>
+      <select class="dr-select" onchange="cmSet('teacher',this.value)"><option value="">전체 선생님</option>${teachers.map(([u, n]) => `<option value="${esc(u)}"${CM.teacher === u ? ' selected' : ''}>${esc(n || '(이름 없음)')}</option>`).join('')}</select>
+    </div>` +
+    (list.length ? list.map((t) => {
+      const link = t.first.targetType === 'monthly' ? ` <a class="lk" style="font-size:12px" href="report.html?id=${encodeURIComponent(t.first.targetId)}" target="_blank" rel="noopener">보고서 보기</a>` : '';
+      return `<div class="th${t.waiting ? ' wait' : ''}"><div class="th-hd">${typeChip(t)}<b>${esc(t.first.studentName || '')}</b><span class="sm">${esc(label(t))} · 담당 ${esc(t.first.teacherName || '-')}</span>${link}<span class="r">${t.waiting ? '<span class="chip bad">답글 대기</span>' : '<span class="chip ok">답글 완료</span>'}</span></div>
+        <div class="msgs">${t.list.map((c) => { const d = tsDate(c.createdAt); return `<div class="msg ${c.authorRole === 'teacher' ? 't' : 'p'}"><small>${esc(c.authorName || (c.authorRole === 'teacher' ? '선생님' : '학부모'))} · ${d ? esc(md(d) + ' ' + hm(d)) : ''}${c.editedAt ? ' · 수정됨' : ''}${c.authorRole === 'parent' && c.readByTeacher ? ' · 선생님 읽음' : c.authorRole === 'parent' ? ' · 선생님 안 읽음' : ''}</small>${esc(c.text || '')}</div>`; }).join('')}</div></div>`;
+    }).join('') : `<div class="empty">${all.length ? '조건에 맞는 댓글이 없습니다.' : '아직 학부모 댓글이 없습니다.'}</div>`) +
+    '<div class="note">답글은 담당 선생님이 선생님 페이지에서 답니다. 마지막 글이 학부모 댓글이면 "답글 대기"로 표시됩니다.</div>';
+}
+
+// ══════════════════════════════════════
+// 확인 필요 (빨간불 모음)
+// ══════════════════════════════════════
+function renderAlerts() {
+  const a = S.alerts, items = [];
+  const dl = a.dayDate ? md(parseYmd(a.dayDate)) : '';
+  if (a.closing) items.push(['day', 'dayClosing', `${dl} 관리부 마감 미기록${branchesInScope().length > 1 ? ' ' + a.closing + '개 관' : ''}`]);
+  if (a.att) items.push(['day', 'dayAtt', `${dl} 출결 마감 미기록`]);
+  if (a.hw) items.push(['day', 'dayHw', `${dl} 숙제 없음 ${a.hw}반`]);
+  if (a.weekly) items.push(['week', 'weekWeekly', `주간성취도 ${a.weekly}명분 미입력`]);
+  if (a.sat) items.push(['week', 'weekSat', `토요클리닉 미제출 ${a.sat}명`]);
+  if (a.month) items.push(['month', 'monthReport', `지난달 월말보고서 ${a.month}명 안 나감${a.monthPastDue ? ' (마감 지남)' : ''}`]);
+  if (a.comment) items.push(['comment', 'cmBox', `학부모 댓글 답글 대기 ${a.comment}건`]);
+  $('drAlerts').innerHTML = '<span class="lb">확인 필요</span>' + (items.length
+    ? items.map(([tab, anchor, txt]) => `<button class="dr-alert" onclick="${tab === 'day' ? `drJumpDay('${anchor}')` : `drJump('${tab}','${anchor}')`}"><i></i>${esc(txt)}</button>`).join('')
+    : '<span class="dr-alert ok"><i></i>지금 빨간불이 없습니다</span>');
+  const cnt = { day: (a.closing ? 1 : 0) + (a.att ? 1 : 0) + (a.hw ? 1 : 0), week: (a.weekly ? 1 : 0) + (a.sat ? 1 : 0), month: a.month ? 1 : 0, comment: a.comment || 0 };
+  document.querySelectorAll('.dr-tab').forEach((b) => {
+    const n = cnt[b.dataset.tab]; const old = b.querySelector('.cnt'); if (old) old.remove();
+    if (n) b.insertAdjacentHTML('beforeend', `<span class="cnt">${n}</span>`);
+  });
+}
+
+async function renderAll() {
+  $('drBranch').value = S.branch;
+  S.alerts = {};
+  await Promise.all([
+    renderDay(),
+    dayAlerts(),
+    // 빨간불 요약은 기본 기간(오늘·지난주·지난달) 기준 — 보고 있는 기간이 다르면 기본 기간으로 한 번 계산
+    (async () => { const keep = S.weekMon; S.weekMon = addDays(mondayOf(new Date()), -7); await renderWeek(); if (+keep !== +S.weekMon) { S.weekMon = keep; await renderWeek(); } })(),
+    (async () => { const keep = S.month; const now = new Date(); S.month = monthKey(new Date(now.getFullYear(), now.getMonth() - 1, 1)); await renderMonth(); if (keep !== S.month) { S.month = keep; await renderMonth(); } })(),
+    renderComments(),
+  ]);
+}
+
+// ── 입장 확인: 관리자 중 원장만 (관리부 role 'office'는 불가) ──
+function gate(html) { $('drMain').style.display = 'none'; const g = $('drGate'); g.innerHTML = html; g.style.display = 'block'; }
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.replace('login.html'); return; }
+  let a;
+  try { const s = await getDoc(doc(db, 'admins', user.uid)); a = s.exists() ? s.data() : null; }
+  catch (e) { gate(`<h2>확인 중 오류</h2><p>${esc(e.message)}</p><a class="btn" href="login.html">로그인 화면</a>`); return; }
+  if (!a) { gate('<h2>원장 계정만 들어올 수 있습니다</h2><p>관리자(원장) 계정으로 로그인해 주세요.</p><a class="btn btn-gold" href="login.html">로그인 화면</a>'); return; }
+  if (a.role === 'office') { gate('<h2>원장 계정만 들어올 수 있습니다</h2><p>관리부 계정은 관리자 페이지를 이용해 주세요.</p><a class="btn btn-gold" href="admin.html">관리자 페이지로</a>'); return; }
+  $('drWho').textContent = (a.name || user.email) + ' 원장';
+  const now = new Date();
+  $('drToday').textContent = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 ${DOW[now.getDay()]}요일 · 보기 전용 (고치기는 관리자 화면에서)`;
+  let savedBranch = null; try { savedBranch = localStorage.getItem('swc_director_branch'); } catch (e) {}
+  if (savedBranch === null && (a.branch === '평촌관' || a.branch === '산본관')) S.branch = a.branch;
+  $('drGate').style.display = 'none'; $('drMain').style.display = 'block';
+  try { await loadBase(); } catch (e) { gate(`<h2>불러오기 오류</h2><p>${esc(e.message)}</p>`); return; }
+  const want = (location.hash || '').replace('#', '');
+  if (['day', 'week', 'month', 'comment'].includes(want)) drTab(want);
+  renderAll();
+});
+</script>
+</body>
+</html>
