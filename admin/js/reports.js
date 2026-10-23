@@ -32,78 +32,152 @@ window.downloadPDF = async (url, teacherName, month, fileName) => {
 };
 
 // ── 주간성취도 엑셀 다운로드 ──
+// 기간·선생님 조건으로 제출 문서를 가져옴
+async function fetchWeeklyDocs(fromVal, toVal, teacherUid) {
+  const fromTs = new Date(fromVal + 'T00:00:00');
+  const toTs   = new Date(toVal   + 'T23:59:59');
+  const constraints = [
+    where('submittedAt', '>=', Timestamp.fromDate(fromTs)),
+    where('submittedAt', '<=', Timestamp.fromDate(toTs))
+  ];
+  if (teacherUid) constraints.push(where('teacherUid', '==', teacherUid));
+  const snap = await getDocs(query(collection(db, 'weeklyReports'), ...constraints));
+  const docs = [];
+  snap.forEach(d => docs.push(d.data()));
+  return docs;
+}
+
+// 문서 목록 → 엑셀 워크북
+function buildWeeklyWorkbook(docs) {
+  const rows = docs.map(data => {
+    const rl = data.ratingsLabel || {};
+    return {
+      선생님:        data.teacherName || '',
+      학생명:        data.studentName || '',
+      과제충실도:    rl.homework || '',
+      수업태도:      rl.attitude || '',
+      클리닉참여도:  rl.clinic || '',
+      담임말씀:      data.memo || '',
+      제출일시:      data.submittedAt?.toDate?.()?.toLocaleDateString('ko-KR') || '',
+    };
+  });
+  rows.sort((a, b) => {
+    if (a.선생님 !== b.선생님) return a.선생님.localeCompare(b.선생님, 'ko');
+    return a.학생명.localeCompare(b.학생명, 'ko');
+  });
+
+  const ws = XLSX.utils.json_to_sheet(rows, {
+    header: ['선생님','학생명','과제충실도','수업태도','클리닉참여도','담임말씀','제출일시']
+  });
+  ws['!cols'] = [{wch:10},{wch:8},{wch:10},{wch:10},{wch:12},{wch:40},{wch:12}];
+  const headerRange = XLSX.utils.decode_range(ws['!ref']);
+  for (let c = headerRange.s.c; c <= headerRange.e.c; c++) {
+    const cellAddr = XLSX.utils.encode_cell({r: 0, c});
+    if (!ws[cellAddr]) continue;
+    ws[cellAddr].s = {
+      font: { bold: true, color: { rgb: '1A1230' } },
+      fill: { fgColor: { rgb: 'F0C040' } },
+      alignment: { horizontal: 'center' }
+    };
+  }
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '주간성취도');
+  return { wb, count: rows.length };
+}
+
+// 파일 이름에 못 쓰는 글자 정리
+const safeFileName = (t) => String(t || '').replace(/[\\/:*?"<>|]/g, '_').trim() || '이름없음';
+
+// 기간 확인 (오류 문구 or null)
+function weeklyRangeError(fromVal, toVal) {
+  if (!fromVal || !toVal) return '시작일과 종료일을 모두 선택해주세요.';
+  if (fromVal > toVal)    return '시작일이 종료일보다 늦습니다.';
+  return null;
+}
+
 window.downloadWeeklyExcel = async () => {
   const fromVal    = document.getElementById('excelDateFrom').value;
   const toVal      = document.getElementById('excelDateTo').value;
   const teacherUid = document.getElementById('excelTeacher').value;
-
-  if (!fromVal || !toVal) { showMsg('excelWeeklyMsg', '시작일과 종료일을 모두 선택해주세요.', 'error'); return; }
-  if (fromVal > toVal)    { showMsg('excelWeeklyMsg', '시작일이 종료일보다 늦습니다.', 'error'); return; }
-
-  const fromTs = new Date(fromVal + 'T00:00:00');
-  const toTs   = new Date(toVal   + 'T23:59:59');
-  const label  = `${fromVal} ~ ${toVal}`;
+  const err = weeklyRangeError(fromVal, toVal);
+  if (err) { showMsg('excelWeeklyMsg', err, 'error'); return; }
 
   showMsg('excelWeeklyMsg', '데이터 조회 중...', 'success');
-
   try {
-    let constraints = [
-      where('submittedAt', '>=', Timestamp.fromDate(fromTs)),
-      where('submittedAt', '<=', Timestamp.fromDate(toTs))
-    ];
-    if (teacherUid) constraints.push(where('teacherUid', '==', teacherUid));
-    const q = query(collection(db, 'weeklyReports'), ...constraints);
-    const snap = await getDocs(q);
-
-    if (snap.empty) {
-      showMsg('excelWeeklyMsg', `${label} 제출된 성취도가 없습니다.`, 'error');
-      return;
-    }
-
-    const rows = [];
-    snap.forEach(d => {
-      const data = d.data();
-      const rl = data.ratingsLabel || {};
-      rows.push({
-        선생님:        data.teacherName || '',
-        학생명:        data.studentName || '',
-        과제충실도:    rl.homework || '',
-        수업태도:      rl.attitude || '',
-        클리닉참여도:  rl.clinic || '',
-        담임말씀:      data.memo || '',
-        제출일시:      data.submittedAt?.toDate?.()?.toLocaleDateString('ko-KR') || '',
-      });
-    });
-
-    rows.sort((a, b) => {
-      if (a.선생님 !== b.선생님) return a.선생님.localeCompare(b.선생님, 'ko');
-      return a.학생명.localeCompare(b.학생명, 'ko');
-    });
-
-    const ws = XLSX.utils.json_to_sheet(rows, {
-      header: ['선생님','학생명','과제충실도','수업태도','클리닉참여도','담임말씀','제출일시']
-    });
-    ws['!cols'] = [{wch:10},{wch:8},{wch:10},{wch:10},{wch:12},{wch:40},{wch:12}];
-
-    const headerRange = XLSX.utils.decode_range(ws['!ref']);
-    for (let c = headerRange.s.c; c <= headerRange.e.c; c++) {
-      const cellAddr = XLSX.utils.encode_cell({r: 0, c});
-      if (!ws[cellAddr]) continue;
-      ws[cellAddr].s = {
-        font: { bold: true, color: { rgb: '1A1230' } },
-        fill: { fgColor: { rgb: 'F0C040' } },
-        alignment: { horizontal: 'center' }
-      };
-    }
-
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, '주간성취도');
-    const tName = teacherUid ? (teachersCache.find(t=>t.id===teacherUid)?.name||'') + '_' : '';
+    const docs = await fetchWeeklyDocs(fromVal, toVal, teacherUid);
+    if (!docs.length) { showMsg('excelWeeklyMsg', `${fromVal} ~ ${toVal} 제출된 성취도가 없습니다.`, 'error'); return; }
+    const { wb, count } = buildWeeklyWorkbook(docs);
+    const tName = teacherUid ? safeFileName(teachersCache.find(t=>t.id===teacherUid)?.name||'') + '_' : '';
     XLSX.writeFile(wb, `주간성취도_${fromVal}_${toVal}_${tName}${new Date().toLocaleDateString('ko-KR').replace(/\. /g,'-').replace('.','')}.xlsx`);
-
-    showMsg('excelWeeklyMsg', `✅ ${rows.length}명 데이터 다운로드 완료!`, 'success');
+    showMsg('excelWeeklyMsg', `✅ ${count}명 데이터 다운로드 완료!`, 'success');
   } catch(e) {
     showMsg('excelWeeklyMsg', '오류: ' + e.message, 'error');
+  }
+};
+
+// 한 선생님 것만 엑셀로 (아래 제출 현황의 선생님별 버튼)
+window.downloadWeeklyTeacherExcel = async (teacherUid, teacherName) => {
+  const fromVal = document.getElementById('excelDateFrom').value;
+  const toVal   = document.getElementById('excelDateTo').value;
+  const err = weeklyRangeError(fromVal, toVal);
+  if (err) { showMsg('excelWeeklyMsg', err, 'error'); return; }
+  try {
+    let docs = await fetchWeeklyDocs(fromVal, toVal, teacherUid || '');
+    if (!teacherUid) docs = docs.filter(d => (d.teacherName || '(이름없음)') === teacherName);
+    if (!docs.length) { showMsg('excelWeeklyMsg', `${teacherName} 선생님의 제출 내역이 없습니다.`, 'error'); return; }
+    const { wb, count } = buildWeeklyWorkbook(docs);
+    XLSX.writeFile(wb, `주간성취도_${safeFileName(teacherName)}_${fromVal}_${toVal}.xlsx`);
+    showMsg('excelWeeklyMsg', `✅ ${teacherName} 선생님 ${count}명 데이터 다운로드 완료!`, 'success');
+  } catch(e) {
+    showMsg('excelWeeklyMsg', '오류: ' + e.message, 'error');
+  }
+};
+
+// 선생님별로 나눈 엑셀 파일들을 ZIP 하나로
+window.downloadWeeklyByTeacherZip = async () => {
+  const fromVal    = document.getElementById('excelDateFrom').value;
+  const toVal      = document.getElementById('excelDateTo').value;
+  const teacherUid = document.getElementById('excelTeacher').value;
+  const err = weeklyRangeError(fromVal, toVal);
+  if (err) { showMsg('excelWeeklyMsg', err, 'error'); return; }
+
+  const btn = document.getElementById('weeklyZipBtn');
+  if (btn) { btn.disabled = true; btn.textContent = '압축 중...'; }
+  showMsg('excelWeeklyMsg', '데이터 조회 중...', 'success');
+  try {
+    const docs = await fetchWeeklyDocs(fromVal, toVal, teacherUid);
+    if (!docs.length) { showMsg('excelWeeklyMsg', `${fromVal} ~ ${toVal} 제출된 성취도가 없습니다.`, 'error'); return; }
+
+    const byTeacher = {};
+    docs.forEach(d => {
+      const key = d.teacherUid || d.teacherName || '(이름없음)';
+      if (!byTeacher[key]) byTeacher[key] = { name: d.teacherName || '(이름없음)', docs: [] };
+      byTeacher[key].docs.push(d);
+    });
+
+    const zip = new JSZip();
+    const used = {};
+    Object.values(byTeacher)
+      .sort((a, b) => a.name.localeCompare(b.name, 'ko'))
+      .forEach(g => {
+        const { wb } = buildWeeklyWorkbook(g.docs);
+        const data = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        let base = `주간성취도_${safeFileName(g.name)}_${fromVal}_${toVal}`;
+        if (used[base]) base += `_${++used[base]}`; else used[base] = 1;
+        zip.file(base + '.xlsx', data);
+      });
+
+    const content = await zip.generateAsync({ type: 'blob' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(content);
+    a.download = `주간성취도_선생님별_${fromVal}_${toVal}.zip`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    showMsg('excelWeeklyMsg', `✅ 선생님 ${Object.keys(byTeacher).length}명 파일로 나눠 다운로드 완료!`, 'success');
+  } catch(e) {
+    showMsg('excelWeeklyMsg', '오류: ' + e.message, 'error');
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = '📦 선생님별 파일로 받기 (ZIP)'; }
   }
 };
 
@@ -282,20 +356,29 @@ window.loadWeeklyPreview = async () => {
     // 선생님별 그룹핑
     const byTeacher = {};
     docs.forEach(data => {
-      const key = data.teacherName || '(이름없음)';
-      if (!byTeacher[key]) byTeacher[key] = [];
-      byTeacher[key].push(data);
+      const tname = data.teacherName || '(이름없음)';
+      const key = data.teacherUid || tname;
+      if (!byTeacher[key]) byTeacher[key] = { uid: data.teacherUid || '', name: tname, list: [] };
+      byTeacher[key].list.push(data);
     });
 
-    const teacherNames = Object.keys(byTeacher).sort((a,b) => a.localeCompare(b,'ko'));
+    const groups = Object.values(byTeacher).sort((a,b) => a.name.localeCompare(b.name,'ko'));
+    const attr = (t) => String(t ?? '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
 
     let html = '';
-    teacherNames.forEach(tname => {
-      const list = byTeacher[tname].sort((a,b) => (a.studentName||'').localeCompare(b.studentName||'','ko'));
+    groups.forEach(g => {
+      const tname = g.name;
+      const list = g.list.sort((a,b) => (a.studentName||'').localeCompare(b.studentName||'','ko'));
       html += `
         <div>
-          <div style="font-weight:700;color:var(--purple, #5B3FA6);margin-bottom:8px;font-size:14px;">
-            👤 ${tname} 선생님 <span style="color:var(--muted);font-weight:400;font-size:12px;">(${list.length}건)</span>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+            <div style="font-weight:700;color:var(--purple, #5B3FA6);font-size:14px;">
+              👤 ${tname} 선생님 <span style="color:var(--muted);font-weight:400;font-size:12px;">(${list.length}건)</span>
+            </div>
+            <button data-uid="${attr(g.uid)}" data-name="${attr(tname)}" onclick="downloadWeeklyTeacherExcel(this.dataset.uid, this.dataset.name)"
+              style="font-size:12px;color:var(--purple, #5B3FA6);background:none;padding:6px 14px;border:1px solid var(--border-soft);border-radius:6px;white-space:nowrap;cursor:pointer;font-family:inherit;">
+              ⬇ ${tname} T 엑셀
+            </button>
           </div>
           <div style="display:flex;flex-direction:column;gap:8px;">
             ${list.map(data => {
@@ -477,9 +560,9 @@ function renderMonthlyResult() {
             <span style="font-size:15px;font-weight:700;color:var(--purple, #5B3FA6);">👤 ${teacherName} T</span>
             <span style="font-size:12px;color:var(--muted);margin-left:10px;">${count}개 보고서</span>
           </div>
-          <button onclick="downloadTeacherZip('${teacherUidKey}','${safeTeacherName}')"
-            style="font-size:12px;color:var(--off-white);background:rgba(30,24,56,0.07);padding:6px 14px;border:1px solid var(--border-soft);border-radius:6px;cursor:pointer;font-family:inherit;white-space:nowrap;">
-            📦 ${teacherName} T 전체 ZIP
+          <button onclick="downloadTeacherZip('${teacherUidKey}','${safeTeacherName}', this)"
+            style="font-size:12px;color:var(--purple, #5B3FA6);background:none;padding:6px 14px;border:1px solid var(--border-soft);border-radius:6px;cursor:pointer;font-family:inherit;white-space:nowrap;">
+            📦 ${teacherName} T 것만 받기 (ZIP)
           </button>
         </div>
         <div class="monthly-teacher-body">${rows}</div>
@@ -490,10 +573,22 @@ function renderMonthlyResult() {
   zipBtn.style.display = 'inline-flex';
 }
 
+// 조회한 기간을 파일 이름에 붙임 (예: _2026-10, _2026년, 전체면 빈칸)
+function monthlyPeriodLabel() {
+  const y = document.getElementById('monthlyYear')?.value || '';
+  const m = document.getElementById('monthlyMonth')?.value || '';
+  if (y && m) return `_${y}-${m}`;
+  if (y) return `_${y}년`;
+  if (m) return `_${Number(m)}월`;
+  return '';
+}
+
 // 선생님별 ZIP 다운로드
-window.downloadTeacherZip = async (teacherUid, teacherName) => {
+window.downloadTeacherZip = async (teacherUid, teacherName, btn) => {
   const docs = monthlyAdminCache.filter(d => d.teacherUid === teacherUid);
   if (!docs.length) { alert('다운로드할 파일이 없습니다.'); return; }
+  const oldLabel = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '압축 중...'; }
 
   const zip = new JSZip();
   const folder = zip.folder(teacherName + '_월말보고서');
@@ -512,11 +607,12 @@ window.downloadTeacherZip = async (teacherUid, teacherName) => {
   const content = await zip.generateAsync({ type: 'blob' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(content);
-  a.download = `${teacherName}_월말보고서.zip`;
+  a.download = `${safeFileName(teacherName)}_월말보고서${monthlyPeriodLabel()}.zip`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(a.href);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  if (btn) { btn.disabled = false; btn.textContent = oldLabel; }
 
   if (failCount) alert(`${failCount}개 파일 다운로드 실패. 나머지는 정상적으로 저장되었습니다.`);
 };
@@ -548,13 +644,13 @@ window.downloadMonthlyZip = async () => {
   const content = await zip.generateAsync({ type: 'blob' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(content);
-  a.download = `월말보고서_전체_${new Date().toISOString().slice(0,7)}.zip`;
+  a.download = `월말보고서_선생님별${monthlyPeriodLabel() || '_전체'}.zip`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(a.href);
 
-  btn.disabled = false; btn.textContent = '📦 ZIP 다운로드';
+  btn.disabled = false; btn.textContent = '📦 전체 받기 (선생님별 폴더 ZIP)';
   if (failCount) alert(`${failCount}개 파일 다운로드 실패. 나머지는 정상적으로 저장되었습니다.`);
 };
 
