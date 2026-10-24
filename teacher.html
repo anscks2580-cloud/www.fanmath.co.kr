@@ -546,6 +546,7 @@ select option:disabled { color:#6B6489; }
 
       <div class="btn-row">
         <button class="btn btn-gold" id="hwSaveBtn" onclick="hwSave()">저장</button>
+        <button class="btn btn-outline" id="hwAbsentBtn" onclick="hwSave(true)" title="체크한 학생을 숙제 대신 결석으로 기록">🚫 체크한 학생 결석 처리</button>
         <button class="btn btn-outline" id="hwCancelBtn" style="display:none;color:#D64545;border-color:rgba(214,69,69,0.3);" onclick="hwCancel()">수정 취소</button>
       </div>
     </div>
@@ -2758,6 +2759,7 @@ window.openVideoModal = function(vimeoId, title) {
 const HW_DOW = ['일','월','화','수','목','금','토'];
 const hwEsc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
 const hwClsOf = (s) => String(s?.classGroup || '').trim() || '(반 미배정)';
+const hwIsTutoring = (s) => /과외/.test(String(s?.classGroup || ''));
 const hwClsKey = (c) => { const m = String(c || '').match(/^(초|중|고)\s*(\d)/); return m ? ({ 초:0, 중:1, 고:2 }[m[1]] * 10 + parseInt(m[2], 10)) : 99; };
 const hwYmd = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
 const hwLabel = (ymd) => { const d = new Date(ymd + 'T00:00:00'); return `${d.getMonth()+1}월 ${d.getDate()}일 (${HW_DOW[d.getDay()]})`; };
@@ -2797,7 +2799,7 @@ function hwRenderClasses() {
   const dayName = date ? HW_DOW[new Date(date + 'T00:00:00').getDay()] : '';
   document.getElementById('hwDateLabel').textContent = date ? hwLabel(date) : '';
   const m = new Map();
-  myStudents.forEach(s => {
+  myStudents.filter(s => !hwIsTutoring(s)).forEach(s => {   // 반이 과외인 학생은 숙제 입력 대상 아님
     const c = hwClsOf(s);
     const o = m.get(c) || { n: 0, today: false, br: new Set() };
     o.n++; if ((s.days || []).includes(dayName)) o.today = true;
@@ -2837,7 +2839,7 @@ function hwRenderExisting() {
   if (!list.length) { el.innerHTML = ''; return; }
   el.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">이 날 ${hwEsc(hwCls)}에 이미 입력한 숙제 ${list.length}건 — 저장하면 새로 추가되고, 아래 것은 그대로 남습니다.</div>` +
     list.map(r => `<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid rgba(30,24,56,0.1);border-radius:8px;margin-bottom:6px;background:${hwEditing === r.id ? 'rgba(245,197,24,0.12)' : 'rgba(30,24,56,0.03)'};font-size:12.5px;">
-      <div style="flex:1;min-width:0;"><b>${hwEsc((r.studentNames || []).join(', '))}</b><div style="white-space:pre-wrap;word-break:break-word;color:var(--muted);margin-top:2px;">${hwEsc(r.content)}</div></div>
+      <div style="flex:1;min-width:0;"><b>${hwEsc((r.studentNames || []).join(', '))}</b><div style="white-space:pre-wrap;word-break:break-word;color:${r.absent ? '#D64545' : 'var(--muted)'};margin-top:2px;${r.absent ? 'font-weight:700;' : ''}">${r.absent ? '🚫 결석' : hwEsc(r.content)}</div></div>
       ${hwEditing === r.id ? '<span style="font-size:11.5px;color:#D97B1A;white-space:nowrap;">수정 중</span>' : `<button type="button" class="btn btn-outline" style="padding:4px 10px;font-size:12px;" onclick="hwEdit('${r.id}')">수정</button>`}
     </div>`).join('');
 }
@@ -2856,10 +2858,12 @@ function hwRenderStudents(checkedIds) {
   hwRenderExisting();
 }
 
-window.hwSave = async function () {
+// absent=true: 체크한 학생을 "결석"으로 기록 (숙제 내용 칸은 비워도 됨)
+window.hwSave = async function (absent) {
+  absent = absent === true;
   const ok = document.getElementById('hw-ok'), err = document.getElementById('hw-err');
   const date = document.getElementById('hwDate').value;
-  const content = document.getElementById('hwContent').value.trim();
+  const content = absent ? '결석' : document.getElementById('hwContent').value.trim();
   const ids = [...document.querySelectorAll('#hwStudents input:checked')].map(c => c.value);
   if (!date)        { showAlert(err, '날짜를 골라주세요.', 'err'); return; }
   if (!hwCls)       { showAlert(err, '반을 골라주세요.', 'err'); return; }
@@ -2868,14 +2872,15 @@ window.hwSave = async function () {
   const names = ids.map(id => studentsCache.find(s => s.id === id)?.name || '');
   const data = {
     date, branch: hwBranchOf(ids), teacherUid: currentTeacher.uid, teacherName: currentTeacher.name || '',
-    classGroup: hwCls, studentIds: ids, studentNames: names, content,
+    classGroup: hwCls, studentIds: ids, studentNames: names, content, absent,
     updatedAt: new Date().toISOString(), updatedBy: (currentTeacher.name || '') + ' 선생님',
   };
+  if (absent && !confirm(`${names.join(', ')} — ${ids.length}명을 결석으로 기록할까요?`)) return;
   const btn = document.getElementById('hwSaveBtn'); btn.disabled = true;
   try {
     if (hwEditing) await updateDoc(doc(db, 'homeworkLogs', hwEditing), data);
     else await addDoc(collection(db, 'homeworkLogs'), { ...data, source: 'teacher', createdAt: new Date().toISOString() });
-    showAlert(ok, hwEditing ? `✅ ${hwCls} 숙제를 수정했습니다.` : `✅ ${hwLabel(date)} ${hwCls} 숙제를 저장했습니다. (${ids.length}명) — 관리부 숙제표에 반영됨`, 'ok');
+    showAlert(ok, absent ? `✅ ${hwLabel(date)} ${hwCls} ${names.join(', ')} 결석으로 기록했습니다.` : hwEditing ? `✅ ${hwCls} 숙제를 수정했습니다.` : `✅ ${hwLabel(date)} ${hwCls} 숙제를 저장했습니다. (${ids.length}명) — 관리부 숙제표에 반영됨`, 'ok');
     const keepCls = hwCls;
     hwCancel();
     await hwLoad();
@@ -2901,7 +2906,7 @@ window.hwEdit = function (id, fromPick) {
   document.getElementById('hwDate').value = r.date;
   hwRenderClasses();
   hwRenderStudents(r.studentIds || []);
-  document.getElementById('hwContent').value = r.content || '';
+  document.getElementById('hwContent').value = r.absent ? '' : (r.content || '');   // 결석 기록을 숙제로 바꿀 땐 내용만 적어 저장
   document.getElementById('hwSaveBtn').textContent = '수정 저장';
   document.getElementById('hwCancelBtn').style.display = '';
   if (fromPick) showAlert(document.getElementById('hw-ok'), '이 날짜에 이미 입력된 숙제를 불러왔어요. 고쳐서 저장하면 수정됩니다.', 'ok');
@@ -3553,7 +3558,7 @@ async function calBuildAutoTodos() {
     if (!calIsOff(todayStr)) {
       const dayName = CAL_DOW[dow];
       const clsMap = new Map();
-      my.forEach(s => { if ((s.days || []).includes(dayName)) { const c = String(s.classGroup || '').trim() || '(반 미배정)'; clsMap.set(c, (clsMap.get(c) || 0) + 1); } });
+      my.forEach(s => { if ((s.days || []).includes(dayName) && !/과외/.test(String(s.classGroup || ''))) { const c = String(s.classGroup || '').trim() || '(반 미배정)'; clsMap.set(c, (clsMap.get(c) || 0) + 1); } });
       if (clsMap.size) {
         const hs = await getDocs(query(collection(db, 'homeworkLogs'), where('teacherUid', '==', currentTeacher.uid)));
         const doneCls = new Set();

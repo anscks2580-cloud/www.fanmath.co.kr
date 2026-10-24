@@ -74,7 +74,8 @@ window.hlOnTeacher = function () {
   hlRenderStudents();
 };
 function hlClassesOf(teacherUid) {
-  const pool = studentsCache.filter((s) => s.branch === hlBranch && (!teacherUid || s.teacherUid === teacherUid));
+  // 반이 과외인 학생은 숙제 입력 대상 아님
+  const pool = studentsCache.filter((s) => s.branch === hlBranch && (!teacherUid || s.teacherUid === teacherUid) && !/과외/.test(String(s.classGroup || '')));
   const m = new Map();
   pool.forEach((s) => { const c = String(s.classGroup || '').trim() || '(반 미배정)'; m.set(c, (m.get(c) || 0) + 1); });
   return [...m.entries()].sort((a, b) => hlClsCmp(a[0], b[0]));
@@ -118,11 +119,13 @@ function hlRenderStudents(checkedIds) {
 }
 
 // ── 저장 ──
-window.hlSave = async function () {
+// absent=true: 체크한 학생을 "결석"으로 기록 (숙제 내용 칸은 비워도 됨)
+window.hlSave = async function (absent) {
+  absent = absent === true;
   const date = document.getElementById('hlDate').value;
   const teacherUid = hlSel.teacherUid;
   const teacherName = teachersCache.find((t) => t.id === teacherUid)?.name || '';
-  const content = document.getElementById('hlContent').value.trim();
+  const content = absent ? '결석' : document.getElementById('hlContent').value.trim();
   const ids = [...document.querySelectorAll('#hlStudents input:checked')].map((c) => c.value);
   if (!date) { showMsg('hlMsg', '날짜를 골라주세요.', 'error'); return; }
   if (!teacherUid) { showMsg('hlMsg', '담당 선생님을 골라주세요.', 'error'); return; }
@@ -130,11 +133,12 @@ window.hlSave = async function () {
   if (!ids.length) { showMsg('hlMsg', '학생을 한 명 이상 체크해주세요.', 'error'); return; }
   if (!content) { showMsg('hlMsg', '숙제 내용을 적어주세요.', 'error'); return; }
   const names = ids.map((id) => studentsCache.find((s) => s.id === id)?.name || '');
-  const data = { date, branch: hlBranch, teacherUid, teacherName, classGroup: hlSel.cls, studentIds: ids, studentNames: names, content, updatedAt: new Date().toISOString(), updatedBy: window.currentAdmin?.name || '' };
+  const data = { date, branch: hlBranch, teacherUid, teacherName, classGroup: hlSel.cls, studentIds: ids, studentNames: names, content, absent, updatedAt: new Date().toISOString(), updatedBy: window.currentAdmin?.name || '' };
+  if (absent && !confirm(`${names.join(', ')} — ${ids.length}명을 결석으로 기록할까요?`)) return;
   try {
     if (hlEditing) await updateDoc(doc(db, 'homeworkLogs', hlEditing), data);
     else await addDoc(collection(db, 'homeworkLogs'), { ...data, createdAt: new Date().toISOString() });
-    showMsg('hlMsg', hlEditing ? '✅ 수정했습니다.' : `✅ ${hlBranch} ${hlSel.cls} 숙제를 저장했습니다. (${ids.length}명) — 다음 반을 골라주세요`, 'success');
+    showMsg('hlMsg', absent ? `✅ ${hlSel.cls} ${names.join(', ')} 결석으로 기록했습니다.` : hlEditing ? '✅ 수정했습니다.' : `✅ ${hlBranch} ${hlSel.cls} 숙제를 저장했습니다. (${ids.length}명) — 다음 반을 골라주세요`, 'success');
     hlCancelEdit(true);   // 반·학생·내용 모두 비움 (날짜·선생님은 유지)
     hlLoad();
   } catch (e) { showMsg('hlMsg', '저장 오류: ' + e.message, 'error'); }
@@ -167,7 +171,7 @@ window.hlLoad = async function () {
         <td style="font-weight:700;color:var(--purple, #5B3FA6);">${showT ? hlEsc(r.teacherName) + 'T' : ''}</td>
         <td style="white-space:nowrap;">${hlEsc(r.classGroup)}</td>
         <td style="font-size:12.5px;color:var(--muted);">${(r.studentNames || []).map(hlEsc).join(', ')}</td>
-        <td style="color:var(--off-white);white-space:pre-wrap;">${hlEsc(r.content)}${r.source === 'teacher' ? '<div style="font-size:11px;color:#2E9E5B;margin-top:3px;">✎ 선생님 직접 입력</div>' : ''}</td>
+        <td style="color:${r.absent ? '#D64545' : 'var(--off-white)'};white-space:pre-wrap;${r.absent ? 'font-weight:700;' : ''}">${r.absent ? '🚫 결석' : hlEsc(r.content)}${r.source === 'teacher' ? '<div style="font-size:11px;color:#2E9E5B;margin-top:3px;">✎ 선생님 직접 입력</div>' : ''}</td>
         <td style="white-space:nowrap;"><button class="btn btn-sm btn-secondary" onclick="hlEdit('${r.id}')">수정</button> <button class="btn btn-sm btn-danger" onclick="hlDelete('${r.id}')">삭제</button></td>
       </tr>`;
     }).join('');
@@ -181,7 +185,7 @@ window.hlEdit = function (id) {
   document.getElementById('hlTeacher').value = r.teacherUid || '';
   hlRenderClasses();
   hlRenderStudents(r.studentIds || []);
-  document.getElementById('hlContent').value = r.content || '';
+  document.getElementById('hlContent').value = r.absent ? '' : (r.content || '');   // 결석 기록을 숙제로 바꿀 땐 내용만 적어 저장
   document.getElementById('hlSaveBtn').textContent = '수정 저장';
   document.getElementById('hlCancelBtn').style.display = '';
   document.getElementById('hlContent').scrollIntoView({ behavior: 'smooth', block: 'center' });

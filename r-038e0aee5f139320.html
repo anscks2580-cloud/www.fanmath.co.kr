@@ -474,7 +474,7 @@ function homeworkOf(logs, dateStr) {
   const classes = {};   // teacherUid|반 → { teacherUid, cls, students[], days:Set }
   scopeStudents().forEach((s) => {
     const cls = String(s.classGroup || '').trim();
-    if (!cls || !s.teacherUid || !tm[s.teacherUid]) return;
+    if (!cls || !s.teacherUid || !tm[s.teacherUid] || /과외/.test(cls)) return;   // 과외 반은 숙제 입력 대상 아님
     const k = s.teacherUid + '|' + cls;
     const c = classes[k] = classes[k] || { teacherUid: s.teacherUid, cls, students: [], days: new Set() };
     c.students.push(s); (s.days || []).forEach((d) => c.days.add(d));
