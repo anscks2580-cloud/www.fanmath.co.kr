@@ -148,6 +148,7 @@
     <button class="admin-tab" onclick="switchTab('homework',this)">📚 숙제 확인</button>
     <button class="admin-tab" onclick="switchTab('answerkeys',this);initTextbooksTab()">🗂 답지</button>
     <button class="admin-tab" onclick="switchTab('tasks',this)">📝 작업물</button>
+    <button class="admin-tab" id="satTabBtn" style="display:none;" onclick="switchTab('satclinic',this);loadSatClinicTA()">🏫 토요 추가클리닉</button>
   </div>
 
   <!-- 클리닉실 현황 -->
@@ -191,6 +192,26 @@
     </div>
   </div>
 
+  <!-- 토요 추가클리닉: 토요일에만 메뉴가 보이고, 그날 클리닉을 관별 이미지로 보여줌 (관리부 토요클리닉 이미지와 같은 모양) -->
+  <div class="tab-panel" id="tab-satclinic">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
+        <h3 style="margin:0;">🏫 오늘 토요 추가클리닉 <span id="satDateLabel" style="font-size:13px;color:var(--muted);font-weight:400;"></span></h3>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-sm sat-br" data-br="평촌관" onclick="setSatBranch('평촌관')">평촌관</button>
+          <button class="btn btn-sm sat-br" data-br="산본관" onclick="setSatBranch('산본관')">산본관</button>
+          <button class="btn btn-secondary btn-sm" onclick="loadSatClinicTA(true)">🔄 새로고침</button>
+        </div>
+      </div>
+      <div id="satSummary" style="font-size:12.5px;color:var(--muted);margin-bottom:10px;"></div>
+      <div id="satResult"><div class="empty">불러오는 중...</div></div>
+      <div id="satImgBtns" style="display:none;margin-top:12px;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-secondary btn-sm" onclick="satSaveImage()">💾 이미지 저장</button>
+      </div>
+      <canvas id="satCanvas" style="display:none;"></canvas>
+    </div>
+  </div>
+
   <!-- 작업물 -->
   <div class="tab-panel" id="tab-tasks">
     <div class="card">
@@ -208,7 +229,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, getDocs, query, orderBy, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, getDownloadURL, listAll } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
@@ -603,6 +624,169 @@ window.loadTasks = async function() {
   }).join('');
 };
 
+// ══════════════════════════════════════
+// 🏫 토요 추가클리닉 — 토요일에만 메뉴 노출, 그날(오늘) 제출된 satClinicReports를 관별 이미지로
+//   관리자 페이지 토요클리닉 이미지(admin/js/satclinic.js scDrawImage)와 같은 모양
+// ══════════════════════════════════════
+const SAT_DOW = ['일','월','화','수','목','금','토'];
+const SAT_GRADE_ORDER = ['초1','초2','초3','초4','초5','초6','중1','중2','중3','고1','고2','고3','N수'];
+const satGradeKey = (g) => { const i = SAT_GRADE_ORDER.indexOf(g); return i < 0 ? 99 : i; };
+let satBranch = '';
+let satRows = null;   // 오늘 기록 (가공됨)
+const isSaturday = () => new Date().getDay() === 6;
+function satStartOf(r) {
+  if (r.startTime && /^\d{1,2}:\d{2}$/.test(r.startTime)) {
+    const [h, m] = r.startTime.split(':').map(Number);
+    return { key: `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`, min: h * 60 + m };
+  }
+  const mt = String(r.time || '').trim().match(/(오전|오후)?\s*(\d{1,2})\s*(?::|시)?\s*(\d{2})?/);
+  if (!mt) return { key: '시간 미기재', min: 9999 };
+  let h = parseInt(mt[2], 10); const m = mt[3] ? parseInt(mt[3], 10) : 0;
+  if (mt[1] === '오후' && h < 12) h += 12; else if (!mt[1] && h >= 1 && h <= 7) h += 12;
+  if (h > 23 || m > 59) return { key: '시간 미기재', min: 9999 };
+  return { key: `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`, min: h * 60 + m };
+}
+window.setSatBranch = (b) => { satBranch = b; try { localStorage.setItem('swc_ta_sat_branch', b); } catch (e) {} satRender(); };
+window.loadSatClinicTA = async function (force) {
+  if (!isSaturday()) return;
+  if (!satBranch) { let saved = ''; try { saved = localStorage.getItem('swc_ta_sat_branch') || ''; } catch (e) {} satBranch = saved || window.__taBranch || '평촌관'; }
+  const today = todayStr();
+  document.getElementById('satDateLabel').textContent = `${new Date().getMonth() + 1}월 ${new Date().getDate()}일 (토)`;
+  if (satRows && !force) { satRender(); return; }
+  document.getElementById('satResult').innerHTML = '<div class="empty">불러오는 중...</div>';
+  try {
+    const [rs, ss, ts] = await Promise.all([
+      getDocs(query(collection(db, 'satClinicReports'), where('date', '==', today))),
+      getDocs(collection(db, 'students')),
+      getDocs(collection(db, 'teachers')),
+    ]);
+    const st = {}; ss.forEach(d => { st[d.id] = d.data(); });
+    const te = {}; ts.forEach(d => { te[d.id] = d.data(); });
+    satRows = [];
+    rs.forEach(d => {
+      const r = { id: d.id, ...d.data() };
+      if (r.isNone) return;
+      const s = r.studentId ? st[r.studentId] : null;
+      r.branch = r.branch || s?.branch || te[r.teacherUid]?.branch || '';
+      r.grade = r.studentGrade || s?.grade || '';
+      r.slot = satStartOf(r);
+      satRows.push(r);
+    });
+    satRender();
+  } catch (e) {
+    document.getElementById('satResult').innerHTML = `<div class="empty" style="color:#D64545;">불러오지 못했습니다 (${esc(e.message)})</div>`;
+  }
+};
+function satView() {
+  return (satRows || []).filter(r => r.branch === satBranch).sort((a, b) => a.slot.min - b.slot.min
+    || (a.teacherName || '').localeCompare(b.teacherName || '', 'ko')
+    || satGradeKey(a.grade) - satGradeKey(b.grade) || (a.studentName || '').localeCompare(b.studentName || '', 'ko'));
+}
+function satRender() {
+  document.querySelectorAll('.sat-br').forEach(b => { const on = b.dataset.br === satBranch; b.className = 'btn btn-sm sat-br ' + (on ? 'btn-primary' : 'btn-secondary'); });
+  if (!satRows) return;
+  const rows = satView();
+  const other = (satRows || []).filter(r => r.branch && r.branch !== satBranch).length;
+  document.getElementById('satSummary').textContent = `${satBranch} ${rows.length}명` + (other ? ` · ${satBranch === '평촌관' ? '산본관' : '평촌관'} ${other}명` : '');
+  if (!rows.length) {
+    document.getElementById('satResult').innerHTML = `<div class="empty">오늘 ${esc(satBranch)} 토요 추가클리닉이 아직 없습니다.</div>`;
+    document.getElementById('satImgBtns').style.display = 'none';
+    return;
+  }
+  const canvas = satDrawImage(rows);
+  document.getElementById('satResult').innerHTML = `<img src="${canvas.toDataURL('image/png')}" alt="${esc(satBranch)} 토요 추가클리닉" style="width:100%;max-width:${canvas.width / 2}px;height:auto;display:block;border-radius:6px;cursor:zoom-in;" onclick="window.open(this.src,'_blank')">`;
+  document.getElementById('satImgBtns').style.display = 'flex';
+}
+function satDrawImage(rows) {
+  const S2 = 2;
+  const cols = [{ h: '시간', w: 78 }, { h: '선생님', w: 70 }, { h: '학생', w: 70 }, { h: '학년', w: 46 }, { h: '지참교재', w: 140 }, { h: '클리닉 내용', w: 270 }];
+  const W = cols.reduce((a, c) => a + c.w, 0) + 2;
+  const pad = 5, lineH = 16, minRowH = 24, titleH = 34, headH = 24;
+  const font = (b, px) => `${b ? 'bold ' : ''}${px}px "Malgun Gothic","Apple SD Gothic Neo",sans-serif`;
+  const bands = ['#FFF2CC', '#DDEBF7', '#E2EFDA', '#FCE4D6', '#EDEDED', '#D9E1F2'];
+  const canvas = document.getElementById('satCanvas');
+  const ctx = canvas.getContext('2d');
+  const wrap = (text, w, f) => {
+    ctx.font = f;
+    return String(text || '').replace(/\r/g, '').split('\n').flatMap((line) => {
+      const out = []; let cur = '';
+      for (const ch of line) { if (ctx.measureText(cur + ch).width > w - pad * 2 && cur) { out.push(cur); cur = ch; } else cur += ch; }
+      out.push(cur); return out;
+    });
+  };
+  const items = rows.map((r) => {
+    const book = wrap(r.book, cols[4].w, font(false, 12)), content = wrap(r.content, cols[5].w, font(false, 12));
+    return { r, book, content, h: Math.max(minRowH, Math.max(book.length, content.length) * lineH + 8) };
+  });
+  // 시간 칸은 두 줄(시작 ~ / 끝)이라, 그 시간대 학생이 적어 칸이 낮으면 마지막 줄을 늘려 글자가 넘치지 않게
+  [...new Set(items.map((x) => x.r.slot.key))].forEach((sk) => {
+    const g = items.filter((x) => x.r.slot.key === sk);
+    const need = lineH * 2 + 10 - g.reduce((a, x) => a + x.h, 0);
+    if (need > 0) g[g.length - 1].h += need;
+  });
+  const H = titleH + headH + items.reduce((a, x) => a + x.h, 0) + 2;
+  canvas.width = W * S2; canvas.height = H * S2;
+  ctx.setTransform(S2, 0, 0, S2, 0, 0);
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
+  ctx.textBaseline = 'middle';
+  const xs = [1]; cols.forEach((c) => xs.push(xs[xs.length - 1] + c.w));
+  const cell = (x, y, w, h, bg, lines, bold, size = 12, align = 'center') => {
+    if (bg) { ctx.fillStyle = bg; ctx.fillRect(x, y, w, h); }
+    ctx.strokeStyle = '#999'; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, w, h);
+    if (lines == null) return;
+    const arr = Array.isArray(lines) ? lines : [String(lines)];
+    ctx.fillStyle = '#111'; ctx.font = font(bold, size); ctx.textAlign = align;
+    const y0 = y + h / 2 - (arr.length - 1) * lineH / 2;
+    arr.forEach((ln, i) => ctx.fillText(ln, align === 'center' ? x + w / 2 : x + pad, y0 + i * lineH));
+  };
+  const d = new Date();
+  let y = 1;
+  cell(1, y, W - 2, titleH, '#FFF2CC', `${satBranch} 토요 추가클리닉 · ${d.getMonth() + 1}월 ${d.getDate()}일 (${SAT_DOW[d.getDay()]}) · ${items.length}명`, true, 14);
+  y += titleH;
+  cols.forEach((c, i) => cell(xs[i], y, c.w, headH, '#F5C518', c.h, true, 12));
+  y += headH;
+  const slots = [...new Set(items.map((x) => x.r.slot.key))];
+  slots.forEach((sk, si) => {
+    const sRows = items.filter((x) => x.r.slot.key === sk);
+    const sTop = y;
+    [...new Set(sRows.map((x) => x.r.teacherName || ''))].forEach((tn) => {
+      const tTop = y;
+      sRows.filter((x) => (x.r.teacherName || '') === tn).forEach((x) => {
+        cell(xs[2], y, cols[2].w, x.h, null, x.r.studentName || '', true, 12);
+        cell(xs[3], y, cols[3].w, x.h, null, x.r.grade || '-', false, 12);
+        cell(xs[4], y, cols[4].w, x.h, null, x.book, false, 12, 'left');
+        cell(xs[5], y, cols[5].w, x.h, null, x.content, false, 12, 'left');
+        y += x.h;
+      });
+      cell(xs[1], tTop, cols[1].w, y - tTop, null, (tn || '') + 'T', true, 12);
+    });
+    const times = [...new Set(sRows.map((x) => x.r.time || ''))];
+    let label = [sk + ' 시작'];
+    if (sk === '시간 미기재') label = ['미기재'];
+    else if (times.length === 1 && times[0]) { const parts = String(times[0]).split(/\s*[~\-]\s*/); label = parts.length === 2 ? [parts[0] + ' ~', parts[1]] : [times[0]]; }
+    cell(xs[0], sTop, cols[0].w, y - sTop, bands[si % bands.length], label, true, 12);
+  });
+  ctx.strokeStyle = '#666'; ctx.lineWidth = 1.5; ctx.strokeRect(1.5, 1.5, W - 3, H - 3);
+  return canvas;
+}
+window.satSaveImage = function () {
+  const rows = satView(); if (!rows.length) return;
+  const canvas = satDrawImage(rows);
+  const a = document.createElement('a');
+  a.download = `토요클리닉_${satBranch}_${todayStr()}.png`;
+  a.href = canvas.toDataURL('image/png'); a.click();
+};
+// 토요일에만 메뉴 보이기 (페이지를 열어 둔 채 날짜가 바뀌어도 반영)
+function satToggleTab() {
+  const btn = document.getElementById('satTabBtn'); if (!btn) return;
+  const on = isSaturday();
+  btn.style.display = on ? '' : 'none';
+  if (!on && document.getElementById('tab-satclinic').classList.contains('active')) {
+    document.querySelector('.admin-tab').click();
+  }
+}
+setInterval(satToggleTab, 60000);
+
 // 로그인은 통합 로그인 페이지(login.html)에서 — 로그인 안 된 상태로 들어오면 그쪽으로 이동
 function showLogin()  { document.getElementById('portalScreen').style.display='none'; location.replace('login.html'); }
 function showPortal() { document.getElementById('loginScreen').style.display='none';  document.getElementById('portalScreen').style.display='block'; }
@@ -619,6 +803,7 @@ onAuthStateChanged(auth, async (user) => {
   document.getElementById('taName').textContent = `${tDoc.data().name} 조교님 · ${tDoc.data().branch || ''}`;
   window.__taBranch = (tDoc.data().branch === '산본관' || tDoc.data().branch === '평촌관') ? tDoc.data().branch : '';
   showPortal();
+  satToggleTab();
   await Promise.all([loadClinicRoom(), loadHomework(), loadTasks(), loadTaMyboxLink()]);
 });
 </script>

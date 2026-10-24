@@ -226,6 +226,12 @@ function scDrawImage() {
       const book = wrap(r.book, cols[4].w, font(false, 12)), content = wrap(r.content, cols[5].w, font(false, 12));
       return { r, book, content, h: Math.max(minRowH, Math.max(book.length, content.length) * lineH + 8) };
     });
+    // 시간 칸은 두 줄(시작 ~ / 끝)이라, 그 시간대 학생이 적어 칸이 낮으면 마지막 줄을 늘려 글자가 넘치지 않게
+    [...new Set(rows.map((x) => x.r.slot.key))].forEach((sk) => {
+      const g = rows.filter((x) => x.r.slot.key === sk);
+      const need = lineH * 2 + 10 - g.reduce((a, x) => a + x.h, 0);
+      if (need > 0) g[g.length - 1].h += need;
+    });
     return { date, rows, h: titleH + headH + rows.reduce((a, x) => a + x.h, 0) };
   });
   const H = plan.reduce((a, p) => a + p.h, 0) + gap * (plan.length - 1) + 2;
