@@ -11,7 +11,8 @@ let srRows = [];          // 현재 조회된 보고서들
 let srInited = false;
 
 const srEsc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const srIsMiddle = (s) => { const g = String(s?.grade || '').trim(); return !(g.startsWith('고') || /N수|재수|졸업/.test(g)); };
+// 월말보고서 대상: 초·중등, 반이 과외인 학생 제외
+const srIsMiddle = (s) => { const g = String(s?.grade || '').trim(); return !(g.startsWith('고') || /N수|재수|졸업/.test(g)) && !/과외/.test(String(s?.classGroup || '')); };
 // Firestore는 배열 안의 배열을 못 받으므로, 혹시 남아 있으면 문자열로 바꿔 저장
 function srSanitize(v, inArray) {
   if (Array.isArray(v)) return inArray ? JSON.stringify(v) : v.map((x) => srSanitize(x, true));
@@ -113,6 +114,7 @@ window.srLoad = async function () {
   try {
     const snap = await getDocs(query(collection(db, 'studentReports'), where('month', '==', month)));
     srRows = []; snap.forEach((d) => srRows.push({ id: d.id, ...d.data() }));
+    srRows = srRows.filter((r) => !/과외/.test(String(r.classGroup || '')));   // 반이 과외인 학생은 월말보고서 해당 없음
     if (teacherUid) srRows = srRows.filter((r) => r.teacherUid === teacherUid);
     srRows.sort((a, b) => (a.classGroup || '').localeCompare(b.classGroup || '', 'ko') || (a.studentName || '').localeCompare(b.studentName || '', 'ko'));
     const st = { draft: 0, reviewed: 0, sent: 0 };

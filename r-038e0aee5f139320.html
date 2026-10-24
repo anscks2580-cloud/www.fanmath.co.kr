@@ -157,6 +157,8 @@ a.lk:hover { text-decoration:underline; }
 /* 댓글 */
 .th { border:1px solid var(--border-soft); border-radius:12px; padding:14px 16px; margin-bottom:10px; background:#fff; }
 .th.wait { border-color:rgba(214,69,69,0.35); box-shadow:inset 3px 0 0 var(--red); }
+.th-ck { font-size:11.5px; color:var(--muted); margin-top:4px; }
+.th-ck .ok { color:var(--green); font-weight:600; margin-right:10px; }
 .th-hd { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:10px; }
 .th-hd b { font-size:14px; }
 .th-hd .sm { font-size:12px; color:var(--muted); }
@@ -312,7 +314,7 @@ a.lk:hover { text-decoration:underline; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs, query, where, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, doc, getDoc, getDocs, query, where, onSnapshot, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
@@ -341,7 +343,9 @@ const clsKey = (c) => { const m = String(c || '').match(/^(초|중|고)\s*(\d)/)
 const clsCmp = (a, b) => clsKey(a) - clsKey(b) || String(a || '').localeCompare(String(b || ''), 'ko', { numeric: true });
 const koCmp = (a, b) => String(a || '').localeCompare(String(b || ''), 'ko');
 // 주간성취도·월말보고서 대상: 초·중등 (고등·N수 제외) — 관리자 홈·선생님 페이지와 같은 기준
-const isJunior = (s) => { const g = String(s?.grade || '').trim(); return !(g.startsWith('고') || /N수|재수|졸업/.test(g)); };
+// 반이 과외인 학생은 주간성취도·월말보고서 해당 없음
+const isTutoring = (s) => /과외/.test(String(s?.classGroup || ''));
+const isJunior = (s) => { const g = String(s?.grade || '').trim(); return !(g.startsWith('고') || /N수|재수|졸업/.test(g)) && !isTutoring(s); };
 function mondayOf(d) { const m = new Date(d); m.setHours(0, 0, 0, 0); const day = m.getDay(); m.setDate(m.getDate() - (day === 0 ? 6 : day - 1)); return m; }
 function weekKeyOf(monday) {   // 선생님 페이지 getWeekKey와 같은 계산
   const y = monday.getFullYear(); const start = new Date(y, 0, 1);
@@ -739,7 +743,9 @@ function threadsOf(comments) {
   return Object.values(g).map((list) => {
     list.sort((a, b) => (tsDate(a.createdAt) || 0) - (tsDate(b.createdAt) || 0));
     const last = list[list.length - 1];
-    return { list, first: list[0], last, waiting: last.authorRole === 'parent', at: tsDate(last.createdAt) };
+    const unanswered = last.authorRole === 'parent';
+    const checked = unanswered && !!(last.dirChecks || {})[CL.me];   // 원장이 "확인함" 처리 → 알람 끔 (새 학부모 댓글이 오면 다시 대기)
+    return { list, first: list[0], last, unanswered, checked, waiting: unanswered && !checked, at: tsDate(last.createdAt) };
   }).sort((a, b) => (b.waiting - a.waiting) || ((b.at || 0) - (a.at || 0)));
 }
 async function renderComments() {
@@ -752,25 +758,48 @@ async function renderComments() {
   S.alerts.comment = wait; renderAlerts();
   const teachers = [...new Map(all.map((t) => [t.first.teacherUid, t.first.teacherName])).entries()].filter(([u]) => u).sort((a, b) => koCmp(a[1], b[1]));
   let list = all;
+  const nChecked = all.filter((t) => t.checked).length;
+  const nDone = all.filter((t) => !t.unanswered).length;
   if (CM.filter === 'wait') list = list.filter((t) => t.waiting);
-  if (CM.filter === 'done') list = list.filter((t) => !t.waiting);
+  if (CM.filter === 'checked') list = list.filter((t) => t.checked);
+  if (CM.filter === 'done') list = list.filter((t) => !t.unanswered);
   if (CM.teacher) list = list.filter((t) => t.first.teacherUid === CM.teacher);
   const label = (t) => t.first.targetLabel || (t.first.targetType === 'weekly' ? '주간성취도' : t.first.targetType === 'monthly' ? '월말보고서' : '');
   const typeChip = (t) => t.first.targetType === 'monthly' ? '<span class="chip pur">월말보고서</span>' : t.first.targetType === 'weekly' ? '<span class="chip warn">주간성취도</span>' : '';
-  box.innerHTML = `<div class="card-hd"><h3>💬 학부모 댓글 · 선생님 답글</h3><div class="r">${wait ? `<span class="st bad">답글 대기 ${wait}건</span>` : '<span class="st ok">모두 답글 완료</span>'}</div></div>
+  box.innerHTML = `<div class="card-hd"><h3>💬 학부모 댓글 · 선생님 답글</h3><div class="r">${wait ? `<span class="st bad">답글 대기 ${wait}건</span>${wait > 1 ? ` <button class="btn btn-ok" onclick="cmCheckAll()">✅ ${wait}건 모두 확인함</button>` : ''}` : '<span class="st ok">대기 중인 댓글 없음</span>'}</div></div>
     <div class="flt">
       <button class="pill${CM.filter === 'all' ? ' on' : ''}" onclick="cmSet('filter','all')">전체 ${all.length}</button>
       <button class="pill${CM.filter === 'wait' ? ' on' : ''}" onclick="cmSet('filter','wait')">답글 대기 ${wait}</button>
-      <button class="pill${CM.filter === 'done' ? ' on' : ''}" onclick="cmSet('filter','done')">답글 완료 ${all.length - wait}</button>
+      <button class="pill${CM.filter === 'checked' ? ' on' : ''}" onclick="cmSet('filter','checked')">확인함 ${nChecked}</button>
+      <button class="pill${CM.filter === 'done' ? ' on' : ''}" onclick="cmSet('filter','done')">답글 완료 ${nDone}</button>
       <select class="dr-select" onchange="cmSet('teacher',this.value)"><option value="">전체 선생님</option>${teachers.map(([u, n]) => `<option value="${esc(u)}"${CM.teacher === u ? ' selected' : ''}>${esc(n || '(이름 없음)')}</option>`).join('')}</select>
     </div>` +
     (list.length ? list.map((t) => {
       const link = t.first.targetType === 'monthly' ? ` <a class="lk" style="font-size:12px" href="report.html?id=${encodeURIComponent(t.first.targetId)}" target="_blank" rel="noopener">보고서 보기</a>` : '';
-      return `<div class="th${t.waiting ? ' wait' : ''}"><div class="th-hd">${typeChip(t)}<b>${esc(t.first.studentName || '')}</b><span class="sm">${esc(label(t))} · 담당 ${esc(t.first.teacherName || '-')}</span>${link}<span class="r">${t.waiting ? '<span class="chip bad">답글 대기</span>' : '<span class="chip ok">답글 완료</span>'}</span></div>
-        <div class="msgs">${t.list.map((c) => { const d = tsDate(c.createdAt); return `<div class="msg ${c.authorRole === 'teacher' ? 't' : 'p'}"><small>${esc(c.authorName || (c.authorRole === 'teacher' ? '선생님' : '학부모'))} · ${d ? esc(md(d) + ' ' + hm(d)) : ''}${c.editedAt ? ' · 수정됨' : ''}${c.authorRole === 'parent' && c.readByTeacher ? ' · 선생님 읽음' : c.authorRole === 'parent' ? ' · 선생님 안 읽음' : ''}</small>${esc(c.text || '')}</div>`; }).join('')}</div></div>`;
+      return `<div class="th${t.waiting ? ' wait' : ''}"><div class="th-hd">${typeChip(t)}<b>${esc(t.first.studentName || '')}</b><span class="sm">${esc(label(t))} · 담당 ${esc(t.first.teacherName || '-')}</span>${link}<span class="r">${t.waiting ? `<span class="chip bad">답글 대기</span><button class="btn btn-ok" onclick="cmCheck('${esc(t.last.id)}')">✅ 확인함</button>` : t.checked ? `<span class="chip mute">답글 전 · 확인함</span><button class="btn" onclick="cmUncheck('${esc(t.last.id)}')">되돌리기</button>` : '<span class="chip ok">답글 완료</span>'}</span></div>
+        <div class="msgs">${t.list.map((c) => { const d = tsDate(c.createdAt); return `<div class="msg ${c.authorRole === 'teacher' ? 't' : 'p'}"><small>${esc(c.authorName || (c.authorRole === 'teacher' ? '선생님' : '학부모'))} · ${d ? esc(md(d) + ' ' + hm(d)) : ''}${c.editedAt ? ' · 수정됨' : ''}${c.authorRole === 'parent' && c.readByTeacher ? ' · 선생님 읽음' : c.authorRole === 'parent' ? ' · 선생님 안 읽음' : ''}</small>${esc(c.text || '')}</div>`; }).join('')}</div>${t.unanswered ? cmCheckLine(t.last) : ''}</div>`;
     }).join('') : `<div class="empty">${all.length ? '조건에 맞는 댓글이 없습니다.' : '아직 학부모 댓글이 없습니다.'}</div>`) +
-    '<div class="note">답글은 담당 선생님이 선생님 페이지에서 답니다. 마지막 글이 학부모 댓글이면 "답글 대기"로 표시됩니다.</div>';
+    '<div class="note">답글은 담당 선생님이 선생님 페이지에서 답니다. 마지막 글이 학부모 댓글이면 "답글 대기"로 표시되고, "✅ 확인함"을 누르면 확인 필요 알람에서 빠집니다 (원장님별로 따로 표시). 확인한 뒤에 학부모 댓글이 새로 달리면 다시 답글 대기로 돌아옵니다.</div>';
 }
+function cmCheckLine(c) {
+  const ck = c.dirChecks || {};
+  const done = Object.entries(DR_NAMES).filter(([k]) => ck[k]);
+  return done.length ? `<div class="th-ck">${done.map(([k, n]) => `<span class="ok">✅ ${esc(n)} 확인함 <span style="font-weight:400;color:var(--muted)">${esc(clFmt(ck[k].at))}</span></span>`).join('')}</div>` : '';
+}
+async function cmSetCheck(id, on) {
+  const ref = doc(db, 'reportComments', id);
+  const val = on ? { name: DR_NAMES[CL.me] || '', at: new Date().toISOString() } : deleteField();
+  await updateDoc(ref, { [`dirChecks.${CL.me}`]: val });
+  const c = (S.comments || []).find((x) => x.id === id);
+  if (c) { const ck = { ...(c.dirChecks || {}) }; if (on) ck[CL.me] = val; else delete ck[CL.me]; c.dirChecks = ck; }
+}
+window.cmCheck = async (id) => { try { await cmSetCheck(id, true); renderComments(); } catch (e) { alert('확인 저장 실패: ' + e.message); } };
+window.cmUncheck = async (id) => { try { await cmSetCheck(id, false); renderComments(); } catch (e) { alert('되돌리기 실패: ' + e.message); } };
+window.cmCheckAll = async () => {
+  const ids = threadsOf(S.comments || []).filter((t) => t.waiting && (!CM.teacher || t.first.teacherUid === CM.teacher)).map((t) => t.last.id);
+  if (!ids.length || !confirm(`답글 대기 ${ids.length}건을 모두 확인함으로 바꿀까요?`)) return;
+  try { await Promise.all(ids.map((id) => cmSetCheck(id, true))); renderComments(); } catch (e) { alert('확인 저장 실패: ' + e.message); }
+};
 
 // ══════════════════════════════════════
 // 확인 필요 (빨간불 모음)
@@ -917,6 +946,7 @@ onAuthStateChanged(auth, async (user) => {
   let savedBranch = null; try { savedBranch = localStorage.getItem('swc_director_branch'); } catch (e) {}
   if (savedBranch === null && (a.branch === '평촌관' || a.branch === '산본관')) S.branch = a.branch;
   $('drGate').style.display = 'none'; $('drMain').style.display = 'block';
+  CL.me = String(user.email || '').toLowerCase().split('@')[0];
   try { await loadBase(); } catch (e) { gate(`<h2>불러오기 오류</h2><p>${esc(e.message)}</p>`); return; }
   const want = (location.hash || '').replace('#', '');
   if (['day', 'week', 'month', 'comment'].includes(want)) drTab(want);

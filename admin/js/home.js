@@ -18,10 +18,10 @@
   let loadedAt = 0;
   let loading = false;
 
-  // 주간성취도 대상 학생: 중등부(초·중)만 (teacher.html과 같은 기준)
+  // 주간성취도 대상 학생: 중등부(초·중)만, 반이 과외인 학생 제외 (teacher.html과 같은 기준)
   function isWeeklyTarget(s) {
     const g = String(s?.grade || '').trim();
-    return !(g.startsWith('고') || /N수|재수|졸업/.test(g));
+    return !(g.startsWith('고') || /N수|재수|졸업/.test(g)) && !/과외/.test(String(s?.classGroup || ''));
   }
   function targetMonday(d, offsetWeeks) {
     const day = d.getDay();
@@ -210,7 +210,7 @@
       let teachers = (typeof teachersCache !== 'undefined' && Array.isArray(teachersCache) && teachersCache.length) ? teachersCache : null;
       if (!teachers) { const ts = await getDocs(collection(db, 'teachers')); teachers = []; ts.forEach((d) => teachers.push({ id: d.id, ...d.data() })); }
       const byBranch = {}; students.forEach((s) => { const b = s.branch || '미지정'; byBranch[b] = (byBranch[b] || 0) + 1; });
-      const mid = students.filter(isWeeklyTarget).length, high = students.length - mid;
+      const mid = students.filter((s) => { const g = String(s?.grade || '').trim(); return !(g.startsWith('고') || /N수|재수|졸업/.test(g)); }).length, high = students.length - mid;
       const noTeacher = students.filter((s) => !s.teacherUid).length;
       el.innerHTML = `<div class="hm-stat">
           <div class="box" data-open="students"><span class="n">${students.length}</span><span class="k">학생 전체</span></div>

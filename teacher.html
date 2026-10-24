@@ -1584,10 +1584,10 @@ let currentDayFilter = 'all';
 let currentGradeFilter = 'all';
 let studentSearchQuery = '';
 let myStudents = []; // 내 담당 학생만
-// 주간성취도 작성 대상: 중등부(초·중)만. 고1~고3·N수 등 고등부는 제외
+// 주간성취도 작성 대상: 중등부(초·중)만. 고1~고3·N수 등 고등부는 제외, 반이 과외인 학생도 제외
 function isWeeklyTarget(s) {
   const g = String(s?.grade || '').trim();
-  return !(g.startsWith('고') || /N수|재수|졸업/.test(g));
+  return !(g.startsWith('고') || /N수|재수|졸업/.test(g)) && !/과외/.test(String(s?.classGroup || ''));
 }
 let weeklyReportsCache = {}; // docId -> 저장된 데이터 (수정용)
 let editingWeeklyDoc = null; // { docId, weekKey, weekLabel } 수정 중인 기록
@@ -5055,7 +5055,8 @@ const NO_CLASS = '(반 미배정)';
 let dtCurrent = null;        // 다시 열어 수정 중인 시험지 (null이면 새 시험지)
 let dtEntered = {};          // studentId -> { wrong:Set, absent }  입력 중인 값
 let dtInited = false;
-const isMiddle = (s) => { const g = String(s?.grade || '').trim(); return !(g.startsWith('고') || /N수|재수|졸업/.test(g)); };
+// 일일테스트(월말보고서 원본) 대상: 초·중등, 반이 과외인 학생 제외
+const isMiddle = (s) => { const g = String(s?.grade || '').trim(); return !(g.startsWith('고') || /N수|재수|졸업/.test(g)) && !/과외/.test(String(s?.classGroup || '')); };
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const todayStr = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
 function note(id, msg, type) { const el = $(id); el.textContent = msg; el.className = `alert ${type}`; el.style.display = 'block'; setTimeout(() => { el.style.display = 'none'; }, 5000); }
@@ -5463,7 +5464,7 @@ window.rvLoad = async function () {
   const el = $('rvList');
   try {
     const snap = await getDocs(query(collection(db, 'studentReports'), where('month', '==', month), where('teacherUid', '==', rvUid)));
-    rvRows = []; snap.forEach((d) => rvRows.push({ id: d.id, ...d.data() }));
+    rvRows = []; snap.forEach((d) => { const r = { id: d.id, ...d.data() }; if (!/과외/.test(String(r.classGroup || ''))) rvRows.push(r); });   // 반이 과외인 학생은 월말보고서 해당 없음
     rvRows.sort((a, b) => (a.classGroup || '').localeCompare(b.classGroup || '', 'ko') || (a.studentName || '').localeCompare(b.studentName || '', 'ko'));
     const done = rvRows.filter((r) => r.status !== 'draft').length;
     $('rvStat').textContent = rvRows.length ? `${rvRows.length}명 중 ${done}명 검수 완료` : '';
