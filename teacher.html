@@ -534,8 +534,9 @@ select option:disabled { color:#6B6489; }
       </div>
 
       <div class="form-group" style="margin-bottom:16px;">
-        <label>학생 <small style="color:var(--muted);font-weight:400;">· 숙제 대상이 아닌 학생은 체크 해제</small></label>
+        <label>학생 <small style="color:var(--muted);font-weight:400;">· 숙제 대상이 아닌 학생은 체크 해제 · 학생마다 숙제가 다르면 나눠서 여러 번 저장 (✓ 이 날 이미 숙제 있음)</small></label>
         <div style="display:flex;gap:6px 14px;flex-wrap:wrap;font-size:13.5px;" id="hwStudents"><span style="font-size:12px;color:var(--muted);">반을 고르면 학생이 나옵니다.</span></div>
+        <div id="hwExisting" style="margin-top:10px;"></div>
       </div>
 
       <div class="form-group" style="margin-bottom:20px;">
@@ -2813,25 +2814,46 @@ function hwRenderClasses() {
 window.hwPick = function (c) {
   const date = document.getElementById('hwDate').value;
   hwCls = c;
-  // 같은 날짜·같은 반에 이미 기록이 있으면 불러와서 수정 모드로 (중복 입력 방지)
-  const exist = hwRows.find(r => r.date === date && (String(r.classGroup || '').trim() || '(반 미배정)') === c);
-  if (exist) { hwEdit(exist.id, true); return; }
+  // 반을 고르면 항상 "새 숙제 추가" — 이미 입력한 숙제는 아래 목록에 따로 보이고, 고치려면 그 목록의 "수정"을 누름
+  //  (예전에는 기존 기록을 불러와 저장 시 덮어써서, 학생별로 나눠 입력하면 앞의 것이 사라졌음)
   hwEditing = null;
+  document.getElementById('hwContent').value = '';
   document.getElementById('hwSaveBtn').textContent = '저장';
   document.getElementById('hwCancelBtn').style.display = 'none';
   hwRenderClasses();
-  hwRenderStudents(null);
+  hwRenderStudents(hwDefaultChecked(date, c));
 };
+const hwSameCls = (r, c) => (String(r.classGroup || '').trim() || '(반 미배정)') === c;
+// 이 날짜·이 반에서 아직 숙제가 없는 학생만 기본 체크 (모두 있으면 전원 체크 해제)
+function hwDefaultChecked(date, c) {
+  const has = new Set(hwRows.filter(r => r.date === date && hwSameCls(r, c)).flatMap(r => r.studentIds || []));
+  if (!has.size) return null;
+  return myStudents.filter(s => hwClsOf(s) === c && !has.has(s.id)).map(s => s.id);
+}
+function hwRenderExisting() {
+  const el = document.getElementById('hwExisting'); if (!el) return;
+  const date = document.getElementById('hwDate').value;
+  const list = hwCls ? hwRows.filter(r => r.date === date && hwSameCls(r, hwCls)) : [];
+  if (!list.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">이 날 ${hwEsc(hwCls)}에 이미 입력한 숙제 ${list.length}건 — 저장하면 새로 추가되고, 아래 것은 그대로 남습니다.</div>` +
+    list.map(r => `<div style="display:flex;gap:10px;align-items:flex-start;padding:8px 10px;border:1px solid rgba(30,24,56,0.1);border-radius:8px;margin-bottom:6px;background:${hwEditing === r.id ? 'rgba(245,197,24,0.12)' : 'rgba(30,24,56,0.03)'};font-size:12.5px;">
+      <div style="flex:1;min-width:0;"><b>${hwEsc((r.studentNames || []).join(', '))}</b><div style="white-space:pre-wrap;word-break:break-word;color:var(--muted);margin-top:2px;">${hwEsc(r.content)}</div></div>
+      ${hwEditing === r.id ? '<span style="font-size:11.5px;color:#D97B1A;white-space:nowrap;">수정 중</span>' : `<button type="button" class="btn btn-outline" style="padding:4px 10px;font-size:12px;" onclick="hwEdit('${r.id}')">수정</button>`}
+    </div>`).join('');
+}
 
 function hwRenderStudents(checkedIds) {
   const el = document.getElementById('hwStudents');
-  if (!hwCls) { el.innerHTML = '<span style="font-size:12px;color:var(--muted);">반을 고르면 학생이 나옵니다.</span>'; return; }
+  if (!hwCls) { el.innerHTML = '<span style="font-size:12px;color:var(--muted);">반을 고르면 학생이 나옵니다.</span>'; hwRenderExisting(); return; }
   const list = myStudents.filter(s => hwClsOf(s) === hwCls).sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
   // 수정 중인 기록에 내 담당이 아닌 학생이 들어 있으면 그대로 유지되도록 함께 표시
   const extra = (checkedIds || []).filter(id => !list.some(s => s.id === id)).map(id => studentsCache.find(s => s.id === id)).filter(Boolean);
   const all = list.concat(extra);
   if (!all.length) { el.innerHTML = '<span style="font-size:12px;color:var(--muted);">이 반 학생이 없습니다.</span>'; return; }
-  el.innerHTML = all.map(s => `<label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" value="${s.id}" ${!checkedIds || checkedIds.includes(s.id) ? 'checked' : ''}> ${hwEsc(s.name)}</label>`).join('');
+  const date = document.getElementById('hwDate').value;
+  const has = new Set(hwRows.filter(r => r.date === date && hwSameCls(r, hwCls) && r.id !== hwEditing).flatMap(r => r.studentIds || []));
+  el.innerHTML = all.map(s => `<label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" value="${s.id}" ${!checkedIds || checkedIds.includes(s.id) ? 'checked' : ''}> ${hwEsc(s.name)}${has.has(s.id) ? ' <b style="color:#2E9E5B;font-size:11px;">✓</b>' : ''}</label>`).join('');
+  hwRenderExisting();
 }
 
 window.hwSave = async function () {
@@ -2854,8 +2876,10 @@ window.hwSave = async function () {
     if (hwEditing) await updateDoc(doc(db, 'homeworkLogs', hwEditing), data);
     else await addDoc(collection(db, 'homeworkLogs'), { ...data, source: 'teacher', createdAt: new Date().toISOString() });
     showAlert(ok, hwEditing ? `✅ ${hwCls} 숙제를 수정했습니다.` : `✅ ${hwLabel(date)} ${hwCls} 숙제를 저장했습니다. (${ids.length}명) — 관리부 숙제표에 반영됨`, 'ok');
+    const keepCls = hwCls;
     hwCancel();
     await hwLoad();
+    hwPick(keepCls);   // 같은 반에 다른 학생 숙제를 이어서 입력할 수 있게 반은 그대로 (아직 숙제 없는 학생만 체크)
     if (typeof refreshTeacherCalendar === 'function') refreshTeacherCalendar();
   } catch (e) { showAlert(err, '저장 오류: ' + e.message, 'err'); }
   finally { btn.disabled = false; }

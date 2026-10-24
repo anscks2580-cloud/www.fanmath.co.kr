@@ -222,8 +222,26 @@ function hlDrawImage() {
   // 선생님별 묶음 → 반별 묶음(학생 1명 = 1줄, 내용은 반 단위 병합)
   const groups = [];
   rows.forEach((r) => { let g = groups.find((x) => x.teacher === r.teacherName); if (!g) { g = { teacher: r.teacherName, classes: [] }; groups.push(g); } g.classes.push(r); });
-  const totalRows = rows.reduce((a, r) => a + Math.max(1, (r.studentNames || []).length), 0);
-  const H = titleH + headH + totalRows * rowH + 2;
+  // 칸 높이 미리 계산: 내용·반 이름이 길어 줄이 늘어나면 그 반 칸 전체를 그만큼 키움
+  const lh = 16, vpad = 6;
+  const mctx = document.getElementById('hlCanvas').getContext('2d');
+  const wrap = (text, w) => {
+    mctx.font = font(false, 12);
+    return String(text || '').replace(/\r/g, '').split(/\n/).flatMap((line) => {
+      const out = []; let cur = '';
+      for (const ch of line) { if (cur && mctx.measureText(cur + ch).width > w - pad * 2) { out.push(cur); cur = ch; } else cur += ch; }
+      out.push(cur); return out;
+    });
+  };
+  const layout = new Map();
+  rows.forEach((r) => {
+    const names = (r.studentNames || []).length ? r.studentNames : ['-'];
+    const cLines = wrap(r.content, colW[3]);
+    const kLines = wrap(r.classGroup, colW[1]);
+    const h = Math.max(names.length * rowH, cLines.length * lh + vpad * 2, kLines.length * lh + vpad * 2);
+    layout.set(r, { names, cLines, kLines, h });
+  });
+  const H = titleH + headH + rows.reduce((a, r) => a + layout.get(r).h, 0) + 2;
   const canvas = document.getElementById('hlCanvas');
   canvas.width = W * S; canvas.height = H * S;
   const ctx = canvas.getContext('2d'); ctx.scale(S, S);
@@ -235,11 +253,11 @@ function hlDrawImage() {
     ctx.strokeStyle = '#999'; ctx.lineWidth = 1; ctx.strokeRect(x + 0.5, y + 0.5, w, h);
     if (text == null) return;
     ctx.fillStyle = '#111'; ctx.font = font(bold, size); ctx.textAlign = align;
-    const lines = String(text).split('\n');
-    const lh = size + 4; const y0 = y + h / 2 - (lines.length - 1) * lh / 2;
+    const lines = Array.isArray(text) ? text : String(text).split('\n');
+    const l = Array.isArray(text) ? lh : size + 4; const y0 = y + h / 2 - (lines.length - 1) * l / 2;
     lines.forEach((ln, i) => {
       let t = ln; while (ctx.measureText(t).width > w - pad * 2 && t.length > 1) t = t.slice(0, -1);
-      ctx.fillText(t, align === 'center' ? x + w / 2 : x + pad, y0 + i * lh);
+      ctx.fillText(t, align === 'center' ? x + w / 2 : x + pad, y0 + i * l);
     });
   };
   // 제목
@@ -249,26 +267,18 @@ function hlDrawImage() {
   y += headH;
   groups.forEach((g, gi) => {
     const gTop = y;
-    const gRows = g.classes.reduce((a, r) => a + Math.max(1, (r.studentNames || []).length), 0);
+    // 선생님 띠 배경을 반·학생·내용 칸에도 연하게 (글자보다 먼저 깔기)
+    const gH = g.classes.reduce((a, r) => a + layout.get(r).h, 0);
+    ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle = bands[gi % bands.length]; ctx.fillRect(xs[1], gTop, W - 2 - colW[0], gH); ctx.restore();
     g.classes.forEach((r) => {
-      const names = (r.studentNames || []).length ? r.studentNames : ['-'];
-      const cTop = y;
-      names.forEach((n) => { cell(xs[2], y, colW[2], rowH, null, n, false, 12); y += rowH; });
-      cell(xs[1], cTop, colW[1], y - cTop, null, r.classGroup, false, 12);
-      // 내용: 길면 줄바꿈
-      ctx.font = font(false, 12);
-      const words = String(r.content || '').replace(/\r/g, '').split(/\n/).flatMap((line) => {
-        const out = []; let cur = '';
-        for (const ch of line) { if (ctx.measureText(cur + ch).width > colW[3] - pad * 2) { out.push(cur); cur = ch; } else cur += ch; }
-        out.push(cur); return out;
-      });
-      cell(xs[3], cTop, colW[3], y - cTop, null, words.join('\n'), false, 12);
+      const L = layout.get(r);
+      const cTop = y, nh = L.h / L.names.length;
+      L.names.forEach((n, i) => cell(xs[2], cTop + nh * i, colW[2], nh, null, n, false, 12));
+      cell(xs[1], cTop, colW[1], L.h, null, L.kLines, false, 12);
+      cell(xs[3], cTop, colW[3], L.h, null, L.cLines, false, 12);
+      y += L.h;
     });
     cell(xs[0], gTop, colW[0], y - gTop, bands[gi % bands.length], (g.teacher || '') + 'T', true, 12);
-    // 선생님 띠 배경을 반·학생·내용 칸에도 연하게
-    ctx.save(); ctx.globalAlpha = 0.35; ctx.fillStyle = bands[gi % bands.length]; ctx.fillRect(xs[1], gTop, W - 2 - colW[0], gRows * rowH); ctx.restore();
-    // 다시 글자/테두리가 가려지지 않게 테두리만 재도색
-    ctx.strokeStyle = '#999'; ctx.strokeRect(xs[1] + 0.5, gTop + 0.5, W - 2 - colW[0], gRows * rowH);
   });
   ctx.strokeStyle = '#666'; ctx.lineWidth = 1.5; ctx.strokeRect(x0 + 0.5, 1.5, W - 2, H - 2);
   return canvas;
