@@ -1,6 +1,6 @@
 'use strict';
 /* ═══════════════════════════════════════════════════════════
-   강의 목록: 영상 · 그룹 이름 · 단원순 정렬 · 폴더 선택 · Vimeo 동기화/정리
+   강의 목록: 영상 · 그룹 이름 · 단원순 정렬 · 폴더 선택 · Vimeo 동기화/정리(삭제된 영상 목록 정리)
    (admin.html에서 분리 — 원본 3775~5362줄. 모든 파일은 같은 전역 범위를 공유합니다)
    ═══════════════════════════════════════════════════════════ */
 // ── 강의 목록 ──
@@ -1245,43 +1245,54 @@ window.syncVimeo = async () => {
   }
 };
 
-// ── Vimeo 정리: 홈페이지 미반영 영상 찾기 & 일괄 삭제 ──
+// ── Vimeo 정리: Vimeo에서 삭제된 영상을 홈페이지 목록에서 제거 ──
+// (Vimeo 영상은 절대 지우지 않습니다. 홈페이지 목록(파이어베이스)만 정리합니다)
 let orphanCandidates = [];
 
-// 홈페이지에서 쓰고 있는 Vimeo ID 전부 수집
-async function collectUsedVimeoIds() {
-  const used = new Set();
-  const add = (v) => { if (v) used.add(String(v).replace(/\D/g, '')); };
-  // 1) 강의 영상
+const MISSING_SRC_LABEL = {
+  videos: '강의 영상', promoVideos: '홍보영상', apexVideos: '에이펙스 영상',
+  consultVideo: '상담 안내 영상', lounge: '상담 샘플강의(수업 미리보기)'
+};
+
+// 홈페이지에 등록된 Vimeo 영상 전부 (어디에 등록됐는지 포함)
+async function collectHomepageVideoRefs() {
+  const refs = [];
+  const idOf = (v) => String(v ?? '').replace(/\D/g, '');
   const vs = await getDocs(collection(db, 'videos'));
-  vs.forEach(d => add(d.data().vimeoId || d.id));
-  // 2) 홍보영상
-  try { const ps = await getDocs(collection(db, 'promoVideos')); ps.forEach(d => add(d.data().vimeoId)); } catch(e) {}
-  // 3) 에이펙스 영상
-  try { const as = await getDocs(collection(db, 'apexVideos')); as.forEach(d => add(d.data().vimeoId)); } catch(e) {}
-  // 4) 상담 화면 영상 설정 / 샘플 강의
+  vs.forEach(d => { const x = d.data(); const id = idOf(x.vimeoId); if (id) refs.push({ src: 'videos', docId: d.id, vimeoId: id, title: x.title || '', tag: x.tag || '' }); });
+  try { const ps = await getDocs(collection(db, 'promoVideos')); ps.forEach(d => { const x = d.data(); const id = idOf(x.vimeoId); if (id) refs.push({ src: 'promoVideos', docId: d.id, vimeoId: id, title: x.title || '', tag: '' }); }); } catch(e) {}
+  try { const as = await getDocs(collection(db, 'apexVideos')); as.forEach(d => { const x = d.data(); const id = idOf(x.vimeoId); if (id) refs.push({ src: 'apexVideos', docId: d.id, vimeoId: id, title: x.title || '', tag: '' }); }); } catch(e) {}
   try {
     const cv = await getDoc(doc(db, 'consultConfig', 'video'));
-    if (cv.exists()) add(cv.data().vimeoId);
+    if (cv.exists()) { const id = idOf(cv.data().vimeoId); if (id) refs.push({ src: 'consultVideo', docId: 'video', vimeoId: id, title: cv.data().title || '', tag: '' }); }
     const lg = await getDoc(doc(db, 'consultConfig', 'lounge'));
-    if (lg.exists()) (lg.data().videos || []).forEach(v => add(v.vimeoId));
+    if (lg.exists()) (lg.data().videos || []).forEach(v => { const id = idOf(v.vimeoId); if (id) refs.push({ src: 'lounge', docId: 'lounge', vimeoId: id, title: v.title || '', tag: '' }); });
   } catch(e) {}
-  used.delete('');
-  return used;
+  return refs;
 }
 
-// 계정 전체 영상 + 폴더 정보 (폴더명 표시용)
-async function fetchAllAccountVideosWithFolder() {
-  let videos = [];
-  let url = 'https://api.vimeo.com/me/videos?fields=uri,name,created_time,duration,parent_folder.name&per_page=100&page=1';
+// 계정(개인) 영상 ID 전체 — 하나라도 실패하면 중단 (잘못된 판정 방지)
+async function fetchAccountVideoIdSet() {
+  const ids = new Set();
+  let url = 'https://api.vimeo.com/me/videos?fields=uri&per_page=100&page=1';
   while (url) {
     const res = await fetch(url, { headers: { Authorization: `bearer ${VIMEO_TOKEN}` } });
     if (!res.ok) throw new Error('Vimeo 영상 목록을 불러오지 못했습니다 (' + res.status + ')');
     const data = await res.json();
-    videos = videos.concat(data.data || []);
+    (data.data || []).forEach(v => ids.add(v.uri.replace('/videos/', '')));
     url = data.paging?.next ? `https://api.vimeo.com${data.paging.next}` : null;
   }
-  return videos;
+  return ids;
+}
+
+// 영상 하나씩 직접 확인: 'gone'(404 — 삭제됨) / 'ok'(있음) / 'unknown'(판단 불가)
+async function checkVimeoVideo(id) {
+  try {
+    const res = await fetch(`https://api.vimeo.com/videos/${id}?fields=uri`, { headers: { Authorization: `bearer ${VIMEO_TOKEN}` } });
+    if (res.ok) return 'ok';
+    if (res.status === 404) return 'gone';
+    return 'unknown';
+  } catch(e) { return 'unknown'; }
 }
 
 window.scanVimeoOrphans = async () => {
@@ -1293,24 +1304,29 @@ window.scanVimeoOrphans = async () => {
 
   try {
     statusEl.textContent = '⏳ 홈페이지 등록 영상 확인 중...';
-    const used = await collectUsedVimeoIds();
+    const refs = await collectHomepageVideoRefs();
 
-    statusEl.textContent = '⏳ Vimeo 전체 영상 불러오는 중...';
-    const all = await fetchAllAccountVideosWithFolder();
+    statusEl.textContent = '⏳ Vimeo 계정 영상 불러오는 중...';
+    const account = await fetchAccountVideoIdSet();
 
-    for (const v of all) {
-      const vimeoId = v.uri.replace('/videos/', '');
-      if (used.has(vimeoId)) continue;
-      const date = v.created_time ? v.created_time.slice(0,10).replace(/-/g,'.') : '';
-      const mins = v.duration ? Math.round(v.duration / 60) + '분' : '';
-      orphanCandidates.push({ vimeoId, title: v.name || '(제목 없음)', folder: v.parent_folder?.name || '', date, mins });
+    // 계정 목록에 없는 것만 하나씩 다시 확인 (팀 라이브러리 영상 등은 여기서 '있음'으로 걸러짐)
+    const suspect = [...new Set(refs.filter(r => !account.has(r.vimeoId)).map(r => r.vimeoId))];
+    const result = {};
+    for (let i = 0; i < suspect.length; i += 5) {
+      statusEl.textContent = `⏳ 영상 상태 확인 중... (${Math.min(i + 5, suspect.length)}/${suspect.length})`;
+      const chunk = suspect.slice(i, i + 5);
+      const rs = await Promise.all(chunk.map(checkVimeoVideo));
+      chunk.forEach((id, k) => result[id] = rs[k]);
     }
+    const unknown = suspect.filter(id => result[id] === 'unknown').length;
+    orphanCandidates = refs.filter(r => result[r.vimeoId] === 'gone');
 
+    const extra = unknown ? ` · 확인 불가 ${unknown}개(건너뜀)` : '';
     if (!orphanCandidates.length) {
-      statusEl.textContent = `✅ 홈페이지에 반영되지 않은 영상이 없습니다. (Vimeo ${all.length}개 · 홈페이지 ${used.size}개)`;
+      statusEl.textContent = `✅ Vimeo에서 삭제된 영상이 홈페이지에 남아 있지 않습니다. (홈페이지 등록 ${refs.length}개 확인${extra})`;
       return;
     }
-    statusEl.textContent = `Vimeo ${all.length}개 중 홈페이지 등록 ${used.size}개 · 미반영 ${orphanCandidates.length}개`;
+    statusEl.textContent = `홈페이지 등록 ${refs.length}개 중 Vimeo에서 삭제된 영상 ${orphanCandidates.length}개${extra}`;
     renderOrphanPreview();
   } catch(e) {
     statusEl.textContent = '';
@@ -1323,40 +1339,35 @@ function renderOrphanPreview() {
   const titleEl   = document.getElementById('orphanPreviewTitle');
   const listEl    = document.getElementById('orphanPreviewList');
 
-  titleEl.innerHTML = `미반영 영상 <b>${orphanCandidates.length}개</b>
+  titleEl.innerHTML = `Vimeo에서 삭제된 영상 <b>${orphanCandidates.length}개</b> (홈페이지 목록에만 남아 있음)
     <span style="margin-left:10px;">
       <a href="#" onclick="event.preventDefault();document.querySelectorAll('.orphan-check').forEach(c=>c.checked=true);">전체선택</a>
       <span style="color:var(--muted);">/</span>
       <a href="#" onclick="event.preventDefault();document.querySelectorAll('.orphan-check').forEach(c=>c.checked=false);">전체해제</a>
     </span>`;
 
-  // 폴더별 그룹핑 (폴더 없음은 맨 위)
+  // 등록 위치별 그룹핑
+  const order = ['videos', 'promoVideos', 'apexVideos', 'consultVideo', 'lounge'];
   const groups = {};
-  orphanCandidates.forEach((v, i) => {
-    const key = v.folder || '__root__';
-    (groups[key] = groups[key] || []).push({ ...v, idx: i });
-  });
-  const keys = Object.keys(groups).sort((a, b) => a === '__root__' ? -1 : b === '__root__' ? 1 : a.localeCompare(b));
+  orphanCandidates.forEach((v, i) => (groups[v.src] = groups[v.src] || []).push({ ...v, idx: i }));
+  const keys = order.filter(k => groups[k]);
 
   listEl.innerHTML = keys.map(key => {
     const items = groups[key];
-    const label = key === '__root__' ? '폴더 없음' : key;
     return `
     <div style="margin-bottom:14px;">
       <div style="font-size:11px;font-weight:700;color:var(--purple, #5B3FA6);letter-spacing:1px;
         padding:5px 0;border-bottom:1px solid rgba(245,197,24,0.2);margin-bottom:4px;">
-        ${label} <span style="font-weight:400;color:var(--muted);">${items.length}개</span>
+        ${MISSING_SRC_LABEL[key]} <span style="font-weight:400;color:var(--muted);">${items.length}개</span>
       </div>
       ${items.map(v => `
         <div style="display:flex;align-items:center;gap:10px;padding:6px 4px;
           border-bottom:1px solid rgba(30,24,56,0.04);font-size:13px;">
           <input id="orphan-check-${v.idx}" class="orphan-check" type="checkbox" checked
             style="flex-shrink:0;width:16px;height:16px;accent-color:#D64545;">
-          <a href="https://vimeo.com/${v.vimeoId}" target="_blank" rel="noopener"
-            style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--off-white);text-decoration:none;">
-            ${(v.title||'').replace(/</g,'&lt;')}</a>
-          <span style="font-size:11px;color:var(--muted);flex-shrink:0;">${v.mins}</span>
-          <span style="font-size:11px;color:var(--muted);flex-shrink:0;">${v.date}</span>
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--off-white);">
+            ${(v.title || '(제목 없음)').replace(/</g,'&lt;')}</span>
+          <span style="font-size:11px;color:var(--muted);flex-shrink:0;">${(v.tag || '').replace(/</g,'&lt;')}</span>
           <span onclick="copyText('${v.vimeoId}', this)" title="클릭하면 복사됩니다"
             style="font-size:11px;color:var(--muted);flex-shrink:0;cursor:pointer;font-family:'SF Mono',Menlo,Consolas,monospace;">${v.vimeoId}</span>
         </div>`).join('')}
@@ -1368,38 +1379,46 @@ function renderOrphanPreview() {
 
 window.deleteVimeoOrphans = async () => {
   const picked = orphanCandidates.filter((v, i) => document.getElementById(`orphan-check-${i}`)?.checked);
-  if (!picked.length) { showMsg('orphanMsg', '삭제할 영상을 선택해주세요.', 'error'); return; }
-  if (!confirm(`선택한 ${picked.length}개 영상을 Vimeo에서 삭제합니다.\n삭제 후에는 복구할 수 없습니다. 계속할까요?`)) return;
-  if (!confirm(`정말 삭제할까요? (${picked.length}개)`)) return;
+  if (!picked.length) { showMsg('orphanMsg', '정리할 항목을 선택해주세요.', 'error'); return; }
+  if (!confirm(`선택한 ${picked.length}개를 홈페이지 목록에서 삭제합니다.\n(Vimeo 영상은 건드리지 않습니다) 계속할까요?`)) return;
 
   const statusEl = document.getElementById('orphanStatus');
-  let ok = 0, fail = [];
-  for (let i = 0; i < picked.length; i++) {
-    const v = picked[i];
-    statusEl.textContent = `⏳ 삭제 중... (${i+1}/${picked.length}) ${v.title}`;
+  let ok = 0; const fail = [];
+  const done = new Set();
+
+  // 문서 단위 삭제 (강의·홍보·에이펙스)
+  for (const v of picked.filter(v => ['videos', 'promoVideos', 'apexVideos'].includes(v.src))) {
+    statusEl.textContent = `⏳ 정리 중... ${v.title}`;
+    try { await deleteDoc(doc(db, v.src, v.docId)); ok++; done.add(v); }
+    catch(e) { fail.push(`${v.title} (${e.message})`); }
+  }
+  // 상담 안내 영상: 영상만 비우고 끔
+  const cvPicked = picked.filter(v => v.src === 'consultVideo');
+  if (cvPicked.length) {
+    try { await updateDoc(doc(db, 'consultConfig', 'video'), { enabled: false, vimeoId: '', title: '' }); ok += cvPicked.length; cvPicked.forEach(v => done.add(v)); }
+    catch(e) { fail.push(`상담 안내 영상 (${e.message})`); }
+  }
+  // 상담 샘플강의: 목록에서 해당 영상만 빼기
+  const lgPicked = picked.filter(v => v.src === 'lounge');
+  if (lgPicked.length) {
     try {
-      const res = await fetch(`https://api.vimeo.com/videos/${v.vimeoId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `bearer ${VIMEO_TOKEN}` }
-      });
-      if (res.status === 204 || res.ok) ok++;
-      else if (res.status === 403) { fail.push(`${v.title} (권한 없음 — Vimeo 토큰에 delete 권한 필요)`); }
-      else fail.push(`${v.title} (${res.status})`);
-    } catch(e) { fail.push(`${v.title} (${e.message})`); }
+      const ids = new Set(lgPicked.map(v => v.vimeoId));
+      const snap = await getDoc(doc(db, 'consultConfig', 'lounge'));
+      const videos = (snap.data()?.videos || []).filter(v => !ids.has(String(v.vimeoId ?? '').replace(/\D/g, '')));
+      await updateDoc(doc(db, 'consultConfig', 'lounge'), { videos });
+      ok += lgPicked.length; lgPicked.forEach(v => done.add(v));
+    } catch(e) { fail.push(`상담 샘플강의 (${e.message})`); }
   }
 
-  // 삭제된 건 목록에서 제거
-  const failTitles = new Set(fail.map(f => f.replace(/ \(.*\)$/, '')));
-  orphanCandidates = orphanCandidates.filter(v => !picked.includes(v) || failTitles.has(v.title));
+  orphanCandidates = orphanCandidates.filter(v => !done.has(v));
   if (orphanCandidates.length) renderOrphanPreview();
   else document.getElementById('orphanPreview').style.display = 'none';
 
   statusEl.textContent = '';
-  if (fail.length) {
-    showMsg('orphanMsg', `${ok}개 삭제 완료 · ${fail.length}개 실패\n` + fail.join('\n'), 'error');
-  } else {
-    showMsg('orphanMsg', `✅ ${ok}개 영상을 Vimeo에서 삭제했습니다.`, 'success');
-  }
+  try { await loadVideos(); } catch(e) {}
+  try { if (typeof loadPromoVideos === 'function') await loadPromoVideos(); } catch(e) {}
+  if (fail.length) showMsg('orphanMsg', `${ok}개 정리 완료 · ${fail.length}개 실패\n` + fail.join('\n'), 'error');
+  else showMsg('orphanMsg', `✅ ${ok}개를 홈페이지 목록에서 삭제했습니다.`, 'success');
 };
 
 function renderSyncPreview(folderCount) {

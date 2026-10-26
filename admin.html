@@ -2277,20 +2277,20 @@
     </div>
 
     <div class="card">
-      <h3>🧹 Vimeo 정리 (홈페이지 미반영 영상 삭제)</h3>
+      <h3>🧹 Vimeo 정리 (Vimeo에서 삭제된 영상 → 홈페이지 목록에서 제거)</h3>
       <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.7;">
-        Vimeo 계정 전체 영상 중 홈페이지에 등록되지 않은 영상(강의·홍보영상·에이펙스·상담 샘플강의 어디에도 없는 영상)을 찾아
-        Vimeo에서 <b style="color:#D64545;">일괄 삭제</b>합니다. 삭제한 영상은 복구할 수 없으니 목록을 꼭 확인하세요.
+        홈페이지에 등록된 영상(강의·홍보영상·에이펙스·상담 안내 영상·상담 샘플강의) 중 Vimeo에서 이미 삭제된 영상을 찾아
+        <b>홈페이지 목록에서만</b> 지웁니다. Vimeo에 있는 영상은 절대 삭제하지 않습니다.
       </div>
       <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-        <button class="btn btn-secondary" onclick="scanVimeoOrphans()">🔍 미반영 영상 찾기</button>
+        <button class="btn btn-secondary" onclick="scanVimeoOrphans()">🔍 삭제된 영상 찾기</button>
         <span id="orphanStatus" style="font-size:13px;color:var(--muted);"></span>
       </div>
       <div id="orphanPreview" style="margin-top:16px;display:none;">
         <div style="font-size:12px;color:var(--purple, #5B3FA6);margin-bottom:10px;" id="orphanPreviewTitle"></div>
         <div id="orphanPreviewList" style="max-height:320px;overflow-y:auto;"></div>
         <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="btn btn-danger" onclick="deleteVimeoOrphans()">🗑 선택한 영상 Vimeo에서 삭제</button>
+          <button class="btn btn-danger" onclick="deleteVimeoOrphans()">🗑 선택한 항목 홈페이지 목록에서 삭제</button>
           <button class="btn btn-secondary" onclick="document.getElementById('orphanPreview').style.display='none'">취소</button>
         </div>
       </div>
