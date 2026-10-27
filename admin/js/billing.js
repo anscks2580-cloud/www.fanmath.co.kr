@@ -33,7 +33,7 @@
   const CASH_METHODS = ['현금', '계좌이체'];
   const ITEMS = ['수강료', '교재비', '기타'];
   const DEFAULT_SETTINGS = {
-    autoStartMonth: '', leadDays: 14,
+    autoStartMonth: '', genDay: 20, notifyDays: 4,
     cardCompanies: ['국민', '신한', '삼성', '현대', '롯데', '하나', '우리', '농협', '비씨', '인터넷카드', '기타'],
     etcItems: ['특강비', '겨울특강비', '여름특강비', '수리논술', '적성고사', '교통비', '기타'],
   };
@@ -146,7 +146,7 @@
       S.settings = { ...DEFAULT_SETTINGS, ...(st.exists() ? st.data() : {}) };
       if (!S.settings.autoStartMonth) {
         S.settings.autoStartMonth = ymOf(today());
-        await setDoc(doc(db, C.settings, 'main'), { autoStartMonth: S.settings.autoStartMonth, leadDays: S.settings.leadDays,
+        await setDoc(doc(db, C.settings, 'main'), { autoStartMonth: S.settings.autoStartMonth, genDay: S.settings.genDay, notifyDays: S.settings.notifyDays,
           cardCompanies: S.settings.cardCompanies, etcItems: S.settings.etcItems }, { merge: true });
       }
       S.classes = cl.docs.map((d) => ({ id: d.id, ...d.data() }));
@@ -171,8 +171,9 @@
   // ── 수강료 자동 발생 ──────────────────────────────────────
   function autoTargets() {
     const t = today();
-    const lead = Math.max(0, Number(S.settings.leadDays) || 0);
-    const limit = addDays(t, lead);
+    // 매월 genDay일(기본 20일)이 되면 다음 달 수강료까지 미리 만듦 (아카와 같은 방식)
+    const gd = Math.min(28, Math.max(1, Number(S.settings.genDay) || 20));
+    const limit = Number(t.slice(8, 10)) >= gd ? dueOf(addMonths(ymOf(t), 1), 31) : dueOf(ymOf(t), 31);
     const lower = [S.settings.autoStartMonth || ymOf(t), addMonths(ymOf(t), -2)].sort().pop();
     const out = [];
     S.students.forEach((s) => {
@@ -189,6 +190,8 @@
           if (due > limit) return;
           if (e.start && due < e.start) return;
           if (e.end && due > e.end) return;
+          // 아카에서 가져온 날까지의 청구는 아카 자료가 기준 → 그 날짜 이후 납입기한만 새로 만듦
+          if (s.autoAfter && due <= s.autoAfter) return;
           const id = 'auto_' + s.id + '_' + e.id + '_' + m;
           if (S.charges.has(id)) return;
           out.push({ id, data: {
@@ -439,6 +442,8 @@
     const left = studs.filter((s) => s.leaveDate && ymOf(s.leaveDate) === ymOf(d)).length;
     const noPayDay = studs.filter((s) => s.status === '재원' && !s.payDay).length;
     const cashWait = pays.filter((p) => p.cash && p.cash.need && !p.cash.issued).length;
+    const nd = Number(S.settings.notifyDays) || 4;
+    const notify = open.filter((c) => c.dueDate === addDays(d, nd)).sort((a, b) => sortKo(a.studentName, b.studentName));
     const upcoming = open.filter((c) => c.dueDate > d && c.dueDate <= addDays(d, 7)).sort((a, b) => sortKo(a.dueDate + a.studentName, b.dueDate + b.studentName));
     const overdue = before.slice().sort((a, b) => sortKo(a.dueDate, b.dueDate));
     const dayPays = pays.filter((p) => p.date === d).sort((a, b) => sortKo(a.studentName, b.studentName));
@@ -466,10 +471,11 @@
       '<div class="bl-kpi"><h4>현금영수증</h4><table><tr><th></th><th>이번 달 미발행</th></tr><tr><td>건수</td><td class="' + (cashWait ? 'red ' : '') + 'big">' + cashWait + '</td></tr></table></div>' +
       '<div class="bl-kpi"><h4>수강료 자동 발생<button type="button" onclick="BL.runAuto()">지금 실행</button></h4><div class="bl-note">' +
       (auto && auto.error ? '<span style="color:var(--bl-red)">실패: ' + esc(auto.error) + '</span>' : auto ? '이번 접속에서 ' + (S.autoMade || 0) + '건 새로 발생' : '아직 실행 전') +
-      '<br>납입일 ' + (S.settings.leadDays || 0) + '일 전에 미리 생겨요 · 시작 월 ' + esc(S.settings.autoStartMonth) + '</div></div>' +
+      '<br>매월 ' + (S.settings.genDay || 20) + '일에 다음 달 수강료가 생겨요 · 시작 월 ' + esc(S.settings.autoStartMonth) + '</div></div>' +
       '</div>' +
       '<div class="card"><h3>오늘 납입 (' + dayPays.length + '건)</h3>' + payTable(dayPays, true) + '</div>' +
       '<div class="card"><h3>기한 지난 미납 (' + overdue.length + '건 · ' + won(sumR(overdue)) + '원)</h3>' + chargeList(overdue, d) + '</div>' +
+      '<div class="card"><h3>납입 안내 카톡 대상 — 납입일 ' + nd + '일 전 (' + notify.length + '건)</h3><div class="bl-note" style="margin-bottom:8px;">' + shortD(addDays(d, nd)) + ' 납입 예정인 미납 청구예요. 카카오 알림톡·결제 연동 뒤에는 이 학생들에게 납입 안내와 인터넷 결제 링크가 자동으로 가요.</div>' + chargeList(notify, d) + '</div>' +
       '<div class="card"><h3>7일 안에 납입 예정 (' + upcoming.length + '건)</h3>' + chargeList(upcoming, d) + '</div>';
 
     $('blTdDate').onchange = (e) => { u.date = e.target.value || today(); renderToday(); };
@@ -1025,7 +1031,8 @@
 
       '<div class="card"><div class="bl-head"><h3>수납 설정</h3></div><div class="bl-profile" id="blSet">' +
       '<label class="bl-f"><span>자동 발생 시작 월</span><input type="month" class="bl-in" data-s="autoStartMonth" value="' + esc(st.autoStartMonth) + '"></label>' +
-      '<label class="bl-f"><span>납입일 며칠 전에 미리 발생</span><input class="bl-in num" data-s="leadDays" value="' + esc(st.leadDays) + '"></label>' +
+      '<label class="bl-f"><span>매월 며칠에 다음 달 수강료 발생</span><input class="bl-in num" data-s="genDay" value="' + esc(st.genDay || 20) + '"></label>' +
+      '<label class="bl-f"><span>납입일 며칠 전에 안내 카톡</span><input class="bl-in num" data-s="notifyDays" value="' + esc(st.notifyDays || 4) + '"></label>' +
       '<label class="bl-f span2"><span>카드사 (쉼표로 구분)</span><input class="bl-in" data-s="cardCompanies" value="' + esc((st.cardCompanies || []).join(', ')) + '"></label>' +
       '<label class="bl-f span4"><span>기타 청구 항목 (쉼표로 구분)</span><input class="bl-in" data-s="etcItems" value="' + esc((st.etcItems || []).join(', ')) + '"></label></div>' +
       '<div class="bl-note" style="margin-top:8px;">시작 월보다 이전 달 수강료는 자동으로 만들지 않아요. 아카에서 데이터를 옮긴 뒤 시작 월을 정하면 겹치지 않아요.</div>' +
@@ -1117,7 +1124,7 @@
   };
   BL.saveSettings = async () => {
     const r = $('blSet'); const g = (k) => r.querySelector('[data-s=' + k + ']').value.trim();
-    const d = { autoStartMonth: g('autoStartMonth') || ymOf(today()), leadDays: Math.max(0, Math.min(40, num(g('leadDays')))),
+    const d = { autoStartMonth: g('autoStartMonth') || ymOf(today()), genDay: Math.max(1, Math.min(28, num(g('genDay')) || 20)), notifyDays: Math.max(0, Math.min(15, num(g('notifyDays')))),
       cardCompanies: g('cardCompanies').split(',').map((x) => x.trim()).filter(Boolean), etcItems: g('etcItems').split(',').map((x) => x.trim()).filter(Boolean) };
     try { await setDoc(doc(db, C.settings, 'main'), d, { merge: true }); Object.assign(S.settings, d); toast('설정을 저장했어요'); renderClasses(); } catch (e) { fail(e); }
   };
@@ -1274,29 +1281,42 @@
 
 
   // ═════════════════════════════════════════════════════════
-  // 7) 아카 데이터 가져오기 — 미납 목록 · 납입 이력 엑셀
-  //    · 같은 엑셀을 두 번 넣어도 같은 줄은 한 번만 들어감 (줄 내용으로 만든 고유 번호)
-  //    · 학생마다 아카 마지막 수강료 청구 다음 달부터 자동 발생 (autoFrom)
+  // 7) 아카 데이터 가져오기 (전환)
+  //    아카에서 받은 엑셀 여러 개를 한 번에 넣으면 종류를 알아서 구분:
+  //      재원생(이름·부모폰·학생폰·반·상담일·학교·학년) · 납입건(이름·반·항목·납입기한·납입일·처리자·예정·납입·수수료·형태·비고)
+  //      미납건(이름·반·항목·납입기한·미납액·비고·부모폰) · 퇴원생(입학일·퇴원일·이름·부모폰·학생폰·반·메모·학교·학년·상담일·담임)
+  //      신규생(입학일·이름·부모폰·학생폰·반·상담일) — 입학상담 엑셀은 수납과 무관해서 건너뜀
+  //    · 재원생: 아카 반별 마지막 수강료 = 매달 청구액, 납입기한 날짜 = 매월 납입일, 아카 마지막 수강료 다음 달부터 자동 발생
+  //    · 같은 엑셀을 다시 넣어도 이미 들어간 줄은 건너뜀
   // ═════════════════════════════════════════════════════════
   function hash(str) { let h1 = 0xdeadbeef, h2 = 0x41c6ce57; for (let i = 0; i < str.length; i++) { const c = str.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
     h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909); h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
     return (h2 >>> 0).toString(36) + (h1 >>> 0).toString(36); }
   function xlDate(v) {
     if (v == null || v === '') return '';
-    if (typeof v === 'number') { const d = new Date(Math.round((v - 25569) * 86400e3)); return d.toISOString().slice(0, 10); }
-    const m = String(v).trim().match(/(\d{2,4})[-./년\s]+(\d{1,2})[-./월\s]+(\d{1,2})/);
+    if (v instanceof Date) return new Date(v.getTime() - v.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+    if (typeof v === 'number') { if (v < 20000 || v > 80000) return ''; return new Date(Math.round((v - 25569) * 86400e3)).toISOString().slice(0, 10); }
+    const m = String(v).trim().match(/^(\d{2,4})[-./년\s]+(\d{1,2})[-./월\s]+(\d{1,2})/);
     if (!m) return '';
     const y = m[1].length === 2 ? '20' + m[1] : m[1];
     return y + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[3]).padStart(2, '0');
   }
-  function col(row, names) { for (const k of Object.keys(row)) { const kk = k.replace(/\s+/g, ''); if (names.includes(kk)) return row[k]; } return undefined; }
+  const isDate = (v) => !!xlDate(v);
+  const isNum = (v) => typeof v === 'number' || (/^-?[\d,]+$/.test(String(v || '').trim()) && String(v).trim() !== '');
+  const isPhone = (v) => /^0\d{1,2}-?\d{3,4}-?\d{4}$/.test(String(v || '').trim());
   const normName = (n) => String(n || '').replace(/\s+/g, '');
-  const baseName = (n) => normName(n).replace(/\(.*?\)$/, '');
+  const baseName = (n) => normName(n).replace(/\((s|p|S|P)\)$/i, '');
+  const splitCls = (v) => String(v || '').split(',').map((x) => x.trim()).filter(Boolean);
+  const isBookCls = (c) => /교재/.test(c);
+  const isTutorCls = (c) => /과외|첨삭/.test(c);
+  // 아카 반 이름 → 관 · 홈페이지 반 이름 ("(S)중3 5-A" → 산본관 "중3 5-A")
+  function clsBranch(c) { return /^\(S\)|^S교재/i.test(String(c || '').trim()) ? '산본관' : '평촌관'; }
+  function clsName(c) { return String(c || '').trim().replace(/^\((S|P)\)\s*/i, ''); }
   function mapItem(raw) {
     const t = String(raw || '').trim() || '수강료';
-    if (t === '수강료' || /수강/.test(t) && !/특강/.test(t)) return { item: '수강료', label: '수강료' };
-    if (/교재/.test(t)) return { item: '교재비', label: t };
-    return { item: '기타', label: t };
+    if (t === '수강료') return { item: '수강료', label: '수강료' };
+    if (/특강|모의|적성|논술|교통|기타/.test(t) && !/교재|문제집|워크북/.test(t)) return { item: '기타', label: t };
+    return { item: '교재비', label: t };
   }
   function mapMethod(raw) {
     const t = String(raw || '').trim();
@@ -1307,33 +1327,120 @@
     if (/결제선생|모바일|링크/.test(t)) return { method: '결제선생', card: '' };
     return { method: '기타', card: t };
   }
-  async function readSheet(file) {
-    const wb = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: false });
-    return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
+  async function readRows(file) {
+    const wb = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true });
+    return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', raw: true });
   }
-  // 엑셀 한 줄 → { branch, name, left, item, label, claim, paid, due, paidDate, method, cls }
-  function parseRow(r, kind) {
-    const name = String(col(r, ['이름', '학생명', '성명', '학생']) || '').trim();
-    if (!name || name === '계' || name === '합계') return null;
-    const branchRaw = String(col(r, ['지점', '관', '사업자', '학원']) || '').trim();
-    const branch = /산본/.test(branchRaw) ? '산본관' : /평촌/.test(branchRaw) ? '평촌관' : '';
-    const st = String(col(r, ['재원상태', '상태', '퇴원일']) || '');
-    const left = /퇴원/.test(st) || /^\d{4}-\d{2}-\d{2}$/.test(st.trim());
-    const it = mapItem(col(r, ['항목', '청구항목', '구분']));
-    const unpaid = col(r, ['미납금액', '미납액', '잔액']);
-    let claim = num(col(r, ['청구금액', '예정금액', '청구액']));
-    let paid = num(col(r, ['납부금액', '납입액', '납입금액', '납부액']));
-    if (unpaid !== undefined && unpaid !== '') { claim = num(unpaid); paid = 0; }
-    // 납부금액이 마이너스면 환불 기록
-    const refund = paid < 0 ? -paid : 0;
-    if (refund) { claim = 0; paid = 0; }
-    if (!claim && paid) claim = paid;
-    if (!claim && !refund) return null;
-    const due = xlDate(col(r, ['납입기한', '납입기한일', '청구일', '기한']));
-    const paidDate = xlDate(col(r, ['납부일', '납입일']));
-    const mm = mapMethod(col(r, ['결제수단', '형태', '납입형태', '입금형태']));
-    const cls = String(col(r, ['반명', '반']) || '').trim();
-    return { kind, branch, name, left, ...it, claim, paid: Math.min(paid, claim) || 0, refund, due: due || paidDate, paidDate, method: mm.method, card: mm.card, cls };
+  // 엑셀 종류 알아내기 (첫 줄부터 데이터 — 아카 기본 내보내기 형식)
+  function detectKind(rows, fname) {
+    const n = fname || '';
+    if (/입학상담/.test(n)) return 'consult';
+    if (/납입/.test(n) && !/미납/.test(n)) return 'paid';
+    if (/미납/.test(n)) return 'unpaid';
+    if (/퇴원/.test(n)) return 'left';
+    if (/신규/.test(n)) return 'new';
+    if (/재원/.test(n)) return 'current';
+    const r = rows.find((x) => x && x.filter((v) => v !== '').length >= 5) || [];
+    if (isDate(r[0]) && isDate(r[1]) && typeof r[2] === 'string') return 'left';
+    if (isDate(r[0]) && typeof r[1] === 'string' && isPhone(r[2])) return 'new';
+    if (typeof r[0] === 'string' && isDate(r[3]) && isNum(r[6]) && isNum(r[7])) return 'paid';
+    if (typeof r[0] === 'string' && isDate(r[3]) && isNum(r[4])) return 'unpaid';
+    if (typeof r[0] === 'string' && isPhone(r[1])) return 'current';
+    return '';
+  }
+  const KIND_LABEL = { current: '재원생', paid: '납입건', unpaid: '미납건', left: '퇴원생', new: '신규생', consult: '입학상담 (수납과 무관 · 건너뜀)' };
+  const dataRow = (r) => r && typeof r[0] !== 'undefined' && String(r[0]).trim() !== '' && r.filter((v) => v !== '').length >= 3;
+
+  window.initBillImport = async function () {
+    const root = $('blImport'); if (!root) return;
+    root.innerHTML = '<div class="bl-empty">불러오는 중...</div>';
+    try { await loadAll(); renderImport(); } catch (e) { fail(e); }
+  };
+  function renderImport() {
+    $('blImport').innerHTML =
+      '<div class="card"><h3>아카 데이터 가져오기</h3>' +
+      '<div class="bl-note" style="margin-bottom:12px;">아카에서 받은 엑셀(<b>재원생 · 납입건 · 미납건 · 퇴원생 · 신규생</b>)을 한꺼번에 골라 넣으세요. 종류는 알아서 구분해요.<br>' +
+      '재원생은 아카 반별 <b>마지막 수강료</b>가 매달 청구액이 되고, 그 <b>납입기한 날짜</b>가 매월 납입일이 돼요. 자동 발생은 아카에서 마지막으로 만든 수강료 <b>다음 달</b>부터예요.<br>' +
+      '같은 엑셀을 다시 넣어도 이미 들어간 줄은 건너뛰어요. 먼저 "학생 수납 › 홈페이지 학생 불러오기"를 해 두면 홈페이지 계정과 연결돼요.</div>' +
+      '<div class="bl-bar"><label class="bl-f" style="flex:1;"><span>아카 엑셀 (여러 개 선택)</span><input type="file" class="bl-in full" id="blImF" accept=".xlsx,.xls" multiple></label>' +
+      '<div class="bl-f"><span>&nbsp;</span><button class="btn btn-primary btn-sm" id="blImPrev">미리 보기</button></div></div></div>' +
+      '<div id="blImOut"></div>';
+    $('blImPrev').onclick = previewImport;
+    if (S.imp && S.imp.plan) drawPlan();
+  }
+
+  async function previewImport() {
+    const files = [...$('blImF').files];
+    if (!files.length) { alert('엑셀을 골라 주세요'); return; }
+    $('blImOut').innerHTML = '<div class="card"><div class="bl-empty">엑셀을 읽는 중...</div></div>';
+    try {
+      const got = { current: [], paid: [], unpaid: [], left: [], new: [] };
+      const found = [];
+      for (const f of files) {
+        const rows = (await readRows(f)).filter(dataRow);
+        // 맨 아래 합계 줄 빼기 (첫 칸이 숫자)
+        const body = rows.filter((r) => !(typeof r[0] === 'number' && r.slice(1).filter((v) => v !== '').length <= 4 && !isDate(r[0])));
+        const k = detectKind(body, f.name);
+        found.push({ name: f.name, kind: k, n: body.length });
+        if (got[k]) got[k].push(...body);
+      }
+      // ── 학생 목록 ──
+      const studs = new Map(); // 이름 → 학생
+      const put = (name, patch) => { const k = normName(name); if (!k) return null; const cur = studs.get(k) || { name: String(name).trim(), classes: [], rows: [] }; Object.keys(patch).forEach((x) => { if (patch[x] !== '' && patch[x] != null && (cur[x] == null || cur[x] === '' || x === 'status' || x === 'classes')) cur[x] = patch[x]; }); studs.set(k, cur); return cur; };
+      got.left.forEach((r) => put(r[2], { status: '퇴원', joinDate: xlDate(r[0]), leaveDate: xlDate(r[1]), parentPhone: String(r[3] || ''), phone: String(r[4] || ''), school: String(r[7] || ''), grade: r[8] || '', allClasses: splitCls(r[5]) }));
+      got.current.forEach((r) => put(r[0], { status: '재원', parentPhone: String(r[1] || ''), phone: String(r[2] || ''), classes: splitCls(r[3]), school: String(r[5] || ''), grade: r[6] || '' }));
+      got.new.forEach((r) => { const s = studs.get(normName(r[1])); if (s && !s.joinDate) s.joinDate = xlDate(r[0]); else if (!s) put(r[1], { joinDate: xlDate(r[0]), parentPhone: String(r[2] || ''), phone: String(r[3] || ''), allClasses: splitCls(r[4]) }); });
+      // ── 청구 줄 ──
+      const lines = [];
+      got.paid.forEach((r) => {
+        const it = mapItem(r[2]); const claim = num(r[6]), paid = num(r[7]);
+        const mm = mapMethod(r[9]);
+        const L = { kind: 'paid', name: String(r[0]).trim(), cls: String(r[1] || '').trim(), ...it, due: xlDate(r[3]), paidDate: xlDate(r[4]), claim: Math.max(0, claim), paid: 0, refund: 0, method: mm.method, card: mm.card, note: String(r[10] || '').trim(), by: String(r[5] || '').trim() };
+        if (paid < 0) L.refund = -paid; else { L.paid = Math.min(paid, claim || paid); if (!L.claim) L.claim = L.paid; }
+        if (!L.claim && !L.refund) return;
+        lines.push(L);
+      });
+      got.unpaid.forEach((r) => {
+        if (!r[1] || !isNum(r[4]) || !isDate(r[3])) return; // 비고가 여러 줄로 나뉜 줄은 건너뜀
+        const it = mapItem(r[2]); const amt = num(r[4]); if (!amt) return;
+        lines.push({ kind: 'unpaid', name: String(r[0]).trim(), cls: String(r[1] || '').trim(), ...it, due: xlDate(r[3]), paidDate: '', claim: amt, paid: 0, refund: 0, method: '', card: '', note: String(r[5] || '').replace(/^:직접입력:/, '').trim(), phone: String(r[6] || '') });
+      });
+      const seen = {};
+      lines.forEach((L) => { const k = [L.kind, normName(L.name), L.cls, L.label, L.claim, L.paid, L.refund, L.due, L.paidDate, L.card].join('|'); seen[k] = (seen[k] || 0) + 1; L.key = hash(k + '#' + seen[k]); const s = studs.get(normName(L.name)) || put(L.name, {}); s.rows.push(L); if (!s.parentPhone && L.phone) s.parentPhone = L.phone; });
+      // ── 학생별 계획 ──
+      const t = today();
+      const plan = [...studs.values()].map((s) => {
+        const all = [...(s.classes || []), ...(s.allClasses || []), ...s.rows.map((L) => L.cls)].filter(Boolean);
+        const branch = all.length ? (all.some((c) => clsBranch(c) === '산본관') ? '산본관' : '평촌관') : '';
+        const status = s.status || '퇴원';
+        // 재원생: 수강 중인 반별 마지막 수강료 · 납입일
+        const enr = [];
+        let payDay = null, autoFrom = '';
+        if (status === '재원') {
+          (s.classes || []).filter((c) => !isBookCls(c)).forEach((c) => {
+            const tu = s.rows.filter((L) => L.item === '수강료' && L.cls === c && L.due && L.claim).sort((a, b) => sortKo(a.due, b.due));
+            const last = tu[tu.length - 1];
+            const days = {}; tu.slice(-4).forEach((L) => { const d = Number(L.due.slice(8, 10)); days[d] = (days[d] || 0) + 1; });
+            const day = last ? Number(Object.keys(days).sort((a, b) => days[b] - days[a] || (Number(b) === Number(last.due.slice(8, 10)) ? 1 : -1))[0]) : null;
+            if (!payDay && day) payDay = day;
+            if (last && (!autoFrom || addMonths(ymOf(last.due), 1) > autoFrom)) autoFrom = addMonths(ymOf(last.due), 1);
+            enr.push({ aca: c, branch: clsBranch(c), className: clsName(c), fee: last ? last.claim : 0, lastDue: last ? last.due : '', auto: !isTutorCls(c) });
+          });
+        }
+        const open = s.rows.reduce((a, L) => a + (L.claim - L.paid > 0 && L.kind === 'unpaid' ? L.claim : 0), 0);
+        const paidSum = s.rows.reduce((a, L) => a + L.paid - L.refund, 0);
+        const m = matchStudent({ name: s.name, branch });
+        return { key: normName(s.name), name: s.name, branch, status, joinDate: s.joinDate || '', leaveDate: s.leaveDate || '', parentPhone: s.parentPhone || '', phone: s.phone || '', school: s.school || '', grade: s.grade || '',
+          enr, payDay, autoFrom, rows: s.rows, open, paid: paidSum, openN: s.rows.filter((L) => L.kind === 'unpaid').length, paidN: s.rows.filter((L) => L.kind === 'paid').length,
+          match: m ? m.id : '', action: m ? 'link' : 'new' };
+      }).sort((a, b) => sortKo((a.status === '재원' ? '0' : '1') + (a.match ? '1' : '0') + a.name, (b.status === '재원' ? '0' : '1') + (b.match ? '1' : '0') + b.name));
+      // 아카 자료 기준일: 엑셀 안의 가장 늦은 날짜(오늘 이전) — 이 날짜까지의 수강료는 아카 자료로, 그 뒤부터 자동 발생
+      const cutoff = lines.map((L) => [L.due, L.paidDate]).flat().filter((d) => d && d <= t).sort().pop() || t;
+      const acaNames = new Set(plan.map((p) => p.match).filter(Boolean));
+      const notInAca = S.students.filter((s) => s.status === '재원' && !acaNames.has(s.id));
+      S.imp = { plan, found, cutoff, notInAca, counts: { current: got.current.length, paid: got.paid.length, unpaid: lines.filter((L) => L.kind === 'unpaid').length } };
+      drawPlan();
+    } catch (e) { fail(e); }
   }
   function matchStudent(row) {
     const n = normName(row.name), b = baseName(row.name);
@@ -1342,162 +1449,113 @@
     if (c.length === 1) return c[0];
     c = S.students.filter((s) => normName(s.name) === n);
     if (c.length === 1) return c[0];
-    c = S.students.filter((s) => baseName(s.name) === b && same(s));
-    if (c.length === 1) return c[0];
+    if (b !== n) { c = S.students.filter((s) => normName(s.name) === b && same(s)); if (c.length === 1) return c[0]; }
     return null;
-  }
-
-  window.initBillImport = async function () {
-    const root = $('blImport'); if (!root) return;
-    root.innerHTML = '<div class="bl-empty">불러오는 중...</div>';
-    try { await loadAll(); renderImport(); } catch (e) { fail(e); }
-  };
-  function renderImport() {
-    const st = S.imp || {};
-    $('blImport').innerHTML =
-      '<div class="card"><h3>아카 데이터 가져오기</h3>' +
-      '<div class="bl-note" style="margin-bottom:12px;">아카에서 받은 엑셀을 넣으면 학생마다 <b>남은 미납</b>과 <b>지난 납입 이력</b>을 맞춰 넣어요. 먼저 "학생 수납 › 홈페이지 학생 불러오기"와 "반·수강료"를 끝낸 뒤에 하세요.<br>' +
-      '같은 엑셀을 다시 넣어도 이미 들어간 줄은 건너뛰어요. 실제로 옮길 때는 <b>전환하는 날 아카에서 새로 받은 엑셀</b>로 한 번 더 넣으면 돼요.</div>' +
-      '<div class="bl-profile">' +
-      '<label class="bl-f span2"><span>① 미납 목록 엑셀 (지점·이름·재원상태·항목·미납금액·납입기한)</span><input type="file" class="bl-in" id="blImU" accept=".xlsx,.xls,.csv"></label>' +
-      '<label class="bl-f span2"><span>② 납입 이력 엑셀 — 선택 (지점·이름·항목·청구금액·납부금액·청구일·납부일·결제수단)</span><input type="file" class="bl-in" id="blImP" accept=".xlsx,.xls,.csv"></label>' +
-      '<label class="bl-f"><span>납입 이력은 이 날짜부터</span><input type="date" class="bl-in" id="blImFrom" value="' + esc(st.from || (ymOf(today()).slice(0, 4) + '-01-01')) + '"></label>' +
-      '<div class="bl-f span2"><span>&nbsp;</span><div style="display:flex;gap:14px;flex-wrap:wrap;">' +
-      '<label class="bl-chk"><input type="checkbox" id="blImDay" checked> 납입일 비어 있는 학생은 아카 수강료 날짜로 채우기</label>' +
-      '<label class="bl-chk"><input type="checkbox" id="blImFee" checked> 매달 청구액을 아카 마지막 수강료에 맞추기 (차이는 할인으로)</label></div></div>' +
-      '<div class="bl-f"><span>&nbsp;</span><button class="btn btn-primary btn-sm" id="blImPrev">미리 보기</button></div></div></div>' +
-      '<div id="blImOut"></div>';
-    $('blImPrev').onclick = previewImport;
-    if (st.plan) drawPlan();
-  }
-  async function previewImport() {
-    const fu = $('blImU').files[0], fp = $('blImP').files[0];
-    if (!fu && !fp) { alert('엑셀을 하나 이상 골라 주세요'); return; }
-    const from = $('blImFrom').value || '';
-    S.imp = { from, optDay: $('blImDay').checked, optFee: $('blImFee').checked };
-    $('blImOut').innerHTML = '<div class="card"><div class="bl-empty">엑셀을 읽는 중...</div></div>';
-    try {
-      const rows = [];
-      if (fp) (await readSheet(fp)).forEach((r) => { const x = parseRow(r, 'paid'); if (x && (!from || (x.due || x.paidDate) >= from)) rows.push(x); });
-      if (fu) (await readSheet(fu)).forEach((r) => { const x = parseRow(r, 'unpaid'); if (x) rows.push(x); });
-      if (!rows.length) { $('blImOut').innerHTML = '<div class="card"><div class="bl-empty">읽을 수 있는 줄이 없어요. 첫 줄 제목(이름·항목·금액·날짜)을 확인해 주세요.</div></div>'; return; }
-      // 납입 이력에서 일부만 낸 줄의 남은 금액은 미납 목록에도 있으므로 한 번만 넣음
-      const partial = new Set(rows.filter((r) => r.kind === 'paid' && r.paid < r.claim).map((r) => [normName(r.name), r.label, r.due, r.claim - r.paid].join('|')));
-      const finalRows = rows.filter((r) => !(r.kind === 'unpaid' && partial.has([normName(r.name), r.label, r.due, r.claim].join('|'))));
-      // 같은 줄이 여러 번 있으면 순번을 붙여 구분
-      const seen = {};
-      finalRows.forEach((r) => { const k = [r.kind, r.branch, normName(r.name), r.label, r.claim, r.paid, r.refund || 0, r.due, r.paidDate, r.method, r.card].join('|'); seen[k] = (seen[k] || 0) + 1; r.key = hash(k + '#' + seen[k]); });
-      // 학생별로 묶기
-      const groups = new Map();
-      finalRows.forEach((r) => { const k = (r.branch || '?') + '|' + normName(r.name); if (!groups.has(k)) groups.set(k, { key: k, name: r.name, branch: r.branch, left: r.left, rows: [] }); const g = groups.get(k); g.rows.push(r); if (!r.left) g.left = false; });
-      const plan = [...groups.values()].map((g) => {
-        const s = matchStudent(g);
-        const tu = g.rows.filter((r) => r.item === '수강료' && r.due).sort((a, b) => sortKo(a.due, b.due));
-        const last = tu[tu.length - 1];
-        const open = g.rows.reduce((a, r) => a + (r.claim - r.paid), 0);
-        const paid = g.rows.reduce((a, r) => a + r.paid - (r.refund || 0), 0);
-        return { ...g, match: s ? s.id : '', action: s ? 'link' : (g.left ? 'new-left' : 'new'), payDay: last ? Number(last.due.slice(8, 10)) : null,
-          lastFee: last ? last.claim : 0, autoFrom: last ? addMonths(ymOf(last.due), 1) : '', open, paid,
-          openN: g.rows.filter((r) => r.claim > r.paid).length, paidN: g.rows.filter((r) => r.paid > 0 || r.refund).length };
-      }).sort((a, b) => sortKo((a.match ? '1' : '0') + a.branch + a.name, (b.match ? '1' : '0') + b.branch + b.name));
-      S.imp.plan = plan; S.imp.rowCount = finalRows.length; S.imp.skipped = rows.length - finalRows.length;
-      drawPlan();
-    } catch (e) { fail(e); }
   }
   function drawPlan() {
     const st = S.imp, plan = st.plan;
-    const un = plan.filter((p) => !p.match).length;
-    const stOpts = (p) => '<select class="bl-in" data-imp="' + esc(p.key) + '" style="min-width:170px;">' +
-      '<option value="new"' + (p.action === 'new' ? ' selected' : '') + '>새 수납 학생으로 만들기 (재원)</option>' +
-      '<option value="new-left"' + (p.action === 'new-left' ? ' selected' : '') + '>새 수납 학생으로 만들기 (퇴원)</option>' +
-      '<option value="skip"' + (p.action === 'skip' ? ' selected' : '') + '>건너뛰기</option>' +
-      S.students.slice().sort((a, b) => sortKo(a.name, b.name)).map((s) => '<option value="id:' + s.id + '"' + (p.action === 'link' && p.match === s.id ? ' selected' : '') + '>' + esc(s.name) + ' · ' + branchShort(s.branch) + ' 와 연결</option>').join('') + '</select>';
+    const cur = plan.filter((p) => p.status === '재원');
+    const un = cur.filter((p) => !p.match).length;
     const tot = plan.reduce((a, p) => { a.o += p.open; a.p += p.paid; return a; }, { o: 0, p: 0 });
+    const stOpts = (p) => '<select class="bl-in" data-imp="' + esc(p.key) + '" style="min-width:150px;max-width:190px;">' +
+      '<option value="new"' + (p.action === 'new' ? ' selected' : '') + '>새로 만들기</option>' +
+      '<option value="skip"' + (p.action === 'skip' ? ' selected' : '') + '>건너뛰기</option>' +
+      S.students.slice().sort((a, b) => sortKo(a.name, b.name)).map((s) => '<option value="id:' + s.id + '"' + (p.action === 'link' && p.match === s.id ? ' selected' : '') + '>' + esc(s.name) + ' · ' + branchShort(s.branch) + '</option>').join('') + '</select>';
+    const row = (p) => '<tr' + (p.match ? '' : ' class="sel"') + '><td><b>' + esc(p.name) + '</b></td><td>' + branchShort(p.branch) + '</td><td>' + stOpts(p) + '</td>' +
+      '<td class="wrap">' + (p.enr.length ? p.enr.map((e) => esc(e.className) + ' <b>' + won(e.fee) + '</b>' + (e.auto ? '' : ' <small class="bl-tag gray">자동 끔</small>')).join('<br>') : '<span style="color:var(--muted)">-</span>') + '</td>' +
+      '<td class="c">' + (p.payDay || '') + '</td><td>' + esc(p.autoFrom || '') + '</td>' +
+      '<td class="r">' + (p.openN || '') + '</td><td class="r' + (p.open ? ' bl-cell-m' : '') + '">' + (p.open ? won(p.open) : '') + '</td><td class="r">' + (p.paidN || '') + '</td><td class="r">' + (p.paid ? won(p.paid) : '') + '</td></tr>';
+    const head = '<thead><tr><th>이름</th><th>관</th><th>홈페이지 학생 연결</th><th>수강반 · 매달 청구액</th><th class="c">납입일</th><th>자동 발생 시작</th><th class="r">미납</th><th class="r">미납액</th><th class="r">납입</th><th class="r">납입 합계</th></tr></thead>';
+    const left = plan.filter((p) => p.status !== '재원');
     $('blImOut').innerHTML =
-      '<div class="card"><div class="bl-head"><h3>미리 보기 — 학생 ' + plan.length + '명 · ' + st.rowCount + '줄</h3>' +
-      '<div class="sum"><span>남은 미납 <b style="color:var(--bl-red)">' + won(tot.o) + '원</b></span><span>납입 이력 <b>' + won(tot.p) + '원</b></span></div></div>' +
-      (st.skipped ? '<div class="bl-note" style="margin-bottom:8px;">납입 이력에 일부만 낸 기록이 있어서 미납 목록의 같은 줄 ' + st.skipped + '개는 겹치지 않게 뺐어요.</div>' : '') +
-      (un ? '<div class="bl-box gold" style="margin-bottom:10px;font-size:13px;">홈페이지 학생과 이름이 안 맞는 학생이 <b>' + un + '명</b> 있어요. 오른쪽에서 연결할 학생을 고르거나, 새로 만들거나, 건너뛰기를 골라 주세요.</div>' : '') +
-      '<div class="bl-tw tall"><table class="bl-t"><thead><tr><th>아카 이름</th><th>관</th><th>처리</th><th class="r">미납</th><th class="r">남은 금액</th><th class="r">납입 이력</th><th class="r">납입 합계</th><th class="c">납입일</th><th class="r">마지막 수강료</th><th>자동 발생 시작</th></tr></thead><tbody>' +
-      plan.map((p) => '<tr' + (p.match ? '' : ' class="sel"') + '><td><b>' + esc(p.name) + '</b>' + (p.left ? ' <small class="bl-tag gray">퇴원</small>' : '') + '</td><td>' + branchShort(p.branch) + '</td>' +
-        '<td>' + stOpts(p) + '</td><td class="r">' + (p.openN || '') + '</td><td class="r' + (p.open ? ' bl-cell-m' : '') + '">' + (p.open ? won(p.open) : '') + '</td>' +
-        '<td class="r">' + (p.paidN || '') + '</td><td class="r">' + (p.paid ? won(p.paid) : '') + '</td><td class="c">' + (p.payDay || '') + '</td><td class="r">' + (p.lastFee ? won(p.lastFee) : '') + '</td><td>' + esc(p.autoFrom || '설정 시작 월') + '</td></tr>').join('') +
-      '</tbody></table></div>' +
+      '<div class="card"><h3>읽은 엑셀</h3><div class="bl-chips">' + st.found.map((f) => '<span class="bl-tag' + (f.kind && f.kind !== 'consult' ? '' : ' gray') + '">' + esc(f.name) + ' → ' + (KIND_LABEL[f.kind] || '알 수 없음') + ' ' + f.n + '줄</span>').join('') + '</div></div>' +
+      '<div class="card"><div class="bl-head"><h3>재원생 ' + cur.length + '명 <small style="font-size:12px;color:var(--muted);font-weight:500;">· 아카 자료 기준일 ' + esc(st.cutoff) + ' (이 날 뒤 납입기한부터 자동 발생)</small></h3><div class="sum"><span>미납 <b style="color:var(--bl-red)">' + won(tot.o) + '원</b></span><span>1월~ 납입 <b>' + won(tot.p) + '원</b></span></div></div>' +
+      (un ? '<div class="bl-box gold" style="margin-bottom:10px;font-size:13px;">홈페이지 학생과 이름이 안 맞는 재원생이 <b>' + un + '명</b> 있어요 (노란 줄). 연결할 학생을 고르거나 새로 만들기로 두세요.</div>' : '') +
+      '<div class="bl-tw tall"><table class="bl-t">' + head + '<tbody>' + cur.map(row).join('') + '</tbody></table></div></div>' +
+      (st.notInAca.length ? '<div class="card"><div class="bl-head"><h3>아카 재원생 명단에 없는 수납 학생 ' + st.notInAca.length + '명</h3><span class="bl-note">홈페이지에서 불러왔지만 아카에는 재원생이 아니에요. 가져온 뒤 학생 수납에서 퇴원 처리하거나 그대로 두세요.</span></div><div class="bl-chips">' +
+        st.notInAca.map((s) => '<span class="bl-tag gray">' + esc(s.name) + ' · ' + branchShort(s.branch) + '</span>').join('') + '</div></div>' : '') +
+      '<div class="card"><div class="bl-head"><h3>퇴원생 · 기타 ' + left.length + '명</h3><span class="bl-note">미납·납입 기록만 들어가고 수강료 자동 발생은 없어요</span></div>' +
+      '<div class="bl-tw mid"><table class="bl-t">' + head + '<tbody>' + left.map(row).join('') + '</tbody></table></div>' +
       '<div style="display:flex;gap:8px;align-items:center;margin-top:14px;"><button class="btn btn-primary" id="blImRun">가져오기 실행</button><span class="bl-note" id="blImMsg"></span></div></div>';
     $('blImOut').querySelectorAll('[data-imp]').forEach((el) => { el.onchange = () => { const p = plan.find((x) => x.key === el.dataset.imp); const v = el.value;
       if (v.startsWith('id:')) { p.action = 'link'; p.match = v.slice(3); } else { p.action = v; p.match = ''; } }; });
     $('blImRun').onclick = runImport;
   }
+  async function ensureClass(branch, name, fee) {
+    let c = S.classes.find((x) => x.name === name && x.branch === branch);
+    if (c) { if (!c.fee && fee) { await updateDoc(doc(db, C.classes, c.id), { fee }); c.fee = fee; } return c; }
+    const data = { name, branch, category: guessCategory(branch, name), teacherName: '', fee: fee || 0, active: true };
+    const ref = await addDoc(collection(db, C.classes), data); c = { id: ref.id, ...data }; S.classes.push(c); return c;
+  }
   async function runImport() {
-    const st = S.imp; const plan = st.plan;
+    const plan = S.imp.plan;
     const todo = plan.filter((p) => p.action !== 'skip');
-    if (!confirm('학생 ' + todo.length + '명의 아카 기록을 가져올까요?\n(이미 들어간 줄은 건너뛰어요)')) return;
+    if (!confirm('학생 ' + todo.length + '명의 아카 기록을 가져올까요?\n· 재원생은 수강반·매달 청구액·납입일이 아카 기준으로 바뀌어요\n· 이미 들어간 줄은 건너뛰어요')) return;
     const btn = $('blImRun'); btn.disabled = true;
-    const msg = (t) => { $('blImMsg').textContent = t; };
+    const msg = (x) => { $('blImMsg').textContent = x; };
     try {
       const F = await fsx();
-      // 이미 들어간 아카 기록
       const exist = new Map();
       (await getDocs(query(collection(db, C.charges), where('source', '==', 'aca')))).forEach((d) => exist.set(d.id, d.data().bsId));
       (await getDocs(query(collection(db, C.payments), where('source', '==', 'aca')))).forEach((d) => { if (d.data().kind === '환불') exist.set(d.id, d.data().bsId); });
-      let batch = F.writeBatch(db), ops = 0, nCharge = 0, nPay = 0, nNew = 0, nSkip = 0;
+      let batch = F.writeBatch(db), ops = 0, nC = 0, nP = 0, nNew = 0, nSkip = 0, nUpd = 0;
       const flush = async () => { if (ops) { await batch.commit(); batch = F.writeBatch(db); ops = 0; } };
       const add = async (fn) => { fn(batch); ops++; if (ops >= 400) await flush(); };
       let i = 0;
       for (const p of todo) {
         i++; if (i % 10 === 0) msg(i + ' / ' + todo.length + '명 처리 중...');
         let s = p.action === 'link' ? studentById(p.match) : null;
-        // 전에 가져온 적 있는 학생이면 그 학생에게 이어서 (새로 또 만들지 않음)
-        if (!s) { const prev = p.rows.map((r) => exist.get('aca_' + r.key)).find(Boolean); if (prev) s = studentById(prev); }
-        if (!s && p.rows.every((r) => exist.has('aca_' + r.key))) { nSkip += p.rows.length; continue; }
+        if (!s) { const prev = p.rows.map((L) => exist.get('aca_' + L.key)).find(Boolean); if (prev) s = studentById(prev); }
+        // 수강반 (재원생만, 아카 기준)
+        const enrollments = [];
+        for (const e of p.enr) {
+          const c = await ensureClass(e.branch, e.className, e.fee);
+          const old = s && (s.enrollments || []).find((x) => x.classId === c.id);
+          enrollments.push({ id: old ? old.id : uid(), classId: c.id, className: c.name, fee: e.fee, discount: 0, discountReason: '', start: old && old.start ? old.start : '', end: '', auto: e.auto });
+        }
         if (!s) {
+          if (p.rows.length && p.rows.every((L) => exist.has('aca_' + L.key)) && p.status !== '재원') { nSkip += p.rows.length; continue; }
           const ref = doc(collection(db, C.students));
-          const data = { name: p.name, studentId: '', branch: p.branch || '', grade: '', school: '', phone: '', parentPhone: '', status: p.action === 'new-left' ? '퇴원' : '재원',
-            payDay: st.optDay ? p.payDay : null, acaNo: '', memo: '아카에서 가져옴', joinDate: '', leaveDate: p.action === 'new-left' ? today() : '', enrollments: [], createdAt: F.serverTimestamp(), createdBy: who() + ' (아카 가져오기)' };
-          await setDoc(ref, data); s = { id: ref.id, ...data }; S.students.push(s); nNew++;
-        }
-        // 학생 정보: 납입일 · 청구액 · 자동 발생 시작
-        const patch = {};
-        if (st.optDay && !s.payDay && p.payDay) patch.payDay = p.payDay;
-        if (p.autoFrom && (!s.autoFrom || p.autoFrom > s.autoFrom)) patch.autoFrom = p.autoFrom;
-        if (st.optFee && p.lastFee) {
-          const act = activeEnrolls(s);
-          if (act.length === 1) {
-            const e = act[0]; const fee = Number(e.fee) || 0;
-            let ne = null;
-            if (!fee) ne = { ...e, fee: p.lastFee, discount: 0, discountReason: '' };
-            else if (p.lastFee < fee && fee - p.lastFee !== (Number(e.discount) || 0)) ne = { ...e, discount: fee - p.lastFee, discountReason: e.discountReason || '아카 이전' };
-            if (ne) patch.enrollments = (s.enrollments || []).map((x) => x.id === e.id ? ne : x);
-          }
-        }
-        if (Object.keys(patch).length) { await add((b) => b.update(doc(db, C.students, s.id), patch)); Object.assign(s, patch); }
-        const en = activeEnrolls(s);
-        for (const r of p.rows) {
-          const cid = 'aca_' + r.key;
-          if (exist.has(cid)) { nSkip++; continue; }
-          if (r.refund) {
-            await add((b) => b.set(doc(db, C.payments, cid), { bsId: s.id, studentName: s.name, branch: s.branch || r.branch || '', kind: '환불', date: r.paidDate || r.due, amount: -r.refund,
-              method: r.method, cardCompany: r.card, allocations: [], memo: '아카 이전 · (' + r.label + ') 환불', cash: { need: false, issued: false }, source: 'aca', by: '아카', createdAt: F.serverTimestamp(), canceled: false }));
-            nPay++; continue;
-          }
-          const amount = r.claim, paid = r.paid;
-          const title = r.item === '수강료' ? '(수강료) ' + (r.cls || (en[0] && en[0].className) || '') : r.item === '교재비' ? '(교재비) ' + (r.label !== '교재비' ? r.label : '') : '(' + r.label + ')';
-          const cdata = { bsId: s.id, studentName: s.name, branch: s.branch || r.branch || '', classId: r.item === '수강료' && en[0] ? en[0].classId : '', className: r.cls || (r.item === '수강료' && en[0] ? en[0].className : ''),
-            item: r.item, title: title.trim(), month: ymOf(r.due), dueDate: r.due, amount, paid, status: statusOf(amount, paid), auto: false, source: 'aca', note: '아카 이전',
+          const data = { name: p.name, studentId: '', branch: p.branch, grade: String(p.grade || ''), school: p.school, phone: p.phone, parentPhone: p.parentPhone, status: p.status,
+            payDay: p.payDay || null, autoFrom: p.autoFrom || '', autoAfter: p.status === '재원' ? S.imp.cutoff : '', acaNo: '', memo: '아카에서 가져옴', joinDate: p.joinDate, leaveDate: p.leaveDate, enrollments,
             createdAt: F.serverTimestamp(), createdBy: who() + ' (아카 가져오기)' };
-          await add((b) => b.set(doc(db, C.charges, cid), cdata)); nCharge++;
-          if (amount > paid) S.charges.set(cid, { id: cid, ...cdata });
-          if (paid > 0) {
-            await add((b) => b.set(doc(db, C.payments, 'aca_' + r.key), { bsId: s.id, studentName: s.name, branch: cdata.branch, kind: '납입', date: r.paidDate || r.due, amount: paid,
-              method: r.method, cardCompany: r.card, allocations: [{ chargeId: cid, amount: paid, title: cdata.title, month: cdata.month }], memo: '아카 이전',
-              cash: { need: false, issued: false }, source: 'aca', by: '아카', createdAt: F.serverTimestamp(), canceled: false }));
-            nPay++;
+          await setDoc(ref, data); s = { id: ref.id, ...data }; S.students.push(s); nNew++;
+        } else {
+          const patch = { status: p.status };
+          if (p.status === '재원') { patch.enrollments = enrollments; if (p.payDay) patch.payDay = p.payDay; if (p.autoFrom) patch.autoFrom = p.autoFrom; patch.autoAfter = S.imp.cutoff; }
+          else { patch.enrollments = (s.enrollments || []).map((e) => e.end ? e : { ...e, end: p.leaveDate || today() }); }
+          ['joinDate', 'leaveDate', 'parentPhone', 'phone', 'school'].forEach((k) => { if (p[k] && !s[k]) patch[k] = p[k]; });
+          if (p.grade && !s.grade) patch.grade = String(p.grade);
+          if (!s.branch && p.branch) patch.branch = p.branch;
+          await add((b) => b.update(doc(db, C.students, s.id), patch)); Object.assign(s, patch); nUpd++;
+        }
+        for (const L of p.rows) {
+          const cid = 'aca_' + L.key;
+          if (exist.has(cid)) { nSkip++; continue; }
+          const branch = s.branch || p.branch || '';
+          if (L.refund) {
+            await add((b) => b.set(doc(db, C.payments, cid), { bsId: s.id, studentName: s.name, branch, kind: '환불', date: L.paidDate || L.due, amount: -L.refund,
+              method: L.method, cardCompany: L.card, allocations: [], memo: '아카 이전 · ' + L.label + ' 환불' + (L.note ? ' · ' + L.note : ''), cash: { need: false, issued: false }, source: 'aca', by: L.by || '아카', createdAt: F.serverTimestamp(), canceled: false }));
+            nP++; continue;
+          }
+          const cn = L.cls && !isBookCls(L.cls) ? clsName(L.cls) : '';
+          const k = cn ? S.classes.find((x) => x.name === cn && x.branch === clsBranch(L.cls)) : null;
+          const title = L.item === '수강료' ? '(수강료) ' + cn : L.item === '교재비' ? L.label : '(' + L.label + ')' + (cn ? ' ' + cn : '');
+          const cdata = { bsId: s.id, studentName: s.name, branch, classId: k ? k.id : '', className: cn, item: L.item, title: title.trim(), month: ymOf(L.due), dueDate: L.due,
+            amount: L.claim, paid: L.paid, status: statusOf(L.claim, L.paid), auto: false, source: 'aca', note: L.note ? '아카: ' + L.note : '아카 이전',
+            createdAt: F.serverTimestamp(), createdBy: who() + ' (아카 가져오기)' };
+          await add((b) => b.set(doc(db, C.charges, cid), cdata)); nC++;
+          S.charges.set(cid, { id: cid, ...cdata });
+          if (L.paid > 0) {
+            await add((b) => b.set(doc(db, C.payments, cid), { bsId: s.id, studentName: s.name, branch, kind: '납입', date: L.paidDate || L.due, amount: L.paid,
+              method: L.method, cardCompany: L.card, allocations: [{ chargeId: cid, amount: L.paid, title: cdata.title, month: cdata.month }], memo: L.note || '아카 이전',
+              cash: { need: false, issued: false }, source: 'aca', by: L.by || '아카', createdAt: F.serverTimestamp(), canceled: false }));
+            nP++;
           }
         }
       }
-      await flush();
-      msg('');
-      alert('가져오기 끝!\n· 새로 만든 수납 학생 ' + nNew + '명\n· 청구 ' + nCharge + '건 (납입 기록 ' + nPay + '건)\n· 이미 있어서 건너뛴 줄 ' + nSkip + '건');
+      await flush(); msg('');
+      alert('가져오기 끝!\n· 새로 만든 수납 학생 ' + nNew + '명 · 정보 맞춘 학생 ' + nUpd + '명\n· 청구 ' + nC + '건 · 납입/환불 기록 ' + nP + '건\n· 이미 있어서 건너뛴 줄 ' + nSkip + '건\n\n이제 자동 발생 규칙에 따라 다음 수강료가 생겨요.');
       S.imp = null; await loadAll(true); renderImport();
     } catch (e) { fail(e); btn.disabled = false; }
   }
