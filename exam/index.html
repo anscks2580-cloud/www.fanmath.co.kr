@@ -685,54 +685,52 @@ const ACADEMIES = [
 //    컬렉션으로 저장해둔 걸 그대로 읽어옵니다. 실제 Vimeo 연동은 admin.html에서 이뤄집니다.
 //    (아래 ACADEMIES의 vimeoFolder 값은 admin.html 쪽 학원명과 맞춰두는 용도의 참고용입니다.)
 
-// 3) 학교별 기말고사 시작일
-
-// 3) 학교별 기말고사 시작일. examDate가 빈 값이면 "일정 확인 중"으로 표시됩니다.
+// 3) 학교별 기말고사 기간(1·2학년 기준, 나이스 학사일정 2026-10-27 확인). period가 빈 값이면 "일정 확인 중"으로 표시됩니다.
 //    확정되는 대로 examDate만 "YYYY-MM-DD" 형식으로 채워주세요.
 const SCHOOLS = [
   // ---- 중학교 ----
-  { name: "고천중학교", region: "의왕", level: "중학교", period: "" },
-  { name: "곡란중학교", region: "군포", level: "중학교", period: "" },
-  { name: "궁내중학교", region: "군포", level: "중학교", period: "" },
+  { name: "고천중학교", region: "의왕", level: "중학교", period: "12/16 - 12/18" },
+  { name: "곡란중학교", region: "군포", level: "중학교", period: "11/30 - 12/2" },
+  { name: "궁내중학교", region: "군포", level: "중학교", period: "12/8 - 12/10" },
   { name: "근명중학교", region: "안양", level: "중학교", period: "" },
-  { name: "귀인중학교", region: "안양", level: "중학교", period: "" },
-  { name: "당동중학교", region: "군포", level: "중학교", period: "" },
+  { name: "귀인중학교", region: "안양", level: "중학교", period: "12/8 - 12/9" },
+  { name: "당동중학교", region: "군포", level: "중학교", period: "12/14 - 12/16" },
   { name: "대안여자중학교", region: "안양", level: "중학교", period: "" },
-  { name: "대안중학교", region: "안양", level: "중학교", period: "" },
+  { name: "대안중학교", region: "안양", level: "중학교", period: "12/15 - 12/17" },
   { name: "도장중학교", region: "군포", level: "중학교", period: "" },
-  { name: "모락중학교", region: "의왕", level: "중학교", period: "" },
-  { name: "범계중학교", region: "안양", level: "중학교", period: "" },
-  { name: "부림중학교", region: "안양", level: "중학교", period: "" },
-  { name: "부흥중학교", region: "안양", level: "중학교", period: "" },
+  { name: "모락중학교", region: "의왕", level: "중학교", period: "12/15 - 12/16" },
+  { name: "범계중학교", region: "안양", level: "중학교", period: "12/15 - 12/17" },
+  { name: "부림중학교", region: "안양", level: "중학교", period: "12/17 - 12/18" },
+  { name: "부흥중학교", region: "안양", level: "중학교", period: "12/14 - 12/16" },
   { name: "비산중학교", region: "안양", level: "중학교", period: "" },
-  { name: "산본중학교", region: "군포", level: "중학교", period: "" },
-  { name: "수리중학교", region: "군포", level: "중학교", period: "" },
-  { name: "신기중학교", region: "안양", level: "중학교", period: "" },
-  { name: "용호중학교", region: "군포", level: "중학교", period: "" },
+  { name: "산본중학교", region: "군포", level: "중학교", period: "12/22 - 12/23" },
+  { name: "수리중학교", region: "군포", level: "중학교", period: "11/25 - 11/27" },
+  { name: "신기중학교", region: "안양", level: "중학교", period: "12/15 - 12/17" },
+  { name: "용호중학교", region: "군포", level: "중학교", period: "11/10 - 11/12" },
   { name: "율목중학교", region: "과천", level: "중학교", period: "" },
   { name: "평촌중학교", region: "안양", level: "중학교", period: "" },
-  { name: "호계중학교", region: "안양", level: "중학교", period: "" },
-  { name: "호성중학교", region: "안양", level: "중학교", period: "" },
-  { name: "흥진중학교", region: "군포", level: "중학교", period: "" },
+  { name: "호계중학교", region: "안양", level: "중학교", period: "12/14 - 12/16" },
+  { name: "호성중학교", region: "안양", level: "중학교", period: "12/18 - 12/21" },
+  { name: "흥진중학교", region: "군포", level: "중학교", period: "12/7 - 12/9" },
 
   // ---- 고등학교 ----
-  { name: "관양고등학교", region: "안양", level: "고등학교", period: "" },
-  { name: "군포고등학교", region: "군포", level: "고등학교", period: "" },
-  { name: "동안고등학교", region: "안양", level: "고등학교", period: "" },
-  { name: "모락고등학교", region: "의왕", level: "고등학교", period: "" },
-  { name: "백영고등학교", region: "의왕", level: "고등학교", period: "" },
+  { name: "관양고등학교", region: "안양", level: "고등학교", period: "12/7 - 12/11" },
+  { name: "군포고등학교", region: "군포", level: "고등학교", period: "12/14 - 12/18" },
+  { name: "동안고등학교", region: "안양", level: "고등학교", period: "12/15 - 12/18" },
+  { name: "모락고등학교", region: "의왕", level: "고등학교", period: "12/10 - 12/16" },
+  { name: "백영고등학교", region: "의왕", level: "고등학교", period: "12/9 - 12/15" },
   { name: "부흥고등학교", region: "군포", level: "고등학교", period: "" },
-  { name: "산본고등학교", region: "군포", level: "고등학교", period: "" },
+  { name: "산본고등학교", region: "군포", level: "고등학교", period: "12/17 - 12/23" },
   { name: "성포고등학교", region: "군포", level: "고등학교", period: "" },
-  { name: "수리고등학교", region: "군포", level: "고등학교", period: "" },
+  { name: "수리고등학교", region: "군포", level: "고등학교", period: "12/4 - 12/11" },
   { name: "신성고등학교", region: "안양", level: "고등학교", period: "" },
   { name: "안양고등학교", region: "안양", level: "고등학교", period: "" },
   { name: "안양여자고등학교", region: "안양", level: "고등학교", period: "" },
-  { name: "양명고등학교", region: "군포", level: "고등학교", period: "" },
-  { name: "용호고등학교", region: "군포", level: "고등학교", period: "" },
+  { name: "양명고등학교", region: "군포", level: "고등학교", period: "12/10 - 12/15" },
+  { name: "용호고등학교", region: "군포", level: "고등학교", period: "12/2 - 12/9" },
   { name: "인덕원고등학교", region: "안양", level: "고등학교", period: "" },
-  { name: "평촌고등학교", region: "안양", level: "고등학교", period: "" },
-  { name: "흥진고등학교", region: "군포", level: "고등학교", period: "" },
+  { name: "평촌고등학교", region: "안양", level: "고등학교", period: "12/7 - 12/11" },
+  { name: "흥진고등학교", region: "군포", level: "고등학교", period: "12/2 - 12/8" },
 ];
 
 
