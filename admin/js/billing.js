@@ -1424,7 +1424,9 @@
             const day = last ? Number(Object.keys(days).sort((a, b) => days[b] - days[a] || (Number(b) === Number(last.due.slice(8, 10)) ? 1 : -1))[0]) : null;
             if (!payDay && day) payDay = day;
             if (last && (!autoFrom || addMonths(ymOf(last.due), 1) > autoFrom)) autoFrom = addMonths(ymOf(last.due), 1);
-            enr.push({ aca: c, branch: clsBranch(c), className: clsName(c), fee: last ? last.claim : 0, lastDue: last ? last.due : '', auto: !isTutorCls(c) });
+            // 한 달 수강료를 여러 번 나눠 낸 경우(같은 납입기한 여러 줄)는 합쳐서 한 달 청구액으로
+            const fee = last ? tu.filter((L) => L.due === last.due).reduce((x, L) => x + L.claim, 0) : 0;
+            enr.push({ aca: c, branch: clsBranch(c), className: clsName(c), fee, lastDue: last ? last.due : '', auto: !isTutorCls(c) });
           });
         }
         const open = s.rows.reduce((a, L) => a + (L.claim - L.paid > 0 && L.kind === 'unpaid' ? L.claim : 0), 0);
