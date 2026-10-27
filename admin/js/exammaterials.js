@@ -131,23 +131,28 @@ async function fetchExamSubfolders(parentUri) {
 // 최상위 폴더에서 먼저 찾고, 없으면 모든 최상위 폴더의 하위 폴더를 동시에(병렬로) 뒤져봅니다.
 // parentName이 주어지면 그 폴더 하나의 하위 폴더만 빠르게 확인합니다.
 async function findExamFolderByName(folderName, topFolders, parentName, onProgress) {
-  let matched = topFolders.find(f => f.name === folderName);
-  if (matched) return matched;
-
+  // 상위 폴더명이 있으면 반드시 그 상위 폴더 "안"에서만 찾습니다.
+  // (같은 이름의 학원 폴더가 다른 곳에도 있으면 엉뚱한 폴더를 집는 문제 방지)
   if (parentName) {
-    const parent = topFolders.find(f => f.name === parentName);
-    if (!parent) return null;
-    if (onProgress) onProgress(`⏳ "${parentName}" 폴더 안을 확인 중...`);
-    const subs = await fetchExamSubfolders(parent.uri);
-    return subs.find(f => f.name === folderName) || null;
+    const parents = topFolders.filter(f => (f.name || '').trim() === parentName);
+    if (!parents.length) return null;
+    for (const parent of parents) {
+      if (onProgress) onProgress(`⏳ "${parentName}" 폴더 안을 확인 중...`);
+      const subs = await fetchExamSubfolders(parent.uri);
+      const m = subs.find(f => (f.name || '').trim() === folderName);
+      if (m) return m;
+    }
+    return null;
   }
 
+  let matched = topFolders.find(f => (f.name || '').trim() === folderName);
+  if (matched) return matched;
   if (onProgress) onProgress('⏳ 하위 폴더까지 확인 중... (폴더가 많으면 오래 걸릴 수 있어요)');
   const subfolderLists = await Promise.all(
     topFolders.map(f => fetchExamSubfolders(f.uri).catch(() => []))
   );
   for (const subs of subfolderLists) {
-    const m = subs.find(f => f.name === folderName);
+    const m = subs.find(f => (f.name || '').trim() === folderName);
     if (m) return m;
   }
   return null;
@@ -173,31 +178,35 @@ window.syncExamFolder = async () => {
     const existingIds = new Set(examMaterialsCache.map(v => v.vimeoId));
 
     let foundAnyFolder = false;
+    const report = [];
     for (const folderName of targetFolders) {
       statusEl.textContent = `⏳ "${folderName}" 폴더 확인 중...`;
       const matched = await findExamFolderByName(folderName, allFolders, parentName, (msg) => {
         statusEl.textContent = msg;
       });
-      if (!matched) continue;
+      if (!matched) { report.push(`${folderName}: 폴더 없음`); continue; }
       foundAnyFolder = true;
       const academy = folderName;
       const subject = EXAM_ACADEMY_SUBJECT[folderName] || '수학';
 
       const videos = await fetchFolderVideos(matched.uri);
+      let added = 0;
       for (const v of videos) {
         const vimeoId = v.uri.replace('/videos/', '');
         if (existingIds.has(vimeoId)) continue;
         examSyncCandidates.push({ vimeoId, title: v.name, academy, subject, materialType, year });
+        added++;
       }
+      report.push(`${folderName}: 영상 ${videos.length}개${videos.length ? ` (새 영상 ${added}개)` : ''}`);
     }
 
     if (!foundAnyFolder) {
-      statusEl.textContent = `⚠️ 선택한 학원 폴더를 Vimeo에서 찾을 수 없습니다. 상위 폴더명을 다시 확인해주세요.`;
+      statusEl.textContent = `⚠️ "${parentName || '(상위 폴더 없음)'}" 안에서 학원 폴더를 찾을 수 없습니다. 비메오의 폴더 이름(띄어쓰기 포함)을 확인해주세요.`;
       return;
     }
 
     if (!examSyncCandidates.length) {
-      statusEl.textContent = `✅ 새로 추가할 영상이 없습니다. (${targetFolders.length}개 폴더 확인 완료)`;
+      statusEl.textContent = `✅ 새로 추가할 영상이 없습니다. — ${report.join(' · ')}`;
       return;
     }
 
