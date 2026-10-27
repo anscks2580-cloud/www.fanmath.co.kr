@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>수납 | 송우찬수학학원</title>
+<meta name="robots" content="noindex,nofollow,noarchive">
+<meta name="referrer" content="no-referrer">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="portal.css">
+<link rel="stylesheet" href="admin/admin.css">
+<link rel="stylesheet" href="admin/billing.css?v=1793091000">
+<script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   수납 전용 페이지 (원장·관리부) — 아카(ACA2000) 대체
+   - 링크로만 들어오는 비공개 페이지: 홈페이지·관리자 화면 어디에도 연결하지 않음
+   - 관리자 계정(admins)만 입장
+   - 지금은 테스트 모드: 수납 데이터가 모두 test_ 로 시작하는 컬렉션에 따로 저장됨
+     (실제로 쓸 때는 아래 BL_PREFIX 를 '' 로 바꾸면 됨)
+   - 화면을 그리는 코드: admin/js/billing.js · 스타일: admin/billing.css
+   ═══════════════════════════════════════════════════════════ */
+body { background:var(--bg, #F7F6FB); margin:0; }
+.pg-top { position:sticky; top:0; z-index:50; height:60px; display:flex; align-items:center; gap:14px; padding:0 20px;
+  background:#fff; border-bottom:1px solid rgba(30,24,56,0.1); }
+.pg-brand { display:flex; align-items:center; gap:10px; font-weight:800; font-size:16px; color:var(--off-white); text-decoration:none; }
+.pg-brand img { width:30px; height:30px; border-radius:8px; }
+.pg-test { background:#D97B1A; color:#fff; font-size:12px; font-weight:800; padding:4px 10px; border-radius:999px; letter-spacing:.3px; }
+.pg-live { background:#2E9E5B; color:#fff; font-size:12px; font-weight:800; padding:4px 10px; border-radius:999px; }
+.pg-top .sp { flex:1; }
+.pg-who { font-size:13px; color:var(--muted); }
+.pg-wrap { display:grid; grid-template-columns:210px minmax(0,1fr); min-height:calc(100vh - 60px); }
+.pg-side { background:#fff; border-right:1px solid rgba(30,24,56,0.08); padding:16px 12px; display:flex; flex-direction:column; gap:4px; position:sticky; top:60px; height:calc(100vh - 60px); box-sizing:border-box; }
+.pg-side .lb { font-size:11px; color:var(--muted); letter-spacing:1px; margin:12px 8px 4px; }
+.pg-nav { display:flex; align-items:center; gap:10px; width:100%; padding:10px 12px; border:none; background:none; border-radius:10px; font-size:14px; font-family:inherit; color:var(--off-white); cursor:pointer; text-align:left; }
+.pg-nav:hover { background:rgba(30,24,56,0.05); }
+.pg-nav.active { background:rgba(245,197,24,0.2); color:var(--purple, #5B3FA6); font-weight:700; }
+.pg-nav .ic { width:20px; text-align:center; }
+.pg-side .foot { margin-top:auto; display:flex; flex-direction:column; gap:6px; }
+.pg-main { padding:24px 28px 60px; min-width:0; }
+.pg-main h2.pg-title { font-size:20px; margin:0 0 16px; }
+.pg-banner { background:rgba(217,123,26,0.1); border:1px solid rgba(217,123,26,0.45); color:#8A4A06; border-radius:12px; padding:10px 14px; font-size:13px; margin-bottom:16px; line-height:1.6; }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+#pgLogin { max-width:380px; margin:12vh auto; background:#fff; border-radius:16px; padding:32px; box-shadow:0 10px 40px rgba(30,24,56,0.1); }
+#pgLogin h1 { font-size:20px; margin:0 0 6px; }
+#pgLogin p { color:var(--muted); font-size:13px; margin:0 0 18px; }
+#pgLogin input { width:100%; box-sizing:border-box; padding:12px 13px; margin-bottom:10px; border:1px solid rgba(30,24,56,0.15); border-radius:9px; font-size:14px; font-family:inherit; }
+#pgLogin .err { color:#D64545; font-size:13px; min-height:18px; margin-bottom:6px; }
+#toast { position:fixed; right:22px; bottom:22px; background:#2A1E55; color:#fff; padding:13px 18px; border-radius:12px; font-size:14px; font-weight:600; opacity:0; transform:translateY(8px); transition:all .2s; z-index:9999; pointer-events:none; }
+#toast.show { opacity:1; transform:none; }
+@media (max-width: 900px) {
+  .pg-wrap { grid-template-columns:1fr; }
+  .pg-side { position:static; height:auto; flex-direction:row; flex-wrap:wrap; }
+  .pg-side .lb, .pg-side .foot { display:none; }
+  .pg-nav { width:auto; }
+  .pg-main { padding:16px; }
+}
+</style>
+</head>
+<body>
+
+<!-- 로그인 (관리자 계정만) -->
+<div id="pgLogin" hidden>
+  <h1>수납 관리</h1>
+  <p>관리자 계정으로 로그인해 주세요.</p>
+  <input type="email" id="pgEmail" placeholder="이메일" autocomplete="username">
+  <input type="password" id="pgPw" placeholder="비밀번호" autocomplete="current-password">
+  <div class="err" id="pgErr"></div>
+  <button class="btn btn-primary" style="width:100%;padding:13px;font-size:15px;" id="pgLoginBtn">로그인</button>
+</div>
+
+<div id="pgApp" hidden>
+  <header class="pg-top">
+    <a class="pg-brand" href="#billtoday"><img src="logo.png" alt="">수납 관리</a>
+    <span id="pgMode"></span>
+    <span class="sp"></span>
+    <span class="pg-who" id="pgWho"></span>
+    <a class="btn btn-secondary btn-sm" href="admin.html" style="text-decoration:none;">관리자 화면</a>
+    <button class="btn btn-secondary btn-sm" id="pgLogout">로그아웃</button>
+  </header>
+  <div class="pg-wrap">
+    <nav class="pg-side" id="pgSide">
+      <div class="lb">수납</div>
+      <button class="pg-nav" data-menu="billtoday"><span class="ic">📊</span>수납 현황</button>
+      <button class="pg-nav" data-menu="billstudent"><span class="ic">👤</span>학생 수납</button>
+      <button class="pg-nav" data-menu="billunpaid"><span class="ic">📋</span>납입·미납 조회</button>
+      <button class="pg-nav" data-menu="billreceipt"><span class="ic">🧾</span>현금영수증</button>
+      <div class="lb">설정</div>
+      <button class="pg-nav" data-menu="billclasses"><span class="ic">🏫</span>반 · 수강료</button>
+      <button class="pg-nav" data-menu="billbooks"><span class="ic">📚</span>교재</button>
+      <div class="foot" id="pgTestTools" hidden>
+        <button class="btn btn-secondary btn-sm" id="pgWipe" title="교육 전에 연습 기록을 깨끗이 지울 때">🧹 테스트 기록 모두 지우기</button>
+      </div>
+    </nav>
+    <main class="pg-main">
+      <div class="pg-banner" id="pgBanner" hidden>
+        <b>테스트 모드</b> — 여기서 입력하는 반·학생·청구·납입·교재 기록은 실제 수납 기록이 아니에요. 연습용으로 따로 저장되고,
+        홈페이지 학생 명단은 읽기만 해서 실제 데이터는 바뀌지 않아요. 마음껏 눌러 보세요.
+      </div>
+      <div class="tab-panel" id="tab-billtoday"><div class="bl-wrap" id="blToday"></div></div>
+      <div class="tab-panel" id="tab-billstudent"><div class="bl-wrap" id="blStudent"></div></div>
+      <div class="tab-panel" id="tab-billunpaid"><div class="bl-wrap" id="blUnpaid"></div></div>
+      <div class="tab-panel" id="tab-billreceipt"><div class="bl-wrap" id="blReceipt"></div></div>
+      <div class="tab-panel" id="tab-billclasses"><div class="bl-wrap" id="blClasses"></div></div>
+      <div class="tab-panel" id="tab-billbooks"><div class="bl-wrap" id="blBooks"></div></div>
+    </main>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+  // ── 테스트 모드 스위치 ─────────────────────────────────────
+  //   'test_' : 테스트 (연습 기록이 test_ 컬렉션에 따로 저장)
+  //   ''      : 실제 운영 (교육 끝나고 바꿀 때)
+  window.BL_PREFIX = 'test_';
+
+  // billing.js가 쓰는 홈페이지 학생 명단 (students 컬렉션 · 읽기만 함)
+  var studentsCache = [];
+</script>
+<script type="module" src="admin/js/00-firebase.js?v=1792760000"></script>
+<script defer src="admin/js/billing.js?v=1793091000"></script>
+<script defer>
+(function () {
+  const $ = (id) => document.getElementById(id);
+  const MENUS = { billtoday: '수납 현황', billstudent: '학생 수납', billunpaid: '납입·미납 조회', billreceipt: '현금영수증', billclasses: '반 · 수강료', billbooks: '교재' };
+  const INIT = { billtoday: 'initBillToday', billstudent: 'initBillStudent', billunpaid: 'initBillUnpaid', billreceipt: 'initBillReceipt', billclasses: 'initBillClasses', billbooks: 'initBillBooks' };
+  const isTest = !!window.BL_PREFIX;
+
+  let toastTm = null;
+  window.showToast = function (msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTm); toastTm = setTimeout(() => t.classList.remove('show'), 2200); };
+
+  // 메뉴 열기 (billing.js 안에서 다른 메뉴로 넘어갈 때도 사용)
+  function openMenu(id) {
+    if (!MENUS[id]) id = 'billtoday';
+    document.querySelectorAll('.tab-panel').forEach((p) => p.classList.toggle('active', p.id === 'tab-' + id));
+    document.querySelectorAll('.pg-nav').forEach((b) => b.classList.toggle('active', b.dataset.menu === id));
+    document.title = MENUS[id] + (isTest ? ' (테스트)' : '') + ' | 수납 | 송우찬수학학원';
+    try { history.replaceState(null, '', '#' + id); } catch (e) {}
+    window.scrollTo({ top: 0 });
+    const fn = window[INIT[id]]; if (typeof fn === 'function') fn();
+  }
+  window.adminOpenMenu = openMenu;
+  $('pgSide').addEventListener('click', (e) => { const b = e.target.closest('.pg-nav'); if (b) openMenu(b.dataset.menu); });
+
+  // 로그인
+  async function login() {
+    const email = $('pgEmail').value.trim(), pw = $('pgPw').value;
+    if (!email || !pw) { $('pgErr').textContent = '이메일과 비밀번호를 넣어 주세요.'; return; }
+    $('pgLoginBtn').disabled = true; $('pgLoginBtn').textContent = '로그인 중...';
+    try { await signInWithEmailAndPassword(auth, email, pw); }
+    catch (e) { $('pgErr').textContent = '이메일 또는 비밀번호가 올바르지 않아요.'; }
+    finally { $('pgLoginBtn').disabled = false; $('pgLoginBtn').textContent = '로그인'; }
+  }
+  $('pgLoginBtn').onclick = login;
+  $('pgPw').addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
+  $('pgLogout').onclick = async () => { await signOut(auth); location.reload(); };
+
+  // 테스트 기록 모두 지우기 (test_ 컬렉션만)
+  $('pgWipe').onclick = async () => {
+    if (!isTest) return;
+    if (!confirm('테스트로 입력한 반·학생·청구·납입·교재 기록을 모두 지울까요?\n실제 데이터와 홈페이지 학생 명단은 그대로예요.')) return;
+    if (prompt('확인을 위해 "지우기"라고 입력해 주세요') !== '지우기') return;
+    const btn = $('pgWipe'); btn.disabled = true; btn.textContent = '지우는 중...';
+    try {
+      const F = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      let n = 0;
+      for (const name of Object.values(window.BL_COLLECTIONS || {})) {
+        if (!name.startsWith('test_')) continue;
+        const snap = await getDocs(collection(db, name));
+        for (let i = 0; i < snap.docs.length; i += 400) {
+          const batch = F.writeBatch(db);
+          snap.docs.slice(i, i + 400).forEach((d) => batch.delete(d.ref));
+          await batch.commit(); n += Math.min(400, snap.docs.length - i);
+        }
+      }
+      alert('테스트 기록 ' + n + '건을 지웠어요.'); location.reload();
+    } catch (e) { alert('지우지 못했어요: ' + (e.code || e.message)); btn.disabled = false; btn.textContent = '🧹 테스트 기록 모두 지우기'; }
+  };
+
+  function start() {
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) { $('pgApp').hidden = true; $('pgLogin').hidden = false; return; }
+      try {
+        const a = await getDoc(doc(db, 'admins', user.uid));
+        if (!a.exists()) { $('pgErr').textContent = '관리자 계정만 들어올 수 있어요.'; await signOut(auth); return; }
+        window.currentAdmin = { uid: user.uid, email: user.email, ...a.data() };
+        $('pgLogin').hidden = true; $('pgApp').hidden = false;
+        $('pgWho').textContent = (window.currentAdmin.name || user.email) + ' · ' + (window.currentAdmin.role === 'office' ? '관리부' : '원장');
+        $('pgMode').innerHTML = isTest ? '<span class="pg-test">테스트 모드</span>' : '<span class="pg-live">실제 운영</span>';
+        $('pgBanner').hidden = !isTest;
+        $('pgTestTools').hidden = !(isTest && window.currentAdmin.role !== 'office');
+        const snap = await getDocs(collection(db, 'students'));
+        studentsCache = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+        openMenu((location.hash || '').replace('#', '') || 'billtoday');
+      } catch (e) {
+        console.error(e);
+        $('pgErr').textContent = '확인 중 오류가 났어요: ' + (e.code || e.message);
+        $('pgApp').hidden = true; $('pgLogin').hidden = false;
+      }
+    });
+  }
+  // 00-firebase.js(모듈)가 전역 함수를 올린 뒤 시작
+  (function wait() { if (window.auth && window.onAuthStateChanged && window.BL) start(); else setTimeout(wait, 30); })();
+})();
+</script>
+</body>
+</html>
