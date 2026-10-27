@@ -310,10 +310,20 @@ document.getElementById('editStudentModal').addEventListener('click', function(e
 });
 
 window.deleteStudent = async (uid, name) => {
-  if (!confirm(`${name} 학생을 삭제하시겠습니까?\n(로그인 계정도 함께 삭제되어, 이후 같은 정보로 재등록할 수 있습니다)`)) return;
+  if (!confirm(`${name} 학생을 퇴원 처리(완전 삭제)하시겠습니까?\n\n` +
+    `· 학생 로그인 계정과 학부모 로그인 계정이 삭제됩니다\n` +
+    `· 주간성취도 · 토요클리닉 · 일일테스트 결과 · 학습보고서 · 학부모 댓글 · 영상 시청기록 · 등원 체크 기록이 모두 삭제됩니다\n` +
+    `· 숙제 기록에서는 이 학생 이름만 빠집니다\n\n되돌릴 수 없습니다.`)) return;
+  if (!confirm(`정말 ${name} 학생의 모든 자료를 삭제할까요?`)) return;
   try {
     const deleteFn = httpsCallable(functionsInstance, 'deleteStudentAccount');
-    await deleteFn({ uid });
+    const res = await deleteFn({ uid });
+    const c = (res && res.data && res.data.counts) || {};
+    const n = (k) => c[k] || 0;
+    alert(`✅ ${name} 학생 퇴원 처리 완료\n\n` +
+      `학부모 계정 ${n('parents')}개 · 주간성취도 ${n('weeklyReports')}건 · 토요클리닉 ${n('satClinicReports')}건\n` +
+      `일일테스트 ${n('dailyTestResults')}건 · 학습보고서 ${n('studentReports')}건 · 댓글 ${n('reportComments')}건\n` +
+      `시청기록 ${n('videoProgress')}건 · 등원 체크 ${n('attendance')}건 삭제`);
   } catch (e) {
     alert('삭제 중 오류: ' + e.message);
     return;
