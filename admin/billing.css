@@ -50,7 +50,8 @@
 .bl-t tr.off td { color:#A8A3B8; }
 .bl-t td.r, .bl-t th.r { text-align:right; font-variant-numeric:tabular-nums; }
 .bl-t td.c, .bl-t th.c { text-align:center; }
-.bl-t td.wrap { white-space:normal; min-width:90px; max-width:220px; }
+.bl-t td.wrap { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:90px; max-width:220px; }
+.bl-t td.wrap:hover { white-space:normal; overflow:visible; }
 .bl-t tfoot td { position:sticky; bottom:0; background:#F4F2FA; font-weight:700; border-top:1px solid var(--bl-line); }
 .bl-t input[type=checkbox] { accent-color:var(--purple, #5B3FA6); width:15px; height:15px; cursor:pointer; }
 .bl-t .lnk { background:none; border:none; padding:0; color:var(--purple, #5B3FA6); font-weight:600; cursor:pointer; font-family:inherit; font-size:13px; }

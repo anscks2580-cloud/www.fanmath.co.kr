@@ -267,7 +267,7 @@
         left -= a;
         const paid = (c.paid || 0) + a;
         tx.update(sn.ref, { paid, status: statusOf(c.amount || 0, paid), lastPaidAt: p.date });
-        alloc.push({ chargeId: sn.id, amount: a, title: c.title || '', month: c.month || '' });
+        alloc.push({ chargeId: sn.id, amount: a, title: c.title || '', month: c.month || '', dueDate: c.dueDate || '' });
       });
       if (!alloc.length) throw new Error('납입할 청구가 없어요 (이미 완납이거나 취소됨)');
       if (left > 0) { alloc[alloc.length - 1].amount += left; const last = alloc[alloc.length - 1];
@@ -483,15 +483,32 @@
   }
   function payTable(list, showStudent) {
     if (!list.length) return '<div class="bl-empty">없어요</div>';
-    return '<div class="bl-tw mid"><table class="bl-t"><thead><tr>' + (showStudent ? '<th>학생</th>' : '') + '<th>납입일</th><th>구분</th><th class="r">금액</th><th>형태</th><th>내역</th><th>현금영수증</th><th>처리자</th>' + (showStudent ? '' : '<th></th>') + '</tr></thead><tbody>' +
+    return '<div class="bl-tw mid"><table class="bl-t"><thead><tr>' + (showStudent ? '<th>학생</th>' : '') + '<th>납입기한</th><th>납입일</th><th>구분</th><th class="r">금액</th><th>형태</th><th>내역</th><th>현금영수증</th><th>처리자</th>' + (showStudent ? '' : '<th></th>') + '</tr></thead><tbody>' +
       list.map((p) => '<tr class="' + (p.canceled ? 'off' : '') + '">' +
         (showStudent ? '<td><button class="lnk" onclick="BL.openStudent(\'' + p.bsId + '\')">' + esc(p.studentName) + '</button> <small style="color:var(--muted)">' + branchShort(p.branch) + '</small></td>' : '') +
-        '<td>' + shortD(p.date) + '</td><td>' + (p.kind === '환불' ? '<span class="bl-st unpaid">환불</span>' : p.canceled ? '<span class="bl-st cancel">취소</span>' : '납입') + '</td>' +
+        '<td>' + dueCell(p) + '</td><td>' + shortD(p.date) + paidLate(p) + '</td><td>' + (p.kind === '환불' ? '<span class="bl-st unpaid">환불</span>' : p.canceled ? '<span class="bl-st cancel">취소</span>' : '납입') + '</td>' +
         '<td class="r"><b>' + won(p.amount) + '</b></td><td>' + esc(p.method || '') + (p.cardCompany ? ' · ' + esc(p.cardCompany) : '') + '</td>' +
         '<td class="wrap">' + esc((p.allocations || []).map((a) => a.title).join(', ') || p.memo || '') + '</td>' +
         '<td>' + cashCell(p) + '</td><td>' + esc(p.by || '') + '</td>' +
         (showStudent ? '' : '<td>' + (p.canceled ? '<small style="color:var(--muted)">' + esc(p.canceledBy || '') + ' 취소</small>' : '<button class="bl-mini red" onclick="BL.cancelPay(\'' + p.id + '\')">납입 취소</button>') + '</td>') +
         '</tr>').join('') + '</tbody></table></div>';
+  }
+  // 납입 기록의 납입기한 (연결된 청구에서 · 여러 건이면 가장 빠른 것)
+  function payDues(p) {
+    return (p.allocations || []).map((a) => a.dueDate || (S.charges.get(a.chargeId) || {}).dueDate || '').filter(Boolean).sort();
+  }
+  function dueCell(p) {
+    const d = payDues(p);
+    if (!d.length) return '<span style="color:var(--muted)">-</span>';
+    return shortD(d[0]) + (d.length > 1 && d[d.length - 1] !== d[0] ? ' <small style="color:var(--muted)">외 ' + (new Set(d).size - 1) + '</small>' : '');
+  }
+  function paidLate(p) {
+    const d = payDues(p)[0];
+    if (!d || !p.date || p.kind === '환불') return '';
+    const n = daysBetween(d, p.date);
+    if (n > 0) return ' <small style="color:var(--bl-red);font-weight:700">(' + n + '일 늦음)</small>';
+    if (n < 0) return ' <small style="color:var(--bl-green)">(' + (-n) + '일 먼저)</small>';
+    return ' <small style="color:var(--bl-green)">(당일)</small>';
   }
   function cashCell(p) {
     if (p.canceled || p.kind === '환불') return '';
@@ -624,10 +641,11 @@
       // 청구
       '<div class="card"><div class="bl-head"><h3>청구 · 미납</h3><div class="bl-seg" id="blCv"><button type="button" data-v="open" class="' + (u.chargeView === 'open' ? 'on' : '') + '">남은 것 (' + openC.length + ')</button><button type="button" data-v="all" class="' + (u.chargeView !== 'open' ? 'on' : '') + '">전체 (' + charges.length + ')</button></div>' +
       '<div class="sum"><button class="btn btn-primary btn-sm" onclick="BL.paySelected()">선택 납입 처리</button><button class="btn btn-secondary btn-sm" onclick="BL.addChargeCur()">+ 청구 추가</button><button class="btn btn-secondary btn-sm" onclick="BL.refund()">환불 기록</button></div></div>' +
-      (shown.length ? '<div class="bl-tw mid"><table class="bl-t"><thead><tr><th class="c"><input type="checkbox" id="blCall"></th><th>내역</th><th>납입기한</th><th class="r">청구액</th><th class="r">납입액</th><th class="r">남은 금액</th><th>상태</th><th>미납 사유 · 메모</th><th></th></tr></thead><tbody>' +
+      (shown.length ? '<div class="bl-tw mid"><table class="bl-t"><thead><tr><th class="c"><input type="checkbox" id="blCall"></th><th>내역</th><th>납입기한</th><th>납입일</th><th class="r">청구액</th><th class="r">납입액</th><th class="r">남은 금액</th><th>상태</th><th>미납 사유 · 메모</th><th></th></tr></thead><tbody>' +
         shown.map((c) => { const can = c.status !== '취소' && remain(c) > 0; return '<tr class="' + (c.status === '취소' ? 'off' : '') + '">' +
           '<td class="c">' + (can ? '<input type="checkbox" class="blCk" value="' + c.id + '">' : '') + '</td>' +
           '<td>' + esc(c.title) + (c.auto ? ' <small class="bl-tag gray">자동</small>' : '') + '</td><td>' + shortD(c.dueDate) + '</td>' +
+          '<td>' + (c.lastPaidAt && (c.paid || 0) > 0 ? shortD(c.lastPaidAt) + (c.lastPaidAt > c.dueDate ? ' <small style="color:var(--bl-red)">(' + daysBetween(c.dueDate, c.lastPaidAt) + '일 늦음)</small>' : '') : '') + '</td>' +
           '<td class="r">' + won(c.amount) + '</td><td class="r">' + won(c.paid) + '</td><td class="r"><b>' + won(c.status === '취소' ? 0 : remain(c)) + '</b></td><td>' + stBadge(c, t) + '</td>' +
           '<td class="wrap">' + esc([c.unpaidReason, c.note].filter(Boolean).join(' · ')) + '</td>' +
           '<td>' + (c.status === '취소' ? '' : '<button class="bl-mini" onclick="BL.editCharge(\'' + c.id + '\')">변경</button> <button class="bl-mini" onclick="BL.reasonCharge(\'' + c.id + '\')">사유</button> ' + ((c.paid || 0) > 0 ? '' : '<button class="bl-mini red" onclick="BL.cancelChargeUI(\'' + c.id + '\')">취소</button>')) + '</td></tr>'; }).join('') +
@@ -940,7 +958,7 @@
       const pays = ps.docs.map((d) => ({ id: d.id, ...d.data() })).filter((p) => !p.canceled && p.date <= u.to && (!u.branch || p.branch === u.branch) &&
         (!u.cls || (p.allocations || []).some((a) => { const c = S.charges.get(a.chargeId); return c && c.classId === u.cls; }))).sort((a, b) => sortKo(a.date + a.studentName, b.date + b.studentName));
       const byM = {}; pays.forEach((p) => { const k = p.kind === '환불' ? '환불' : (p.method || '기타') + (p.cardCompany ? '(' + p.cardCompany + ')' : ''); byM[k] = (byM[k] || 0) + (p.amount || 0); });
-      sheet = [['납입일', '학생', '관', '구분', '금액', '형태', '카드사', '내역', '현금영수증', '처리자']].concat(pays.map((p) => [p.date, p.studentName, p.branch, p.kind, p.amount, p.method, p.cardCompany || '', (p.allocations || []).map((a) => a.title).join(', ') || p.memo || '', p.cash && p.cash.need ? (p.cash.issued ? '발행' : '미발행') : '', p.by || '']));
+      sheet = [['납입기한', '납입일', '학생', '관', '구분', '금액', '형태', '카드사', '내역', '현금영수증', '처리자']].concat(pays.map((p) => [payDues(p)[0] || '', p.date, p.studentName, p.branch, p.kind, p.amount, p.method, p.cardCompany || '', (p.allocations || []).map((a) => a.title).join(', ') || p.memo || '', p.cash && p.cash.need ? (p.cash.issued ? '발행' : '미발행') : '', p.by || '']));
       html = '<div class="bl-head"><h3>납입 ' + pays.length + '건 · ' + won(pays.reduce((a, p) => a + (p.amount || 0), 0)) + '원</h3></div>' +
         '<div class="bl-chips" style="margin-bottom:10px;">' + Object.keys(byM).sort(sortKo).map((k) => '<span class="bl-tag">' + esc(k) + ' ' + won(byM[k]) + '</span>').join('') + '</div>' + payTable(pays, true);
     }
@@ -1432,7 +1450,7 @@
         const open = s.rows.reduce((a, L) => a + (L.claim - L.paid > 0 && L.kind === 'unpaid' ? L.claim : 0), 0);
         const paidSum = s.rows.reduce((a, L) => a + L.paid - L.refund, 0);
         const m = matchStudent({ name: s.name, branch });
-        return { key: normName(s.name), name: s.name, branch, status, joinDate: s.joinDate || '', leaveDate: s.leaveDate || '', parentPhone: s.parentPhone || '', phone: s.phone || '', school: s.school || '', grade: s.grade || '',
+        return { key: normName(s.name), name: s.name, branch, status, joinDate: s.joinDate || '', leaveDate: status === '재원' ? '' : (s.leaveDate || ''), parentPhone: s.parentPhone || '', phone: s.phone || '', school: s.school || '', grade: s.grade || '',
           enr, payDay, autoFrom, rows: s.rows, open, paid: paidSum, openN: s.rows.filter((L) => L.kind === 'unpaid').length, paidN: s.rows.filter((L) => L.kind === 'paid').length,
           match: m ? m.id : '', action: m ? 'link' : 'new' };
       }).sort((a, b) => sortKo((a.status === '재원' ? '0' : '1') + (a.match ? '1' : '0') + a.name, (b.status === '재원' ? '0' : '1') + (b.match ? '1' : '0') + b.name));
@@ -1544,13 +1562,13 @@
           const k = cn ? S.classes.find((x) => x.name === cn && x.branch === clsBranch(L.cls)) : null;
           const title = L.item === '수강료' ? '(수강료) ' + cn : L.item === '교재비' ? L.label : '(' + L.label + ')' + (cn ? ' ' + cn : '');
           const cdata = { bsId: s.id, studentName: s.name, branch, classId: k ? k.id : '', className: cn, item: L.item, title: title.trim(), month: ymOf(L.due), dueDate: L.due,
-            amount: L.claim, paid: L.paid, status: statusOf(L.claim, L.paid), auto: false, source: 'aca', note: L.note ? '아카: ' + L.note : '아카 이전',
+            amount: L.claim, paid: L.paid, status: statusOf(L.claim, L.paid), lastPaidAt: L.paid > 0 ? (L.paidDate || '') : '', auto: false, source: 'aca', note: L.note ? '아카: ' + L.note : '아카 이전',
             createdAt: F.serverTimestamp(), createdBy: who() + ' (아카 가져오기)' };
           await add((b) => b.set(doc(db, C.charges, cid), cdata)); nC++;
           S.charges.set(cid, { id: cid, ...cdata });
           if (L.paid > 0) {
             await add((b) => b.set(doc(db, C.payments, cid), { bsId: s.id, studentName: s.name, branch, kind: '납입', date: L.paidDate || L.due, amount: L.paid,
-              method: L.method, cardCompany: L.card, allocations: [{ chargeId: cid, amount: L.paid, title: cdata.title, month: cdata.month }], memo: L.note || '아카 이전',
+              method: L.method, cardCompany: L.card, allocations: [{ chargeId: cid, amount: L.paid, title: cdata.title, month: cdata.month, dueDate: cdata.dueDate }], memo: L.note || '아카 이전',
               cash: { need: false, issued: false }, source: 'aca', by: L.by || '아카', createdAt: F.serverTimestamp(), canceled: false }));
             nP++;
           }
