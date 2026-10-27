@@ -177,12 +177,14 @@
     const out = [];
     S.students.forEach((s) => {
       if (s.status !== '재원' || !s.payDay) return;
+      // 아카에서 옮겨 온 학생은 아카 마지막 청구 다음 달부터 (autoFrom)
+      const low = s.autoFrom && s.autoFrom > lower ? s.autoFrom : lower;
       (s.enrollments || []).forEach((e) => {
         if (e.auto === false) return;
         const amount = (Number(e.fee) || 0) - (Number(e.discount) || 0);
         if (amount <= 0) return;
-        const startM = e.start ? ymOf(e.start) : lower;
-        monthsBetween(startM > lower ? startM : lower, ymOf(limit)).forEach((m) => {
+        const startM = e.start ? ymOf(e.start) : low;
+        monthsBetween(startM > low ? startM : low, ymOf(limit)).forEach((m) => {
           const due = dueOf(m, Number(s.payDay));
           if (due > limit) return;
           if (e.start && due < e.start) return;
@@ -1270,6 +1272,236 @@
       } }] });
   };
 
+
+  // ═════════════════════════════════════════════════════════
+  // 7) 아카 데이터 가져오기 — 미납 목록 · 납입 이력 엑셀
+  //    · 같은 엑셀을 두 번 넣어도 같은 줄은 한 번만 들어감 (줄 내용으로 만든 고유 번호)
+  //    · 학생마다 아카 마지막 수강료 청구 다음 달부터 자동 발생 (autoFrom)
+  // ═════════════════════════════════════════════════════════
+  function hash(str) { let h1 = 0xdeadbeef, h2 = 0x41c6ce57; for (let i = 0; i < str.length; i++) { const c = str.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909); h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return (h2 >>> 0).toString(36) + (h1 >>> 0).toString(36); }
+  function xlDate(v) {
+    if (v == null || v === '') return '';
+    if (typeof v === 'number') { const d = new Date(Math.round((v - 25569) * 86400e3)); return d.toISOString().slice(0, 10); }
+    const m = String(v).trim().match(/(\d{2,4})[-./년\s]+(\d{1,2})[-./월\s]+(\d{1,2})/);
+    if (!m) return '';
+    const y = m[1].length === 2 ? '20' + m[1] : m[1];
+    return y + '-' + String(m[2]).padStart(2, '0') + '-' + String(m[3]).padStart(2, '0');
+  }
+  function col(row, names) { for (const k of Object.keys(row)) { const kk = k.replace(/\s+/g, ''); if (names.includes(kk)) return row[k]; } return undefined; }
+  const normName = (n) => String(n || '').replace(/\s+/g, '');
+  const baseName = (n) => normName(n).replace(/\(.*?\)$/, '');
+  function mapItem(raw) {
+    const t = String(raw || '').trim() || '수강료';
+    if (t === '수강료' || /수강/.test(t) && !/특강/.test(t)) return { item: '수강료', label: '수강료' };
+    if (/교재/.test(t)) return { item: '교재비', label: t };
+    return { item: '기타', label: t };
+  }
+  function mapMethod(raw) {
+    const t = String(raw || '').trim();
+    if (!t) return { method: '기타', card: '' };
+    if (/현금/.test(t)) return { method: '현금', card: '' };
+    if (/카드/.test(t)) return { method: '카드', card: t };
+    if (/계좌|이체|무통장|가상/.test(t)) return { method: '계좌이체', card: '' };
+    if (/결제선생|모바일|링크/.test(t)) return { method: '결제선생', card: '' };
+    return { method: '기타', card: t };
+  }
+  async function readSheet(file) {
+    const wb = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: false });
+    return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
+  }
+  // 엑셀 한 줄 → { branch, name, left, item, label, claim, paid, due, paidDate, method, cls }
+  function parseRow(r, kind) {
+    const name = String(col(r, ['이름', '학생명', '성명', '학생']) || '').trim();
+    if (!name || name === '계' || name === '합계') return null;
+    const branchRaw = String(col(r, ['지점', '관', '사업자', '학원']) || '').trim();
+    const branch = /산본/.test(branchRaw) ? '산본관' : /평촌/.test(branchRaw) ? '평촌관' : '';
+    const st = String(col(r, ['재원상태', '상태', '퇴원일']) || '');
+    const left = /퇴원/.test(st) || /^\d{4}-\d{2}-\d{2}$/.test(st.trim());
+    const it = mapItem(col(r, ['항목', '청구항목', '구분']));
+    const unpaid = col(r, ['미납금액', '미납액', '잔액']);
+    let claim = num(col(r, ['청구금액', '예정금액', '청구액']));
+    let paid = num(col(r, ['납부금액', '납입액', '납입금액', '납부액']));
+    if (unpaid !== undefined && unpaid !== '') { claim = num(unpaid); paid = 0; }
+    // 납부금액이 마이너스면 환불 기록
+    const refund = paid < 0 ? -paid : 0;
+    if (refund) { claim = 0; paid = 0; }
+    if (!claim && paid) claim = paid;
+    if (!claim && !refund) return null;
+    const due = xlDate(col(r, ['납입기한', '납입기한일', '청구일', '기한']));
+    const paidDate = xlDate(col(r, ['납부일', '납입일']));
+    const mm = mapMethod(col(r, ['결제수단', '형태', '납입형태', '입금형태']));
+    const cls = String(col(r, ['반명', '반']) || '').trim();
+    return { kind, branch, name, left, ...it, claim, paid: Math.min(paid, claim) || 0, refund, due: due || paidDate, paidDate, method: mm.method, card: mm.card, cls };
+  }
+  function matchStudent(row) {
+    const n = normName(row.name), b = baseName(row.name);
+    const same = (s) => !row.branch || !s.branch || s.branch === row.branch;
+    let c = S.students.filter((s) => normName(s.name) === n && same(s));
+    if (c.length === 1) return c[0];
+    c = S.students.filter((s) => normName(s.name) === n);
+    if (c.length === 1) return c[0];
+    c = S.students.filter((s) => baseName(s.name) === b && same(s));
+    if (c.length === 1) return c[0];
+    return null;
+  }
+
+  window.initBillImport = async function () {
+    const root = $('blImport'); if (!root) return;
+    root.innerHTML = '<div class="bl-empty">불러오는 중...</div>';
+    try { await loadAll(); renderImport(); } catch (e) { fail(e); }
+  };
+  function renderImport() {
+    const st = S.imp || {};
+    $('blImport').innerHTML =
+      '<div class="card"><h3>아카 데이터 가져오기</h3>' +
+      '<div class="bl-note" style="margin-bottom:12px;">아카에서 받은 엑셀을 넣으면 학생마다 <b>남은 미납</b>과 <b>지난 납입 이력</b>을 맞춰 넣어요. 먼저 "학생 수납 › 홈페이지 학생 불러오기"와 "반·수강료"를 끝낸 뒤에 하세요.<br>' +
+      '같은 엑셀을 다시 넣어도 이미 들어간 줄은 건너뛰어요. 실제로 옮길 때는 <b>전환하는 날 아카에서 새로 받은 엑셀</b>로 한 번 더 넣으면 돼요.</div>' +
+      '<div class="bl-profile">' +
+      '<label class="bl-f span2"><span>① 미납 목록 엑셀 (지점·이름·재원상태·항목·미납금액·납입기한)</span><input type="file" class="bl-in" id="blImU" accept=".xlsx,.xls,.csv"></label>' +
+      '<label class="bl-f span2"><span>② 납입 이력 엑셀 — 선택 (지점·이름·항목·청구금액·납부금액·청구일·납부일·결제수단)</span><input type="file" class="bl-in" id="blImP" accept=".xlsx,.xls,.csv"></label>' +
+      '<label class="bl-f"><span>납입 이력은 이 날짜부터</span><input type="date" class="bl-in" id="blImFrom" value="' + esc(st.from || (ymOf(today()).slice(0, 4) + '-01-01')) + '"></label>' +
+      '<div class="bl-f span2"><span>&nbsp;</span><div style="display:flex;gap:14px;flex-wrap:wrap;">' +
+      '<label class="bl-chk"><input type="checkbox" id="blImDay" checked> 납입일 비어 있는 학생은 아카 수강료 날짜로 채우기</label>' +
+      '<label class="bl-chk"><input type="checkbox" id="blImFee" checked> 매달 청구액을 아카 마지막 수강료에 맞추기 (차이는 할인으로)</label></div></div>' +
+      '<div class="bl-f"><span>&nbsp;</span><button class="btn btn-primary btn-sm" id="blImPrev">미리 보기</button></div></div></div>' +
+      '<div id="blImOut"></div>';
+    $('blImPrev').onclick = previewImport;
+    if (st.plan) drawPlan();
+  }
+  async function previewImport() {
+    const fu = $('blImU').files[0], fp = $('blImP').files[0];
+    if (!fu && !fp) { alert('엑셀을 하나 이상 골라 주세요'); return; }
+    const from = $('blImFrom').value || '';
+    S.imp = { from, optDay: $('blImDay').checked, optFee: $('blImFee').checked };
+    $('blImOut').innerHTML = '<div class="card"><div class="bl-empty">엑셀을 읽는 중...</div></div>';
+    try {
+      const rows = [];
+      if (fp) (await readSheet(fp)).forEach((r) => { const x = parseRow(r, 'paid'); if (x && (!from || (x.due || x.paidDate) >= from)) rows.push(x); });
+      if (fu) (await readSheet(fu)).forEach((r) => { const x = parseRow(r, 'unpaid'); if (x) rows.push(x); });
+      if (!rows.length) { $('blImOut').innerHTML = '<div class="card"><div class="bl-empty">읽을 수 있는 줄이 없어요. 첫 줄 제목(이름·항목·금액·날짜)을 확인해 주세요.</div></div>'; return; }
+      // 납입 이력에서 일부만 낸 줄의 남은 금액은 미납 목록에도 있으므로 한 번만 넣음
+      const partial = new Set(rows.filter((r) => r.kind === 'paid' && r.paid < r.claim).map((r) => [normName(r.name), r.label, r.due, r.claim - r.paid].join('|')));
+      const finalRows = rows.filter((r) => !(r.kind === 'unpaid' && partial.has([normName(r.name), r.label, r.due, r.claim].join('|'))));
+      // 같은 줄이 여러 번 있으면 순번을 붙여 구분
+      const seen = {};
+      finalRows.forEach((r) => { const k = [r.kind, r.branch, normName(r.name), r.label, r.claim, r.paid, r.refund || 0, r.due, r.paidDate, r.method, r.card].join('|'); seen[k] = (seen[k] || 0) + 1; r.key = hash(k + '#' + seen[k]); });
+      // 학생별로 묶기
+      const groups = new Map();
+      finalRows.forEach((r) => { const k = (r.branch || '?') + '|' + normName(r.name); if (!groups.has(k)) groups.set(k, { key: k, name: r.name, branch: r.branch, left: r.left, rows: [] }); const g = groups.get(k); g.rows.push(r); if (!r.left) g.left = false; });
+      const plan = [...groups.values()].map((g) => {
+        const s = matchStudent(g);
+        const tu = g.rows.filter((r) => r.item === '수강료' && r.due).sort((a, b) => sortKo(a.due, b.due));
+        const last = tu[tu.length - 1];
+        const open = g.rows.reduce((a, r) => a + (r.claim - r.paid), 0);
+        const paid = g.rows.reduce((a, r) => a + r.paid - (r.refund || 0), 0);
+        return { ...g, match: s ? s.id : '', action: s ? 'link' : (g.left ? 'new-left' : 'new'), payDay: last ? Number(last.due.slice(8, 10)) : null,
+          lastFee: last ? last.claim : 0, autoFrom: last ? addMonths(ymOf(last.due), 1) : '', open, paid,
+          openN: g.rows.filter((r) => r.claim > r.paid).length, paidN: g.rows.filter((r) => r.paid > 0 || r.refund).length };
+      }).sort((a, b) => sortKo((a.match ? '1' : '0') + a.branch + a.name, (b.match ? '1' : '0') + b.branch + b.name));
+      S.imp.plan = plan; S.imp.rowCount = finalRows.length; S.imp.skipped = rows.length - finalRows.length;
+      drawPlan();
+    } catch (e) { fail(e); }
+  }
+  function drawPlan() {
+    const st = S.imp, plan = st.plan;
+    const un = plan.filter((p) => !p.match).length;
+    const stOpts = (p) => '<select class="bl-in" data-imp="' + esc(p.key) + '" style="min-width:170px;">' +
+      '<option value="new"' + (p.action === 'new' ? ' selected' : '') + '>새 수납 학생으로 만들기 (재원)</option>' +
+      '<option value="new-left"' + (p.action === 'new-left' ? ' selected' : '') + '>새 수납 학생으로 만들기 (퇴원)</option>' +
+      '<option value="skip"' + (p.action === 'skip' ? ' selected' : '') + '>건너뛰기</option>' +
+      S.students.slice().sort((a, b) => sortKo(a.name, b.name)).map((s) => '<option value="id:' + s.id + '"' + (p.action === 'link' && p.match === s.id ? ' selected' : '') + '>' + esc(s.name) + ' · ' + branchShort(s.branch) + ' 와 연결</option>').join('') + '</select>';
+    const tot = plan.reduce((a, p) => { a.o += p.open; a.p += p.paid; return a; }, { o: 0, p: 0 });
+    $('blImOut').innerHTML =
+      '<div class="card"><div class="bl-head"><h3>미리 보기 — 학생 ' + plan.length + '명 · ' + st.rowCount + '줄</h3>' +
+      '<div class="sum"><span>남은 미납 <b style="color:var(--bl-red)">' + won(tot.o) + '원</b></span><span>납입 이력 <b>' + won(tot.p) + '원</b></span></div></div>' +
+      (st.skipped ? '<div class="bl-note" style="margin-bottom:8px;">납입 이력에 일부만 낸 기록이 있어서 미납 목록의 같은 줄 ' + st.skipped + '개는 겹치지 않게 뺐어요.</div>' : '') +
+      (un ? '<div class="bl-box gold" style="margin-bottom:10px;font-size:13px;">홈페이지 학생과 이름이 안 맞는 학생이 <b>' + un + '명</b> 있어요. 오른쪽에서 연결할 학생을 고르거나, 새로 만들거나, 건너뛰기를 골라 주세요.</div>' : '') +
+      '<div class="bl-tw tall"><table class="bl-t"><thead><tr><th>아카 이름</th><th>관</th><th>처리</th><th class="r">미납</th><th class="r">남은 금액</th><th class="r">납입 이력</th><th class="r">납입 합계</th><th class="c">납입일</th><th class="r">마지막 수강료</th><th>자동 발생 시작</th></tr></thead><tbody>' +
+      plan.map((p) => '<tr' + (p.match ? '' : ' class="sel"') + '><td><b>' + esc(p.name) + '</b>' + (p.left ? ' <small class="bl-tag gray">퇴원</small>' : '') + '</td><td>' + branchShort(p.branch) + '</td>' +
+        '<td>' + stOpts(p) + '</td><td class="r">' + (p.openN || '') + '</td><td class="r' + (p.open ? ' bl-cell-m' : '') + '">' + (p.open ? won(p.open) : '') + '</td>' +
+        '<td class="r">' + (p.paidN || '') + '</td><td class="r">' + (p.paid ? won(p.paid) : '') + '</td><td class="c">' + (p.payDay || '') + '</td><td class="r">' + (p.lastFee ? won(p.lastFee) : '') + '</td><td>' + esc(p.autoFrom || '설정 시작 월') + '</td></tr>').join('') +
+      '</tbody></table></div>' +
+      '<div style="display:flex;gap:8px;align-items:center;margin-top:14px;"><button class="btn btn-primary" id="blImRun">가져오기 실행</button><span class="bl-note" id="blImMsg"></span></div></div>';
+    $('blImOut').querySelectorAll('[data-imp]').forEach((el) => { el.onchange = () => { const p = plan.find((x) => x.key === el.dataset.imp); const v = el.value;
+      if (v.startsWith('id:')) { p.action = 'link'; p.match = v.slice(3); } else { p.action = v; p.match = ''; } }; });
+    $('blImRun').onclick = runImport;
+  }
+  async function runImport() {
+    const st = S.imp; const plan = st.plan;
+    const todo = plan.filter((p) => p.action !== 'skip');
+    if (!confirm('학생 ' + todo.length + '명의 아카 기록을 가져올까요?\n(이미 들어간 줄은 건너뛰어요)')) return;
+    const btn = $('blImRun'); btn.disabled = true;
+    const msg = (t) => { $('blImMsg').textContent = t; };
+    try {
+      const F = await fsx();
+      // 이미 들어간 아카 기록
+      const exist = new Map();
+      (await getDocs(query(collection(db, C.charges), where('source', '==', 'aca')))).forEach((d) => exist.set(d.id, d.data().bsId));
+      (await getDocs(query(collection(db, C.payments), where('source', '==', 'aca')))).forEach((d) => { if (d.data().kind === '환불') exist.set(d.id, d.data().bsId); });
+      let batch = F.writeBatch(db), ops = 0, nCharge = 0, nPay = 0, nNew = 0, nSkip = 0;
+      const flush = async () => { if (ops) { await batch.commit(); batch = F.writeBatch(db); ops = 0; } };
+      const add = async (fn) => { fn(batch); ops++; if (ops >= 400) await flush(); };
+      let i = 0;
+      for (const p of todo) {
+        i++; if (i % 10 === 0) msg(i + ' / ' + todo.length + '명 처리 중...');
+        let s = p.action === 'link' ? studentById(p.match) : null;
+        // 전에 가져온 적 있는 학생이면 그 학생에게 이어서 (새로 또 만들지 않음)
+        if (!s) { const prev = p.rows.map((r) => exist.get('aca_' + r.key)).find(Boolean); if (prev) s = studentById(prev); }
+        if (!s && p.rows.every((r) => exist.has('aca_' + r.key))) { nSkip += p.rows.length; continue; }
+        if (!s) {
+          const ref = doc(collection(db, C.students));
+          const data = { name: p.name, studentId: '', branch: p.branch || '', grade: '', school: '', phone: '', parentPhone: '', status: p.action === 'new-left' ? '퇴원' : '재원',
+            payDay: st.optDay ? p.payDay : null, acaNo: '', memo: '아카에서 가져옴', joinDate: '', leaveDate: p.action === 'new-left' ? today() : '', enrollments: [], createdAt: F.serverTimestamp(), createdBy: who() + ' (아카 가져오기)' };
+          await setDoc(ref, data); s = { id: ref.id, ...data }; S.students.push(s); nNew++;
+        }
+        // 학생 정보: 납입일 · 청구액 · 자동 발생 시작
+        const patch = {};
+        if (st.optDay && !s.payDay && p.payDay) patch.payDay = p.payDay;
+        if (p.autoFrom && (!s.autoFrom || p.autoFrom > s.autoFrom)) patch.autoFrom = p.autoFrom;
+        if (st.optFee && p.lastFee) {
+          const act = activeEnrolls(s);
+          if (act.length === 1) {
+            const e = act[0]; const fee = Number(e.fee) || 0;
+            let ne = null;
+            if (!fee) ne = { ...e, fee: p.lastFee, discount: 0, discountReason: '' };
+            else if (p.lastFee < fee && fee - p.lastFee !== (Number(e.discount) || 0)) ne = { ...e, discount: fee - p.lastFee, discountReason: e.discountReason || '아카 이전' };
+            if (ne) patch.enrollments = (s.enrollments || []).map((x) => x.id === e.id ? ne : x);
+          }
+        }
+        if (Object.keys(patch).length) { await add((b) => b.update(doc(db, C.students, s.id), patch)); Object.assign(s, patch); }
+        const en = activeEnrolls(s);
+        for (const r of p.rows) {
+          const cid = 'aca_' + r.key;
+          if (exist.has(cid)) { nSkip++; continue; }
+          if (r.refund) {
+            await add((b) => b.set(doc(db, C.payments, cid), { bsId: s.id, studentName: s.name, branch: s.branch || r.branch || '', kind: '환불', date: r.paidDate || r.due, amount: -r.refund,
+              method: r.method, cardCompany: r.card, allocations: [], memo: '아카 이전 · (' + r.label + ') 환불', cash: { need: false, issued: false }, source: 'aca', by: '아카', createdAt: F.serverTimestamp(), canceled: false }));
+            nPay++; continue;
+          }
+          const amount = r.claim, paid = r.paid;
+          const title = r.item === '수강료' ? '(수강료) ' + (r.cls || (en[0] && en[0].className) || '') : r.item === '교재비' ? '(교재비) ' + (r.label !== '교재비' ? r.label : '') : '(' + r.label + ')';
+          const cdata = { bsId: s.id, studentName: s.name, branch: s.branch || r.branch || '', classId: r.item === '수강료' && en[0] ? en[0].classId : '', className: r.cls || (r.item === '수강료' && en[0] ? en[0].className : ''),
+            item: r.item, title: title.trim(), month: ymOf(r.due), dueDate: r.due, amount, paid, status: statusOf(amount, paid), auto: false, source: 'aca', note: '아카 이전',
+            createdAt: F.serverTimestamp(), createdBy: who() + ' (아카 가져오기)' };
+          await add((b) => b.set(doc(db, C.charges, cid), cdata)); nCharge++;
+          if (amount > paid) S.charges.set(cid, { id: cid, ...cdata });
+          if (paid > 0) {
+            await add((b) => b.set(doc(db, C.payments, 'aca_' + r.key), { bsId: s.id, studentName: s.name, branch: cdata.branch, kind: '납입', date: r.paidDate || r.due, amount: paid,
+              method: r.method, cardCompany: r.card, allocations: [{ chargeId: cid, amount: paid, title: cdata.title, month: cdata.month }], memo: '아카 이전',
+              cash: { need: false, issued: false }, source: 'aca', by: '아카', createdAt: F.serverTimestamp(), canceled: false }));
+            nPay++;
+          }
+        }
+      }
+      await flush();
+      msg('');
+      alert('가져오기 끝!\n· 새로 만든 수납 학생 ' + nNew + '명\n· 청구 ' + nCharge + '건 (납입 기록 ' + nPay + '건)\n· 이미 있어서 건너뛴 줄 ' + nSkip + '건');
+      S.imp = null; await loadAll(true); renderImport();
+    } catch (e) { fail(e); btn.disabled = false; }
+  }
+
   // ── 화면 다시 그리기 ──
   function rerenderAll() {
     const act = document.querySelector('.tab-panel.active');
@@ -1280,5 +1512,6 @@
     else if (id === 'tab-billreceipt') renderReceipt();
     else if (id === 'tab-billclasses') renderClasses();
     else if (id === 'tab-billbooks') renderBooks();
+    else if (id === 'tab-billimport') renderImport();
   }
 })();

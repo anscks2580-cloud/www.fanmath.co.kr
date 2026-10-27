@@ -9,7 +9,7 @@
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="portal.css">
 <link rel="stylesheet" href="admin/admin.css">
-<link rel="stylesheet" href="admin/billing.css?v=1793091000">
+<link rel="stylesheet" href="admin/billing.css?v=1793095000">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <style>
 /* ═══════════════════════════════════════════════════════════
@@ -89,6 +89,7 @@ body { background:var(--bg, #F7F6FB); margin:0; }
       <div class="lb">설정</div>
       <button class="pg-nav" data-menu="billclasses"><span class="ic">🏫</span>반 · 수강료</button>
       <button class="pg-nav" data-menu="billbooks"><span class="ic">📚</span>교재</button>
+      <button class="pg-nav" data-menu="billimport"><span class="ic">⇣</span>아카 데이터 가져오기</button>
       <div class="foot" id="pgTestTools" hidden>
         <button class="btn btn-secondary btn-sm" id="pgWipe" title="교육 전에 연습 기록을 깨끗이 지울 때">🧹 테스트 기록 모두 지우기</button>
       </div>
@@ -104,6 +105,7 @@ body { background:var(--bg, #F7F6FB); margin:0; }
       <div class="tab-panel" id="tab-billreceipt"><div class="bl-wrap" id="blReceipt"></div></div>
       <div class="tab-panel" id="tab-billclasses"><div class="bl-wrap" id="blClasses"></div></div>
       <div class="tab-panel" id="tab-billbooks"><div class="bl-wrap" id="blBooks"></div></div>
+      <div class="tab-panel" id="tab-billimport"><div class="bl-wrap" id="blImport"></div></div>
     </main>
   </div>
 </div>
@@ -119,12 +121,12 @@ body { background:var(--bg, #F7F6FB); margin:0; }
   var studentsCache = [];
 </script>
 <script type="module" src="admin/js/00-firebase.js?v=1792760000"></script>
-<script defer src="admin/js/billing.js?v=1793091000"></script>
+<script defer src="admin/js/billing.js?v=1793095000"></script>
 <script defer>
 (function () {
   const $ = (id) => document.getElementById(id);
-  const MENUS = { billtoday: '수납 현황', billstudent: '학생 수납', billunpaid: '납입·미납 조회', billreceipt: '현금영수증', billclasses: '반 · 수강료', billbooks: '교재' };
-  const INIT = { billtoday: 'initBillToday', billstudent: 'initBillStudent', billunpaid: 'initBillUnpaid', billreceipt: 'initBillReceipt', billclasses: 'initBillClasses', billbooks: 'initBillBooks' };
+  const MENUS = { billtoday: '수납 현황', billstudent: '학생 수납', billunpaid: '납입·미납 조회', billreceipt: '현금영수증', billclasses: '반 · 수강료', billbooks: '교재', billimport: '아카 데이터 가져오기' };
+  const INIT = { billtoday: 'initBillToday', billstudent: 'initBillStudent', billunpaid: 'initBillUnpaid', billreceipt: 'initBillReceipt', billclasses: 'initBillClasses', billbooks: 'initBillBooks', billimport: 'initBillImport' };
   const isTest = !!window.BL_PREFIX;
 
   let toastTm = null;
