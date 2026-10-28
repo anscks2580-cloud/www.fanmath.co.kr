@@ -257,3 +257,8 @@ footer {
 }
 .mobile-menu a:last-child { border-bottom: none; }
 .mobile-menu a:hover, .mobile-menu a.active { color: var(--purple, #5B3FA6); }
+
+/* 메뉴가 늘어 중간 폭(노트북 등)에서 넘치지 않게 간격을 줄임 */
+@media (min-width:769px) and (max-width:1200px) {
+  .nav-links { gap:16px !important; }
+}

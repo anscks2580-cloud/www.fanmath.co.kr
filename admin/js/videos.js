@@ -46,6 +46,9 @@ const BOOKS_L = ['세쌍둥이개념'];
 
 const VIDEO_GROUPS = [
   { label: '중등', tags: ['중1','중2','중3'] },
+  { label: '주간 클리어 — 중1', tags: ['주간클리어_중1'] },
+  { label: '주간 클리어 — 중2', tags: ['주간클리어_중2'] },
+  { label: '주간 클리어 — 중3', tags: ['주간클리어_중3'] },
   ...genGroups('공통수학1','고1', SUBJ_T1, BOOKS_F),
   ...genGroups('공통수학2','고1', SUBJ_T1, BOOKS_F),
   ...genGroups('대수',     '고2', SUBJ_T2, BOOKS_F),
@@ -85,6 +88,7 @@ const VIDEO_GROUPS = [
 ];
 const VIDEO_CAT_TAGS = {
   '중등':    ['중1','중2','중3'],
+  '주간 클리어': ['주간클리어_중1','주간클리어_중2','주간클리어_중3'],
   '고등':    ['공통수학1','공통수학2','대수','미적분1','확통','미적분2','기하'],
   '기출해설': [
     ...EXAM_YEARS.flatMap(y => ['고1','고2','고3'].map(g => `기출_${g}_${y}`)),
@@ -123,6 +127,9 @@ function renderVideos() {
     { group:'중등',           value:'중1' },
     { group:'중등',           value:'중2' },
     { group:'중등',           value:'중3' },
+    { group:'주간 클리어', value:'주간클리어_중1', label:'주간 클리어 중1' },
+    { group:'주간 클리어', value:'주간클리어_중2', label:'주간 클리어 중2' },
+    { group:'주간 클리어', value:'주간클리어_중3', label:'주간 클리어 중3' },
     { group:'고등 — 고1',     value:'공통수학1' },
     { group:'고등 — 고1',     value:'공통수학2' },
     { group:'고등 — 고2',     value:'대수' },
@@ -398,6 +405,11 @@ function buildTagTree() {
   items.push({ label: '── 중등 ──', value: null, indent: 0 });
   for (const g of ['중1','중2','중3']) {
     items.push({ label: `  ${g}`, value: g, indent: 1 });
+  }
+  // 주간 클리어
+  items.push({ label: '── 주간 클리어 ──', value: null, indent: 0 });
+  for (const g of ['중1','중2','중3']) {
+    items.push({ label: `  주간 클리어 ${g}`, value: `주간클리어_${g}`, indent: 1 });
   }
   // 보충강의실
   items.push({ label: '── 보충강의실 ──', value: null, indent: 0 });
@@ -933,6 +945,7 @@ const FOLDER_TREE = [
   { group:'수리논술', folders:['수리논술'] },
   { group:'선생님전용', folders:['선생님전용'] },
   { group:'중등', folders:['중1','중2','중3'] },
+  { group:'주간 클리어', folders:['주간클리어_중1','주간클리어_중2','주간클리어_중3'] },
   { group:'보충강의실', folders:['보충_평촌_송우찬 원장T','보충_평촌_송문찬 원장T','보충_평촌_조현주 부원장T','보충_평촌_김영진T','보충_평촌_신민훈T','보충_평촌_장미현T','보충_평촌_공민정T','보충_산본_송우찬 원장T','보충_산본_송문찬 원장T','보충_산본_조현주 부원장T','보충_산본_공민정T','보충_산본_장미현T','보충_산본_김영진T','보충_산본_신민훈T'] },
   { group:"Song's Tip", folders:['송팁_공통수학1','송팁_공통수학2'] },
 ];
@@ -1029,6 +1042,7 @@ const VIMEO_TOKEN = 'b94a395d9de9ac2f507bf8f9c2563d1b';
 
 const KNOWN_TAGS_SYNC = [
   '중1','중2','중3',
+  '주간클리어_중1','주간클리어_중2','주간클리어_중3',
   // 공통수학1
   '공통수학1_세쌍둥이개념_송우찬 원장T','공통수학1_세쌍둥이개념_송문찬 원장T','공통수학1_세쌍둥이개념_공민정T',
   '공통수학1_세쌍둥이심화_송우찬 원장T','공통수학1_세쌍둥이심화_송문찬 원장T','공통수학1_세쌍둥이심화_공민정T',
@@ -1139,8 +1153,64 @@ async function fetchVimeoFolders() {
     console.log('팀 라이브러리 폴더 로드 실패:', e.message);
   }
 
-  return folders;
+  // 주간 클리어 폴더 안의 하위 폴더(중1·중2·중3)도 확실히 포함
+  for (const root of folders.filter(f => WC_ROOT_RE.test(f.name || ''))) {
+    try {
+      const subs = await fetchWcSubfolders(root.uri);
+      subs.forEach(sf => { sf._wcParent = true; });
+      folders = folders.concat(subs);
+    } catch (e) { console.log('주간 클리어 하위 폴더 로드 실패:', e.message); }
+  }
+  // 같은 폴더가 두 번 들어오면 하나로 (주간 클리어 표시가 있는 쪽 우선)
+  const byId = new Map();
+  folders.forEach(f => {
+    const id = vimeoFolderId(f.uri);
+    const prev = byId.get(id);
+    if (!prev || f._wcParent) byId.set(id, f);
+  });
+  return [...byId.values()];
 }
+
+// ── 주간 클리어 (Weekly Clear) ──
+// 비메오 폴더: 「주간 클리어(Weekly Clear)」 안에 하위 폴더 중1·중2·중3
+// 강의 카테고리(태그): 주간클리어_중1 / 주간클리어_중2 / 주간클리어_중3
+const WC_ROOT_RE = /주간\s*클리어|weekly\s*clear/i;
+const WC_TAG_PREFIX = '주간클리어_';
+function vimeoFolderId(uri) { return String(uri || '').split('/').filter(Boolean).pop(); }
+async function fetchWcSubfolders(rootUri) {
+  let out = [];
+  let url = `https://api.vimeo.com${rootUri}/items?per_page=100&page=1`;
+  while (url) {
+    const res = await fetch(url, { headers: { Authorization: `bearer ${VIMEO_TOKEN}` } });
+    if (!res.ok) break;
+    const data = await res.json();
+    (data.data || []).forEach(it => { if (it.type === 'folder' && it.folder) out.push(it.folder); });
+    url = data.paging?.next ? `https://api.vimeo.com${data.paging.next}` : null;
+  }
+  return out;
+}
+// 폴더 → 강의 카테고리(태그). 주간 클리어 안의 '중1' 폴더는 일반 '중1'과 구분해서 주간클리어_중1
+function vimeoFolderTag(f) {
+  const name = String(f?.name || '').trim();
+  const anc = f?.metadata?.connections?.ancestor_path || [];
+  const inWc = !!f?._wcParent || anc.some(a => WC_ROOT_RE.test(a?.name || ''));
+  if (inWc) {
+    const g = name.replace(/\s+/g, '').match(/중[123]/);
+    return g ? WC_TAG_PREFIX + g[0] : WC_TAG_PREFIX + name.replace(/\s+/g, '');
+  }
+  return name;
+}
+// 주간 클리어 하위 폴더 ID → { tag, uri } (업로드 때 폴더 표시·카테고리 바로잡기용)
+let _wcFolderMapCache = null;
+async function getWcFolderMap(force) {
+  if (_wcFolderMapCache && !force) return _wcFolderMapCache;
+  const map = new Map();
+  const all = await fetchVimeoFolders();
+  all.forEach(f => { const t = vimeoFolderTag(f); if (t.startsWith(WC_TAG_PREFIX)) map.set(vimeoFolderId(f.uri), { tag: t, uri: f.uri }); });
+  _wcFolderMapCache = map;
+  return map;
+}
+window.getWcFolderMap = getWcFolderMap;
 
 // 특정 폴더의 영상 목록 가져오기
 async function fetchFolderVideos(folderUri) {
@@ -1192,11 +1262,10 @@ window.syncVimeo = async () => {
     const allFolders = await fetchVimeoFolders();
 
     // 지정된 폴더명만 필터 (미입력 시 KNOWN_TAGS_SYNC 전체)
-    const matchedFolders = allFolders.filter(f =>
-      targetFolders
-        ? targetFolders.includes(f.name)
-        : KNOWN_TAGS_SYNC.includes(f.name)
-    );
+    const matchedFolders = allFolders.filter(f => {
+      const t = vimeoFolderTag(f);
+      return targetFolders ? targetFolders.includes(t) : KNOWN_TAGS_SYNC.includes(t);
+    });
 
     if (!matchedFolders.length) {
       statusEl.textContent = '⚠️ 입력한 폴더명과 일치하는 Vimeo 폴더가 없습니다.';
@@ -1208,14 +1277,15 @@ window.syncVimeo = async () => {
 
     // 지정 폴더 영상
     for (const folder of matchedFolders) {
-      statusEl.textContent = `⏳ "${folder.name}" 확인 중...`;
+      const folderTag = vimeoFolderTag(folder);
+      statusEl.textContent = `⏳ "${folderTag}" 확인 중...`;
       const videos = await fetchFolderVideos(folder.uri);
       for (const v of videos) {
         const vimeoId = v.uri.replace('/videos/', '');
         foundIds.add(vimeoId);
         if (existingIds.has(vimeoId)) continue;
         const date = v.created_time ? v.created_time.slice(0,7).replace('-','.') : '';
-        syncCandidates.push({ vimeoId, title: v.name, tag: folder.name, date });
+        syncCandidates.push({ vimeoId, title: v.name, tag: folderTag, date });
       }
     }
 

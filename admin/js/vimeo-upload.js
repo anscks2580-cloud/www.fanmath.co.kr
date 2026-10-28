@@ -21,7 +21,20 @@ async function auLoadFolders(force) {
     let r;
     try { r = await auApi('folders'); }
     catch (e1) { await new Promise((ok) => setTimeout(ok, 1500)); r = await auApi('folders'); } // 서버가 막 깨어날 때 한 번 더 시도
-    au.folders = r.folders || []; auFillFolders();
+    au.folders = r.folders || [];
+    // 주간 클리어(Weekly Clear) 하위 폴더(중1·중2·중3)는 일반 '중1' 폴더와 헷갈리지 않게 이름을 바꿔 표시하고,
+    // 서버 목록에 없으면 비메오에서 직접 찾아 추가
+    try {
+      const wc = await getWcFolderMap(true);
+      const fid = (u) => String(u || '').split('/').filter(Boolean).pop();
+      const seen = new Set();
+      au.folders.forEach((f) => { const w = wc.get(fid(f.uri)); if (w) { f.name = '주간 클리어 › ' + w.tag.replace('주간클리어_', ''); f._wcTag = w.tag; seen.add(fid(f.uri)); } });
+      wc.forEach((w, id) => { if (!seen.has(id)) au.folders.push({ uri: w.uri, name: '주간 클리어 › ' + w.tag.replace('주간클리어_', ''), _wcTag: w.tag }); });
+      // 주간 클리어 최상위 폴더 자체에는 올리지 않도록 목록에서 뺌 (하위 폴더에 올려야 학년이 정해짐)
+      au.folders = au.folders.filter((f) => f._wcTag || !/주간\s*클리어|weekly\s*clear/i.test(f.name || ''));
+      au.folders.sort((a, b) => (b._wcTag ? 1 : 0) - (a._wcTag ? 1 : 0) || String(a.name).localeCompare(String(b.name), 'ko'));
+    } catch (e) { console.warn('주간 클리어 폴더 확인 실패', e); }
+    auFillFolders();
   }
   catch (e) { document.getElementById('auFolder').innerHTML = `<option value="">폴더 목록 실패: ${auEsc(auErr(e))}</option>`; }
   finally { au.loading = false; }
@@ -110,6 +123,7 @@ window.auStartUploads = async function () {
   if (!folderUri) { showMsg('auMsg', '올릴 비메오 폴더를 먼저 선택해주세요.', 'error'); return; }
   if (!window.tus) { showMsg('auMsg', '업로드 도구를 불러오지 못했어요. 페이지를 새로고침해 주세요.', 'error'); return; }
   const folderName = sel.options[sel.selectedIndex].textContent;
+  const folderWcTag = ((au.folders || []).find((f) => f.uri === folderUri) || {})._wcTag || '';
   au.uploading = true;
   auRenderQueue();
   let ok = 0, fail = 0;
@@ -130,6 +144,11 @@ window.auStartUploads = async function () {
       // 영상 고유 코드 부여 (기존 동기화와 같은 규칙)
       try {
         const v = fin.video;
+        // 주간 클리어 하위 폴더에 올린 영상은 카테고리를 주간클리어_중N 으로 바로잡은 뒤 코드 부여
+        if (folderWcTag && v.tag !== folderWcTag) {
+          await updateDoc(doc(db, 'videos', v.id), { tag: folderWcTag });
+          v.tag = folderWcTag;
+        }
         videosCache.push(v);
         const code = generateVideoCode({ tag: v.tag, date: v.date, order: v.order }, vcUsedCodes(v.id));
         if (code) {

@@ -319,6 +319,7 @@
     <li><a href="about.html">학원소개</a></li>
     <li><a href="admission.html">입학안내</a></li>
     <li><a href="videos.html">동영상강의</a></li>
+    <li><a href="videos.html?cat=weekly">주간 클리어</a></li>
     <li><a href="textbook.html">교재소개</a></li>
     <li><a href="curriculum.html">커리큘럼</a></li>
     <li><a href="interview.html">졸업생 인터뷰</a></li>
@@ -334,6 +335,7 @@
 <div class="mobile-menu" id="mobileMenu">
     <a href="about.html" >학원소개</a>
     <a href="videos.html" class='active'>동영상강의</a>
+    <a href="videos.html?cat=weekly">주간 클리어</a>
     <a href="textbook.html" >교재소개</a>
     <a href="curriculum.html" >커리큘럼</a>
     <a href="interview.html" >졸업생 인터뷰</a>
@@ -345,10 +347,10 @@
 
     <div class="page-hero">
       <div class="breadcrumb">
-        <a href="index.html">홈</a> › <span>동영상강의</span>
+        <a href="index.html">홈</a> › <span id="pageCrumb">동영상강의</span>
       </div>
-      <h1 class="section-title">동영상강의</h1>
-      <p class="section-desc">
+      <h1 class="section-title" id="pageTitle">동영상강의</h1>
+      <p class="section-desc" id="pageDesc">
         카테고리를 선택해 원하는 강의를 찾아보세요.
       </p>
     </div>
@@ -423,6 +425,8 @@
     <!-- 검색 결과 안내 -->
     <div id="searchResultInfo" style="display:none;font-size:12px;color:var(--purple, #5B3FA6);margin-bottom:12px;padding:0 4px;"></div>
 
+    <!-- 주간 클리어 학년 선택 (주간 클리어 화면에서만 보임) -->
+    <div class="filter-bar" id="wcBar" style="display:none;margin-bottom:24px;"></div>
     <div class="filter-wrap">
       <!-- 1단계: 메인 카테고리 -->
       <div class="filter-bar" id="filterMain">
@@ -787,6 +791,38 @@ let myVideos = [];
 let currentTag = 'all';
 let isLoggedIn = false;
 
+// ── 주간 클리어 (Weekly Clear) ──
+// 주소가 videos.html?cat=weekly 이면 주간 클리어 화면. 영상 태그: 주간클리어_중1 / 중2 / 중3
+// 중1·중2·중3 학생은 별도 배정 없이 자기 학년 것을 자동으로 볼 수 있음
+const IS_WC = new URLSearchParams(location.search).get('cat') === 'weekly';
+const WC_PREFIX = '주간클리어_';
+const isWcTag = (t) => String(t || '').startsWith(WC_PREFIX);
+let wcGrade = '';
+let wcIsStaff = false;
+if (IS_WC) {
+  document.title = '주간 클리어 (Weekly Clear) | 송우찬수학학원';
+  const setTxt = (id, t) => { const e = document.getElementById(id); if (e) e.textContent = t; };
+  setTxt('pageCrumb', '주간 클리어');
+  setTxt('pageTitle', '주간 클리어 (Weekly Clear)');
+  setTxt('pageDesc', '매주 배운 내용을 영상으로 정리합니다. 중1·중2·중3 학생은 자기 학년 강의를 바로 볼 수 있어요.');
+  const fw = document.querySelector('.filter-wrap'); if (fw) fw.style.display = 'none';
+  // 메뉴 표시: 동영상강의 대신 주간 클리어에 불
+  document.querySelectorAll('.nav-links a, .mobile-menu a').forEach(a => {
+    const h = a.getAttribute('href') || '';
+    a.classList.toggle('active', h.includes('cat=weekly'));
+  });
+}
+window.wcSelect = function(g) { wcGrade = g; renderVideos(); };
+function renderWcBar() {
+  const bar = document.getElementById('wcBar');
+  if (!bar || !IS_WC) return;
+  const grades = ['중1','중2','중3'].filter(g => wcIsStaff || myVideos.some(v => v.tag === WC_PREFIX + g));
+  if (grades.length <= 1) { bar.style.display = 'none'; return; }
+  bar.style.display = '';
+  bar.innerHTML = ['', ...grades].map(g =>
+    `<button class="filter-btn${wcGrade === g ? ' active' : ''}" onclick="wcSelect('${g}')">${g || 'ALL'}</button>`).join('');
+}
+
 // ── 시청 진행률 추적 ──
 let myProfile = null;      // { uid, name, branch, grade, teacherName } - 학생일 때만 세팅
 let currentProgress = null; // 현재 재생중인 영상의 진행 상태
@@ -1060,6 +1096,12 @@ onAuthStateChanged(auth, async (user) => {
       } else {
         myVideos = [];
       }
+      // 주간 클리어: 일반 동영상강의 화면에서는 빼고, 주간 클리어 화면에서만 보여줌
+      wcIsStaff = isAdmin || isTeacher;
+      const wcAll = allVideos.filter(v => isWcTag(v.tag));
+      const myGrade = myProfile ? (myProfile.grade || '').trim() : '';
+      const wcMine = wcIsStaff ? wcAll : wcAll.filter(v => v.tag === WC_PREFIX + myGrade || myVideos.includes(v));
+      myVideos = IS_WC ? wcMine : myVideos.filter(v => !isWcTag(v.tag));
       renderVideos();
     });
     // 학생이면 필터 바 접근 가능 카테고리만 표시
@@ -1437,6 +1479,12 @@ function renderVideos() {
     }
   }
 
+  // 주간 클리어 학년 선택
+  if (IS_WC) {
+    renderWcBar();
+    if (wcGrade) list = list.filter(v => v.tag === WC_PREFIX + wcGrade);
+  }
+
   // 검색어 필터
   const q = currentSearch.toLowerCase();
   if (q) {
@@ -1453,7 +1501,7 @@ function renderVideos() {
 
   if (!list.length) {
     grid.innerHTML = `<div style="text-align:center;padding:60px;color:var(--muted);">
-      ${isLoggedIn ? (q ? `"${currentSearch}"에 해당하는 강의가 없습니다.` : '등록된 강의가 없습니다.') : ''}
+      ${isLoggedIn ? (q ? `"${currentSearch}"에 해당하는 강의가 없습니다.` : (IS_WC && !wcIsStaff && myProfile && !['중1','중2','중3'].includes((myProfile.grade || '').trim()) ? '주간 클리어는 중1·중2·중3 학생 대상 강의입니다.' : '등록된 강의가 없습니다.')) : ''}
     </div>`;
     return;
   }
@@ -1605,7 +1653,7 @@ function renderVideos() {
     });
     let html = '';
     groups.forEach((items, tag) => {
-      html += `<div class="video-group-header">${tag} <span style="font-weight:400;color:var(--muted);font-size:10px;">${items.length}개</span></div>`;
+      html += `<div class="video-group-header">${isWcTag(tag) ? '주간 클리어 · ' + tag.slice(WC_PREFIX.length) : tag} <span style="font-weight:400;color:var(--muted);font-size:10px;">${items.length}개</span></div>`;
       html += items.map((v,i) => renderRow(v, i+1, highlight)).join('');
     });
     grid.innerHTML = html;

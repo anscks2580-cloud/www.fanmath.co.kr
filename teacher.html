@@ -461,6 +461,7 @@ select option:disabled { color:#6B6489; }
     <button class="teacher-tab" onclick="switchTab('progress',this)">반별 진도</button>
     <button class="teacher-tab" onclick="switchTab('clinic',this);initClinicTab()">토요클리닉</button>
     <button class="teacher-tab" onclick="switchTab('videos',this);loadTeacherVideos()">강의 목록</button>
+    <button class="teacher-tab" onclick="switchTab('weeklyclear',this);loadWeeklyClear()">주간 클리어</button>
     <button class="teacher-tab" onclick="switchTab('myroom',this);mrLoad()">보충강의실 영상 업로드</button>
     <button class="teacher-tab" onclick="switchTab('meetingdocs',this);initMeetingDocsTab()">회의 자료</button>
     <button class="teacher-tab" onclick="switchTab('pastexams',this);initPastExamsTab()">기출문제</button>
@@ -1241,6 +1242,18 @@ select option:disabled { color:#6B6489; }
         </div>
         <div id="videoModalTitle" style="margin-top:12px;font-size:15px;font-weight:600;color:#fff;text-align:center;"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- ══ 주간 클리어 (Weekly Clear) 강의 목록 ══ -->
+  <div class="tab-panel" id="tab-weeklyclear">
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <span>주간 클리어 <small style="color:var(--muted);font-weight:500;font-size:12px;margin-left:4px;">Weekly Clear</small></span>
+        <button class="btn btn-secondary btn-sm" onclick="loadWeeklyClear(true)">새로고침</button>
+      </div>
+      <div id="wcGradeBtns" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;"></div>
+      <div id="wcList" style="color:var(--muted);font-size:13px;">불러오는 중...</div>
     </div>
   </div>
 
@@ -2364,6 +2377,9 @@ const TWS_FIXED_TAG_CATEGORIES = [
   { label: '중등', tags: [
       {v:'중1', l:'중1'}, {v:'중2', l:'중2'}, {v:'중3', l:'중3'},
   ]},
+  { label: '주간 클리어', tags: [
+      {v:'주간클리어_중1', l:'주간 클리어 중1'}, {v:'주간클리어_중2', l:'주간 클리어 중2'}, {v:'주간클리어_중3', l:'주간 클리어 중3'},
+  ]},
 ];
 
 function twsGetTagCategories() {
@@ -2447,7 +2463,8 @@ window.loadTeacherWatchStatus = async function(force) {
     twsAllRows = [];
     myStudents.forEach(s => {
       const tags = [...new Set((Array.isArray(s.assignedTags) ? s.assignedTags : [])
-        .map(t => (t || '').trim()).filter(Boolean))];
+        .map(t => (t || '').trim()).filter(Boolean)
+        .concat(['중1','중2','중3'].includes((s.grade || '').trim()) ? ['주간클리어_' + s.grade.trim()] : []))];
       tags.forEach(a => {
         if (!videosByTag.has(a)) videosByTag.set(a, twsVideosForTag(a, twsAllVideosCache));
         const vids = videosByTag.get(a);
@@ -2743,6 +2760,75 @@ function renderTeacherVideos() {
       <div style="color:var(--purple, #5B3FA6);font-size:20px;flex-shrink:0;">▶</div>
     </div>`).join('');
 }
+
+// ══ 주간 클리어 (Weekly Clear): 태그 주간클리어_중1 / 중2 / 중3 ══
+const WC_GRADES = ['중1','중2','중3'];
+let wcVideos = [];
+let wcLoaded = false;
+let wcGrade = '';
+const wcEsc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+window.loadWeeklyClear = async function(force) {
+  const el = document.getElementById('wcList');
+  if (wcLoaded && !force) { renderWeeklyClear(); return; }
+  el.innerHTML = '<div style="color:var(--muted);font-size:13px;">불러오는 중...</div>';
+  try {
+    const q = query(collection(db, 'videos'), where('tag', 'in', WC_GRADES.map(g => '주간클리어_' + g)));
+    const snap = await getDocs(q);
+    wcVideos = [];
+    snap.forEach(d => wcVideos.push({ id: d.id, ...d.data() }));
+    const ord = (v) => v.order != null ? Number(v.order) : 9999;
+    wcVideos.sort((a, b) => (a.tag || '').localeCompare(b.tag || '') || ord(a) - ord(b) || String(a.code || '').localeCompare(String(b.code || '')));
+    wcLoaded = true;
+    renderWeeklyClear();
+  } catch (e) {
+    el.innerHTML = `<div style="color:#D64545;">오류: ${wcEsc(e.message)}</div>`;
+  }
+};
+
+window.wcSelectGrade = function(g) { wcGrade = g; renderWeeklyClear(); };
+
+function renderWeeklyClear() {
+  const btns = document.getElementById('wcGradeBtns');
+  const el = document.getElementById('wcList');
+  const cnt = (g) => wcVideos.filter(v => !g || v.tag === '주간클리어_' + g).length;
+  btns.innerHTML = ['', ...WC_GRADES].map(g => `
+    <button class="btn btn-sm ${wcGrade === g ? 'btn-primary' : 'btn-secondary'}" onclick="wcSelectGrade('${g}')">${g || '전체'} <span style="opacity:.7;">${cnt(g)}</span></button>`).join('');
+  const grades = wcGrade ? [wcGrade] : WC_GRADES;
+  let html = '';
+  grades.forEach(g => {
+    const list = wcVideos.filter(v => v.tag === '주간클리어_' + g);
+    if (!list.length) return;
+    html += `<div style="font-size:12px;font-weight:700;color:var(--purple, #5B3FA6);letter-spacing:1px;margin:14px 0 8px;">${g} <span style="font-weight:400;color:var(--muted);">${list.length}강</span></div>`;
+    html += list.map((v, i) => `
+      <div onclick="wcOpen('${wcEsc(v.vimeoId)}','${wcEsc((v.title || '').replace(/'/g, "\\'"))}')"
+        style="display:flex;align-items:center;gap:14px;padding:12px 16px;background:rgba(30,24,56,0.03);border:1px solid var(--border-soft);
+        border-radius:10px;margin-bottom:8px;cursor:pointer;transition:all 0.18s;"
+        onmouseover="this.style.borderColor='rgba(245,197,24,0.4)';this.style.background='rgba(245,197,24,0.05)'"
+        onmouseout="this.style.borderColor='var(--border-soft)';this.style.background='rgba(30,24,56,0.03)'">
+        <span style="font-size:12px;color:var(--muted);min-width:22px;text-align:right;">${v.order != null ? wcEsc(v.order) : i + 1}</span>
+        <div style="width:48px;height:48px;border-radius:8px;overflow:hidden;flex-shrink:0;background:#000;">
+          <img src="https://vumbnail.com/${wcEsc(v.vimeoId)}.jpg" alt="" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none'">
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:600;color:var(--off-white);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${wcEsc(v.title || '-')}</div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            ${v.code ? `<span style="font-size:12px;font-weight:600;color:var(--purple, #5B3FA6);font-family:'SF Mono',Menlo,Consolas,monospace;" title="영상 고유 코드">${wcEsc(v.code)}</span>` : '<span style="font-size:11px;color:var(--muted);">코드 미배정</span>'}
+            ${v.date ? `<span style="font-size:11px;color:var(--muted);">${wcEsc(v.date)}</span>` : ''}
+          </div>
+        </div>
+        <div style="color:var(--purple, #5B3FA6);font-size:20px;flex-shrink:0;">▶</div>
+      </div>`).join('');
+  });
+  el.innerHTML = html || '<div style="color:var(--muted);font-size:13px;padding:12px 0;">아직 올라온 주간 클리어 강의가 없습니다.</div>';
+}
+
+// 플레이어 창이 '강의 목록' 화면 안에 있어서, 다른 화면에서도 보이도록 body로 옮긴 뒤 재생
+window.wcOpen = function(vimeoId, title) {
+  const m = document.getElementById('videoModal');
+  if (m && m.parentElement !== document.body) document.body.appendChild(m);
+  openVideoModal(vimeoId, title);
+};
 
 window.openVideoModal = function(vimeoId, title) {
   document.getElementById('vimeoFrame').src = `https://player.vimeo.com/video/${vimeoId}?autoplay=1`;
@@ -5637,6 +5723,7 @@ window.addEventListener('message', (e) => { if (e.data && e.data.type === 'pcRea
     ] },
     { id: 'video',   label: '영상',   icon: '🎬', items: [
       { id: 'videos',      label: '강의 목록',        desc: '학원 강의 영상' },
+      { id: 'weeklyclear', label: '주간 클리어',      desc: 'Weekly Clear · 중1·중2·중3 강의 · 영상 코드' },
       { id: 'myroom',      label: '보충강의실 업로드', desc: '내 비메오 폴더에 직접 업로드' },
       { id: 'watchstatus', label: '학생 시청현황',    desc: '담당 학생 시청 기록' },
     ] },
