@@ -198,7 +198,7 @@ if (savedId) {
 
 // 통합 로그인 — 아이디에 따라 학생/선생님/조교/관리자 페이지로 자동 이동
 //  · 이메일(@ 포함)로 입력하면 그대로, 이름으로 입력하면 이름@songmath.kr 로 로그인
-//  · 로그인 후 계정 종류 확인: 관리자 → admin.html, 조교 → ta.html, 선생님 → teacher.html, 학생 → videos.html, 학부모 → parent.html
+//  · 로그인 후 계정 종류 확인: 관리자 → admin.html, 조교 → ta.html, 선생님 → teacher.html, 학생 → index.html(첫 화면), 학부모 → parent.html
 //  · 학부모: 같은 학생 이름으로 입력하되 비밀번호가 학부모 전화번호 → 학생 계정 로그인이 실패하면 이름.p@songmath.kr(학부모 계정)로 한 번 더 시도
 //  · 학생은 브라우저를 닫으면 로그아웃(기존 방식), 선생님·관리자는 로그인 유지(기존 각 페이지 방식)
 window.loginStudent = async function() {
@@ -246,7 +246,7 @@ window.loginStudent = async function() {
     }
     const studentDoc = await getDoc(doc(db, 'students', uid));
     if (studentDoc.exists()) {
-      window.location.href = 'videos.html';
+      window.location.href = 'index.html';
       return;
     }
     const parentDoc = await getDoc(doc(db, 'parents', uid));
