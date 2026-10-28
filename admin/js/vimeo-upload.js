@@ -22,13 +22,15 @@ async function auLoadFolders(force) {
     try { r = await auApi('folders'); }
     catch (e1) { await new Promise((ok) => setTimeout(ok, 1500)); r = await auApi('folders'); } // 서버가 막 깨어날 때 한 번 더 시도
     au.folders = r.folders || [];
+    // 서버가 주간 클리어 하위 폴더 카테고리(주간클리어_중N)를 알려주면 그대로 사용
+    au.folders.forEach((f) => { if (String(f.tag || '').startsWith('주간클리어_')) f._wcTag = f.tag; });
     // 주간 클리어(Weekly Clear) 하위 폴더(중1·중2·중3)는 일반 '중1' 폴더와 헷갈리지 않게 이름을 바꿔 표시하고,
     // 서버 목록에 없으면 비메오에서 직접 찾아 추가
     try {
       const wc = await getWcFolderMap(true);
       const fid = (u) => String(u || '').split('/').filter(Boolean).pop();
       const seen = new Set();
-      au.folders.forEach((f) => { const w = wc.get(fid(f.uri)); if (w) { f.name = '주간 클리어 › ' + w.tag.replace('주간클리어_', ''); f._wcTag = w.tag; seen.add(fid(f.uri)); } });
+      au.folders.forEach((f) => { if (f._wcTag) seen.add(fid(f.uri)); const w = wc.get(fid(f.uri)); if (w && !f._wcTag) { f.name = '주간 클리어 › ' + w.tag.replace('주간클리어_', ''); f._wcTag = w.tag; seen.add(fid(f.uri)); } });
       wc.forEach((w, id) => { if (!seen.has(id)) au.folders.push({ uri: w.uri, name: '주간 클리어 › ' + w.tag.replace('주간클리어_', ''), _wcTag: w.tag }); });
       // 주간 클리어 최상위 폴더 자체에는 올리지 않도록 목록에서 뺌 (하위 폴더에 올려야 학년이 정해짐)
       au.folders = au.folders.filter((f) => f._wcTag || !/주간\s*클리어|weekly\s*clear/i.test(f.name || ''));
