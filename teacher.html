@@ -2817,11 +2817,29 @@ function renderWeeklyClear() {
             ${v.date ? `<span style="font-size:11px;color:var(--muted);">${wcEsc(v.date)}</span>` : ''}
           </div>
         </div>
-        <div style="color:var(--purple, #5B3FA6);font-size:20px;flex-shrink:0;">▶</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:45%;" onclick="event.stopPropagation()">
+          ${(Array.isArray(v.pdfs) ? v.pdfs : []).map((p, pi) => `<button class="btn btn-secondary btn-sm" title="${wcEsc(p.name)}" onclick="wcPdf('${v.id}',${pi},this)"
+            style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📄 ${wcEsc(p.name.replace(/\.pdf$/i, ''))}</button>`).join('')}
+        </div>
+        <div style="color:var(--purple, #5B3FA6);font-size:20px;flex-shrink:0;" title="영상 보기">▶</div>
       </div>`).join('');
   });
   el.innerHTML = html || '<div style="color:var(--muted);font-size:13px;padding:12px 0;">아직 올라온 주간 클리어 강의가 없습니다.</div>';
 }
+
+// PDF 내려받기 (선생님·관리자만 — storage.rules weeklyClear)
+window.wcPdf = async function(id, i, btn) {
+  const p = ((wcVideos.find(v => v.id === id) || {}).pdfs || [])[i];
+  if (!p) return;
+  const old = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '여는 중...'; }
+  try {
+    const url = await getDownloadURL(ref(storage, p.path));
+    const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; a.download = p.name;
+    document.body.appendChild(a); a.click(); a.remove();
+  } catch (e) { alert('PDF를 받지 못했습니다 (' + (e.code || e.message) + ')'); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = old; } }
+};
 
 // 플레이어 창이 '강의 목록' 화면 안에 있어서, 다른 화면에서도 보이도록 body로 옮긴 뒤 재생
 window.wcOpen = function(vimeoId, title) {
@@ -5723,7 +5741,7 @@ window.addEventListener('message', (e) => { if (e.data && e.data.type === 'pcRea
     ] },
     { id: 'video',   label: '영상',   icon: '🎬', items: [
       { id: 'videos',      label: '강의 목록',        desc: '학원 강의 영상' },
-      { id: 'weeklyclear', label: '주간 클리어',      desc: 'Weekly Clear · 중1·중2·중3 강의 · 영상 코드' },
+      { id: 'weeklyclear', label: '주간 클리어',      desc: 'Weekly Clear · 중1·중2·중3 강의 · 영상 코드 · PDF 내려받기' },
       { id: 'myroom',      label: '보충강의실 업로드', desc: '내 비메오 폴더에 직접 업로드' },
       { id: 'watchstatus', label: '학생 시청현황',    desc: '담당 학생 시청 기록' },
     ] },

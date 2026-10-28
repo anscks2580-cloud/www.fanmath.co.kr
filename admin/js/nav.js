@@ -28,6 +28,7 @@
     ] },
     { id: 'video', label: '영상', icon: '🎬', items: [
       { id: 'videos',      label: '강의 목록',      desc: '영상 등록 · 태그 · 비메오 동기화 · 업로드', keywords: ['강의', '강의목록', '영상', '동영상', '폴더', '비메오', 'vimeo', '인강', '업로드'] },
+      { id: 'weeklyclear', label: '주간 클리어',    desc: '중1·중2·중3 주간 영상 + PDF 올리기 (선생님 페이지에서 PDF 내려받기)', keywords: ['주간', '주간클리어', '주간 클리어', 'weekly', 'weekly clear', '위클리', '중등', 'pdf', '자료', '업로드'] },
       { id: 'videocode',   label: '영상 코드 조회', desc: '영상 고유 코드 검색', keywords: ['코드', '영상코드', '고유번호', '강의번호', '영상번호', '강의코드', '검색', '몇강'] },
       { id: 'watchstatus', label: '시청현황',       desc: '학생별 영상 시청 기록', keywords: ['시청', '시청현황', '수강현황', '시청기록', '학습현황', '영상시청'] },
       { id: 'apexvideo',   label: '에이펙스 영상',  desc: '에이펙스관 전용 영상', keywords: ['영상', '에이펙스', 'apex', '동영상'] },

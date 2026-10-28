@@ -33,7 +33,8 @@ async function auLoadFolders(force) {
       au.folders.forEach((f) => { if (f._wcTag) seen.add(fid(f.uri)); const w = wc.get(fid(f.uri)); if (w && !f._wcTag) { f.name = '주간 클리어 › ' + w.tag.replace('주간클리어_', ''); f._wcTag = w.tag; seen.add(fid(f.uri)); } });
       wc.forEach((w, id) => { if (!seen.has(id)) au.folders.push({ uri: w.uri, name: '주간 클리어 › ' + w.tag.replace('주간클리어_', ''), _wcTag: w.tag }); });
       // 주간 클리어 최상위 폴더 자체에는 올리지 않도록 목록에서 뺌 (하위 폴더에 올려야 학년이 정해짐)
-      au.folders = au.folders.filter((f) => f._wcTag || !/주간\s*클리어|weekly\s*clear/i.test(f.name || ''));
+      // 주간 클리어는 「주간 클리어」 메뉴에서 따로 올림 → 여기 목록에서는 뺌
+      au.folders = au.folders.filter((f) => !f._wcTag && !/주간\s*클리어|weekly\s*clear/i.test(f.name || ''));
       au.folders.sort((a, b) => (b._wcTag ? 1 : 0) - (a._wcTag ? 1 : 0) || String(a.name).localeCompare(String(b.name), 'ko'));
     } catch (e) { console.warn('주간 클리어 폴더 확인 실패', e); }
     auFillFolders();

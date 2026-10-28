@@ -77,6 +77,7 @@
     <button class="admin-tab" onclick="switchTab('promotion',this);initPromotionTab()">🎓 일괄 진급</button>
     <button class="admin-tab" onclick="switchTab('assign',this)">강의 배정</button>
     <button class="admin-tab" onclick="switchTab('videos',this);renderFolderAccordion()">강의 목록</button>
+    <button class="admin-tab" onclick="switchTab('weeklyclear',this);initWeeklyClearAdmin()">📅 주간 클리어</button>
     <button class="admin-tab" onclick="switchTab('videocode',this);initVideoCodeTab()">🔢 영상 코드 조회</button>
     <button class="admin-tab" onclick="switchTab('watchstatus',this);initWatchStatusTab()">📺 시청현황</button>
     <button class="admin-tab" onclick="switchTab('teachers',this)">선생님 관리</button>
@@ -684,6 +685,41 @@
 
 
   <!-- ══ 🗒 회의 자료 (선생님 포털 미리보기 전용 · Firestore meetingDocs + Storage meetingDocs/{id}.pdf) ══ -->
+  <!-- ══ 📅 주간 클리어 (Weekly Clear) — 영상 + PDF 업로드 (admin/js/weeklyclear.js) ══ -->
+  <div class="tab-panel" id="tab-weeklyclear">
+    <div class="card">
+      <h3>+ 주간 클리어 올리기</h3>
+      <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:10px;">
+        영상은 비메오 <span style="color:var(--off-white);">주간 클리어(Weekly Clear) › 학년</span> 폴더로 바로 올라가고, 강의 목록 등록과 영상 코드가 자동으로 붙어요.<br>
+        PDF는 영상에 붙어서 <span style="color:var(--off-white);">선생님 페이지 › 주간 클리어</span>에서 내려받을 수 있어요. (학생에게는 영상만 보여요)
+      </div>
+      <div id="wca-folderstate" style="font-size:12px;margin-bottom:12px;">비메오 폴더 확인 중...</div>
+      <div class="form-row">
+        <div class="form-group"><label>학년</label>
+          <select id="wca-grade"><option value="중1">중1</option><option value="중2">중2</option><option value="중3">중3</option></select></div>
+        <div class="form-group" style="flex:2;"><label>영상 제목</label><input type="text" id="wca-title" maxlength="120" placeholder="예: [Weekly Clear 중1] 2학기 4단원 통계"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>영상 파일</label><input type="file" id="wca-video" accept="video/*,.mp4,.mov,.m4v" onchange="wcaOnVideo(this)" style="color:var(--muted);font-size:13px;"></div>
+        <div class="form-group"><label>PDF 자료 (선택 · 여러 개 가능)</label><input type="file" id="wca-pdf" accept=".pdf,application/pdf" multiple style="color:var(--muted);font-size:13px;"></div>
+      </div>
+      <div><button class="btn btn-primary" id="wca-btn" onclick="wcaUpload()">올리기</button></div>
+      <div class="msg" id="wca-msg"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span>📅 주간 클리어 영상 · PDF</span>
+        <span style="display:flex;gap:8px;">
+          <select id="wca-filter" onchange="wcaRenderList()" style="padding:6px 10px;border-radius:8px;"><option value="">전체 학년</option><option>중1</option><option>중2</option><option>중3</option></select>
+          <button class="btn btn-secondary btn-sm" onclick="wcaLoadVideos()">새로고침</button>
+        </span>
+      </h3>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">이미 올린 영상에 PDF만 붙일 때는 「+ PDF 추가」. 영상 제목·순서 수정이나 삭제는 강의 목록에서 해요.</div>
+      <div id="wca-list"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
+    </div>
+  </div>
+
   <div class="tab-panel" id="tab-meetingdocs">
     <div class="card">
       <h3>+ 회의 자료 올리기</h3>
@@ -2510,9 +2546,10 @@
 <script defer src="admin/js/meetings.js"></script>
 <script defer src="admin/js/pastexams.js"></script>
 <script defer src="admin/js/textbooks.js"></script>
-<script defer src="admin/js/vimeo-upload.js"></script>
+<script defer src="admin/js/vimeo-upload.js?v=1793190000"></script>
+<script defer src="admin/js/weeklyclear.js?v=1793190000"></script>
 <script defer src="admin/js/exammaterials.js?v=1792850000"></script>
-<script defer src="admin/js/nav.js?v=1792748600"></script>
+<script defer src="admin/js/nav.js?v=1793190000"></script>
 <script defer src="admin/js/home.js?v=1793180000"></script>
 
 <div id="toast"></div>
