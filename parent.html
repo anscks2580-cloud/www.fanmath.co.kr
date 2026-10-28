@@ -140,7 +140,7 @@ onAuthStateChanged(auth, async (user) => {
   } catch (e) { $app.innerHTML = `<div class="empty">불러오지 못했습니다.<br><small>${esc(e.message)}</small></div>`; }
 });
 
-window.pTab = (t) => { cur = t; render(); };
+window.pTab = (t) => { cur = t; render(); if (t === 'monthly' && monthly[0] && !monthly[0].parentViewedAt && !isTeacherView()) pOpenNewReport(monthly[0].id); };
 const threadOf = (type, id) => comments.filter((c) => c.targetType === type && c.targetId === id);
 const isTeacherView = () => viewer.role === 'teacher';
 // 안 읽은 글: 학부모 화면에선 선생님 답글, 선생님 화면에선 학부모 댓글
@@ -204,16 +204,30 @@ window.pSend = async (type, id, teacherUid, teacherName, label) => {
     render();
   } catch (e) { alert('댓글을 보내지 못했습니다: ' + e.message); ta.disabled = false; }
 };
-// 들어오자마자 보이는 알림: 안 읽은 상대방 글을 대화별로 모아 맨 위에
+// 들어오자마자 보이는 알림: ① 아직 안 본 새 월간 보고서 ② 안 읽은 상대방 댓글
+const newReports = () => isTeacherView() ? [] : monthly.filter((r) => !r.parentViewedAt);
+window.pOpenNewReport = async (id) => {
+  cur = 'monthly'; openReports.add(id); render();
+  const r = monthly.find((x) => x.id === id);
+  if (r && !r.parentViewedAt) { try { await updateDoc(doc(db, 'studentReports', id), { parentViewedAt: new Date().toISOString() }); r.parentViewedAt = new Date().toISOString(); render(); } catch (e) {} }
+  setTimeout(() => { const el = document.getElementById(`rf-${id}`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 80);
+};
 function notiHtml() {
   const unread = comments.filter((c) => isTeacherView() ? (c.authorRole === 'parent' && !c.readByTeacher) : (c.authorRole === 'teacher' && !c.readByParent));
-  if (!unread.length) return '';
+  const reps = newReports();
+  if (!unread.length && !reps.length) return '';
   const groups = {};
   unread.forEach((c) => { const k = `${c.targetType}|${c.targetId}`; (groups[k] = groups[k] || { c, n: 0 }).n++; });
-  return `<div class="noti">
+  let html = '';
+  if (reps.length) html += `<div class="noti" style="background:var(--accent);box-shadow:0 8px 24px rgba(91,63,166,.3);">
+    <h3><span class="dot"></span>${reps.length === 1 ? `${reps[0].month.replace('-', '년 ')}월 학습보고서가 도착했어요` : `새 학습보고서 ${reps.length}개가 도착했어요`}</h3>
+    ${reps.map((r) => `<button onclick="pOpenNewReport('${r.id}')"><b>${r.month.replace('-', '년 ')}월 보고서</b><span>정답률 ${r.summary?.pct ?? '-'}% · ${r.summary?.gradeBand ?? '-'}등급 · ${esc(r.teacherName || '')} 선생님 의견</span><b>›</b></button>`).join('')}
+  </div>`;
+  if (unread.length) html += `<div class="noti">
     <h3><span class="dot"></span>${isTeacherView() ? `학부모 댓글 ${unread.length}개가 답글을 기다려요` : `선생님 답글 ${unread.length}개가 도착했어요`}</h3>
     ${Object.entries(groups).map(([k, g]) => `<button onclick="pGoThread('${k}')"><b>${esc(g.c.targetLabel || '')}</b><span>${esc(g.c.authorName || '')}: ${esc(g.c.text)}</span><b>›</b></button>`).join('')}
   </div>`;
+  return html;
 }
 window.pGoThread = async (key) => {
   const [type] = key.split('|');
@@ -247,7 +261,7 @@ function render() {
     <div class="tabs">
       <button class="tab ${cur === 'homework' ? 'active' : ''}" onclick="pTab('homework')">숙제</button>
       <button class="tab ${cur === 'weekly' ? 'active' : ''}" onclick="pTab('weekly')">주간 성취도${tabDot('weekly')}</button>
-      <button class="tab ${cur === 'monthly' ? 'active' : ''}" onclick="pTab('monthly')">월간 보고서${tabDot('monthly')}</button>
+      <button class="tab ${cur === 'monthly' ? 'active' : ''}" onclick="pTab('monthly')">월간 보고서${tabDot('monthly') || (newReports().length ? ' <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#C8541F;vertical-align:middle;margin-left:2px;"></span>' : '')}</button>
     </div>
     ${cur === 'homework' ? `<div class="card"><h2>숙제</h2>${homework.length ? homework.slice(0, 60).map((h) => { const d = new Date(h.date + 'T00:00:00'); const dow = ['일','월','화','수','목','금','토'][d.getDay()]; const isToday = h.date === new Date().toISOString().slice(0, 10); return `
         <div class="wk" style="${isToday ? 'border-color:var(--accent);' : ''}">
