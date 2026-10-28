@@ -981,6 +981,11 @@ onAuthStateChanged(auth, async (user) => {
 
     const isAdmin   = adminDoc.exists();
     const isTeacher = teacherDoc.exists();
+    // 퇴원생: 로그인돼 있던 창이라도 내보냄
+    if (!isAdmin && !isTeacher && studentDoc.exists() && studentDoc.data().status === '퇴원') {
+      alert('퇴원 처리되어 사용이 중지된 계정입니다. 학원으로 문의해주세요.');
+      await signOut(auth); location.href = 'login.html'; return;
+    }
 
     // nav 표시
     const displayName = isAdmin   ? '관리자'

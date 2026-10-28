@@ -126,7 +126,7 @@
       let teachers = (typeof teachersCache !== 'undefined' && Array.isArray(teachersCache) && teachersCache.length) ? teachersCache : null;
       if (!teachers) { const ts = await getDocs(collection(db, 'teachers')); teachers = []; ts.forEach((d) => teachers.push({ id: d.id, ...d.data() })); }
       let students = (typeof studentsCache !== 'undefined' && Array.isArray(studentsCache) && studentsCache.length) ? studentsCache : null;
-      if (!students) { const ss = await getDocs(collection(db, 'students')); students = []; ss.forEach((d) => students.push({ id: d.id, ...d.data() })); }
+      if (!students) { const ss = await getDocs(collection(db, 'students')); students = []; ss.forEach((d) => { if (d.data().status !== '퇴원') students.push({ id: d.id, ...d.data() }); }); }
       const byTeacher = {};
       students.forEach((s) => { if (!s.teacherUid) return; (byTeacher[s.teacherUid] = byTeacher[s.teacherUid] || []).push(s); });
       const active = teachers.filter((t) => t.role !== 'ta' && (byTeacher[t.id] || []).length);
@@ -206,7 +206,7 @@
     const el = $('hmStudent'); if (!el || el.closest('[hidden]')) return;
     try {
       let students = (typeof studentsCache !== 'undefined' && Array.isArray(studentsCache) && studentsCache.length) ? studentsCache : null;
-      if (!students) { const ss = await getDocs(collection(db, 'students')); students = []; ss.forEach((d) => students.push({ id: d.id, ...d.data() })); }
+      if (!students) { const ss = await getDocs(collection(db, 'students')); students = []; ss.forEach((d) => { if (d.data().status !== '퇴원') students.push({ id: d.id, ...d.data() }); }); }
       let teachers = (typeof teachersCache !== 'undefined' && Array.isArray(teachersCache) && teachersCache.length) ? teachersCache : null;
       if (!teachers) { const ts = await getDocs(collection(db, 'teachers')); teachers = []; ts.forEach((d) => teachers.push({ id: d.id, ...d.data() })); }
       const byBranch = {}; students.forEach((s) => { const b = s.branch || '미지정'; byBranch[b] = (byBranch[b] || 0) + 1; });

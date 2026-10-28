@@ -364,7 +364,7 @@ window.loadClinicRoom = async function() {
       getDocs(collection(db, 'students')),
       getDocs(collection(db, 'timetables'))
     ]);
-    studentsSnap.forEach(d => students.push({ id: d.id, ...d.data() }));
+    studentsSnap.forEach(d => { if (d.data().status !== '퇴원') students.push({ id: d.id, ...d.data() }); }); // 퇴원생 제외
     timetablesSnap.forEach(d => timetables.push({ id: d.id, ...d.data() }));
   } catch (e) {
     const errMsg = `<div class="empty" style="color:#D64545;">불러오지 못했습니다. (${esc(e.message)})<br>원장님께 권한 설정(Firestore 보안규칙) 확인을 요청해주세요.</div>`;

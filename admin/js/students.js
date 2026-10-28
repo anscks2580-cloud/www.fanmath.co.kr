@@ -4,10 +4,14 @@
    (admin.html에서 분리 — 원본 3123~3590줄. 모든 파일은 같은 전역 범위를 공유합니다)
    ═══════════════════════════════════════════════════════════ */
 // ── 학생 로드 ──
+// 퇴원생(status '퇴원')은 기록은 남기되 모든 명단(studentsCache)에서 뺌 → withdrawnCache 에 따로 보관
+let withdrawnCache = [];
 async function loadStudents() {
   const snap = await getDocs(collection(db, 'students'));
   studentsCache = [];
-  snap.forEach(d => studentsCache.push({id: d.id, ...d.data()}));
+  withdrawnCache = [];
+  snap.forEach(d => { const s = {id: d.id, ...d.data()}; (s.status === '퇴원' ? withdrawnCache : studentsCache).push(s); });
+  if (typeof renderWithdrawnList === 'function') renderWithdrawnList();
   renderStudents();
   renderAssignSelect();
   const scEl = document.getElementById('studentCount');
@@ -32,7 +36,7 @@ window.renderStudents = function renderStudents() {
       <span class="student-meta" style="font-size:11px;color:${s.classGroup ? 'var(--gold)' : 'var(--muted)'};">${s.classGroup || '반 미배정'}</span>
       <span class="student-meta" style="font-size:11px;">영상접근 ${(s.assignedTags||[]).length}개</span>
       <button class="btn btn-secondary btn-sm" onclick="openEditModal('${s.id}')">✏️ 수정</button>
-      <button class="btn btn-danger btn-sm" onclick="deleteStudent('${s.id}','${s.name}')">삭제</button>
+      <button class="btn btn-danger btn-sm" onclick="withdrawStudent('${s.id}','${s.name}')">퇴원</button>
     </div>`).join('');
 }
 
@@ -309,12 +313,77 @@ document.getElementById('editStudentModal').addEventListener('click', function(e
   if (e.target === this) closeEditModal();
 });
 
+// ── 퇴원 (기록 보존) ─────────────────────────────────────────
+//  로그인만 막고 모든 기록은 그대로 둠 → 명단에서만 사라짐. 수납 프로그램도 같이 「퇴원」
+window.withdrawStudent = async (uid, name, opt) => {
+  const o = opt || {};
+  const leaveDate = o.leaveDate || (window.billLeave ? window.billLeave.today() : new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10));
+  if (!o.silent && !confirm(`${name} 학생을 ${leaveDate}에 퇴원 처리할까요?\n\n` +
+    `· 학생·학부모 로그인이 막히고 홈페이지 명단에서 사라집니다\n` +
+    `· 주간성취도·보고서·시청기록·숙제·출결 등 이전 기록은 모두 남습니다 (퇴원생 보기에서 복귀 가능)\n` +
+    `· 수납 프로그램에서도 「퇴원」으로 바뀌어 다음 달부터 수강료가 생기지 않습니다\n` +
+    `· 이미 발생한 수강료·미납 금액은 그대로 남습니다`)) return false;
+  try {
+    await httpsCallable(functionsInstance, 'withdrawStudent')({ uid, leaveDate });
+  } catch (e) { alert('퇴원 처리 실패: ' + e.message); return false; }
+  let billMsg = '';
+  if (!o.skipBilling && window.billLeave) {
+    try {
+      const b = await window.billLeave.leaveByHomepageStudent(uid, leaveDate);
+      billMsg = (b.real.students || b.test.students) ? `\n수납: 퇴원으로 변경${b.real.students ? '' : ' (테스트 수납 기록)'}` : '\n수납: 연결된 수납 학생이 없어요';
+    } catch (e) { billMsg = '\n⚠️ 수납 연동 실패: ' + e.message; }
+  }
+  if (!o.silent) alert(`✅ ${name} 학생 퇴원 처리 완료 (기록 보존)${billMsg}`);
+  await loadStudents();
+  return true;
+};
+
+// ── 복귀 (퇴원 취소) ────────────────────────────────────────
+window.restoreStudent = async (uid, name) => {
+  if (!confirm(`${name} 학생을 다시 재원으로 되돌릴까요?\n\n· 학생·학부모 로그인이 다시 열리고 명단에 다시 보입니다\n· 수납 프로그램도 「재원」으로 바뀌고 퇴원 때 종료된 수강반이 다시 이어집니다`)) return;
+  try {
+    await httpsCallable(functionsInstance, 'restoreStudent')({ uid });
+  } catch (e) { alert('복귀 처리 실패: ' + e.message); return; }
+  let billMsg = '';
+  if (window.billLeave) {
+    try { const b = await window.billLeave.restoreByHomepageStudent(uid); billMsg = (b.real || b.test) ? '\n수납: 재원으로 변경' : ''; }
+    catch (e) { billMsg = '\n⚠️ 수납 연동 실패: ' + e.message; }
+  }
+  alert(`✅ ${name} 학생 복귀 완료${billMsg}`);
+  await loadStudents();
+};
+
+// ── 퇴원생 목록 ─────────────────────────────────────────────
+let withdrawnOpen = false;
+window.toggleWithdrawnList = function() { withdrawnOpen = !withdrawnOpen; renderWithdrawnList(); };
+window.renderWithdrawnList = function() {
+  const btn = document.getElementById('withdrawnToggle');
+  const el = document.getElementById('withdrawnList');
+  if (!btn || !el) return;
+  btn.textContent = withdrawnOpen ? `퇴원생 닫기 (${withdrawnCache.length})` : `퇴원생 보기 (${withdrawnCache.length})`;
+  el.style.display = withdrawnOpen ? 'block' : 'none';
+  if (!withdrawnOpen) return;
+  const list = withdrawnCache.slice().sort((a, b) => String(b.leaveDate || '').localeCompare(String(a.leaveDate || '')) || a.name.localeCompare(b.name, 'ko'));
+  el.innerHTML = `<div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:8px;">퇴원생 ${list.length}명 · 로그인 막힘 · 기록은 모두 보존</div>` +
+    (list.length ? list.map(s => `
+    <div class="student-item" style="opacity:.75;">
+      <div class="student-name">${s.name}</div>
+      <span class="student-meta">${s.grade || ''} · ${s.branch || ''}</span>
+      <span class="student-meta" style="font-size:11px;">${s.classGroup || '-'}</span>
+      <span class="student-meta" style="font-size:11px;color:#D64545;">퇴원 ${s.leaveDate || ''}</span>
+      <button class="btn btn-secondary btn-sm" onclick="restoreStudent('${s.id}','${s.name}')">복귀</button>
+      <button class="btn btn-danger btn-sm" onclick="deleteStudent('${s.id}','${s.name}')" title="모든 기록까지 완전히 삭제">완전 삭제</button>
+    </div>`).join('') : '<div style="color:var(--muted);font-size:13px;">퇴원생이 없습니다.</div>');
+};
+
+// ── 완전 삭제 (기록까지 전부 삭제 — 잘못 등록한 학생 등 특별한 경우만) ──
 window.deleteStudent = async (uid, name) => {
   if (!confirm(`${name} 학생을 퇴원 처리(완전 삭제)하시겠습니까?\n\n` +
     `· 학생 로그인 계정과 학부모 로그인 계정이 삭제됩니다\n` +
     `· 주간성취도 · 토요클리닉 · 일일테스트 결과 · 학습보고서 · 학부모 댓글 · 영상 시청기록 · 등원 체크 기록이 모두 삭제됩니다\n` +
     `· 숙제 기록에서는 이 학생 이름만 빠집니다\n` +
-    `· 수납 프로그램에서는 「퇴원」으로 바뀌고 오늘 이후 납입기한인 미납 수강료 청구는 취소됩니다 (지난 납입·미납 기록은 남아요)\n\n되돌릴 수 없습니다.`)) return;
+    `· 수납 프로그램의 납입·미납 기록은 그대로 남습니다 (홈페이지 연결만 끊김)\n\n` +
+    `※ 보통 퇴원은 [퇴원] 버튼으로 하세요 (기록 보존). 완전 삭제는 되돌릴 수 없습니다.`)) return;
   if (!confirm(`정말 ${name} 학생의 모든 자료를 삭제할까요?`)) return;
   try {
     const deleteFn = httpsCallable(functionsInstance, 'deleteStudentAccount');
@@ -325,11 +394,8 @@ window.deleteStudent = async (uid, name) => {
     let billMsg = '';
     try {
       if (window.billLeave) {
-        const b = await window.billLeave.leaveByHomepageStudent(uid);
-        const t = b.real.students ? b.real : b.test;
-        billMsg = (b.real.students || b.test.students)
-          ? `\n\n수납: 퇴원으로 변경${b.real.students ? '' : ' (테스트 수납 기록)'} · 미납 수강료 청구 ${t.charges}건 취소`
-          : '\n\n수납: 연결된 수납 학생이 없어요';
+        const b = await window.billLeave.leaveByHomepageStudent(uid, null, { unlink: true });
+        billMsg = (b.real.students || b.test.students) ? '\n\n수납: 퇴원 상태로 두고 홈페이지 연결만 끊었어요 (수납 기록 보존)' : '';
       }
     } catch (e) { billMsg = '\n\n⚠️ 수납 퇴원 연동 실패: ' + e.message + '\n수납 페이지에서 직접 퇴원으로 바꿔 주세요.'; }
     alert(`✅ ${name} 학생 퇴원 처리 완료\n\n` +

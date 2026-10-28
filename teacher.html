@@ -1735,7 +1735,7 @@ window.logoutTeacher = async function() {
 async function loadStudents() {
   const snap = await getDocs(collection(db, 'students'));
   studentsCache = [];
-  snap.forEach(d => studentsCache.push({ id: d.id, ...d.data() }));
+  snap.forEach(d => { if (d.data().status !== '퇴원') studentsCache.push({ id: d.id, ...d.data() }); }); // 퇴원생 제외 (기록은 보존)
   studentsCache.sort((a,b) => (a.name||'').localeCompare(b.name||'', 'ko'));
 
   // 내 담당 학생만 필터
@@ -3564,7 +3564,7 @@ async function calBuildAutoTodos() {
   let my = [];
   try {
     const sSnap = await getDocs(query(collection(db, 'students'), where('teacherUid', '==', currentTeacher.uid)));
-    sSnap.forEach(d => my.push({ id: d.id, ...d.data() }));
+    sSnap.forEach(d => { if (d.data().status !== '퇴원') my.push({ id: d.id, ...d.data() }); });
   } catch (e) { my = (typeof myStudents !== 'undefined' ? myStudents : []); }
 
   // ① 주간성취도 (지난주분, 금요일까지) — 중등부 학생만
@@ -5248,7 +5248,7 @@ async function dtLoadStudents() {
   if (!me) return;
   const snap = await getDocs(query(collection(db, 'students'), where('teacherUid', '==', me.uid))); // 내 담당만
   allStudents = [];
-  snap.forEach((d) => { const s = { id: d.id, ...d.data() }; if (isMiddle(s)) allStudents.push(s); });
+  snap.forEach((d) => { const s = { id: d.id, ...d.data() }; if (isMiddle(s) && s.status !== '퇴원') allStudents.push(s); });
   allStudents.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
 }
 

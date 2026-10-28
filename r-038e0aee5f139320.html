@@ -406,7 +406,7 @@ async function loadBase() {
     getDocs(collection(db, 'teachers')),
     getDocs(collection(db, 'scheduleEvents')).catch(() => null),
   ]);
-  S.students = []; st.forEach((d) => S.students.push({ id: d.id, ...d.data() }));
+  S.students = []; S.allStudents = []; st.forEach((d) => { const s = { id: d.id, ...d.data() }; S.allStudents.push(s); if (s.status !== '퇴원') S.students.push(s); }); // 퇴원생은 명단에서 제외
   S.teachers = []; te.forEach((d) => { const t = d.data(); if (t.role !== 'ta') S.teachers.push({ id: d.id, ...t }); });
   S.events = []; if (ev) ev.forEach((d) => S.events.push(d.data()));
 }

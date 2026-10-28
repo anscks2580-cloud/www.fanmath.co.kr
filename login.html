@@ -226,7 +226,7 @@ window.loginStudent = async function() {
     outer: for (const em of emails) {
       for (const pw of pwList) {
         try { cred = await signInWithEmailAndPassword(auth, em, pw); break outer; }
-        catch (e) { lastErr = e; }
+        catch (e) { if (e.code === 'auth/user-disabled') { lastErr = e; break outer; } lastErr = e; }
       }
     }
     if (!cred) throw lastErr;
@@ -260,7 +260,9 @@ window.loginStudent = async function() {
     await auth.signOut();
     btn.disabled = false; btn.textContent = '로그인';
   } catch(e) {
-    showErr('s-err','아이디 또는 비밀번호가 올바르지 않습니다.');
+    showErr('s-err', e && e.code === 'auth/user-disabled'
+      ? '퇴원 처리되어 사용이 중지된 계정입니다. 학원으로 문의해주세요.'
+      : '아이디 또는 비밀번호가 올바르지 않습니다.');
     btn.disabled = false; btn.textContent = '로그인';
   }
 };

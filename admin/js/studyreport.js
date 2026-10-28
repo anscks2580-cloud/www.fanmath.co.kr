@@ -49,7 +49,7 @@ async function srFetchMonth(month) {
   const rSnap = await getDocs(query(collection(db, 'dailyTestResults'), where('date', '>=', from), where('date', '<=', to)));
   const results = []; rSnap.forEach((d) => results.push({ id: d.id, ...d.data() }));
   const sSnap = await getDocs(collection(db, 'students'));
-  const students = []; sSnap.forEach((d) => { const s = { id: d.id, ...d.data() }; if (srIsMiddle(s)) students.push(s); });
+  const students = []; sSnap.forEach((d) => { const s = { id: d.id, ...d.data() }; if (srIsMiddle(s) && s.status !== '퇴원') students.push(s); });
   return { tests, results, students };
 }
 

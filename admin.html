@@ -216,10 +216,12 @@
           style="flex:1;min-width:160px;max-width:280px;padding:8px 13px;background:rgba(30,24,56,0.05);
           border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:13px;
           font-family:inherit;outline:none;">
+        <button class="btn btn-secondary btn-sm" id="withdrawnToggle" onclick="toggleWithdrawnList()">퇴원생 보기</button>
         <button class="btn btn-danger" onclick="deleteAllStudents()" style="font-size:12px;">
           🗑 전체 삭제
         </button>
       </div>
+      <div id="withdrawnList" style="display:none;margin-bottom:16px;"></div>
       <div id="studentList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
     </div>
 
@@ -2476,8 +2478,8 @@
 <script type="module" src="admin/js/00-firebase.js?v=1792760000"></script>
 <script defer src="admin/js/01-core.js"></script>
 <script defer src="admin/js/consultdeck.js"></script>
-<script defer src="admin/js/billing-leave.js?v=1793178000"></script>
-<script defer src="admin/js/students.js?v=1793178000"></script>
+<script defer src="admin/js/billing-leave.js?v=1793180000"></script>
+<script defer src="admin/js/students.js?v=1793180000"></script>
 <script defer src="admin/js/classassign.js"></script>
 <script defer src="admin/js/assign.js"></script>
 <script defer src="admin/js/videos.js"></script>
@@ -2485,7 +2487,7 @@
 <script defer src="admin/js/clinicroom.js"></script>
 <script defer src="admin/js/tamaterials.js?v=1792759000"></script>
 <script defer src="admin/js/reports.js"></script>
-<script defer src="admin/js/studyreport.js?v=1792811435"></script>
+<script defer src="admin/js/studyreport.js?v=1793180000"></script>
 <script defer src="admin/js/parents.js?v=1792681350"></script>
 <script defer src="admin/js/homeworklog.js?v=1792818255"></script>
 <script defer src="admin/js/satclinic.js?v=1792811435"></script>
@@ -2511,7 +2513,7 @@
 <script defer src="admin/js/vimeo-upload.js"></script>
 <script defer src="admin/js/exammaterials.js?v=1792850000"></script>
 <script defer src="admin/js/nav.js?v=1792748600"></script>
-<script defer src="admin/js/home.js?v=1792811435"></script>
+<script defer src="admin/js/home.js?v=1793180000"></script>
 
 <div id="toast"></div>
 <div id="printSheet"></div>
