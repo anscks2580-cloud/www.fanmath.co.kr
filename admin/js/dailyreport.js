@@ -21,8 +21,14 @@ window.initDailyReportTab = function() {
     document.getElementById('dr-date').addEventListener('change', drAutoSelectByDate);
   }
   // 이미 적어 둔 수업반이 있으면(불러오기 등) 그대로 두고 체크만 맞춤, 비어 있으면 자동 선택
-  if (document.getElementById('dr-classes').value.trim()) drSyncFromText();
-  else drAutoSelectByDate();
+  const apply = () => {
+    if (document.getElementById('dr-classes').value.trim()) drSyncFromText();
+    else drAutoSelectByDate();
+  };
+  // 학생 목록이 아직 안 불러와졌으면 먼저 불러온 뒤 반 목록 계산
+  if ((typeof studentsCache === 'undefined' || !studentsCache.length) && typeof loadStudents === 'function') {
+    loadStudents().then(apply).catch(apply);
+  } else apply();
 };
 
 // ── 수업반 데이터 ──
@@ -45,6 +51,33 @@ const DR_CLASSES = {
 };
 
 const DAY_ORDER = ['월','화','수','목','금','토'];
+
+// ── 실제 수업반 계산 ──
+// 학생 출결과 같은 기준: 학생별 등원 요일(days) + 반(classGroup)으로 요일별 반 목록을 만듦.
+// 학생 데이터가 아직 없을 때만 위의 고정 표(DR_CLASSES)를 씀.
+const DR_GRADE_ORDER = ['초4','초5','초6','중1','중2','중3','고1','고2','고3','N수'];
+function drClassMap(branch) {
+  const list = (typeof studentsCache !== 'undefined' && Array.isArray(studentsCache)) ? studentsCache : [];
+  if (!list.length) return DR_CLASSES[branch] || {};
+  const map = {};    // 요일 → { 반이름 → 가장 낮은 학년 순번 }
+  list.forEach(s => {
+    if (s.branch !== branch) return;
+    const cls = String(s.classGroup || '').trim();
+    if (!cls) return;                          // 반 미배정은 제외
+    const rank = (i => i === -1 ? DR_GRADE_ORDER.length : i)(DR_GRADE_ORDER.indexOf(s.grade));
+    (s.days || []).forEach(day => {
+      if (!DAY_ORDER.includes(day)) return;
+      map[day] = map[day] || {};
+      map[day][cls] = Math.min(map[day][cls] ?? 99, rank);
+    });
+  });
+  const out = {};
+  Object.keys(map).forEach(day => {
+    const m = map[day];
+    out[day] = Object.keys(m).sort((a, b) => (m[a] - m[b]) || a.localeCompare(b, 'ko'));
+  });
+  return out;
+}
 let drActiveDayTab = '';        // 현재 선택된 요일 탭
 let drChecked = new Set();      // 선택된 반 (요일_반명 키)
 
@@ -58,7 +91,7 @@ function drDayOfDate() {
 // 요일 탭만 그림 (선택 상태는 유지)
 function renderDrDayTabs() {
   const branch = document.getElementById('dr-branch').value;
-  const days = Object.keys(DR_CLASSES[branch] || {}).sort((a,b) => DAY_ORDER.indexOf(a) - DAY_ORDER.indexOf(b));
+  const days = Object.keys(drClassMap(branch) || {}).sort((a,b) => DAY_ORDER.indexOf(a) - DAY_ORDER.indexOf(b));
   const tabWrap = document.getElementById('drClassDayTabs');
   tabWrap.innerHTML = days.map(d => `
     <button class="btn btn-sm btn-secondary" id="drTab-${d}"
@@ -74,8 +107,8 @@ window.drAutoSelectByDate = function() {
   const branch = document.getElementById('dr-branch').value;
   const day = drDayOfDate();
   drChecked.clear();
-  (DR_CLASSES[branch]?.[day] || []).forEach(cls => drChecked.add(day + '_' + cls));
-  drActiveDayTab = DR_CLASSES[branch]?.[day] ? day : '';
+  (drClassMap(branch)?.[day] || []).forEach(cls => drChecked.add(day + '_' + cls));
+  drActiveDayTab = drClassMap(branch)?.[day] ? day : '';
   renderDrDayTabs();
   updateDrClassInput();
 };
@@ -86,8 +119,8 @@ window.drSyncFromText = function() {
   const day = drDayOfDate();
   const tokens = new Set(document.getElementById('dr-classes').value.split(/\s*[\/,]\s*/).map(t => t.trim()).filter(Boolean));
   drChecked.clear();
-  (DR_CLASSES[branch]?.[day] || []).forEach(cls => { if (tokens.has(cls)) drChecked.add(day + '_' + cls); });
-  drActiveDayTab = DR_CLASSES[branch]?.[day] ? day : '';
+  (drClassMap(branch)?.[day] || []).forEach(cls => { if (tokens.has(cls)) drChecked.add(day + '_' + cls); });
+  drActiveDayTab = drClassMap(branch)?.[day] ? day : '';
   renderDrDayTabs();
 };
 
@@ -106,7 +139,7 @@ window.drSwitchDay = function(day) {
   if (activeBtn) { activeBtn.classList.remove('btn-secondary'); activeBtn.classList.add('btn-primary'); }
 
   const branch = document.getElementById('dr-branch').value;
-  const classes = DR_CLASSES[branch]?.[day] || [];
+  const classes = drClassMap(branch)?.[day] || [];
   const panel = document.getElementById('drClassDayPanel');
   panel.innerHTML = classes.map(cls => {
     const key = day + '_' + cls;
@@ -139,7 +172,7 @@ window.drToggleClass = function(cb, key) {
 window.drSelectAllClasses = function() {
   const branch = document.getElementById('dr-branch').value;
   const day = drActiveDayTab;
-  (DR_CLASSES[branch]?.[day] || []).forEach(cls => drChecked.add(day + '_' + cls));
+  (drClassMap(branch)?.[day] || []).forEach(cls => drChecked.add(day + '_' + cls));
   drSwitchDay(day);
   updateDrClassInput();
 };
@@ -155,7 +188,7 @@ function updateDrClassInput() {
   // 요일 순서대로 정렬해서 input에 반영
   const branch = document.getElementById('dr-branch').value;
   const parts = DAY_ORDER.map(day => {
-    const dayClasses = DR_CLASSES[branch]?.[day] || [];
+    const dayClasses = drClassMap(branch)?.[day] || [];
     const selected = dayClasses.filter(cls => drChecked.has(day + '_' + cls));
     if (!selected.length) return null;
     return selected.join(', ');
