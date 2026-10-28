@@ -588,10 +588,16 @@
     const list = S.students.filter((s) => (u.filter === '전체' || s.status === u.filter) && (!u.branch || s.branch === u.branch) &&
       (!q || (s.name + (s.parentPhone || '') + (s.phone || '') + classNames(s) + (s.acaNo || '')).replace(/[\s-]/g, '').toLowerCase().includes(q.replace(/-/g, ''))))
       .sort((a, b) => sortKo(a.name, b.name));
-    $('blSlist').innerHTML = list.length ? list.map((s) =>
+    const orphans = hpOrphans();
+    const orphanBar = orphans.length
+      ? '<div class="bl-note" style="margin-bottom:8px;border-color:#D64545;color:#B23A3A;">홈페이지에서 퇴원(삭제)됐는데 수납에는 아직 재원·휴원인 학생 <b>' + orphans.length + '명</b>' +
+        '<div style="font-size:12px;margin:4px 0 6px;">' + orphans.map((s) => esc(s.name)).join(', ') + '</div>' +
+        '<button class="btn btn-danger btn-sm" onclick="BL.leaveOrphans()">한꺼번에 퇴원 처리</button></div>'
+      : '';
+    $('blSlist').innerHTML = orphanBar + (list.length ? list.map((s) =>
       '<div class="bl-sitem' + (S.cur.student === s.id ? ' on' : '') + (s.status !== '재원' ? ' off' : '') + '" onclick="BL.openStudent(\'' + s.id + '\',true)">' +
       '<span class="n">' + esc(s.name) + '</span><span class="m">' + esc(branchShort(s.branch)) + ' · ' + esc(classNames(s)) + '</span>' + (openBy[s.id] ? '<span class="d" title="기한 지난 미납"></span>' : '') + '</div>').join('')
-      : '<div class="bl-empty">' + (S.students.length ? '해당하는 학생이 없어요' : '아직 수납 학생이 없어요.<br>아래 "홈페이지 학생 불러오기"를 눌러 주세요.') + '</div>';
+      : '<div class="bl-empty">' + (S.students.length ? '해당하는 학생이 없어요' : '아직 수납 학생이 없어요.<br>아래 "홈페이지 학생 불러오기"를 눌러 주세요.') + '</div>');
   }
   BL.openStudent = async (id, inPlace) => {
     S.cur.student = id;
@@ -660,6 +666,51 @@
     return '<label class="bl-f"><span>' + label + '</span><input class="bl-in' + (type === 'num' ? ' num' : '') + '" ' + (type === 'date' ? 'type="date" ' : '') + 'data-p="' + key + '" value="' + esc(v || '') + '" placeholder="' + esc(ph || '') + '"></label>';
   }
   function fldSel(label, key, list, v) { return '<label class="bl-f"><span>' + label + '</span><select class="bl-in" data-p="' + key + '">' + opts(list, v || '', '선택') + '</select></label>'; }
+  // ── 퇴원 연동 ──────────────────────────────────────────────
+  // 홈페이지 학생 명단에 없는데(퇴원·삭제됨) 수납에는 연결된 채 재원·휴원으로 남은 학생
+  function hpOrphans() {
+    const hp = hpList();
+    if (!hp.length) return [];
+    const ids = new Set(hp.map((x) => x.id));
+    return S.students.filter((s) => s.status !== '퇴원' && s.studentId && !ids.has(s.studentId));
+  }
+  // 수강반 종료 + 미납 수강료 청구 취소 (billing-leave.js 공통 코드)
+  async function applyLeave(s, date, reason, extra) {
+    if (!window.billLeave) throw new Error('퇴원 처리 코드를 불러오지 못했어요. 새로고침해 주세요');
+    const r = await window.billLeave.leaveBillStudent(P, s, date, reason, extra);
+    Object.assign(s, r.patch);
+    r.canceled.forEach((c) => S.charges.set(c.id, c));
+    return r;
+  }
+  async function leaveAndAskHomepage(s, date) {
+    const r = await applyLeave(s, date, '퇴원');
+    if (r.canceled.length) toast('퇴원일 뒤 수강료 청구 ' + r.canceled.length + '건 취소했어요');
+    const hp = s.studentId ? hpList().find((x) => x.id === s.studentId) : null;
+    if (!hp) return;
+    if (P) { alert('테스트 모드라 홈페이지 계정(' + hp.name + ')은 그대로 둬요.\n실제 운영으로 바꾸면 여기서 홈페이지 계정 퇴원까지 같이 할 수 있어요.'); return; }
+    if (!confirm('홈페이지 계정도 퇴원 처리(완전 삭제)할까요?\n\n' + hp.name + ' 학생·학부모 로그인 계정과 주간성취도·보고서·시청기록 등이 모두 삭제되고 되돌릴 수 없어요.\n(취소를 누르면 홈페이지 계정은 그대로 두고 수납만 퇴원이에요)')) return;
+    if (!confirm('정말 ' + hp.name + ' 학생의 홈페이지 자료를 모두 삭제할까요?')) return;
+    try {
+      await httpsCallable(functionsInstance, 'deleteStudentAccount')({ uid: hp.id });
+      const patch = { studentId: '', hpLeftId: hp.id, hpLeftAt: today() };
+      await updateDoc(doc(db, C.students, s.id), patch); Object.assign(s, patch);
+      try { const i = studentsCache.findIndex((x) => x.id === hp.id); if (i >= 0) studentsCache.splice(i, 1); } catch (e) {}
+      toast('홈페이지 계정도 퇴원 처리했어요');
+    } catch (e) { alert('홈페이지 계정 퇴원 처리 실패: ' + (e.message || e) + '\n관리자 화면 학생 관리에서 직접 삭제해 주세요.'); }
+  }
+  BL.leaveOrphans = async () => {
+    const list = hpOrphans(); if (!list.length) return;
+    if (!confirm('홈페이지에서 이미 퇴원(삭제)된 ' + list.length + '명을 수납에서도 오늘 날짜로 퇴원 처리할까요?\n\n' + list.map((s) => s.name).join(', ') +
+      '\n\n수강반이 종료되고, 오늘 뒤 납입기한인 미납 수강료 청구는 취소돼요. (지난 납입·미납 기록은 남아요)')) return;
+    let n = 0, c = 0;
+    for (const s of list) {
+      try { const r = await applyLeave(s, today(), '홈페이지 퇴원 처리', { studentId: '', hpLeftId: s.studentId, hpLeftAt: today() }); n++; c += r.canceled.length; }
+      catch (e) { console.warn(e); }
+    }
+    toast(n + '명 퇴원 처리 · 수강료 청구 ' + c + '건 취소');
+    renderSlist(); if (S.cur.student) renderScard();
+  };
+
   function hpList() { try { return (typeof studentsCache !== 'undefined' ? studentsCache : []) || []; } catch (e) { return []; } }
   function hpOptions(cur) {
     const list = hpList().slice().sort((a, b) => sortKo(a.name, b.name)).map((x) => ({ v: x.id, l: x.name + ' · ' + (x.grade || '') + ' · ' + branchShort(x.branch) + (x.classGroup ? ' · ' + x.classGroup : '') }));
@@ -688,8 +739,13 @@
     if (!p.name) { alert('이름을 넣어 주세요'); return; }
     p.payDay = p.payDay ? Math.min(31, Math.max(1, num(p.payDay))) : null;
     if (p.status === '퇴원' && !p.leaveDate) p.leaveDate = today();
+    const becomingLeft = p.status === '퇴원' && s.status !== '퇴원';
+    if (becomingLeft && !confirm(s.name + ' 학생을 ' + p.leaveDate + '에 퇴원 처리할까요?\n\n' +
+      '· 수강 중인 반이 모두 종료돼 다음 달부터 수강료가 생기지 않아요\n' +
+      '· 퇴원일 뒤가 납입기한인 미납 수강료 청구는 취소돼요\n· 이미 낸 기록과 지난 미납은 그대로 남아요')) return;
     try {
       await saveStudent(s, p);
+      if (becomingLeft) await leaveAndAskHomepage(s, p.leaveDate);
       toast('저장했어요');
       if (p.payDay && s.status === '재원') { const r = await autoGenerate(await fsx()); if (r.made) toast('수강료 ' + r.made + '건 자동 발생'); }
       renderSlist(); renderScard();
@@ -1136,7 +1192,14 @@
       await batch.commit();
       // 종료일 뒤 미납 청구 안내
       const after = [...S.charges.values()].filter((c) => list.some((s) => s.id === c.bsId) && c.status !== '취소' && (c.paid || 0) === 0 && c.dueDate > d && (leave || c.classId === from.id));
-      toast(list.length + '명 처리했어요' + (after.length ? ' · 종료일 뒤 청구 ' + after.length + '건은 학생 수납에서 취소해 주세요' : ''));
+      if (leave) {
+        let n = 0;
+        for (const c of after.filter((x) => x.item === '수강료')) { try { await cancelCharge(c, '퇴원'); n++; } catch (e) {} }
+        const rest = after.length - n;
+        toast(list.length + '명 퇴원 처리했어요' + (n ? ' · 퇴원일 뒤 수강료 청구 ' + n + '건 취소' : '') + (rest ? ' · 다른 청구 ' + rest + '건은 학생 수납에서 확인해 주세요' : ''));
+      } else {
+        toast(list.length + '명 처리했어요' + (after.length ? ' · 종료일 뒤 청구 ' + after.length + '건은 학생 수납에서 취소해 주세요' : ''));
+      }
       renderClasses();
     } catch (e) { fail(e); }
   };
@@ -1450,7 +1513,7 @@
         const open = s.rows.reduce((a, L) => a + (L.claim - L.paid > 0 && L.kind === 'unpaid' ? L.claim : 0), 0);
         const paidSum = s.rows.reduce((a, L) => a + L.paid - L.refund, 0);
         const m = matchStudent({ name: s.name, branch });
-        return { key: normName(s.name), name: s.name, branch, status, joinDate: s.joinDate || '', leaveDate: status === '재원' ? '' : (s.leaveDate || ''), parentPhone: s.parentPhone || '', phone: s.phone || '', school: s.school || '', grade: s.grade || '',
+        return { key: normName(s.name), name: s.name, branch, status, joinDate: s.joinDate || '', leaveDate: s.leaveDate || '', parentPhone: s.parentPhone || '', phone: s.phone || '', school: s.school || '', grade: s.grade || '',
           enr, payDay, autoFrom, rows: s.rows, open, paid: paidSum, openN: s.rows.filter((L) => L.kind === 'unpaid').length, paidN: s.rows.filter((L) => L.kind === 'paid').length,
           match: m ? m.id : '', action: m ? 'link' : 'new' };
       }).sort((a, b) => sortKo((a.status === '재원' ? '0' : '1') + (a.match ? '1' : '0') + a.name, (b.status === '재원' ? '0' : '1') + (b.match ? '1' : '0') + b.name));

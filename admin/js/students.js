@@ -313,17 +313,29 @@ window.deleteStudent = async (uid, name) => {
   if (!confirm(`${name} 학생을 퇴원 처리(완전 삭제)하시겠습니까?\n\n` +
     `· 학생 로그인 계정과 학부모 로그인 계정이 삭제됩니다\n` +
     `· 주간성취도 · 토요클리닉 · 일일테스트 결과 · 학습보고서 · 학부모 댓글 · 영상 시청기록 · 등원 체크 기록이 모두 삭제됩니다\n` +
-    `· 숙제 기록에서는 이 학생 이름만 빠집니다\n\n되돌릴 수 없습니다.`)) return;
+    `· 숙제 기록에서는 이 학생 이름만 빠집니다\n` +
+    `· 수납 프로그램에서는 「퇴원」으로 바뀌고 오늘 이후 납입기한인 미납 수강료 청구는 취소됩니다 (지난 납입·미납 기록은 남아요)\n\n되돌릴 수 없습니다.`)) return;
   if (!confirm(`정말 ${name} 학생의 모든 자료를 삭제할까요?`)) return;
   try {
     const deleteFn = httpsCallable(functionsInstance, 'deleteStudentAccount');
     const res = await deleteFn({ uid });
     const c = (res && res.data && res.data.counts) || {};
     const n = (k) => c[k] || 0;
+    // 수납 프로그램 연동: 연결된 수납 학생도 퇴원 + 앞으로 생길 수강료 청구 취소
+    let billMsg = '';
+    try {
+      if (window.billLeave) {
+        const b = await window.billLeave.leaveByHomepageStudent(uid);
+        const t = b.real.students ? b.real : b.test;
+        billMsg = (b.real.students || b.test.students)
+          ? `\n\n수납: 퇴원으로 변경${b.real.students ? '' : ' (테스트 수납 기록)'} · 미납 수강료 청구 ${t.charges}건 취소`
+          : '\n\n수납: 연결된 수납 학생이 없어요';
+      }
+    } catch (e) { billMsg = '\n\n⚠️ 수납 퇴원 연동 실패: ' + e.message + '\n수납 페이지에서 직접 퇴원으로 바꿔 주세요.'; }
     alert(`✅ ${name} 학생 퇴원 처리 완료\n\n` +
       `학부모 계정 ${n('parents')}개 · 주간성취도 ${n('weeklyReports')}건 · 토요클리닉 ${n('satClinicReports')}건\n` +
       `일일테스트 ${n('dailyTestResults')}건 · 학습보고서 ${n('studentReports')}건 · 댓글 ${n('reportComments')}건\n` +
-      `시청기록 ${n('videoProgress')}건 · 등원 체크 ${n('attendance')}건 삭제`);
+      `시청기록 ${n('videoProgress')}건 · 등원 체크 ${n('attendance')}건 삭제` + billMsg);
   } catch (e) {
     alert('삭제 중 오류: ' + e.message);
     return;
