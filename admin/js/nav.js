@@ -136,7 +136,30 @@
       }
       groupsEl.appendChild(wrap); groupElById[g.id] = wrap;
     });
+    renderRecentBlock();
     syncActive();
+  }
+
+  // ── 사이드바 "최근 사용" (오늘 그룹 바로 아래, 최대 5개) ──
+  const RECENT_SIDE_MAX = 5;
+  function renderRecentBlock() {
+    let box = groupsEl.querySelector('.ad-recent');
+    const list = readRecent().filter((id) => isVisible(itemById[id].group)).slice(0, RECENT_SIDE_MAX);
+    if (!list.length) { if (box) box.remove(); return; }
+    if (!box) {
+      box = document.createElement('div'); box.className = 'ad-recent';
+      const home = groupElById.home;
+      if (home && home.nextSibling) groupsEl.insertBefore(box, home.nextSibling); else groupsEl.appendChild(box);
+    }
+    box.innerHTML = '<div class="ad-recent-head"><span class="ic">🕘</span><span class="lb">최근 사용</span></div>';
+    list.forEach((id) => {
+      const m = itemById[id];
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'ad-item ad-recent-item' + (id === current ? ' active' : ''); b.dataset.recent = id;
+      b.innerHTML = '<span>' + esc(m.label) + '</span><small>' + esc(groupById[m.group].label) + '</small>';
+      b.addEventListener('click', () => openMenu(id));
+      box.appendChild(b);
+    });
   }
 
   function syncActive() {
@@ -173,6 +196,7 @@
     current = id;
     syncActive();
     if (id !== 'home') pushRecent(id);
+    renderRecentBlock();
     try { history.replaceState(null, '', '#' + id); } catch (e) {}
   };
   window.adminOpenMenu = (id) => openMenu(id);

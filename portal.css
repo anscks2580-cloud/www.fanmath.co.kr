@@ -91,6 +91,12 @@ nav.ad-top {
 .ad-item.active { color:var(--purple, #5B3FA6); background:rgba(245,197,24,0.1); font-weight:600; }
 .ad-item.active::before { content:''; position:absolute; left:12px; top:50%; width:5px; height:5px; border-radius:50%; background:var(--gold); transform:translateY(-50%); }
 .ad-item .badge { margin-left:auto; font-size:10.5px; padding:1px 7px; border-radius:10px; background:rgba(214,69,69,0.18); color:#D64545; font-weight:600; }
+/* 사이드바 최근 사용 (최대 5개) */
+.ad-recent { margin:2px 0 8px; padding-bottom:6px; border-bottom:1px solid var(--border-soft); }
+.ad-recent-head { display:flex; align-items:center; gap:10px; padding:10px 10px 4px; font-size:11.5px; color:var(--muted); letter-spacing:.3px; font-weight:600; }
+.ad-recent-head .ic { width:22px; text-align:center; font-size:13px; }
+.ad-recent-item { padding-left:26px; }
+.ad-recent-item small { margin-left:auto; font-size:10.5px; color:var(--muted); opacity:.8; }
 .ad-side-foot { padding:10px 14px; border-top:1px solid var(--border-soft); font-size:11.5px; color:var(--muted); display:flex; justify-content:space-between; align-items:center; gap:8px; }
 .ad-side-foot .role { padding:2px 8px; border-radius:10px; background:rgba(245,197,24,0.12); color:var(--purple, #5B3FA6); font-weight:600; }
 .ad-backdrop { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:89; }
