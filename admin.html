@@ -1014,29 +1014,15 @@
 
     <!-- ══ 설명회 후속 상담 · 후기 (seminar-followup.html) ══ -->
     <div class="card">
-      <h3>🔗 설명회 후속 상담 · 후기 링크 / QR</h3>
+      <h3>🔗 설명회 후기 · 후속 상담 링크 / QR</h3>
       <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
-        설명회 끝나고 나눠 드릴 링크·QR입니다. <b style="color:var(--off-white);">관별로 QR이 다릅니다</b> — 평촌관 설명회에는 평촌관 QR을, 산본관에는 산본관 QR을 쓰면 신청 페이지에 그 관이 미리 선택됩니다. 한 페이지 안에 <b style="color:var(--off-white);">후속 상담 신청</b>과 <b style="color:var(--off-white);">후기</b> 두 탭이 있고, 상담 신청을 마치면 후기 쓰기로 자연스럽게 이어집니다. 접수되면 텔레그램으로 알림이 옵니다.
+        설명회 끝나고 나눠 드릴 링크·QR입니다 (평촌관·산본관 공통, 하나). 열면 <b style="color:var(--off-white);">1단계 설명회 후기(필수)</b> → <b style="color:var(--off-white);">2단계 후속 상담 신청(선택)</b> 순서로 진행되고, 참석한 관은 학부모가 화면에서 고릅니다. 접수되면 텔레그램으로 알림이 오고, 아래 목록은 관별로 나뉘어 보입니다.
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <div style="padding:14px 16px;border:1px solid rgba(91,63,166,0.25);border-radius:10px;background:rgba(91,63,166,0.05);">
-          <div style="font-weight:800;margin-bottom:8px;"><span class="sm-branch pc">평촌관</span></div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <button class="btn btn-primary btn-sm" onclick="showSeminarFollowupQr('평촌관')">📱 QR 보기</button>
-            <button class="btn btn-secondary btn-sm" onclick="copySeminarFollowupLink('평촌관')">🔗 링크 복사</button>
-            <a class="btn btn-secondary btn-sm" href="seminar-followup.html?b=평촌관" target="_blank" rel="noopener">열기 ↗</a>
-            <button class="btn btn-secondary btn-sm" onclick="showSeminarFollowupQr('평촌관','review')" title="후기 탭으로 바로 열리는 QR">⭐ 후기 전용 QR</button>
-          </div>
-        </div>
-        <div style="padding:14px 16px;border:1px solid rgba(30,140,160,0.25);border-radius:10px;background:rgba(30,140,160,0.05);">
-          <div style="font-weight:800;margin-bottom:8px;"><span class="sm-branch sb">산본관</span></div>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <button class="btn btn-primary btn-sm" onclick="showSeminarFollowupQr('산본관')">📱 QR 보기</button>
-            <button class="btn btn-secondary btn-sm" onclick="copySeminarFollowupLink('산본관')">🔗 링크 복사</button>
-            <a class="btn btn-secondary btn-sm" href="seminar-followup.html?b=산본관" target="_blank" rel="noopener">열기 ↗</a>
-            <button class="btn btn-secondary btn-sm" onclick="showSeminarFollowupQr('산본관','review')" title="후기 탭으로 바로 열리는 QR">⭐ 후기 전용 QR</button>
-          </div>
-        </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-primary btn-sm" onclick="showSeminarFollowupQr()">📱 QR 보기</button>
+        <button class="btn btn-secondary btn-sm" onclick="copySeminarFollowupLink()">🔗 링크 복사</button>
+        <a class="btn btn-secondary btn-sm" href="seminar-followup.html" target="_blank" rel="noopener">열기 ↗</a>
+        <span style="font-size:11.5px;color:var(--muted);">https://www.fanmath.co.kr/seminar-followup.html</span>
       </div>
       <div id="sfQrBox" style="margin-top:14px;text-align:center;"></div>
     </div>
@@ -2617,7 +2603,7 @@
 <script defer src="admin/js/consult.js?v=1793351000"></script>
 <script defer src="admin/js/homepopup.js"></script>
 <script defer src="admin/js/consult-qr.js"></script>
-<script defer src="admin/js/seminar.js?v=1793356000"></script>
+<script defer src="admin/js/seminar.js?v=1793358000"></script>
 <script defer src="admin/js/videocode.js"></script>
 <script defer src="admin/js/schedule.js"></script>
 <script defer src="admin/js/meetings.js"></script>

@@ -270,12 +270,11 @@ function sfPrettyDate(str) {
   const [y, m, d] = String(str).split('-').map(Number); if (!y || !m || !d) return str;
   return `${m}/${d}(${DOW_KO[new Date(y, m - 1, d).getDay()]})`;
 }
-window.sfLink = (branch, tab) => SF_URL + '?b=' + encodeURIComponent(branch) + (tab === 'review' ? '&tab=review' : '');
+window.sfLink = () => SF_URL;   // 평촌관·산본관 공통 링크 하나
 
-window.copySeminarFollowupLink = async function(branch, tab) {
-  const url = sfLink(branch, tab);
-  try { await navigator.clipboard.writeText(url); showToast(`${branch} ${tab === 'review' ? '후기' : '후속 상담'} 링크를 복사했습니다`); }
-  catch (e) { prompt('링크', url); }
+window.copySeminarFollowupLink = async function() {
+  try { await navigator.clipboard.writeText(SF_URL); showToast('설명회 후기·후속 상담 링크를 복사했습니다'); }
+  catch (e) { prompt('링크', SF_URL); }
 };
 
 // QR 보기 (consult-qr.js와 같은 라이브러리)
@@ -287,26 +286,25 @@ function sfLoadQrLib() {
     sc.onload = ok; sc.onerror = () => fail(new Error('QR 라이브러리 로드 실패')); document.head.appendChild(sc);
   });
 }
-window.showSeminarFollowupQr = async function(branch, tab) {
+window.showSeminarFollowupQr = async function() {
   const box = document.getElementById('sfQrBox'); if (!box) return;
-  const url = sfLink(branch, tab);
   box.innerHTML = '<div style="color:var(--muted);font-size:12px;">QR 만드는 중...</div>';
   try {
     await sfLoadQrLib();
     const holder = document.createElement('div');
-    new QRCode(holder, { text: url, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
+    new QRCode(holder, { text: SF_URL, width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
     box.innerHTML = '';
     const title = document.createElement('div');
     title.style.cssText = 'font-weight:800;font-size:14px;margin-bottom:6px;';
-    title.textContent = `${branch} · ${tab === 'review' ? '설명회 후기' : '후속 상담 신청 (후기 탭 포함)'}`;
+    title.textContent = '설명회 후기 · 후속 상담 신청 (평촌관·산본관 공통)';
     box.appendChild(title); box.appendChild(holder);
-    const u = document.createElement('div'); u.style.cssText = 'font-size:11px;color:var(--muted);margin-top:6px;word-break:break-all;'; u.textContent = url; box.appendChild(u);
-    const acts = document.createElement('div'); acts.style.cssText = 'display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;';
+    const u = document.createElement('div'); u.style.cssText = 'font-size:11px;color:var(--muted);margin-top:6px;word-break:break-all;'; u.textContent = SF_URL; box.appendChild(u);
+    const acts = document.createElement('div'); acts.style.cssText = 'display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;justify-content:center;';
     const dl = document.createElement('button'); dl.className = 'btn btn-secondary btn-sm'; dl.textContent = '⬇ PNG 저장';
     dl.onclick = () => {
       const c = holder.querySelector('canvas'); const img = holder.querySelector('img');
       const src = c ? c.toDataURL('image/png') : img?.src; if (!src) return;
-      const a = document.createElement('a'); a.href = src; a.download = `설명회_${tab === 'review' ? '후기' : '후속상담'}_QR_${branch}.png`; a.click();
+      const a = document.createElement('a'); a.href = src; a.download = '설명회_후기_후속상담_QR.png'; a.click();
     };
     acts.appendChild(dl); box.appendChild(acts);
   } catch (e) { box.innerHTML = `<div style="color:#D64545;font-size:12px;">${smEsc(e.message)}</div>`; }
