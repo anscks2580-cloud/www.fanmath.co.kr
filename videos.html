@@ -968,7 +968,7 @@ function updateModalProgressNote() {
   noteEl.innerHTML = completed
     ? `✅ 시청 완료 (${percent}%) · 자유롭게 이동 가능`
     : currentProgress.freeSeek
-    ? `⏳ 시청률 ${percent}% · 기출해설은 원하는 구간으로 자유롭게 이동 가능 (보던 위치는 이어보기로 저장됩니다)`
+    ? `⏳ 시청률 ${percent}% · 이 영상은 원하는 구간으로 자유롭게 이동 가능 (보던 위치는 이어보기로 저장됩니다)`
     : `⏳ 시청률 ${percent}% · 처음 시청 중에는 이미 본 구간으로 되돌아가기만 가능하고, 아직 보지 않은 구간으로는 넘길 수 없습니다 (끝까지 한 번 다 보면 자유롭게 이동 가능)`;
 }
 
@@ -1715,9 +1715,10 @@ function fmtTime(t) {
   return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
 }
 
-// 기출해설 영상인지 (기출해설은 앞으로 넘기기 자유)
+// 앞으로 넘기기가 자유로운 영상인지 — 기출해설(기출_…) · 주간 클리어(주간클리어_…)
+// (그 외 정규 강의는 완주 전까지 앞으로 넘기기·배속 잠금)
 function isFreeSeekTag(tag) {
-  return String(tag || '').split(/[,\s]+/).some(t => t.startsWith('기출_'));
+  return String(tag || '').split(/[,\s]+/).some(t => t.startsWith('기출_') || t.startsWith('주간클리어_'));
 }
 
 // 이어보기 지점 계산
