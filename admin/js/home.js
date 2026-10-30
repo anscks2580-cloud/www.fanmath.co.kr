@@ -47,8 +47,15 @@
     const dateEl = $('hmDate'); if (dateEl) dateEl.textContent = `${now.getFullYear()}년 ${now.getMonth() + 1}월 ${now.getDate()}일 ${DOW[now.getDay()]}요일`;
     const a = window.currentAdmin || {};
     const h = now.getHours();
-    const hello = h < 11 ? '좋은 아침이에요' : h < 17 ? '안녕하세요' : '수고 많으셨어요';
-    const g = $('hmGreeting'); if (g) g.innerHTML = esc(hello) + (a.name ? ', ' + esc(a.name) + '님' : '') + '<small>송우찬수학학원 관리자</small>';
+    // 시간대별 응원 문구 — 들어올 때마다 랜덤
+    const CHEER = {
+      morning: ['오늘도 화이팅', '좋은 아침이에요, 힘차게 시작해요', '오늘 하루도 열심히 해봐요', '상쾌한 아침, 오늘도 잘 될 거예요', '좋은 아침! 오늘도 달려봅시다', '오늘도 학생들과 좋은 하루 만들어요'],
+      day: ['오늘도 화이팅', '힘내세요, 잘하고 있어요', '오늘도 열심히 해봐요', '한 걸음씩, 오늘도 꾸준히', '지금처럼만 하면 됩니다', '오늘도 멋진 하루 만들어요'],
+      evening: ['오늘도 화이팅', '오늘도 수고 많으셨어요', '끝까지 힘내요', '저녁 수업도 화이팅', '오늘 하루도 잘 버텼어요', '조금만 더, 오늘도 잘하고 있어요'],
+    };
+    const pool = CHEER[h < 11 ? 'morning' : h < 17 ? 'day' : 'evening'];
+    const hello = pool[Math.floor(Math.random() * pool.length)];
+    const g = $('hmGreeting'); if (g) g.innerHTML = esc(hello) + (a.name ? ', ' + esc(a.name) + '님!' : '!') + '<small>송우찬수학학원 관리자</small>';
     const quick = $('hmQuick');
     if (quick) {
       const recent = typeof window.adminRecentMenus === 'function' ? window.adminRecentMenus() : [];
