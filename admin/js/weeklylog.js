@@ -25,14 +25,38 @@ const WL_PLACEHOLDERS = {
   consult:  ['홍길동','고1','○○고','송문찬T','고1-3A'],
 };
 
+// 관별 기본 기간 (오늘 기준)
+//  · 평촌관: 이번 주 월 ~ 토
+//  · 산본관: 매주 금요일에 작성 — 지난주 토 ~ 이번 주 토
+function wlDefaultRange(branch) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const mon = new Date(today); mon.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+  const sat = new Date(mon); sat.setDate(mon.getDate() + 5);
+  if (branch === '산본관') { const prevSat = new Date(sat); prevSat.setDate(sat.getDate() - 7); return [prevSat, sat]; }
+  return [mon, sat];
+}
+function wlFmtDate(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+window.wlApplyDefaultDates = function(force) {
+  const br = document.getElementById('wl-branch').value;
+  const [from, to] = wlDefaultRange(br);
+  const f = document.getElementById('wl-from'), t = document.getElementById('wl-to');
+  if (force || !f.value) f.value = wlFmtDate(from);
+  if (force || !t.value) t.value = wlFmtDate(to);
+};
+
 window.initWeeklyLogTab = function() {
-  // 이번 주 월~토 기본값
-  const today = new Date();
-  const mon = new Date(today); mon.setDate(today.getDate() - ((today.getDay()+6)%7));
-  const sat = new Date(mon);  sat.setDate(mon.getDate() + 5);
-  const fmt = d => d.toISOString().slice(0,10);
-  if (!document.getElementById('wl-from').value) document.getElementById('wl-from').value = fmt(mon);
-  if (!document.getElementById('wl-to').value)   document.getElementById('wl-to').value   = fmt(sat);
+  // 관 선택은 브라우저에 기억 (평촌관·산본관 따로)
+  const bsel = document.getElementById('wl-branch');
+  try { const b = localStorage.getItem('swc_wl_branch'); if ((b === '평촌관' || b === '산본관') && !bsel.dataset.touched) bsel.value = b; } catch (e) {}
+  if (!bsel.dataset.bound) {
+    bsel.dataset.bound = '1';
+    bsel.addEventListener('change', () => {
+      bsel.dataset.touched = '1';
+      try { localStorage.setItem('swc_wl_branch', bsel.value); } catch (e) {}
+      wlApplyDefaultDates(true);   // 관을 바꾸면 그 관 기준 기간으로 다시 맞춤
+    });
+  }
+  wlApplyDefaultDates(false);
 
   // 각 섹션 초기화 (비어있을 때만)
   ['new','leave','pause','upcoming','cash','consult'].forEach(sec => {
