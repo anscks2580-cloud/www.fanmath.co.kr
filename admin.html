@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="portal.css">
-<link rel="stylesheet" href="admin/admin.css">
+<link rel="stylesheet" href="admin/admin.css?v=1793350000">
 <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.1.0/dist/tus.min.js"></script>
 <!-- SheetJS 엑셀 파싱 -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -836,8 +836,22 @@
         <span style="font-size:12px;color:var(--muted);line-height:1.5;">관리자 로그인 없이 링크(QR)로만 열리는 상담 전용 화면입니다. 홈페이지·관리자 페이지 어디에도 연결되어 있지 않습니다.<br>QR은 고정 주소라 한 번 인쇄해 상담 테이블에 두고 계속 쓰면 됩니다.</span>
       </div>
 
+      <div class="cf-branch-bar">
+        <span class="cf-branch-label">관 선택</span>
+        <select id="consultBranchFilter" onchange="setConsultBranch(this.value)" style="font-weight:700;">
+          <option value="평촌관">평촌관</option>
+          <option value="산본관">산본관</option>
+          <option value="">전체 (관 표시 포함)</option>
+        </select>
+        <span class="cf-count" id="consultBranchCount"></span>
+        <span style="font-size:11.5px;color:var(--muted);">평촌관·산본관 상담 신청은 따로 봅니다. 선택한 관은 이 브라우저에 기억됩니다.</span>
+      </div>
       <div class="cf-toolbar">
         <input type="search" id="consultSearch" placeholder="학생 이름 · 연락처 검색" oninput="setConsultFilter()">
+        <select id="consultViewFilter" onchange="setConsultFilter()">
+          <option value="visible">보이는 신청</option>
+          <option value="hidden">🙈 숨긴 신청</option>
+        </select>
         <select id="consultStatusFilter" onchange="setConsultFilter()">
           <option value="all">전체</option>
           <option value="parent_done">학부모 설문 완료</option>
@@ -2538,7 +2552,7 @@
 <script defer src="admin/js/adminmgmt.js"></script>
 <script defer src="admin/js/apex-promo.js"></script>
 <script defer src="admin/js/notice.js"></script>
-<script defer src="admin/js/consult.js"></script>
+<script defer src="admin/js/consult.js?v=1793350000"></script>
 <script defer src="admin/js/homepopup.js"></script>
 <script defer src="admin/js/consult-qr.js"></script>
 <script defer src="admin/js/seminar.js?v=1792754000"></script>
@@ -2551,7 +2565,7 @@
 <script defer src="admin/js/weeklyclear.js?v=1793190000"></script>
 <script defer src="admin/js/exammaterials.js?v=1792850000"></script>
 <script defer src="admin/js/nav.js?v=1793190000"></script>
-<script defer src="admin/js/home.js?v=1793180000"></script>
+<script defer src="admin/js/home.js?v=1793350000"></script>
 
 <div id="toast"></div>
 <div id="printSheet"></div>

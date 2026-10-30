@@ -97,23 +97,29 @@
       const snap = await getDocs(query(collection(db, 'consultForms'), orderBy('createdAt', 'desc')));
       const now = new Date(); const today = ymd(now);
       const weekAgo = new Date(now); weekAgo.setDate(now.getDate() - 7);
-      let todayN = 0, weekN = 0, openN = 0; const recent = [];
+      // 평촌관 · 산본관 따로 집계 (목록에서 숨긴 신청은 제외)
+      const mk = () => ({ todayN: 0, weekN: 0, openN: 0 });
+      const st = { '평촌관': mk(), '산본관': mk() }; const recent = [];
       snap.forEach((d) => {
         const x = d.data();
+        if (x.hidden === true) return;
+        const br = String(x.branch || '').includes('산본') ? '산본관' : '평촌관';
         const created = x.createdAt?.toDate ? x.createdAt.toDate() : null;
         const done = x.stage === 'consultation_completed';
-        if (created && ymd(created) === today) todayN++;
-        if (created && created >= weekAgo) weekN++;
-        if (!done) openN++;
-        if (recent.length < 4) recent.push({ name: x.studentName || '(이름 없음)', grade: x.grade || x.studentGrade || '', created, done, stage: x.stage || '' });
+        if (created && ymd(created) === today) st[br].todayN++;
+        if (created && created >= weekAgo) st[br].weekN++;
+        if (!done) st[br].openN++;
+        if (recent.length < 4) recent.push({ name: x.studentName || '(이름 없음)', grade: x.grade || x.studentGrade || '', br, created, done, stage: x.stage || '' });
       });
+      const two = (k) => `<span class="n" style="font-size:15px;line-height:1.5;">평촌 ${st['평촌관'][k]} <small style="color:var(--muted);font-weight:400;">·</small> 산본 ${st['산본관'][k]}</span>`;
+      const openAll = st['평촌관'].openN + st['산본관'].openN;
       el.innerHTML = `
         <div class="hm-stat">
-          <div class="box" data-open="consult"><span class="n">${todayN}</span><span class="k">오늘 접수</span></div>
-          <div class="box" data-open="consult"><span class="n">${weekN}</span><span class="k">최근 7일</span></div>
-          <div class="box${openN ? ' warn' : ''}" data-open="consult"><span class="n">${openN}</span><span class="k">상담 진행 전</span></div>
+          <div class="box" data-open="consult">${two('todayN')}<span class="k">오늘 접수</span></div>
+          <div class="box" data-open="consult">${two('weekN')}<span class="k">최근 7일</span></div>
+          <div class="box${openAll ? ' warn' : ''}" data-open="consult">${two('openN')}<span class="k">상담 진행 전</span></div>
         </div>
-        ${recent.length ? '<div class="hm-list">' + recent.map((r) => `<div class="hm-row"><span class="dot" style="background:${r.done ? '#2E9E5B' : '#F5C518'}"></span><span class="t"><b>${esc(r.name)}${r.grade ? ' <small style="display:inline">' + esc(r.grade) + '</small>' : ''}</b><small>${r.done ? '상담 완료' : '상담 전'}</small></span><span class="r">${r.created ? esc(md(r.created)) : ''}</span></div>`).join('') + '</div>' : '<div class="hm-empty">접수된 상담이 없습니다.</div>'}`;
+        ${recent.length ? '<div class="hm-list">' + recent.map((r) => `<div class="hm-row"><span class="dot" style="background:${r.done ? '#2E9E5B' : '#F5C518'}"></span><span class="t"><b><small style="display:inline;font-weight:800;color:${r.br === '산본관' ? '#15788C' : '#5B3FA6'};">[${r.br}]</small> ${esc(r.name)}${r.grade ? ' <small style="display:inline">' + esc(r.grade) + '</small>' : ''}</b><small>${r.done ? '상담 완료' : '상담 전'}</small></span><span class="r">${r.created ? esc(md(r.created)) : ''}</span></div>`).join('') + '</div>' : '<div class="hm-empty">접수된 상담이 없습니다.</div>'}`;
     } catch (e) {
       el.innerHTML = `<div class="hm-empty">상담 현황을 불러오지 못했습니다 (${esc(e.message)})</div>`;
     }

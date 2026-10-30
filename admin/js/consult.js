@@ -14,7 +14,12 @@ async function consultFlowModule() {
 }
 let consultRows = [];             // [{ id, data }] — consultForms (최신순)
 let consultLegacyProfiles = {};   // { 상담ID: { parent, student } } — 문서 ID 규칙 이전(자동 ID)으로 저장된 설문 결과
-const consultFilter = { q: '', status: 'all' };
+// 관 구분: 평촌관 · 산본관은 항상 따로 봅니다 (선택값은 브라우저에 기억)
+let consultBranch = '평촌관';
+try { const b = localStorage.getItem('swc_consult_branch'); if (b === '평촌관' || b === '산본관' || b === '') consultBranch = b; } catch (e) {}
+const consultFilter = { q: '', status: 'all', view: 'visible' };   // view: visible(숨긴 것 제외) | hidden(숨긴 것만)
+// 기록의 관 판별 — '산본'이 들어가면 산본관, 그 외(미입력 포함)는 평촌관
+function consultBranchOf(d) { return String(d?.branch || '').includes('산본') ? '산본관' : '평촌관'; }
 let consultRefreshTimer = null;
 let crCurrent = null;
 
@@ -55,7 +60,31 @@ window.initConsultTab = async function() {
 window.setConsultFilter = function() {
   consultFilter.q = document.getElementById('consultSearch').value;
   consultFilter.status = document.getElementById('consultStatusFilter').value;
+  const v = document.getElementById('consultViewFilter'); if (v) consultFilter.view = v.value;
   renderConsultList();
+};
+
+window.setConsultBranch = function(b) {
+  consultBranch = b;
+  try { localStorage.setItem('swc_consult_branch', b); } catch (e) {}
+  renderConsultList();
+};
+
+// 목록에서 숨기기 / 다시 보이기 (삭제 아님 — hidden 표시만 바꿉니다)
+window.toggleConsultHidden = async function(cid, hide) {
+  const row = consultRows.find((r) => r.id === cid);
+  if (!row) return;
+  const name = row.data.studentName || '이름없음';
+  if (hide && !confirm(`${name} 상담 신청을 목록에서 숨길까요?\n삭제되지 않으며 "숨긴 신청" 보기에서 언제든 다시 꺼낼 수 있습니다.`)) return;
+  try {
+    await updateDoc(doc(db, 'consultForms', cid), hide
+      ? { hidden: true, hiddenAt: Timestamp.now(), hiddenBy: auth.currentUser?.email || '' }
+      : { hidden: false, hiddenAt: null, hiddenBy: '' });
+    row.data.hidden = hide;
+    if (window._consultData && window._consultData[cid]) window._consultData[cid].hidden = hide;
+    showToast(hide ? `${name} 상담 신청을 숨겼습니다` : `${name} 상담 신청을 다시 표시합니다`);
+    renderConsultList();
+  } catch (e) { alert('처리 실패: ' + e.message); }
 };
 
 function renderConsultList() {
@@ -67,8 +96,17 @@ function renderConsultList() {
     return;
   }
   const q = consultFilter.q.trim(), qn = q.replace(/\s/g, ''), qd = q.replace(/\D/g, '');
+  const bsel = document.getElementById('consultBranchFilter'); if (bsel && bsel.value !== consultBranch) bsel.value = consultBranch;
+  const wantHidden = consultFilter.view === 'hidden';
+  // 관별 건수 (숨긴 것 제외) — 평촌관·산본관 탭 옆에 표시
+  const bc = { '평촌관': 0, '산본관': 0, hidden: 0 };
+  consultRows.forEach((r) => { if (r.data.hidden === true) bc.hidden++; else bc[consultBranchOf(r.data)]++; });
+  const bcEl = document.getElementById('consultBranchCount');
+  if (bcEl) bcEl.innerHTML = `평촌관 <b>${bc['평촌관']}</b> · 산본관 <b>${bc['산본관']}</b>${bc.hidden ? ` · 숨김 ${bc.hidden}` : ''}`;
   const rows = consultRows.filter((r) => {
     const d = r.data;
+    if ((d.hidden === true) !== wantHidden) return false;
+    if (consultBranch && consultBranchOf(d) !== consultBranch) return false;
     if (q) {
       const nameHit = qn && String(d.studentName || '').replace(/\s/g, '').includes(qn);
       const phoneHit = qd.length >= 3 && (String(d.parentPhone || '').replace(/\D/g, '').includes(qd) || String(d.studentPhone || '').replace(/\D/g, '').includes(qd));
@@ -89,8 +127,8 @@ function renderConsultList() {
       default: return true;
     }
   });
-  if (countEl) countEl.textContent = `${rows.length} / ${consultRows.length}건`;
-  if (!rows.length) { el.innerHTML = '<div style="color:var(--muted);font-size:13px;">조건에 맞는 상담 기록이 없습니다.</div>'; return; }
+  if (countEl) countEl.textContent = `${consultBranch || '전체'}${wantHidden ? ' · 숨긴 신청' : ''} ${rows.length}건`;
+  if (!rows.length) { el.innerHTML = `<div style="color:var(--muted);font-size:13px;">${wantHidden ? '숨긴 상담 신청이 없습니다.' : '조건에 맞는 상담 기록이 없습니다.'}</div>`; return; }
   const e = escapeConsultHtml;
   const chip = (cls, txt) => `<span class="cf-chip ${cls}">${txt}</span>`;
   const surveyChip = (label, x) => x.done
@@ -101,15 +139,17 @@ function renderConsultList() {
     const dateStr = d.createdAt?.toDate ? formatConsultDate(d.createdAt.toDate()) : '-';
     const upd = s?.updatedAt?.toDate ? formatConsultDate(s.updatedAt.toDate()) : dateStr;
     const stageTxt = s ? s.stageLabel + (s.isFlow && s.video && s.video.status !== 'pending' && s.video.status !== 'none' ? ` · 상담자료 ${s.video.label}` : '') : '신청서 접수';
+    const br = consultBranchOf(d);
     return `
-      <div class="consult-item cf-item">
+      <div class="consult-item cf-item${d.hidden === true ? ' cf-hidden' : ''}">
         <div class="consult-main">
+          <span class="cf-branch ${br === '산본관' ? 'sb' : 'pc'}">${br}</span>
           <span class="consult-level">${e(d.level || '-')}</span>
           <span class="consult-name">${e(d.studentName || '이름없음')}</span>
           ${d.source === 'tablet' ? '<span class="consult-src">🖊 태블릿</span>'
             : d.source === 'qr' ? '<span class="consult-src">📱 QR</span>'
             : '<span class="consult-src web">홈페이지</span>'}
-          <span class="consult-sub">${e(d.schoolGrade || '')} · ${e(d.branch || '')} · ${dateStr}</span>
+          <span class="consult-sub">${e(d.schoolGrade || '')} · ${dateStr}</span>
         </div>
         <div class="cf-status">
           ${chip('ok', '신청서 ✓')}
@@ -127,6 +167,9 @@ function renderConsultList() {
           <button class="btn btn-secondary btn-sm" onclick="openConsultRecord('${r.id}','student')">학생 결과</button>
           <button class="btn btn-secondary btn-sm" onclick="startConsultSurvey('${r.id}','student')">학생 설문 시작</button>
           <button class="btn btn-secondary btn-sm" onclick="saveConsultImage('${r.id}')">📷 결과 이미지 (카톡 전달용)</button>
+          ${d.hidden === true
+            ? `<button class="btn btn-secondary btn-sm" style="margin-left:auto;" onclick="toggleConsultHidden('${r.id}', false)">↩ 다시 보이기</button>`
+            : `<button class="btn btn-secondary btn-sm" style="margin-left:auto;opacity:.75;" onclick="toggleConsultHidden('${r.id}', true)">🙈 목록에서 숨기기</button>`}
         </div>
       </div>`;
   }).join('');
