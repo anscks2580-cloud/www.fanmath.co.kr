@@ -100,16 +100,18 @@
       // 평촌관 · 산본관 따로 집계 (목록에서 숨긴 신청은 제외)
       const mk = () => ({ todayN: 0, weekN: 0, openN: 0 });
       const st = { '평촌관': mk(), '산본관': mk() }; const recent = [];
+      let hiddenN = 0, doneVisible = [];
       snap.forEach((d) => {
         const x = d.data();
-        if (x.hidden === true) return;
+        if (x.hidden === true) { hiddenN++; return; }
+        if (x.stage === 'consultation_completed') doneVisible.push(d.id);
         const br = String(x.branch || '').includes('산본') ? '산본관' : '평촌관';
         const created = x.createdAt?.toDate ? x.createdAt.toDate() : null;
         const done = x.stage === 'consultation_completed';
         if (created && ymd(created) === today) st[br].todayN++;
         if (created && created >= weekAgo) st[br].weekN++;
         if (!done) st[br].openN++;
-        if (recent.length < 4) recent.push({ name: x.studentName || '(이름 없음)', grade: x.grade || x.studentGrade || '', br, created, done, stage: x.stage || '' });
+        if (recent.length < 6) recent.push({ id: d.id, name: x.studentName || '(이름 없음)', grade: x.grade || x.studentGrade || '', br, created, done, stage: x.stage || '' });
       });
       const two = (k) => `<span class="n" style="font-size:15px;line-height:1.5;">평촌 ${st['평촌관'][k]} <small style="color:var(--muted);font-weight:400;">·</small> 산본 ${st['산본관'][k]}</span>`;
       const openAll = st['평촌관'].openN + st['산본관'].openN;
@@ -119,7 +121,12 @@
           <div class="box" data-open="consult">${two('weekN')}<span class="k">최근 7일</span></div>
           <div class="box${openAll ? ' warn' : ''}" data-open="consult">${two('openN')}<span class="k">상담 진행 전</span></div>
         </div>
-        ${recent.length ? '<div class="hm-list">' + recent.map((r) => `<div class="hm-row"><span class="dot" style="background:${r.done ? '#2E9E5B' : '#F5C518'}"></span><span class="t"><b><small style="display:inline;font-weight:800;color:${r.br === '산본관' ? '#15788C' : '#5B3FA6'};">[${r.br}]</small> ${esc(r.name)}${r.grade ? ' <small style="display:inline">' + esc(r.grade) + '</small>' : ''}</b><small>${r.done ? '상담 완료' : '상담 전'}</small></span><span class="r">${r.created ? esc(md(r.created)) : ''}</span></div>`).join('') + '</div>' : '<div class="hm-empty">접수된 상담이 없습니다.</div>'}`;
+        ${recent.length ? '<div class="hm-list">' + recent.map((r) => `<div class="hm-row"><span class="dot" style="background:${r.done ? '#2E9E5B' : '#F5C518'}"></span><span class="t"><b><small style="display:inline;font-weight:800;color:${r.br === '산본관' ? '#15788C' : '#5B3FA6'};">[${r.br}]</small> ${esc(r.name)}${r.grade ? ' <small style="display:inline">' + esc(r.grade) + '</small>' : ''}</b><small>${r.done ? '상담 완료' : '상담 전'}</small></span><span class="r">${r.created ? esc(md(r.created)) : ''}</span><button type="button" class="hm-hide" title="홈 화면 상담 목록에서 숨기기 (삭제 아님)" onclick="hmHideConsult('${r.id}')">✕</button></div>`).join('') + '</div>' : '<div class="hm-empty">접수된 상담이 없습니다.</div>'}
+        <div class="hm-foot">
+          ${doneVisible.length ? `<button type="button" class="btn btn-secondary btn-sm" onclick="hmHideDoneConsults()">✅ 상담 완료 ${doneVisible.length}건 모두 숨기기</button>` : ''}
+          ${hiddenN ? `<span>숨긴 상담 ${hiddenN}건 — 상담 신청 탭 › "🙈 숨긴 신청"에서 다시 꺼낼 수 있습니다</span>` : '<span>✕ 를 누르면 그 상담은 홈·상담 신청 목록에서 숨겨집니다 (삭제 아님)</span>'}
+        </div>`;
+      el._doneIds = doneVisible;
     } catch (e) {
       el.innerHTML = `<div class="hm-empty">상담 현황을 불러오지 못했습니다 (${esc(e.message)})</div>`;
     }
@@ -228,6 +235,25 @@
       el.innerHTML = `<div class="hm-empty">학생 현황을 불러오지 못했습니다 (${esc(e.message)})</div>`;
     }
   }
+
+  // 홈 상담 목록 숨기기 — 삭제가 아니라 hidden 표시만 (상담 신청 탭 "숨긴 신청"에서 복구)
+  async function hideConsultDocs(ids) {
+    for (const id of ids) {
+      await updateDoc(doc(db, 'consultForms', id), { hidden: true, hiddenAt: Timestamp.now(), hiddenBy: auth.currentUser?.email || '' });
+      if (window._consultData && window._consultData[id]) window._consultData[id].hidden = true;
+    }
+  }
+  window.hmHideConsult = async function (id) {
+    try { await hideConsultDocs([id]); showToast('홈 상담 목록에서 숨겼습니다'); await loadConsult(); }
+    catch (e) { alert('숨기기 실패: ' + e.message); }
+  };
+  window.hmHideDoneConsults = async function () {
+    const ids = ($('hmConsult') || {})._doneIds || [];
+    if (!ids.length) return;
+    if (!confirm(`상담 완료된 ${ids.length}건을 목록에서 숨길까요?\n삭제되지 않으며 상담 신청 탭 "숨긴 신청"에서 다시 볼 수 있습니다.`)) return;
+    try { await hideConsultDocs(ids); showToast(`상담 완료 ${ids.length}건을 숨겼습니다`); await loadConsult(); }
+    catch (e) { alert('숨기기 실패: ' + e.message); }
+  };
 
   async function refresh(force) {
     if (loading) return;

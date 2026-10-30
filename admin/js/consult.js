@@ -167,9 +167,7 @@ function renderConsultList() {
           <button class="btn btn-secondary btn-sm" onclick="openConsultRecord('${r.id}','student')">학생 결과</button>
           <button class="btn btn-secondary btn-sm" onclick="startConsultSurvey('${r.id}','student')">학생 설문 시작</button>
           <button class="btn btn-secondary btn-sm" onclick="saveConsultImage('${r.id}')">📷 결과 이미지 (카톡 전달용)</button>
-          ${d.hidden === true
-            ? `<button class="btn btn-secondary btn-sm" style="margin-left:auto;" onclick="toggleConsultHidden('${r.id}', false)">↩ 다시 보이기</button>`
-            : `<button class="btn btn-secondary btn-sm" style="margin-left:auto;opacity:.75;" onclick="toggleConsultHidden('${r.id}', true)">🙈 목록에서 숨기기</button>`}
+          ${d.hidden === true ? `<button class="btn btn-secondary btn-sm" style="margin-left:auto;" onclick="toggleConsultHidden('${r.id}', false)">↩ 다시 보이기</button>` : ''}
         </div>
       </div>`;
   }).join('');
