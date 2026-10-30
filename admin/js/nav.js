@@ -67,7 +67,7 @@
   // 역할별 기본 노출 그룹 (null = 전체). 계정마다 menuGroups로 직접 지정하면 그게 우선.
   const ROLE_PRESETS = {
     master: null,
-    office: ['home', 'student', 'consult', 'office', 'notice'],
+    office: ['home', 'student', 'reports', 'consult', 'office', 'notice'],   // 수업 보고 포함 (2026.10.30)
   };
   const ROLE_LABELS = { master: '원장', office: '관리부' };
 
@@ -95,7 +95,8 @@
     console.warn('[메뉴] ADMIN_GROUPS에 없는 탭을 설정 그룹에 임시 배치:', m.id);
   });
 
-  let visibleGroups = null; // null = 전체
+  // 로그인 계정의 역할을 확인하기 전에는 '오늘'만 보여줌 (전체 메뉴가 잠깐 보였다가 사라지는 깜빡임 방지)
+  let visibleGroups = ['home'];
   let current = 'home';
   const btnById = {}, groupElById = {};
 
