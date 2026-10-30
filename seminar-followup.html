@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>설명회 후속 상담 신청 · 후기 | 송우찬수학학원</title>
+<meta name="description" content="송우찬수학학원 설명회에 참석해 주신 분들을 위한 후속 상담 신청과 설명회 후기 남기기 — 평촌관·산본관.">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://www.fanmath.co.kr/seminar-followup.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="송우찬수학학원">
+<meta property="og:title" content="설명회 후속 상담 신청 · 후기 | 송우찬수학학원">
+<meta property="og:description" content="설명회에 참석해 주셔서 감사합니다. 후속 상담을 신청하시거나 설명회 후기를 남겨 주세요.">
+<meta property="og:url" content="https://www.fanmath.co.kr/seminar-followup.html">
+<meta property="og:image" content="https://www.fanmath.co.kr/assets/og/og-image.jpg">
+<meta property="og:locale" content="ko_KR">
+<link rel="stylesheet" href="style.css">
+<style>
+  .form-wrap { max-width: 680px; margin: 0 auto; padding: 32px 20px 80px; }
+  .form-header { text-align:center; margin-bottom: 22px; }
+  .form-badge {
+    display:inline-block; font-size:11px; letter-spacing:2px; color:var(--purple, #5B3FA6);
+    border:1px solid var(--border); border-radius:100px; padding:5px 14px; margin-bottom:14px;
+  }
+  .form-header h1 { font-size:24px; font-weight:700; margin-bottom:10px; letter-spacing:-0.5px; }
+  .form-header p { font-size:13px; color:var(--muted); line-height:1.7; }
+
+  /* 상단 탭 */
+  .tabs { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:18px; }
+  .tab-btn {
+    padding:13px 10px; border-radius:12px; border:1.5px solid var(--border-soft); background:rgba(30,24,56,0.03);
+    font-size:14px; font-weight:700; color:var(--muted); cursor:pointer; font-family:inherit; transition:all .15s;
+  }
+  .tab-btn.active { border-color:var(--gold); background:var(--gold-glow); color:var(--purple, #5B3FA6); box-shadow:0 0 0 1px rgba(245,197,24,0.35); }
+  .pane { display:none; }
+  .pane.active { display:block; }
+
+  .f-section {
+    background: var(--bg-card);
+    border: 1px solid rgba(30,24,56,0.1);
+    border-radius: 14px;
+    padding: 20px 20px;
+    margin-bottom: 14px;
+  }
+  .f-label {
+    font-size: 13px; font-weight:600; color: var(--purple, #5B3FA6);
+    margin-bottom: 12px; display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+  }
+  .f-sub { font-size: 11px; color: var(--muted); font-weight:400; margin-left:4px; }
+  .f-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 10px; }
+  .f-row:last-child { margin-bottom:0; }
+  .f-field { flex:1; min-width: 140px; }
+  .f-field label { display:block; font-size:12px; color:#6B6489; margin-bottom:6px; font-weight:500; }
+  .f-field label .req { color: var(--purple, #5B3FA6); margin-left:2px; }
+  .f-field input[type=text], .f-field input[type=tel], .f-field input[type=date], .f-field select, .f-field textarea {
+    width:100%; padding:11px 12px; border-radius:8px;
+    background: rgba(30,24,56,0.07); border:1px solid rgba(30,24,56,0.18);
+    color: var(--off-white); font-size:14px; font-family:inherit; color-scheme:light;
+  }
+  .f-field textarea { resize:vertical; min-height:110px; line-height:1.6; }
+  .f-field input:focus, .f-field select:focus, .f-field textarea:focus { outline:none; border-color: var(--gold); }
+
+  /* 관 선택 카드 */
+  .branch-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .branch-card {
+    position:relative; display:block; cursor:pointer; text-align:center;
+    border:1.5px solid var(--border-soft); border-radius:12px; background: rgba(30,24,56,0.03); padding:14px 10px; transition:all .15s;
+  }
+  .branch-card input { position:absolute; opacity:0; width:1px; height:1px; pointer-events:none; }
+  .branch-card:has(input:checked) { border-color:var(--gold); background:var(--gold-glow); box-shadow:0 0 0 1px rgba(245,197,24,0.35); }
+  .branch-card b { display:block; font-size:16px; color:var(--off-white); }
+  .branch-card small { display:block; font-size:11.5px; color:var(--muted); margin-top:3px; }
+  .branch-card:has(input:checked) b { color:var(--purple, #5B3FA6); }
+
+  .chip-group { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip-opt {
+    display:flex; align-items:center; gap:6px; padding: 9px 14px; border-radius: 20px;
+    border:1px solid var(--border-soft); background: rgba(30,24,56,0.03);
+    font-size:13px; color: var(--muted); cursor:pointer; transition: all .15s; position: relative;
+  }
+  .chip-opt input { position:absolute; opacity:0; width:1px; height:1px; pointer-events:none; }
+  .chip-opt:has(input:checked) { border-color: var(--gold); color: var(--purple, #5B3FA6); background: var(--gold-glow); }
+
+  /* 주의사항 */
+  .notice {
+    border:1px solid rgba(245,197,24,0.45); background:rgba(245,197,24,0.08); border-radius:12px;
+    padding:14px 16px; font-size:13px; line-height:1.7; color:var(--off-white); margin-bottom:14px;
+  }
+  .notice b { color:var(--purple, #5B3FA6); }
+  .notice ul { margin:6px 0 0 18px; padding:0; }
+
+  /* 별점 */
+  .stars { display:flex; gap:6px; direction:rtl; justify-content:flex-end; }
+  .stars input { position:absolute; opacity:0; width:1px; height:1px; pointer-events:none; }
+  .stars label { font-size:34px; cursor:pointer; color:rgba(30,24,56,0.18); transition:color .1s; line-height:1; }
+  .stars label:hover, .stars label:hover ~ label, .stars input:checked ~ label { color:var(--gold); }
+  .star-wrap { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+  .star-text { font-size:13px; color:var(--muted); }
+
+  .agree-box { display:flex; align-items:flex-start; gap:10px; cursor:pointer; font-size:13px; color:var(--off-white); line-height:1.6; }
+  .agree-box input { margin-top:4px; accent-color: var(--gold); width:16px; height:16px; flex-shrink:0; }
+  .agree-detail { font-size:11.5px; color:var(--muted); line-height:1.6; margin-top:10px; padding-left:26px; }
+
+  .hidden { display:none !important; }
+
+  .submit-btn {
+    width:100%; padding:16px; margin-top: 8px;
+    background: var(--gold); color: var(--on-gold, #2A1E55); font-weight:700; font-size:15px;
+    border:none; border-radius:10px; cursor:pointer; transition: opacity .15s;
+  }
+  .submit-btn:disabled { opacity:0.5; cursor:not-allowed; }
+  .submit-btn:hover:not(:disabled) { opacity:0.9; }
+
+  .contact-line { text-align:center; font-size:12.5px; color:var(--muted); margin-top:18px; line-height:1.8; }
+  .contact-line a { color:var(--purple, #5B3FA6); text-decoration:none; font-weight:600; }
+
+  .result-box { text-align:center; padding: 40px 20px; }
+  .result-box .emoji { font-size: 44px; margin-bottom: 16px; }
+  .result-box h2 { font-size:20px; margin-bottom:12px; }
+  .result-box p { font-size:13px; color:var(--muted); line-height:1.8; }
+  .result-box .r-card {
+    display:inline-block; margin:18px auto 0; padding:16px 26px; border-radius:12px;
+    background: var(--gold-glow); border:1px solid var(--border); text-align:left; font-size:13px; line-height:1.8;
+  }
+  .result-box .r-card b { color:var(--off-white); }
+  .result-box .r-card .when { font-size:15px; font-weight:800; color:var(--purple, #5B3FA6); }
+  .next-btn {
+    display:inline-block; margin:22px 4px 0; padding:12px 22px; border-radius:10px; cursor:pointer; font-family:inherit;
+    border:1.5px solid var(--gold); color:var(--purple, #5B3FA6); background:none; text-decoration:none; font-size:13px; font-weight:700;
+  }
+  .next-btn.fill { background:var(--gold); color:var(--on-gold, #2A1E55); }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#1E1838;flex-shrink:0;overflow:hidden;max-width:100%;">
+    <img src="swc-logo.svg" style="height:30px;width:30px;object-fit:contain;flex-shrink:0;display:block;" alt="SWC">
+    <span style="font-size:13px;font-weight:600;color:#1E1838;white-space:nowrap;letter-spacing:-0.3px;overflow:hidden;text-overflow:ellipsis;">송우찬수학학원</span>
+  </a>
+</nav>
+
+<div class="page">
+  <div class="form-wrap">
+    <div class="form-header">
+      <div class="form-badge">AFTER SEMINAR</div>
+      <h1>설명회에 참석해 주셔서 감사합니다</h1>
+      <p id="headIntro">궁금한 점이 남으셨다면 <b>후속 상담</b>을 신청해 주시고,<br>오늘 설명회가 어떠셨는지 <b>후기</b>도 남겨 주시면 큰 힘이 됩니다.</p>
+    </div>
+
+    <div class="tabs">
+      <button type="button" class="tab-btn active" id="tabConsult" onclick="showPane('consult')">📞 후속 상담 신청</button>
+      <button type="button" class="tab-btn" id="tabReview" onclick="showPane('review')">⭐ 설명회 후기</button>
+    </div>
+
+    <!-- ══════════ 후속 상담 신청 ══════════ -->
+    <div class="pane active" id="paneConsult">
+      <form id="consultForm">
+        <div class="f-section">
+          <div class="f-label">참석하신 설명회<span class="f-sub">상담도 같은 관에서 진행됩니다</span></div>
+          <div class="branch-grid">
+            <label class="branch-card"><input type="radio" name="branch" value="평촌관" required><b>평촌관</b><small>안양 평촌 학원가</small></label>
+            <label class="branch-card"><input type="radio" name="branch" value="산본관"><b>산본관</b><small>군포 산본</small></label>
+          </div>
+        </div>
+
+        <div class="f-section">
+          <div class="f-label">기본 정보</div>
+          <div class="f-row">
+            <div class="f-field">
+              <label>학부모 성함<span class="req">*</span></label>
+              <input type="text" name="parentName" required maxlength="40" placeholder="학부모 성함" autocomplete="off">
+            </div>
+            <div class="f-field">
+              <label>학부모 연락처<span class="req">*</span></label>
+              <input type="tel" name="parentPhone" required maxlength="20" placeholder="010-0000-0000" inputmode="numeric" autocomplete="off">
+            </div>
+          </div>
+          <div class="f-row">
+            <div class="f-field">
+              <label>학생 이름<span class="req">*</span></label>
+              <input type="text" name="studentName" required maxlength="40" placeholder="학생 이름" autocomplete="off">
+            </div>
+            <div class="f-field">
+              <label>학년<span class="f-sub">선택</span></label>
+              <select name="grade">
+                <option value="">선택</option>
+                <option>중1</option><option>중2</option><option>중3 (예비고1)</option>
+                <option>고1</option><option>고2</option><option>고3</option><option>기타</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="f-section">
+          <div class="f-label">상담 희망 일시<span class="f-sub">가능하신 시간을 알려 주세요</span></div>
+          <div class="f-row">
+            <div class="f-field">
+              <label>1순위 날짜<span class="req">*</span></label>
+              <input type="date" name="date1" required>
+            </div>
+            <div class="f-field">
+              <label>1순위 시간<span class="req">*</span></label>
+              <select name="time1" required></select>
+            </div>
+          </div>
+          <div class="f-row">
+            <div class="f-field">
+              <label>2순위 날짜<span class="f-sub">선택</span></label>
+              <input type="date" name="date2">
+            </div>
+            <div class="f-field">
+              <label>2순위 시간<span class="f-sub">선택</span></label>
+              <select name="time2"></select>
+            </div>
+          </div>
+          <div class="f-row" style="margin-top:10px;">
+            <div class="f-field">
+              <label>상담 때 특히 궁금한 점<span class="f-sub">선택</span></label>
+              <textarea name="note" maxlength="500" placeholder="예: 현재 성적 기준으로 어느 반이 맞을지, 고등 선행 계획, 수업 시간표 등" style="min-height:80px;"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="notice">
+          <b>⚠️ 상담 일정 안내</b>
+          <ul>
+            <li>적어 주신 희망 일시는 <b>참고용</b>이며, 희망하신 시간에 모두 상담이 진행되는 것은 아닙니다.</li>
+            <li>원장님이 일정을 확인한 뒤 <b>학부모 연락처로 다시 연락드려</b> 상담 시간을 확정합니다.</li>
+            <li>연락은 보통 1~2일 안에 드리며, 급하신 경우 학원으로 전화 주세요.</li>
+          </ul>
+        </div>
+
+        <div class="f-section">
+          <label class="agree-box">
+            <input type="checkbox" name="agree" required>
+            <span>개인정보 수집·이용에 동의합니다. <span style="color:var(--purple, #5B3FA6);">*</span></span>
+          </label>
+          <div class="agree-detail">
+            수집 항목: 학부모 성함·연락처, 학생 이름·학년, 희망 상담 일시 &nbsp;|&nbsp; 이용 목적: 상담 일정 안내 연락 &nbsp;|&nbsp; 보유 기간: 상담 종료 후 3개월 이내 파기
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn" id="consultBtn">후속 상담 신청하기</button>
+      </form>
+
+      <div class="result-box hidden" id="consultResult">
+        <div class="emoji">✅</div>
+        <h2>후속 상담 신청이 접수되었습니다</h2>
+        <p>원장님이 일정을 확인한 뒤 <b id="rPhone"></b>로 연락드려<br>상담 시간을 확정해 드리겠습니다.</p>
+        <div class="r-card">
+          <div><b id="rBranch"></b> · <span id="rStudent"></span></div>
+          <div class="when" id="rWhen"></div>
+          <div style="font-size:12px;color:var(--muted);">희망 일시 (참고용 · 확정 아님)</div>
+        </div>
+        <br>
+        <button type="button" class="next-btn fill" onclick="showPane('review')">⭐ 설명회 후기도 남기기</button>
+        <a href="index.html" class="next-btn">홈으로</a>
+      </div>
+    </div>
+
+    <!-- ══════════ 설명회 후기 ══════════ -->
+    <div class="pane" id="paneReview">
+      <form id="reviewForm">
+        <div class="f-section">
+          <div class="f-label">참석하신 설명회</div>
+          <div class="branch-grid">
+            <label class="branch-card"><input type="radio" name="rbranch" value="평촌관" required><b>평촌관</b><small>안양 평촌 학원가</small></label>
+            <label class="branch-card"><input type="radio" name="rbranch" value="산본관"><b>산본관</b><small>군포 산본</small></label>
+          </div>
+        </div>
+
+        <div class="f-section">
+          <div class="f-label">설명회는 어떠셨나요?<span class="req" style="color:var(--purple, #5B3FA6);">*</span></div>
+          <div class="star-wrap">
+            <div class="stars" id="stars">
+              <input type="radio" name="rating" value="5" id="s5" required><label for="s5" title="매우 만족">★</label>
+              <input type="radio" name="rating" value="4" id="s4"><label for="s4" title="만족">★</label>
+              <input type="radio" name="rating" value="3" id="s3"><label for="s3" title="보통">★</label>
+              <input type="radio" name="rating" value="2" id="s2"><label for="s2" title="아쉬움">★</label>
+              <input type="radio" name="rating" value="1" id="s1"><label for="s1" title="많이 아쉬움">★</label>
+            </div>
+            <span class="star-text" id="starText">별을 눌러 주세요</span>
+          </div>
+        </div>
+
+        <div class="f-section">
+          <div class="f-label">후기<span class="req" style="color:var(--purple, #5B3FA6);">*</span><span class="f-sub">도움이 된 점, 아쉬운 점 모두 환영합니다</span></div>
+          <div class="f-row">
+            <div class="f-field">
+              <textarea name="content" required minlength="10" maxlength="1000" placeholder="예: 고등 수학 로드맵 설명이 특히 도움이 됐어요. 반 편성 기준도 명확해서 좋았습니다."></textarea>
+            </div>
+          </div>
+          <div class="f-row" style="margin-top:10px;">
+            <div class="f-field">
+              <label>성함<span class="f-sub">선택 · 공개 시 "김○○ 학부모"처럼 표시</span></label>
+              <input type="text" name="authorName" maxlength="40" placeholder="학부모 성함" autocomplete="off">
+            </div>
+            <div class="f-field">
+              <label>학생 학년<span class="f-sub">선택</span></label>
+              <select name="rgrade">
+                <option value="">선택</option>
+                <option>중1</option><option>중2</option><option>중3 (예비고1)</option>
+                <option>고1</option><option>고2</option><option>고3</option><option>기타</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="f-section">
+          <label class="agree-box">
+            <input type="checkbox" name="publicOk">
+            <span>이 후기를 학원 홈페이지·블로그에 <b>익명(성 + ○○)</b>으로 소개해도 괜찮습니다. <span class="f-sub">선택</span></span>
+          </label>
+          <label class="agree-box" style="margin-top:12px;">
+            <input type="checkbox" name="ragree" required>
+            <span>개인정보 수집·이용에 동의합니다. <span style="color:var(--purple, #5B3FA6);">*</span></span>
+          </label>
+          <div class="agree-detail">
+            수집 항목: 후기 내용, 성함·학년(입력 시) &nbsp;|&nbsp; 이용 목적: 설명회 개선 및 (동의 시) 익명 소개 &nbsp;|&nbsp; 연락처는 수집하지 않습니다
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn" id="reviewBtn">후기 남기기</button>
+      </form>
+
+      <div class="result-box hidden" id="reviewResult">
+        <div class="emoji">🙏</div>
+        <h2>소중한 후기 감사합니다</h2>
+        <p>남겨 주신 의견은 다음 설명회와 수업 준비에<br>꼼꼼히 반영하겠습니다.</p>
+        <br>
+        <button type="button" class="next-btn fill" id="toConsultBtn" onclick="showPane('consult')">📞 후속 상담 신청하기</button>
+        <a href="index.html" class="next-btn">홈으로</a>
+      </div>
+    </div>
+
+    <div class="contact-line">
+      📞 문의 &nbsp;·&nbsp; 평촌관 <a href="tel:031-386-8899">031-386-8899</a> &nbsp;|&nbsp; 산본관 <a href="tel:031-346-8899">031-346-8899</a>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, doc, getDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
+  authDomain: "songmath.firebaseapp.com",
+  projectId: "songmath",
+  storageBucket: "songmath.firebasestorage.app",
+  messagingSenderId: "936295436575",
+  appId: "1:936295436575:web:d1e201508719850cfbe02a"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ── 텔레그램 알림 (상담 신청 · 설명회 신청과 같은 봇·채팅방) ──
+const TELEGRAM_BOT_TOKEN = '8802440196:AAHh9EWYtR7ITLkXYlbYe5N4xD_sQ2JSS78';
+const TELEGRAM_CHAT_ID = '8913371664';
+async function sendTelegram(text) {
+  const res = await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text })
+  });
+  if (!res.ok) throw new Error('Telegram ' + res.status);
+}
+
+// ── 주소 파라미터: ?b=평촌관|산본관 (QR별로 관 미리 선택) · ?tab=review (후기 탭으로 바로) ──
+const params = new URLSearchParams(location.search);
+const paramBranch = params.get('b') || '';
+const BRANCH = paramBranch.includes('산본') ? '산본관' : paramBranch.includes('평촌') ? '평촌관' : '';
+if (BRANCH) {
+  document.querySelectorAll('input[name=branch], input[name=rbranch]').forEach(el => { el.checked = el.value === BRANCH; });
+}
+
+// 설명회 제목 (관리자 설정)
+let eventTitle = '설명회';
+getDoc(doc(db, 'seminarConfig', 'current'))
+  .then(snap => { if (snap.exists() && snap.data().title) eventTitle = snap.data().title; })
+  .catch(() => { /* 제목만 기본값 사용 */ });
+
+// ── 탭 ──
+window.showPane = function(name) {
+  document.getElementById('paneConsult').classList.toggle('active', name === 'consult');
+  document.getElementById('paneReview').classList.toggle('active', name === 'review');
+  document.getElementById('tabConsult').classList.toggle('active', name === 'consult');
+  document.getElementById('tabReview').classList.toggle('active', name === 'review');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+if (params.get('tab') === 'review') showPane('review');
+
+// ── 시간 선택지 ──
+const TIMES = ['오전 10시', '오전 11시', '낮 12시', '오후 1시', '오후 2시', '오후 3시', '오후 4시', '오후 5시', '오후 6시', '오후 7시', '오후 8시', '시간 상관없음 (원장님이 정해 주세요)'];
+const fillTimes = (sel, first) => { sel.innerHTML = `<option value="">${first}</option>` + TIMES.map(t => `<option>${t}</option>`).join(''); };
+fillTimes(document.querySelector('select[name=time1]'), '시간 선택');
+fillTimes(document.querySelector('select[name=time2]'), '선택');
+
+// 날짜 최소값 = 오늘
+const todayStr = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
+document.querySelectorAll('input[type=date]').forEach(el => { el.min = todayStr; });
+
+// ── 전화번호 자동 하이픈 ──
+function formatPhone(v) {
+  const n = v.replace(/\D/g, '').slice(0, 11);
+  if (n.length < 4) return n;
+  if (n.length < 8) return n.slice(0, 3) + '-' + n.slice(3);
+  if (n.length < 11) return n.slice(0, 3) + '-' + n.slice(3, 6) + '-' + n.slice(6);
+  return n.slice(0, 3) + '-' + n.slice(3, 7) + '-' + n.slice(7);
+}
+document.querySelectorAll('input[type=tel]').forEach(el => { el.addEventListener('input', () => { el.value = formatPhone(el.value); }); });
+
+const DOW = ['일', '월', '화', '수', '목', '금', '토'];
+function prettyDate(s) {
+  if (!s) return '';
+  const [y, m, d] = s.split('-').map(Number);
+  const dt = new Date(y, m - 1, d);
+  return `${m}월 ${d}일(${DOW[dt.getDay()]})`;
+}
+
+/* ══════════ 후속 상담 신청 ══════════ */
+const consultForm = document.getElementById('consultForm');
+const consultBtn = document.getElementById('consultBtn');
+consultForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(consultForm);
+  const branch = fd.get('branch');
+  if (!branch) { alert('참석하신 설명회(관)를 선택해 주세요.'); return; }
+  const parentPhone = (fd.get('parentPhone') || '').trim();
+  if (parentPhone.replace(/\D/g, '').length < 9) { alert('학부모 연락처를 정확히 입력해 주세요.'); return; }
+
+  const data = {
+    eventTitle,
+    branch,
+    parentName: (fd.get('parentName') || '').trim(),
+    parentPhone,
+    studentName: (fd.get('studentName') || '').trim(),
+    grade: (fd.get('grade') || '').trim(),
+    date1: fd.get('date1') || '',
+    time1: fd.get('time1') || '',
+    date2: fd.get('date2') || '',
+    time2: fd.get('time2') || '',
+    note: (fd.get('note') || '').trim(),
+    privacyAgreed: true,
+    status: 'new',
+    source: 'seminar-followup.html',
+    createdAt: serverTimestamp(),
+  };
+
+  consultBtn.disabled = true; consultBtn.textContent = '신청 중...';
+  try {
+    await addDoc(collection(db, 'seminarFollowups'), data);
+    const v = (x) => (x ? x : '-');
+    const msg = [
+      '📞 설명회 후속 상담 신청 [' + branch + ']',
+      '',
+      '👨‍👩‍👧 학부모: ' + v(data.parentName) + ' / ' + v(data.parentPhone),
+      '🧑‍🎓 학생: ' + v(data.studentName) + (data.grade ? ' (' + data.grade + ')' : ''),
+      '📅 1순위: ' + prettyDate(data.date1) + ' ' + v(data.time1),
+      data.date2 || data.time2 ? '📅 2순위: ' + prettyDate(data.date2) + ' ' + v(data.time2) : '',
+      data.note ? '📝 ' + data.note : '',
+      '',
+      '※ 일정 확인 후 학부모께 연락해 확정 필요',
+      '🕒 ' + new Date().toLocaleString('ko-KR'),
+    ].filter(l => l !== '').join('\n');
+    try { await sendTelegram(msg); } catch (err) { console.error('텔레그램 알림 발송 실패:', err); }
+
+    document.getElementById('rPhone').textContent = data.parentPhone;
+    document.getElementById('rBranch').textContent = branch;
+    document.getElementById('rStudent').textContent = data.studentName + ' 학생';
+    document.getElementById('rWhen').textContent = prettyDate(data.date1) + ' ' + data.time1 + (data.date2 ? ' / ' + prettyDate(data.date2) + ' ' + data.time2 : '');
+    consultForm.classList.add('hidden');
+    document.getElementById('consultResult').classList.remove('hidden');
+    // 후기 탭에도 같은 관 미리 선택
+    document.querySelectorAll('input[name=rbranch]').forEach(el => { el.checked = el.value === branch; });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (err) {
+    console.error(err);
+    alert('신청 중 오류가 발생했습니다. 잠시 후 다시 시도하시거나 학원으로 전화 주세요.');
+    consultBtn.disabled = false; consultBtn.textContent = '후속 상담 신청하기';
+  }
+});
+
+/* ══════════ 설명회 후기 ══════════ */
+const STAR_TEXT = { 5: '매우 만족 😊', 4: '만족 🙂', 3: '보통 😐', 2: '아쉬움 🙁', 1: '많이 아쉬움 😞' };
+document.querySelectorAll('#stars input').forEach(el => {
+  el.addEventListener('change', () => { document.getElementById('starText').textContent = STAR_TEXT[el.value] || ''; });
+});
+
+const reviewForm = document.getElementById('reviewForm');
+const reviewBtn = document.getElementById('reviewBtn');
+reviewForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(reviewForm);
+  const branch = fd.get('rbranch');
+  if (!branch) { alert('참석하신 설명회(관)를 선택해 주세요.'); return; }
+  const rating = parseInt(fd.get('rating') || '0', 10);
+  if (!rating) { alert('별점을 선택해 주세요.'); return; }
+  const content = (fd.get('content') || '').trim();
+  if (content.length < 10) { alert('후기를 10자 이상 적어 주세요.'); return; }
+
+  const data = {
+    eventTitle,
+    branch,
+    rating,
+    content,
+    authorName: (fd.get('authorName') || '').trim(),
+    grade: (fd.get('rgrade') || '').trim(),
+    publicOk: fd.get('publicOk') === 'on',
+    privacyAgreed: true,
+    status: 'new',
+    source: 'seminar-followup.html',
+    createdAt: serverTimestamp(),
+  };
+
+  reviewBtn.disabled = true; reviewBtn.textContent = '보내는 중...';
+  try {
+    await addDoc(collection(db, 'seminarReviews'), data);
+    const msg = [
+      '⭐ 설명회 후기 [' + branch + '] ' + '★'.repeat(rating) + '☆'.repeat(5 - rating),
+      '',
+      content,
+      '',
+      '✍️ ' + (data.authorName || '익명') + (data.grade ? ' (' + data.grade + ')' : '') + (data.publicOk ? ' · 익명 소개 동의 ✓' : ' · 비공개'),
+      '🕒 ' + new Date().toLocaleString('ko-KR'),
+    ].join('\n');
+    try { await sendTelegram(msg); } catch (err) { console.error('텔레그램 알림 발송 실패:', err); }
+
+    reviewForm.classList.add('hidden');
+    document.getElementById('reviewResult').classList.remove('hidden');
+    // 상담 신청을 이미 했으면 다시 권하지 않음
+    if (consultForm.classList.contains('hidden')) document.getElementById('toConsultBtn').classList.add('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (err) {
+    console.error(err);
+    alert('후기를 보내는 중 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
+    reviewBtn.disabled = false; reviewBtn.textContent = '후기 남기기';
+  }
+});
+</script>
+
+</body>
+</html>

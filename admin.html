@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="portal.css?v=1793353000">
-<link rel="stylesheet" href="admin/admin.css?v=1793351000">
+<link rel="stylesheet" href="admin/admin.css?v=1793356000">
 <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.1.0/dist/tus.min.js"></script>
 <!-- SheetJS 엑셀 파싱 -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -1010,6 +1010,67 @@
       </div>
       <div style="font-size:11.5px;color:var(--muted);margin-bottom:10px;">참석 체크는 설명회 당일 접수대에서 바로 표시하면 되고, 메모 칸을 누르면 상담 희망·동반 인원 같은 내용을 적어둘 수 있습니다. 엑셀은 전체 · 산본관 · 평촌관 시트로 나뉘어 내려받습니다.</div>
       <div id="smList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
+    </div>
+
+    <!-- ══ 설명회 후속 상담 · 후기 (seminar-followup.html) ══ -->
+    <div class="card">
+      <h3>🔗 설명회 후속 상담 · 후기 링크 / QR</h3>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
+        설명회 끝나고 나눠 드릴 링크·QR입니다. <b style="color:var(--off-white);">관별로 QR이 다릅니다</b> — 평촌관 설명회에는 평촌관 QR을, 산본관에는 산본관 QR을 쓰면 신청 페이지에 그 관이 미리 선택됩니다. 한 페이지 안에 <b style="color:var(--off-white);">후속 상담 신청</b>과 <b style="color:var(--off-white);">후기</b> 두 탭이 있고, 상담 신청을 마치면 후기 쓰기로 자연스럽게 이어집니다. 접수되면 텔레그램으로 알림이 옵니다.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div style="padding:14px 16px;border:1px solid rgba(91,63,166,0.25);border-radius:10px;background:rgba(91,63,166,0.05);">
+          <div style="font-weight:800;margin-bottom:8px;"><span class="sm-branch pc">평촌관</span></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" onclick="showSeminarFollowupQr('평촌관')">📱 QR 보기</button>
+            <button class="btn btn-secondary btn-sm" onclick="copySeminarFollowupLink('평촌관')">🔗 링크 복사</button>
+            <a class="btn btn-secondary btn-sm" href="seminar-followup.html?b=평촌관" target="_blank" rel="noopener">열기 ↗</a>
+            <button class="btn btn-secondary btn-sm" onclick="showSeminarFollowupQr('평촌관','review')" title="후기 탭으로 바로 열리는 QR">⭐ 후기 전용 QR</button>
+          </div>
+        </div>
+        <div style="padding:14px 16px;border:1px solid rgba(30,140,160,0.25);border-radius:10px;background:rgba(30,140,160,0.05);">
+          <div style="font-weight:800;margin-bottom:8px;"><span class="sm-branch sb">산본관</span></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" onclick="showSeminarFollowupQr('산본관')">📱 QR 보기</button>
+            <button class="btn btn-secondary btn-sm" onclick="copySeminarFollowupLink('산본관')">🔗 링크 복사</button>
+            <a class="btn btn-secondary btn-sm" href="seminar-followup.html?b=산본관" target="_blank" rel="noopener">열기 ↗</a>
+            <button class="btn btn-secondary btn-sm" onclick="showSeminarFollowupQr('산본관','review')" title="후기 탭으로 바로 열리는 QR">⭐ 후기 전용 QR</button>
+          </div>
+        </div>
+      </div>
+      <div id="sfQrBox" style="margin-top:14px;text-align:center;"></div>
+    </div>
+
+    <div class="card">
+      <h3>📞 후속 상담 신청</h3>
+      <div class="sm-stats" id="sfStats"></div>
+      <div class="cf-toolbar">
+        <select id="sfBranchFilter" onchange="setSfBranch(this.value)" style="font-weight:700;">
+          <option value="평촌관">평촌관</option>
+          <option value="산본관">산본관</option>
+          <option value="">전체</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="initSeminarTab()">새로고침</button>
+        <span class="cf-count" id="sfCount"></span>
+      </div>
+      <div style="font-size:11.5px;color:var(--muted);margin-bottom:10px;">희망 일시는 참고용입니다. 일정 확인 후 학부모께 연락해 확정하고, "연락 완료"에 체크한 뒤 메모에 확정 일시를 적어 두세요.</div>
+      <div id="sfList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
+    </div>
+
+    <div class="card">
+      <h3>⭐ 설명회 후기</h3>
+      <div class="sm-stats" id="srStats"></div>
+      <div class="cf-toolbar">
+        <select id="srBranchFilter" onchange="setSrBranch(this.value)" style="font-weight:700;">
+          <option value="평촌관">평촌관</option>
+          <option value="산본관">산본관</option>
+          <option value="">전체</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="initSeminarTab()">새로고침</button>
+        <span class="cf-count" id="srCount"></span>
+      </div>
+      <div style="font-size:11.5px;color:var(--muted);margin-bottom:10px;">"익명 소개 동의"한 후기만 홈페이지·블로그에 쓰세요. 복사 버튼은 "김○○ 학부모" 형태로 익명 처리해 복사합니다.</div>
+      <div id="srList"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
     </div>
   </div>
 
@@ -2556,7 +2617,7 @@
 <script defer src="admin/js/consult.js?v=1793351000"></script>
 <script defer src="admin/js/homepopup.js"></script>
 <script defer src="admin/js/consult-qr.js"></script>
-<script defer src="admin/js/seminar.js?v=1792754000"></script>
+<script defer src="admin/js/seminar.js?v=1793356000"></script>
 <script defer src="admin/js/videocode.js"></script>
 <script defer src="admin/js/schedule.js"></script>
 <script defer src="admin/js/meetings.js"></script>
