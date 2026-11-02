@@ -56,6 +56,18 @@ function pxaPickSubject(grade, folders, fileName) {
   return pxaSubjectOf(fileName) || PXA_UNSORTED;
 }
 function pxaLabel(grade, subject) { return subject ? `${grade} · ${subject}` : grade; }
+// 분류 선택지: 중1 … 고1, 고2 · 미적분1, 고2 · 확률과 통계, 고2 · 기하, 고2 · 과목 미분류, 고3
+function pxaClassOptions(grade, subject) {
+  const cur = grade + '|' + (subject || '');
+  const opts = [];
+  PXA_GRADES.forEach(g => {
+    if (PXA_SUBJECT_GRADES.includes(g)) PXA_SUBJECTS.concat([PXA_UNSORTED]).forEach(sb => opts.push([g, sb]));
+    else opts.push([g, '']);
+  });
+  if (!opts.some(([g, sb]) => g + '|' + sb === cur)) opts.push([grade, subject || '']);
+  return opts.map(([g, sb]) => `<option value="${pxaEsc(g + '|' + sb)}"${g + '|' + sb === cur ? ' selected' : ''}>${pxaEsc(pxaLabel(g, sb))}</option>`).join('');
+}
+const PXA_SEL_STYLE = 'padding:4px 6px;font-size:12.5px;border:1px solid var(--border-soft);border-radius:6px;background:#fff;color:var(--off-white);font-family:inherit;max-width:170px;';
 function pxaPath(it) {
   return `pastExams/${pxaClean(it.exam)}/${pxaClean(it.grade)}/` + (it.subject ? `${pxaClean(it.subject)}/` : '') + pxaClean(it.name);
 }
@@ -128,6 +140,7 @@ function pxaGroupKeys(items) {
 }
 
 function pxaRenderPreview(bad = []) {
+  pxaLastBad = bad;
   const box = document.getElementById('pxa-preview');
   if (!pxaQueue.length) {
     box.innerHTML = bad.length
@@ -146,8 +159,17 @@ function pxaRenderPreview(bad = []) {
       const warn = s === PXA_UNSORTED ? ' style="color:#D97B1A;"' : '';
       return `<tr><td style="${td}font-weight:600;color:var(--off-white);"><span${warn}>${pxaEsc(pxaLabel(g, s))}</span></td><td style="${td}text-align:right;color:var(--off-white);">${c}개</td></tr>`;
     }).join('');
-    const unsorted = items.some(x => x.subject === PXA_UNSORTED)
-      ? `<div style="font-size:12px;color:#D97B1A;margin-top:6px;">고2 파일 중 과목(미적분1·확률과 통계·기하)을 폴더·파일 이름에서 찾지 못한 것은 "${PXA_UNSORTED}"으로 올라갑니다.</div>` : '';
+    const un = pxaQueue.map((x, i) => [x, i]).filter(([x]) => x.exam === exam && x.subject === PXA_UNSORTED);
+    const unsorted = un.length ? `<div style="margin-top:10px;padding:10px 12px;border:1px solid rgba(217,123,26,0.35);border-radius:8px;background:rgba(217,123,26,0.05);">
+        <div style="font-size:12.5px;color:#D97B1A;font-weight:600;margin-bottom:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          과목을 이름에서 찾지 못한 고2 파일 ${un.length}개 — 올리기 전에 과목을 골라주세요
+          <select style="${PXA_SEL_STYLE}" data-exam="${pxaEsc(exam)}" onchange="pxaQueueSetAll(this)"><option value="">한꺼번에 지정…</option>${PXA_SUBJECTS.map(sb => `<option>${sb}</option>`).join('')}</select>
+        </div>
+        ${un.map(([x, i]) => `<div style="display:flex;align-items:center;gap:8px;padding:3px 0;font-size:12.5px;">
+          <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--off-white);">📄 ${pxaEsc(x.name)}</span>
+          <select style="${PXA_SEL_STYLE}" data-i="${i}" onchange="pxaQueueSet(this)">${PXA_SUBJECTS.concat([PXA_UNSORTED]).map(sb => `<option${sb === x.subject ? ' selected' : ''}>${sb}</option>`).join('')}</select>
+        </div>`).join('')}
+      </div>` : '';
     return `<div style="margin-bottom:14px;">
       <div style="font-size:14px;font-weight:700;color:var(--off-white);margin-bottom:8px;">${exam ? pxaEsc(exam) : '<span style="color:#D64545;">(시험명 폴더 없음 — 아래에 시험명 입력)</span>'} <span style="color:var(--purple, #5B3FA6);">${items.length}개</span>${exists}</div>
       <table style="border-collapse:collapse;font-size:13px;min-width:260px;">${rows}</table>${unsorted}</div>`;
@@ -161,6 +183,16 @@ function pxaRenderPreview(bad = []) {
       <button class="btn btn-secondary" onclick="pxaCancelFolder()">취소</button>
     </div>`;
 }
+window.pxaQueueSet = (sel) => {
+  const it = pxaQueue[+sel.dataset.i];
+  if (it) it.subject = sel.value;
+};
+window.pxaQueueSetAll = (sel) => {
+  if (!sel.value) return;
+  pxaQueue.forEach(x => { if (x.exam === sel.dataset.exam && x.subject === PXA_UNSORTED) x.subject = sel.value; });
+  pxaRenderPreview(pxaLastBad);
+};
+let pxaLastBad = [];
 function pxaBadList(bad) {
   return `<details style="margin:4px 0 14px;font-size:12.5px;color:#D97B1A;"><summary style="cursor:pointer;">제외된 파일 ${bad.length}개</summary>
     <div style="margin-top:6px;line-height:1.7;color:var(--muted);">${bad.slice(0, 200).map(pxaEsc).join('<br>')}</div></details>`;
@@ -284,16 +316,79 @@ window.pxaLoadList = async () => {
       </summary>
       <div style="margin-top:12px;">${keys.map(k => { const [g, s] = k.split('\u0000'); const list = inKey(k); return `
         <div style="margin-bottom:10px;">
-          <div style="font-size:12.5px;font-weight:700;color:${s === PXA_UNSORTED ? '#D97B1A' : 'var(--off-white)'};margin-bottom:4px;">${pxaEsc(pxaLabel(g, s))} <span style="color:var(--muted);font-weight:500;">${list.length}개</span></div>
+          <div style="font-size:12.5px;font-weight:700;color:${s === PXA_UNSORTED ? '#D97B1A' : 'var(--off-white)'};margin-bottom:4px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">${pxaEsc(pxaLabel(g, s))} <span style="color:var(--muted);font-weight:500;">${list.length}개</span>
+            <select style="${PXA_SEL_STYLE}font-weight:500;" data-exam="${pxaEsc(exam)}" data-key="${pxaEsc(g + '|' + s)}" onchange="pxaMoveGroup(this)"><option value="">이 묶음 전체 분류 변경…</option>${pxaClassOptions(g, s).replace(/ selected/g, '')}</select></div>
           ${list.sort((a, b) => a.name.localeCompare(b.name, 'ko', { numeric: true })).map(f => `
             <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;font-size:13px;">
               <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--off-white);">📄 ${pxaEsc(f.name)}</span>
+              <select style="${PXA_SEL_STYLE}" title="분류 변경" data-exam="${pxaEsc(exam)}" data-path="${pxaEsc(f.path)}" onchange="pxaMoveOne(this)">${pxaClassOptions(f.grade, f.subject)}</select>
               <button class="btn btn-secondary btn-sm" data-path="${pxaEsc(f.path)}" onclick="pxaOpenFile(this.dataset.path)">열기</button>
               <button class="btn btn-danger btn-sm" data-path="${pxaEsc(f.path)}" onclick="pxaDeleteFile(this.dataset.path)">삭제</button>
             </div>`).join('')}
         </div>`; }).join('')}</div>
     </details>`;
   }).join('');
+};
+
+// ── 분류 변경 (파일을 새 위치로 복사 후 원래 파일 삭제) ──
+async function pxaMoveFiles(exam, files, grade, subject) {
+  if (pxaBusy) { alert('다른 작업이 진행 중입니다.'); return; }
+  const sub = PXA_SUBJECT_GRADES.includes(grade) ? subject : '';
+  const taken = new Set((pxaData[exam] || []).map(f => f.path));
+  const todo = files.map(f => {
+    let name = f.name, n = 2, to = pxaPath({ exam, grade, subject: sub, name });
+    if (to === f.path) return null;
+    while (taken.has(to)) { name = f.name.replace(/(\.pdf)?$/i, ` (${n++})$1`); to = pxaPath({ exam, grade, subject: sub, name }); }
+    taken.add(to);
+    return { from: f.path, to, name: f.name };
+  }).filter(Boolean);
+  if (!todo.length) return;
+  pxaBusy = true;
+  const box = document.getElementById('pxa-list');
+  const note = document.createElement('div');
+  note.className = 'msg success'; note.style.display = 'block'; note.style.marginBottom = '10px';
+  box.prepend(note);
+  let i = 0, done = 0; const failed = [];
+  const tick = () => { note.textContent = `분류 변경 중... ${done + failed.length} / ${todo.length}`; };
+  tick();
+  async function worker() {
+    while (i < todo.length) {
+      const t = todo[i++];
+      try {
+        const res = await fetch(await getDownloadURL(ref(storage, t.from)));
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const blob = await res.blob();
+        await uploadBytes(ref(storage, t.to), blob, { contentType: 'application/pdf' });
+        await deleteObject(ref(storage, t.from));
+        done++;
+      } catch (e) { failed.push(`${t.name} (${e.code || e.message})`); }
+      tick();
+    }
+  }
+  await Promise.all([worker(), worker(), worker()]);
+  pxaBusy = false;
+  if (failed.length) alert(`${done}개 변경 · ${failed.length}개 실패:\n` + failed.slice(0, 20).join('\n'));
+  await pxaLoadList();
+  // 방금 작업한 시험은 펼친 채로
+  [...document.querySelectorAll('#pxa-list details')].forEach(d => {
+    if (d.querySelector(`[data-exam="${CSS.escape(exam)}"]`)) d.open = true;
+  });
+}
+window.pxaMoveOne = async (sel) => {
+  const exam = sel.dataset.exam, path = sel.dataset.path;
+  const f = (pxaData[exam] || []).find(x => x.path === path);
+  if (!f) return;
+  const [grade, subject] = sel.value.split('|');
+  await pxaMoveFiles(exam, [f], grade, subject);
+};
+window.pxaMoveGroup = async (sel) => {
+  if (!sel.value) return;
+  const exam = sel.dataset.exam;
+  const [g0, s0] = sel.dataset.key.split('|');
+  const [grade, subject] = sel.value.split('|');
+  const files = (pxaData[exam] || []).filter(f => f.grade === g0 && (f.subject || '') === s0);
+  if (!confirm(`${pxaLabel(g0, s0)} ${files.length}개를 "${pxaLabel(grade, PXA_SUBJECT_GRADES.includes(grade) ? subject : '')}"(으)로 옮길까요?`)) { sel.value = ''; return; }
+  await pxaMoveFiles(exam, files, grade, subject);
 };
 
 window.pxaOpenFile = async (path) => {
