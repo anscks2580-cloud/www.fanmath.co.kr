@@ -323,6 +323,7 @@ window.pxaLoadList = async () => {
               <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--off-white);">📄 ${pxaEsc(f.name)}</span>
               <select style="${PXA_SEL_STYLE}" title="분류 변경" data-exam="${pxaEsc(exam)}" data-path="${pxaEsc(f.path)}" onchange="pxaMoveOne(this)">${pxaClassOptions(f.grade, f.subject)}</select>
               <button class="btn btn-secondary btn-sm" data-path="${pxaEsc(f.path)}" onclick="pxaOpenFile(this.dataset.path)">열기</button>
+              <button class="btn btn-secondary btn-sm" data-exam="${pxaEsc(exam)}" data-path="${pxaEsc(f.path)}" onclick="pxaRenameFile(this)">이름 변경</button>
               <button class="btn btn-danger btn-sm" data-path="${pxaEsc(f.path)}" onclick="pxaDeleteFile(this.dataset.path)">삭제</button>
             </div>`).join('')}
         </div>`; }).join('')}</div>
@@ -331,14 +332,16 @@ window.pxaLoadList = async () => {
 };
 
 // ── 분류 변경 (파일을 새 위치로 복사 후 원래 파일 삭제) ──
-async function pxaMoveFiles(exam, files, grade, subject) {
+async function pxaMoveFiles(exam, files, grade, subject, newName) {
   if (pxaBusy) { alert('다른 작업이 진행 중입니다.'); return; }
   const sub = PXA_SUBJECT_GRADES.includes(grade) ? subject : '';
   const taken = new Set((pxaData[exam] || []).map(f => f.path));
   const todo = files.map(f => {
-    let name = f.name, n = 2, to = pxaPath({ exam, grade, subject: sub, name });
+    const base = newName || f.name;
+    let name = base, n = 2, to = pxaPath({ exam, grade, subject: sub, name });
     if (to === f.path) return null;
-    while (taken.has(to)) { name = f.name.replace(/(\.pdf)?$/i, ` (${n++})$1`); to = pxaPath({ exam, grade, subject: sub, name }); }
+    taken.delete(f.path);
+    while (taken.has(to)) { name = base.replace(/(\.pdf)?$/i, ` (${n++})$1`); to = pxaPath({ exam, grade, subject: sub, name }); }
     taken.add(to);
     return { from: f.path, to, name: f.name };
   }).filter(Boolean);
@@ -349,7 +352,7 @@ async function pxaMoveFiles(exam, files, grade, subject) {
   note.className = 'msg success'; note.style.display = 'block'; note.style.marginBottom = '10px';
   box.prepend(note);
   let i = 0, done = 0; const failed = [];
-  const tick = () => { note.textContent = `분류 변경 중... ${done + failed.length} / ${todo.length}`; };
+  const tick = () => { note.textContent = `${newName ? '이름 변경' : '분류 변경'} 중... ${done + failed.length} / ${todo.length}`; };
   tick();
   async function worker() {
     while (i < todo.length) {
@@ -380,6 +383,18 @@ window.pxaMoveOne = async (sel) => {
   if (!f) return;
   const [grade, subject] = sel.value.split('|');
   await pxaMoveFiles(exam, [f], grade, subject);
+};
+window.pxaRenameFile = async (btn) => {
+  const exam = btn.dataset.exam, path = btn.dataset.path;
+  const f = (pxaData[exam] || []).find(x => x.path === path);
+  if (!f) return;
+  const cur = f.name.replace(/\.pdf$/i, '');
+  const input = prompt('새 파일 이름 (.pdf는 자동으로 붙음)', cur);
+  if (input === null) return;
+  const nm = input.trim().replace(/\.pdf$/i, '');
+  if (!nm) { alert('이름을 입력해주세요.'); return; }
+  if (nm === cur) return;
+  await pxaMoveFiles(exam, [f], f.grade, f.subject, pxaClean(nm) + '.pdf');
 };
 window.pxaMoveGroup = async (sel) => {
   if (!sel.value) return;
