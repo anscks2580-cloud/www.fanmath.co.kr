@@ -4,14 +4,19 @@
    (admin.html에서 분리 — 원본 11086~11361줄. 모든 파일은 같은 전역 범위를 공유합니다)
    ═══════════════════════════════════════════════════════════ */
 // ══════════════════════════════════════════
-// 📚 기출문제 — Storage 경로: pastExams/시험명/학년/지역/파일.pdf
+// 📚 기출문제 — Storage 경로 (지역 구분 없음)
+//   고2      : pastExams/시험명/고2/과목/파일.pdf   (과목: 미적분1 · 확률과 통계 · 기하)
+//   그 외 학년: pastExams/시험명/학년/파일.pdf
 // 선생님 포털(teacher.html "기출문제" 탭)에서 열람. 업로드·삭제는 관리자만 (storage.rules)
+// ※ 예전 구조(…/학년/지역/파일.pdf)로 올라간 파일도 그대로 읽힘 — 지역 폴더는 무시
 // ══════════════════════════════════════════
-const PXA_GRADES  = ['중1','중2','중3','고1','고2','고3'];
-const PXA_REGIONS = ['군포','안양','의왕','과천'];
+const PXA_GRADES   = ['중1','중2','중3','고1','고2','고3'];
+const PXA_SUBJECTS = ['미적분1','확률과 통계','기하'];
+const PXA_SUBJECT_GRADES = ['고2'];     // 과목으로 나누는 학년
+const PXA_UNSORTED = '과목 미분류';
 const PXA_MAX_MB  = 50;
 let pxaQueue = [];      // 폴더 선택으로 준비된 업로드 목록
-let pxaData  = {};      // 시험명 → [{ grade, region, name, path }]
+let pxaData  = {};      // 시험명 → [{ grade, subject, name, path }]
 let pxaBusy  = false;
 
 function pxaEsc(s) {
@@ -31,6 +36,29 @@ function pxaExamScore(name) {
 }
 // 저장 경로에 쓰면 곤란한 문자만 바꿔줌 (한글·공백은 그대로)
 function pxaClean(s) { return String(s).normalize('NFC').trim().replace(/[#\[\]\*\?\/\\]/g, '_'); }
+// 폴더 이름 → 학년 ("고2", "고등2학년", "중 1" 등)
+function pxaGradeOf(part) {
+  const m = String(part).normalize('NFC').replace(/\s/g, '').match(/^(중|고)(?:등학교|등)?([123])(?:학년)?/);
+  return m ? m[1] + m[2] : '';
+}
+// 폴더/파일 이름 → 고2 과목
+function pxaSubjectOf(text) {
+  const t = String(text).normalize('NFC').replace(/\s/g, '');
+  if (/확률|확통/.test(t)) return '확률과 통계';
+  if (/미적/.test(t)) return '미적분1';
+  if (/기하/.test(t)) return '기하';
+  return '';
+}
+// 학년 폴더 아래 경로 조각들(+파일명)로 과목 결정 — 고2만
+function pxaPickSubject(grade, folders, fileName) {
+  if (!PXA_SUBJECT_GRADES.includes(grade)) return '';
+  for (const f of folders) { const s = pxaSubjectOf(f); if (s) return s; }
+  return pxaSubjectOf(fileName) || PXA_UNSORTED;
+}
+function pxaLabel(grade, subject) { return subject ? `${grade} · ${subject}` : grade; }
+function pxaPath(it) {
+  return `pastExams/${pxaClean(it.exam)}/${pxaClean(it.grade)}/` + (it.subject ? `${pxaClean(it.subject)}/` : '') + pxaClean(it.name);
+}
 function pxaMsg(id, text, type) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -41,10 +69,15 @@ function pxaMsg(id, text, type) {
 }
 
 window.initPastExamAdminTab = async () => {
-  const g = document.getElementById('pxa-m-grade'), r = document.getElementById('pxa-m-region');
+  const g = document.getElementById('pxa-m-grade'), s = document.getElementById('pxa-m-subject');
   if (g && !g.options.length) g.innerHTML = PXA_GRADES.map(v => `<option>${v}</option>`).join('');
-  if (r && !r.options.length) r.innerHTML = PXA_REGIONS.map(v => `<option>${v}</option>`).join('');
+  if (s && !s.options.length) s.innerHTML = PXA_SUBJECTS.map(v => `<option>${v}</option>`).join('');
+  pxaToggleSubject();
   await pxaLoadList();
+};
+window.pxaToggleSubject = () => {
+  const g = document.getElementById('pxa-m-grade'), w = document.getElementById('pxa-m-subjectwrap');
+  if (g && w) w.style.display = PXA_SUBJECT_GRADES.includes(g.value) ? '' : 'none';
 };
 
 function pxaFillExamSelect() {
@@ -62,7 +95,9 @@ window.pxaToggleNewExam = () => {
   document.getElementById('pxa-m-newwrap').style.display = isNew ? '' : 'none';
 };
 
-// ── 폴더 선택 → 경로에서 시험명/학년/지역 자동 분류 ──
+// ── 폴더 선택 → 경로에서 시험명/학년(/고2 과목) 자동 분류 ──
+// 학년 폴더 바로 위 폴더가 시험명. 학년 폴더 아래 지역 폴더 등은 무시.
+// 고2는 하위 폴더 이름이나 파일 이름에서 미적분1·확률과 통계·기하를 찾아 나눔.
 window.pxaOnFolder = (input) => {
   const ok = [], bad = [];
   [...input.files].forEach(f => {
@@ -71,15 +106,26 @@ window.pxaOnFolder = (input) => {
     const base = parts[parts.length - 1];
     if (base.startsWith('.') || /^(thumbs\.db|desktop\.ini)$/i.test(base)) return;
     if (!/\.pdf$/i.test(base)) { bad.push(rel + ' — PDF가 아님'); return; }
-    if (parts.length < 4) { bad.push(rel + ' — 학년/지역 폴더 안에 있지 않음'); return; }
     if (f.size > PXA_MAX_MB * 1024 * 1024) { bad.push(rel + ` — ${PXA_MAX_MB}MB 초과`); return; }
-    const n = parts.length;
-    ok.push({ file: f, exam: parts[n - 4], grade: parts[n - 3], region: parts[n - 2], name: base });
+    const folders = parts.slice(0, -1);
+    const gi = folders.findIndex(p => pxaGradeOf(p));
+    if (gi === -1) { bad.push(rel + ' — 학년 폴더(중1~고3) 안에 있지 않음'); return; }
+    const grade = pxaGradeOf(folders[gi]);
+    const exam = gi >= 1 ? folders[gi - 1] : '';
+    ok.push({ file: f, exam, grade, subject: pxaPickSubject(grade, folders.slice(gi + 1), base), name: base });
   });
   pxaQueue = ok;
   pxaMsg('pxa-folder-msg', '');
   pxaRenderPreview(bad);
 };
+
+function pxaGroupKeys(items) {
+  const keys = [...new Set(items.map(x => x.grade + '\u0000' + (x.subject || '')))];
+  return keys.sort((a, b) => {
+    const [ga, sa] = a.split('\u0000'), [gb, sb] = b.split('\u0000');
+    return pxaOrder(PXA_GRADES)(ga, gb) || pxaOrder(PXA_SUBJECTS)(sa, sb);
+  });
+}
 
 function pxaRenderPreview(bad = []) {
   const box = document.getElementById('pxa-preview');
@@ -92,23 +138,22 @@ function pxaRenderPreview(bad = []) {
   const exams = [...new Set(pxaQueue.map(x => x.exam))];
   const tables = exams.map(exam => {
     const items = pxaQueue.filter(x => x.exam === exam);
-    const grades  = [...new Set(items.map(x => x.grade))].sort(pxaOrder(PXA_GRADES));
-    const regions = [...new Set(items.map(x => x.region))].sort(pxaOrder(PXA_REGIONS));
-    const exists = pxaData[pxaClean(exam)] ? ` <span style="color:#D97B1A;font-size:12px;font-weight:500;">· 이미 있는 시험 — 같은 이름 파일은 덮어씀</span>` : '';
-    const th = 'padding:6px 10px;border-bottom:1px solid var(--border-soft);font-weight:600;color:var(--muted);text-align:center;';
-    const td = 'padding:6px 10px;border-bottom:1px solid rgba(30,24,56,0.05);text-align:center;';
+    const exists = exam && pxaData[pxaClean(exam)] ? ` <span style="color:#D97B1A;font-size:12px;font-weight:500;">· 이미 있는 시험 — 같은 이름 파일은 덮어씀</span>` : '';
+    const td = 'padding:6px 10px;border-bottom:1px solid rgba(30,24,56,0.05);';
+    const rows = pxaGroupKeys(items).map(k => {
+      const [g, s] = k.split('\u0000');
+      const c = items.filter(x => x.grade === g && (x.subject || '') === s).length;
+      const warn = s === PXA_UNSORTED ? ' style="color:#D97B1A;"' : '';
+      return `<tr><td style="${td}font-weight:600;color:var(--off-white);"><span${warn}>${pxaEsc(pxaLabel(g, s))}</span></td><td style="${td}text-align:right;color:var(--off-white);">${c}개</td></tr>`;
+    }).join('');
+    const unsorted = items.some(x => x.subject === PXA_UNSORTED)
+      ? `<div style="font-size:12px;color:#D97B1A;margin-top:6px;">고2 파일 중 과목(미적분1·확률과 통계·기하)을 폴더·파일 이름에서 찾지 못한 것은 "${PXA_UNSORTED}"으로 올라갑니다.</div>` : '';
     return `<div style="margin-bottom:14px;">
-      <div style="font-size:14px;font-weight:700;color:var(--off-white);margin-bottom:8px;">${pxaEsc(exam)} <span style="color:var(--purple, #5B3FA6);">${items.length}개</span>${exists}</div>
-      <div style="overflow-x:auto;"><table style="border-collapse:collapse;font-size:13px;min-width:320px;">
-        <tr><th style="${th}text-align:left;">학년</th>${regions.map(r => `<th style="${th}">${pxaEsc(r)}</th>`).join('')}</tr>
-        ${grades.map(g => `<tr><td style="${td}text-align:left;font-weight:600;color:var(--off-white);">${pxaEsc(g)}</td>${regions.map(r => {
-          const c = items.filter(x => x.grade === g && x.region === r).length;
-          return `<td style="${td}color:${c ? 'var(--off-white)' : 'var(--muted)'};">${c || '-'}</td>`;
-        }).join('')}</tr>`).join('')}
-      </table></div></div>`;
+      <div style="font-size:14px;font-weight:700;color:var(--off-white);margin-bottom:8px;">${exam ? pxaEsc(exam) : '<span style="color:#D64545;">(시험명 폴더 없음 — 아래에 시험명 입력)</span>'} <span style="color:var(--purple, #5B3FA6);">${items.length}개</span>${exists}</div>
+      <table style="border-collapse:collapse;font-size:13px;min-width:260px;">${rows}</table>${unsorted}</div>`;
   }).join('');
   const rename = exams.length === 1
-    ? `<div class="form-group" style="max-width:420px;margin-bottom:12px;"><label>시험명 (필요하면 수정)</label><input type="text" id="pxa-exam-name" value="${pxaEsc(exams[0])}"></div>`
+    ? `<div class="form-group" style="max-width:420px;margin-bottom:12px;"><label>시험명 (필요하면 수정)</label><input type="text" id="pxa-exam-name" value="${pxaEsc(exams[0])}" placeholder="예: 2026년 2학기 기말고사"></div>`
     : '';
   box.innerHTML = tables + (bad.length ? pxaBadList(bad) : '') + rename +
     `<div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -140,11 +185,10 @@ async function pxaUpload(items, msgId, btn) {
   async function worker() {
     while (i < items.length) {
       const it = items[i++];
-      const path = `pastExams/${pxaClean(it.exam)}/${pxaClean(it.grade)}/${pxaClean(it.region)}/${pxaClean(it.name)}`;
       try {
-        await uploadBytes(ref(storage, path), it.file, { contentType: 'application/pdf' });
+        await uploadBytes(ref(storage, pxaPath(it)), it.file, { contentType: 'application/pdf' });
         done++;
-      } catch (e) { failed.push(`${it.grade}/${it.region}/${it.name} (${e.code || e.message})`); }
+      } catch (e) { failed.push(`${pxaLabel(it.grade, it.subject)}/${it.name} (${e.code || e.message})`); }
       tick();
     }
   }
@@ -168,6 +212,8 @@ window.pxaUploadFolder = async () => {
     const nm = nameEl.value.trim();
     if (!nm) { alert('시험명을 입력해주세요.'); nameEl.focus(); return; }
     items = pxaQueue.map(x => ({ ...x, exam: nm }));
+  } else if (items.some(x => !x.exam)) {
+    alert('시험명 폴더가 없는 파일이 있습니다. 시험명 폴더째로 골라주세요.'); return;
   }
   const ok = await pxaUpload(items, 'pxa-folder-msg', document.getElementById('pxa-folder-btn'));
   if (ok) {
@@ -181,7 +227,7 @@ window.pxaManualUpload = async () => {
   const sel = document.getElementById('pxa-m-exam').value;
   const exam = sel === '__new__' ? document.getElementById('pxa-m-new').value.trim() : sel;
   const grade = document.getElementById('pxa-m-grade').value;
-  const region = document.getElementById('pxa-m-region').value;
+  const subject = PXA_SUBJECT_GRADES.includes(grade) ? document.getElementById('pxa-m-subject').value : '';
   const input = document.getElementById('pxa-m-files');
   const files = [...input.files];
   if (!exam) { alert('시험명을 입력해주세요.'); return; }
@@ -190,7 +236,7 @@ window.pxaManualUpload = async () => {
   if (notPdf.length) { alert('PDF 파일만 올릴 수 있습니다: ' + notPdf.map(f => f.name).join(', ')); return; }
   const big = files.filter(f => f.size > PXA_MAX_MB * 1024 * 1024);
   if (big.length) { alert(`${PXA_MAX_MB}MB를 넘는 파일이 있습니다: ` + big.map(f => f.name).join(', ')); return; }
-  const items = files.map(f => ({ file: f, exam, grade, region, name: f.name.normalize('NFC') }));
+  const items = files.map(f => ({ file: f, exam, grade, subject, name: f.name.normalize('NFC') }));
   const ok = await pxaUpload(items, 'pxa-m-msg', document.getElementById('pxa-m-btn'));
   if (ok) { input.value = ''; document.getElementById('pxa-m-new').value = ''; document.getElementById('pxa-m-exam').value = pxaClean(exam); pxaToggleNewExam(); }
 };
@@ -207,7 +253,10 @@ window.pxaLoadList = async () => {
       const files = [];
       async function walk(r, parts) {
         const res = await listAll(r);
-        res.items.forEach(it => files.push({ grade: parts[0] || '기타', region: parts[1] || '기타', name: it.name, path: it.fullPath }));
+        res.items.forEach(it => {
+          const grade = pxaGradeOf(parts[0] || '') || parts[0] || '기타';
+          files.push({ grade, subject: pxaPickSubject(grade, parts.slice(1), it.name), name: it.name, path: it.fullPath });
+        });
         await Promise.all(res.prefixes.map(p => walk(p, [...parts, p.name])));
       }
       await walk(ex, []);
@@ -223,10 +272,9 @@ window.pxaLoadList = async () => {
   if (!exams.length) { box.innerHTML = '<div style="color:var(--muted);font-size:13px;">아직 올라간 기출문제가 없습니다.</div>'; return; }
   box.innerHTML = exams.map(exam => {
     const files = data[exam];
-    const byGrade = {};
-    files.forEach(f => { ((byGrade[f.grade] = byGrade[f.grade] || {})[f.region] = byGrade[f.grade][f.region] || []).push(f); });
-    const grades = Object.keys(byGrade).sort(pxaOrder(PXA_GRADES));
-    const summary = grades.map(g => `${pxaEsc(g)} ${Object.values(byGrade[g]).reduce((s, a) => s + a.length, 0)}`).join(' · ');
+    const keys = pxaGroupKeys(files);
+    const inKey = k => { const [g, s] = k.split('\u0000'); return files.filter(f => f.grade === g && (f.subject || '') === s); };
+    const summary = keys.map(k => { const [g, s] = k.split('\u0000'); return `${pxaEsc(pxaLabel(g, s))} ${inKey(k).length}`; }).join(' · ');
     return `<details style="border:1px solid var(--border-soft);border-radius:10px;padding:12px 14px;margin-bottom:10px;background:rgba(30,24,56,0.02);">
       <summary style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;">
         <span><b style="color:var(--off-white);font-size:14px;">${pxaEsc(exam)}</b>
@@ -234,16 +282,16 @@ window.pxaLoadList = async () => {
           <span style="color:var(--muted);font-size:12px;margin-left:8px;">${summary}</span></span>
         <button class="btn btn-danger btn-sm" data-exam="${pxaEsc(exam)}" onclick="event.preventDefault();pxaDeleteExam(this.dataset.exam)">시험 전체 삭제</button>
       </summary>
-      <div style="margin-top:12px;">${grades.map(g => Object.keys(byGrade[g]).sort(pxaOrder(PXA_REGIONS)).map(r => `
+      <div style="margin-top:12px;">${keys.map(k => { const [g, s] = k.split('\u0000'); const list = inKey(k); return `
         <div style="margin-bottom:10px;">
-          <div style="font-size:12.5px;font-weight:700;color:var(--off-white);margin-bottom:4px;">${pxaEsc(g)} · ${pxaEsc(r)} <span style="color:var(--muted);font-weight:500;">${byGrade[g][r].length}개</span></div>
-          ${byGrade[g][r].sort((a, b) => a.name.localeCompare(b.name, 'ko', { numeric: true })).map(f => `
+          <div style="font-size:12.5px;font-weight:700;color:${s === PXA_UNSORTED ? '#D97B1A' : 'var(--off-white)'};margin-bottom:4px;">${pxaEsc(pxaLabel(g, s))} <span style="color:var(--muted);font-weight:500;">${list.length}개</span></div>
+          ${list.sort((a, b) => a.name.localeCompare(b.name, 'ko', { numeric: true })).map(f => `
             <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;border-radius:6px;font-size:13px;">
               <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--off-white);">📄 ${pxaEsc(f.name)}</span>
               <button class="btn btn-secondary btn-sm" data-path="${pxaEsc(f.path)}" onclick="pxaOpenFile(this.dataset.path)">열기</button>
               <button class="btn btn-danger btn-sm" data-path="${pxaEsc(f.path)}" onclick="pxaDeleteFile(this.dataset.path)">삭제</button>
             </div>`).join('')}
-        </div>`).join('')).join('')}</div>
+        </div>`; }).join('')}</div>
     </details>`;
   }).join('');
 };
@@ -255,7 +303,7 @@ window.pxaOpenFile = async (path) => {
 };
 
 window.pxaDeleteFile = async (path) => {
-  const name = path.split('/').slice(-3).join(' / ');
+  const name = path.split('/').slice(2).join(' / ');
   if (!confirm(`"${name}" 파일을 삭제할까요?\n되돌릴 수 없습니다.`)) return;
   try { await deleteObject(ref(storage, path)); await pxaLoadList(); }
   catch (e) { alert('삭제 실패: ' + (e.code || e.message)); }

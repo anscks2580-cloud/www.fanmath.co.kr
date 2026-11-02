@@ -1338,8 +1338,10 @@ select option:disabled { color:#6B6489; }
       </div>
       <div class="px-chip-label">학년</div>
       <div class="px-chips" id="pxGradeChips"></div>
-      <div class="px-chip-label">지역</div>
-      <div class="px-chips" id="pxRegionChips"></div>
+      <div id="pxSubjectWrap" style="display:none;">
+        <div class="px-chip-label">과목</div>
+        <div class="px-chips" id="pxSubjectChips"></div>
+      </div>
       <div id="pxList"><div class="px-empty">불러오는 중...</div></div>
     </div>
   </div>
@@ -4109,11 +4111,15 @@ window.tbDownload = async function (btn) {
 };
 
 // ══════════════════════════════════════
-// 📚 기출문제 — Firebase Storage 경로: pastExams/시험명/학년/지역/파일.pdf
+// 📚 기출문제 — Firebase Storage 경로 (지역 구분 없음)
+//   고2: pastExams/시험명/고2/과목/파일.pdf (미적분1 · 확률과 통계 · 기하) / 그 외: pastExams/시험명/학년/파일.pdf
+// 예전 구조(…/학년/지역/파일.pdf)도 읽힘 — 지역은 무시하고 학년으로 합침
 // (업로드·삭제는 admin.html "기출문제" 탭, 선생님은 열람만)
 // ══════════════════════════════════════
-const PX_GRADE_ORDER  = ['중1','중2','중3','고1','고2','고3'];
-const PX_REGION_ORDER = ['군포','안양','의왕','과천'];
+const PX_GRADE_ORDER   = ['중1','중2','중3','고1','고2','고3'];
+const PX_SUBJECT_ORDER = ['미적분1','확률과 통계','기하'];
+const PX_SUBJECT_GRADES = ['고2'];
+const PX_UNSORTED = '과목 미분류';
 function pxOrderSort(order) {
   return (a, b) => {
     const ia = order.indexOf(a), ib = order.indexOf(b);
@@ -4130,9 +4136,20 @@ function pxExamScore(name) {
 function pxEsc(s) {
   return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 }
+function pxGradeOf(part) {
+  const m = String(part).normalize('NFC').replace(/\s/g, '').match(/^(중|고)(?:등학교|등)?([123])(?:학년)?/);
+  return m ? m[1] + m[2] : '';
+}
+function pxSubjectOf(text) {
+  const t = String(text).normalize('NFC').replace(/\s/g, '');
+  if (/확률|확통/.test(t)) return '확률과 통계';
+  if (/미적/.test(t)) return '미적분1';
+  if (/기하/.test(t)) return '기하';
+  return '';
+}
 let pxExams = null;          // 시험명 목록
-const pxCache = {};          // 시험명 → [{ grade, region, name, path }]
-const pxState = { exam: '', grade: 'all', region: 'all', q: '' };
+const pxCache = {};          // 시험명 → [{ grade, subject, name, path }]
+const pxState = { exam: '', grade: 'all', subject: 'all', q: '' };
 
 window.initPastExamsTab = async function (force = false) {
   const sel  = document.getElementById('pxExamSel');
@@ -4152,7 +4169,7 @@ window.initPastExamsTab = async function (force = false) {
   if (!pxExams.length) {
     sel.innerHTML = '';
     document.getElementById('pxGradeChips').innerHTML = '';
-    document.getElementById('pxRegionChips').innerHTML = '';
+    document.getElementById('pxSubjectWrap').style.display = 'none';
     list.innerHTML = '<div class="px-empty">아직 올라온 기출문제가 없습니다.</div>';
     return;
   }
@@ -4171,7 +4188,12 @@ async function pxLoadExam(exam) {
       const res = await listAll(r);
       res.items.forEach(it => {
         if (!/\.pdf$/i.test(it.name)) return;
-        files.push({ grade: parts[0] || '기타', region: parts[1] || '기타', name: it.name, path: it.fullPath });
+        const grade = pxGradeOf(parts[0] || '') || parts[0] || '기타';
+        let subject = '';
+        if (PX_SUBJECT_GRADES.includes(grade)) {
+          subject = parts.slice(1).map(pxSubjectOf).find(Boolean) || pxSubjectOf(it.name) || PX_UNSORTED;
+        }
+        files.push({ grade, subject, name: it.name, path: it.fullPath });
       });
       await Promise.all(res.prefixes.map(p => walk(p, [...parts, p.name])));
     }
@@ -4187,12 +4209,12 @@ async function pxLoadExam(exam) {
 }
 
 window.pxSelectExam = function (exam) {
-  pxState.exam = exam; pxState.grade = 'all'; pxState.region = 'all';
+  pxState.exam = exam; pxState.grade = 'all'; pxState.subject = 'all';
   pxLoadExam(exam);
 };
-window.pxSetGrade  = function (g) { pxState.grade = g; pxState.region = 'all'; pxRender(); };
-window.pxSetRegion = function (r) { pxState.region = r; pxRender(); };
-window.pxSetQuery  = function (q) { pxState.q = q.trim().toLowerCase(); pxRender(); };
+window.pxSetGrade   = function (g) { pxState.grade = g; pxState.subject = 'all'; pxRender(); };
+window.pxSetSubject = function (s) { pxState.subject = s; pxRender(); };
+window.pxSetQuery   = function (q) { pxState.q = q.trim().toLowerCase(); pxRender(); };
 
 function pxRender() {
   const files = pxCache[pxState.exam];
@@ -4210,28 +4232,37 @@ function pxRender() {
     grades.map(g => chip(g, pxState.grade === g, `pxSetGrade('${pxEsc(g)}')`, gCount[g])).join('');
 
   const inGrade = pxState.grade === 'all' ? files : files.filter(f => f.grade === pxState.grade);
-  const rCount  = count(inGrade, 'region');
-  const regions = Object.keys(rCount).sort(pxOrderSort(PX_REGION_ORDER));
-  if (pxState.region !== 'all' && !rCount[pxState.region]) pxState.region = 'all';
-  document.getElementById('pxRegionChips').innerHTML =
-    chip('전체', pxState.region === 'all', "pxSetRegion('all')", inGrade.length) +
-    regions.map(r => chip(r, pxState.region === r, `pxSetRegion('${pxEsc(r)}')`, rCount[r])).join('');
+  // 과목 칩은 고2를 골랐을 때만
+  const subWrap = document.getElementById('pxSubjectWrap');
+  let shown = inGrade;
+  if (PX_SUBJECT_GRADES.includes(pxState.grade)) {
+    const sCount = count(inGrade, 'subject');
+    const subjects = Object.keys(sCount).sort(pxOrderSort(PX_SUBJECT_ORDER));
+    if (pxState.subject !== 'all' && !sCount[pxState.subject]) pxState.subject = 'all';
+    document.getElementById('pxSubjectChips').innerHTML =
+      chip('전체', pxState.subject === 'all', "pxSetSubject('all')", inGrade.length) +
+      subjects.map(s => chip(s, pxState.subject === s, `pxSetSubject('${pxEsc(s)}')`, sCount[s])).join('');
+    subWrap.style.display = '';
+    if (pxState.subject !== 'all') shown = inGrade.filter(f => f.subject === pxState.subject);
+  } else {
+    subWrap.style.display = 'none';
+    pxState.subject = 'all';
+  }
 
-  let shown = pxState.region === 'all' ? inGrade : inGrade.filter(f => f.region === pxState.region);
   if (pxState.q) shown = shown.filter(f => f.name.toLowerCase().includes(pxState.q));
   if (!shown.length) {
     list.innerHTML = `<div class="px-empty">${pxState.q ? '검색 결과가 없습니다.' : '해당하는 기출문제가 없습니다.'}</div>`;
     return;
   }
   const groups = {};
-  shown.forEach(f => { const k = f.grade + '\u0000' + f.region; (groups[k] = groups[k] || []).push(f); });
+  shown.forEach(f => { const k = f.grade + '\u0000' + (f.subject || ''); (groups[k] = groups[k] || []).push(f); });
   const keys = Object.keys(groups).sort((a, b) => {
-    const [ga, ra] = a.split('\u0000'), [gb, rb] = b.split('\u0000');
-    return pxOrderSort(PX_GRADE_ORDER)(ga, gb) || pxOrderSort(PX_REGION_ORDER)(ra, rb);
+    const [ga, sa] = a.split('\u0000'), [gb, sb] = b.split('\u0000');
+    return pxOrderSort(PX_GRADE_ORDER)(ga, gb) || pxOrderSort(PX_SUBJECT_ORDER)(sa, sb);
   });
   list.innerHTML = `<div class="px-meta">총 ${shown.length}개</div>` + keys.map(k => {
-    const [g, r] = k.split('\u0000');
-    return `<div class="px-group"><div class="px-group-h">${pxEsc(g)} · ${pxEsc(r)}<small>${groups[k].length}개</small></div>
+    const [g, s] = k.split('\u0000');
+    return `<div class="px-group"><div class="px-group-h">${pxEsc(g)}${s ? ' · ' + pxEsc(s) : ''}<small>${groups[k].length}개</small></div>
       <div class="px-rows">${groups[k].map(f => `<div class="tb-row">
         <span class="tb-name" title="${pxEsc(f.name)}">📄 ${pxEsc(f.name.replace(/\.pdf$/i, ''))}</span>
         <span class="tb-acts">
