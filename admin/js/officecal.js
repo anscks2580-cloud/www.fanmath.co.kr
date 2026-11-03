@@ -69,7 +69,8 @@
     const todayBtn = $('ocThisWeek'); if (todayBtn) todayBtn.hidden = weekOffset === 0;
     renderBranchMenu();
 
-    const pass = (b) => branchFilter === '전체' || b === branchFilter;
+    const norm = (b) => (String(b || '').includes('산본') ? '산본관' : String(b || '').includes('평촌') ? '평촌관' : '');
+    const pass = (b) => branchFilter === '전체' || norm(b) === branchFilter;
     let html = '<div class="oc-grid">';
     for (let i = 0; i < 7; i++) {
       const d = new Date(s); d.setDate(s.getDate() + i);
@@ -119,7 +120,7 @@
   // ── 왼쪽 위 관 선택 (펼침 메뉴) ──
   function renderBranchMenu() {
     const btn = $('ocBrBtn'), list = $('ocBrList'); if (!btn || !list) return;
-    const n = (b) => events.filter((x) => b === '전체' || x.branch === b).length;
+    const n = (b) => events.filter((x) => b === '전체' || String(x.branch || '').includes(b.replace('관', ''))).length;
     btn.className = 'oc-br-btn ' + (branchFilter === '평촌관' ? 'pc' : branchFilter === '산본관' ? 'sb' : '');
     btn.innerHTML = `<span>${esc(branchFilter)}</span><small>${n(branchFilter)}건</small><i>▾</i>`;
     list.innerHTML = ['전체', '평촌관', '산본관'].map((b) => `<button type="button" class="${b === '평촌관' ? 'pc' : b === '산본관' ? 'sb' : ''}${b === branchFilter ? ' on' : ''}" onclick="ocSetBranch('${b}')"><span class="sw"></span>${b}<small>${n(b)}건</small></button>`).join('');
@@ -134,9 +135,11 @@
     try { localStorage.setItem(BR_KEY, b); } catch (e) {}
     ocToggleBranch(false);
     render();
+    window.dispatchEvent(new CustomEvent('oc:branch', { detail: b }));
   };
   document.addEventListener('click', (e) => { if (!e.target.closest('#ocBr')) { const w = $('ocBr'); if (w) w.classList.remove('open'); } });
 
+  window.ocBranch = () => branchFilter;
   window.ocMoveWeek = function (step) { weekOffset = step === 0 ? 0 : weekOffset + step; load(); };
 
   // ── 등록 / 수정 창 ──

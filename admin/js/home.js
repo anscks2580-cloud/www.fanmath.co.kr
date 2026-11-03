@@ -16,6 +16,24 @@
   const TYPE_COLOR = { '휴무': '#D64545', '회의': '#2F7FD6', '상담': '#0E9384', '설명회': '#6B4FBB', '시험기간': '#D97B1A', '행사': '#2E9E5B', '할 일': '#F5C518', '기타': '#6B6489' };
 
   let loadedAt = 0;
+  // 홈 맨 위 달력에서 고른 관(전체·평촌관·산본관)을 아래 카드에도 똑같이 적용
+  const brFilter = () => (typeof window.ocBranch === 'function' ? window.ocBranch() : '전체');
+  function teacherBranchOf(uid) {
+    const list = (typeof teachersCache !== 'undefined' && Array.isArray(teachersCache)) ? teachersCache : [];
+    const t = list.find((x) => x.id === uid || x.uid === uid);
+    return t && t.branch ? (String(t.branch).includes('산본') ? '산본관' : '평촌관') : '';
+  }
+  function markBranch() {
+    const bf = brFilter();
+    ['hmScheduleCard', 'hmConsultCard'].forEach((id) => {
+      const h = document.querySelector('#' + id + ' h3 span'); if (!h) return;
+      let tag = h.querySelector('.hm-brtag');
+      if (bf === '전체') { if (tag) tag.remove(); return; }
+      if (!tag) { tag = document.createElement('small'); tag.className = 'hm-brtag'; h.appendChild(tag); }
+      tag.textContent = bf; tag.style.cssText = `margin-left:8px;font-size:12px;font-weight:800;color:${bf === '산본관' ? '#A87A00' : '#5B3FA6'}`;
+    });
+  }
+  window.addEventListener('oc:branch', () => { markBranch(); loadSchedule(); loadConsult(); });
   let loading = false;
 
   // 주간성취도 대상 학생: 중등부(초·중)만, 반이 과외인 학생 제외 (teacher.html과 같은 기준)
@@ -79,6 +97,9 @@
         const e = d.data(); const s = e.start || '', en = e.end || s;
         if (!s) return;
         if (en < today || s > untilStr) return;
+        const bf = brFilter();
+        if (bf !== '전체' && e.target === 'branch' && e.branch && e.branch !== bf) return;
+        if (bf !== '전체' && e.target === 'teachers' && Array.isArray(e.teacherUids) && e.teacherUids.length && teacherBranchOf && !e.teacherUids.some((u) => teacherBranchOf(u) === bf || !teacherBranchOf(u))) return;
         rows.push(e);
       });
       rows.sort((a, b) => (a.start || '').localeCompare(b.start || '') || (a.time || '').localeCompare(b.time || ''));
@@ -113,6 +134,7 @@
         if (x.hidden === true) { hiddenN++; return; }
         if (x.stage === 'consultation_completed') doneVisible.push(d.id);
         const br = String(x.branch || '').includes('산본') ? '산본관' : '평촌관';
+        if (brFilter() !== '전체' && br !== brFilter()) return;
         const created = x.createdAt?.toDate ? x.createdAt.toDate() : null;
         const done = x.stage === 'consultation_completed';
         if (created && ymd(created) === today) st[br].todayN++;
@@ -120,7 +142,8 @@
         if (!done) st[br].openN++;
         if (recent.length < 6) recent.push({ id: d.id, name: x.studentName || '(이름 없음)', grade: x.grade || x.studentGrade || '', br, created, done, stage: x.stage || '' });
       });
-      const two = (k) => `<span class="n" style="font-size:15px;line-height:1.5;">평촌 ${st['평촌관'][k]} <small style="color:var(--muted);font-weight:400;">·</small> 산본 ${st['산본관'][k]}</span>`;
+      const bf = brFilter();
+      const two = (k) => bf !== '전체' ? `<span class="n" style="color:${bf === '산본관' ? '#A87A00' : '#5B3FA6'}">${st[bf][k]}</span>` : `<span class="n" style="font-size:15px;line-height:1.5;">평촌 ${st['평촌관'][k]} <small style="color:var(--muted);font-weight:400;">·</small> 산본 ${st['산본관'][k]}</span>`;
       const openAll = st['평촌관'].openN + st['산본관'].openN;
       el.innerHTML = `
         <div class="hm-stat">
@@ -128,7 +151,7 @@
           <div class="box" data-open="consult">${two('weekN')}<span class="k">최근 7일</span></div>
           <div class="box${openAll ? ' warn' : ''}" data-open="consult">${two('openN')}<span class="k">상담 진행 전</span></div>
         </div>
-        ${recent.length ? '<div class="hm-list">' + recent.map((r) => `<div class="hm-row"><span class="dot" style="background:${r.done ? '#2E9E5B' : '#F5C518'}"></span><span class="t"><b><small style="display:inline;font-weight:800;color:${r.br === '산본관' ? '#15788C' : '#5B3FA6'};">[${r.br}]</small> ${esc(r.name)}${r.grade ? ' <small style="display:inline">' + esc(r.grade) + '</small>' : ''}</b><small>${r.done ? '상담 완료' : '상담 전'}</small></span><span class="r">${r.created ? esc(md(r.created)) : ''}</span><button type="button" class="hm-hide" title="홈 화면 상담 목록에서 숨기기 (삭제 아님)" onclick="hmHideConsult('${r.id}')">✕</button></div>`).join('') + '</div>' : '<div class="hm-empty">접수된 상담이 없습니다.</div>'}
+        ${recent.length ? '<div class="hm-list">' + recent.map((r) => `<div class="hm-row"><span class="dot" style="background:${r.done ? '#2E9E5B' : '#F5C518'}"></span><span class="t"><b><small style="display:inline;font-weight:800;color:${r.br === '산본관' ? '#A87A00' : '#5B3FA6'};">[${r.br}]</small> ${esc(r.name)}${r.grade ? ' <small style="display:inline">' + esc(r.grade) + '</small>' : ''}</b><small>${r.done ? '상담 완료' : '상담 전'}</small></span><span class="r">${r.created ? esc(md(r.created)) : ''}</span><button type="button" class="hm-hide" title="홈 화면 상담 목록에서 숨기기 (삭제 아님)" onclick="hmHideConsult('${r.id}')">✕</button></div>`).join('') + '</div>' : '<div class="hm-empty">접수된 상담이 없습니다.</div>'}
         <div class="hm-foot">
           ${doneVisible.length ? `<button type="button" class="btn btn-secondary btn-sm" onclick="hmHideDoneConsults()">✅ 상담 완료 ${doneVisible.length}건 모두 숨기기</button>` : ''}
           ${hiddenN ? `<span>숨긴 상담 ${hiddenN}건 — 상담 신청 탭 › "🙈 숨긴 신청"에서 다시 꺼낼 수 있습니다</span>` : '<span>✕ 를 누르면 그 상담은 홈·상담 신청 목록에서 숨겨집니다 (삭제 아님)</span>'}
@@ -266,7 +289,7 @@
     if (loading) return;
     if (!force && Date.now() - loadedAt < 60 * 1000) { renderHeader(); return; }
     loading = true;
-    renderHeader(); renderOffice();
+    renderHeader(); renderOffice(); markBranch();
     if (typeof window.ocRefresh === 'function') window.ocRefresh();
     await Promise.all([loadSchedule(), loadConsult(), loadSubmissions(), loadStudentsSummary()]);
     loadedAt = Date.now(); loading = false;
