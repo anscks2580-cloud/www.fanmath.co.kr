@@ -9,6 +9,8 @@
 //   그 외 학년: pastExams/시험명/학년/파일.pdf
 // 선생님 포털(teacher.html "기출문제" 탭)에서 열람. 업로드·삭제는 관리자만 (storage.rules)
 // ※ 예전 구조(…/학년/지역/파일.pdf)로 올라간 파일도 그대로 읽힘 — 지역 폴더는 무시
+// 📝 변형문제: pastExamVariants/ 아래에 원본과 똑같은 경로·이름으로 저장 (원본 1개당 변형 1개)
+//    → 선생님 포털에서 원본 줄 [미리보기] 옆 [변형문제] 버튼. 원본을 옮기거나 지우면 변형도 같이 옮겨지고 지워짐
 // ══════════════════════════════════════════
 const PXA_GRADES   = ['중1','중2','중3','고1','고2','고3'];
 const PXA_SUBJECTS = ['미적분1','확률과 통계','기하'];
@@ -18,6 +20,10 @@ const PXA_MAX_MB  = 50;
 let pxaQueue = [];      // 폴더 선택으로 준비된 업로드 목록
 let pxaData  = {};      // 시험명 → [{ grade, subject, name, path }]
 let pxaBusy  = false;
+const PXV_ROOT = 'pastExamVariants';
+let pxaVars  = new Set();   // 변형문제가 있는 원본 경로
+let pxaVarErr = '';         // 변형문제 목록을 못 불러온 이유 (보통 storage.rules 미반영)
+function pxaVarPath(path) { return String(path).replace(/^pastExams\//, PXV_ROOT + '/'); }
 
 function pxaEsc(s) {
   return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
@@ -101,6 +107,12 @@ function pxaFillExamSelect() {
     '<option value="__new__">+ 새 시험 만들기</option>';
   sel.value = exams.includes(prev) ? prev : (exams[0] || '__new__');
   pxaToggleNewExam();
+  const vs = document.getElementById('pxv-exam');
+  if (vs) {
+    const vprev = vs.value;
+    vs.innerHTML = exams.length ? exams.map(e => `<option value="${pxaEsc(e)}">${pxaEsc(e)}</option>`).join('') : '<option value="">(먼저 기출문제를 올려주세요)</option>';
+    vs.value = exams.includes(vprev) ? vprev : (exams[0] || '');
+  }
 }
 window.pxaToggleNewExam = () => {
   const isNew = document.getElementById('pxa-m-exam').value === '__new__';
@@ -299,7 +311,20 @@ window.pxaLoadList = async () => {
     return;
   }
   pxaData = data;
+  // 변형문제 목록
+  const vars = new Set();
+  pxaVarErr = '';
+  try {
+    const walkVar = async r => {
+      const res = await listAll(r);
+      res.items.forEach(it => vars.add(it.fullPath.replace(new RegExp('^' + PXV_ROOT + '/'), 'pastExams/')));
+      await Promise.all(res.prefixes.map(walkVar));
+    };
+    await walkVar(ref(storage, PXV_ROOT));
+  } catch (e) { pxaVarErr = e.code || e.message; }
+  pxaVars = vars;
   pxaFillExamSelect();
+  pxvRematch();
   const exams = Object.keys(data).sort((a, b) => (pxaExamScore(b) - pxaExamScore(a)) || b.localeCompare(a, 'ko'));
   if (!exams.length) { box.innerHTML = '<div style="color:var(--muted);font-size:13px;">아직 올라간 기출문제가 없습니다.</div>'; return; }
   box.innerHTML = exams.map(exam => {
@@ -311,7 +336,8 @@ window.pxaLoadList = async () => {
       <summary style="cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;list-style:none;">
         <span><b style="color:var(--off-white);font-size:14px;">${pxaEsc(exam)}</b>
           <span style="color:var(--purple, #5B3FA6);font-size:13px;margin-left:6px;">${files.length}개</span>
-          <span style="color:var(--muted);font-size:12px;margin-left:8px;">${summary}</span></span>
+          <span style="color:var(--muted);font-size:12px;margin-left:8px;">${summary}</span>
+          ${files.filter(f => pxaVars.has(f.path)).length ? `<span style="color:var(--purple, #5B3FA6);font-size:12px;margin-left:8px;">· 변형문제 ${files.filter(f => pxaVars.has(f.path)).length}개</span>` : ''}</span>
         <button class="btn btn-danger btn-sm" data-exam="${pxaEsc(exam)}" onclick="event.preventDefault();pxaDeleteExam(this.dataset.exam)">시험 전체 삭제</button>
       </summary>
       <div style="margin-top:12px;">${keys.map(k => { const [g, s] = k.split('\u0000'); const list = inKey(k); return `
@@ -323,6 +349,11 @@ window.pxaLoadList = async () => {
               <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--off-white);">📄 ${pxaEsc(f.name)}</span>
               <select style="${PXA_SEL_STYLE}" title="분류 변경" data-exam="${pxaEsc(exam)}" data-path="${pxaEsc(f.path)}" onchange="pxaMoveOne(this)">${pxaClassOptions(f.grade, f.subject)}</select>
               <button class="btn btn-secondary btn-sm" data-path="${pxaEsc(f.path)}" onclick="pxaOpenFile(this.dataset.path)">열기</button>
+              ${pxaVars.has(f.path)
+                ? `<button class="btn btn-secondary btn-sm" style="color:var(--purple, #5B3FA6);border-color:rgba(91,63,166,0.4);" data-path="${pxaEsc(pxaVarPath(f.path))}" onclick="pxaOpenFile(this.dataset.path)">변형 열기</button>
+                   <button class="btn btn-secondary btn-sm" data-path="${pxaEsc(f.path)}" onclick="pxaVarPick(this.dataset.path)">변형 교체</button>
+                   <button class="btn btn-danger btn-sm" data-path="${pxaEsc(f.path)}" onclick="pxaVarDelete(this.dataset.path)">변형 삭제</button>`
+                : `<button class="btn btn-secondary btn-sm" style="color:var(--purple, #5B3FA6);border-color:rgba(91,63,166,0.4);" data-path="${pxaEsc(f.path)}" onclick="pxaVarPick(this.dataset.path)">변형 올리기</button>`}
               <button class="btn btn-secondary btn-sm" data-exam="${pxaEsc(exam)}" data-path="${pxaEsc(f.path)}" onclick="pxaRenameFile(this)">이름 변경</button>
               <button class="btn btn-danger btn-sm" data-path="${pxaEsc(f.path)}" onclick="pxaDeleteFile(this.dataset.path)">삭제</button>
             </div>`).join('')}
@@ -363,6 +394,12 @@ async function pxaMoveFiles(exam, files, grade, subject, newName) {
         const blob = await res.blob();
         await uploadBytes(ref(storage, t.to), blob, { contentType: 'application/pdf' });
         await deleteObject(ref(storage, t.from));
+        if (pxaVars.has(t.from)) {   // 변형문제도 같은 곳으로 옮김
+          const vr = await fetch(await getDownloadURL(ref(storage, pxaVarPath(t.from))));
+          if (!vr.ok) throw new Error('변형문제 HTTP ' + vr.status);
+          await uploadBytes(ref(storage, pxaVarPath(t.to)), await vr.blob(), { contentType: 'application/pdf' });
+          await deleteObject(ref(storage, pxaVarPath(t.from)));
+        }
         done++;
       } catch (e) { failed.push(`${t.name} (${e.code || e.message})`); }
       tick();
@@ -414,8 +451,13 @@ window.pxaOpenFile = async (path) => {
 
 window.pxaDeleteFile = async (path) => {
   const name = path.split('/').slice(2).join(' / ');
-  if (!confirm(`"${name}" 파일을 삭제할까요?\n되돌릴 수 없습니다.`)) return;
-  try { await deleteObject(ref(storage, path)); await pxaLoadList(); }
+  const hasVar = pxaVars.has(path);
+  if (!confirm(`"${name}" 파일을 삭제할까요?${hasVar ? '\n(이 파일의 변형문제도 같이 삭제됩니다)' : ''}\n되돌릴 수 없습니다.`)) return;
+  try {
+    await deleteObject(ref(storage, path));
+    if (hasVar) await deleteObject(ref(storage, pxaVarPath(path))).catch(() => {});
+    await pxaLoadList();
+  }
   catch (e) { alert('삭제 실패: ' + (e.code || e.message)); }
 };
 
@@ -429,7 +471,10 @@ window.pxaDeleteExam = async (exam) => {
   async function worker() {
     while (i < files.length) {
       const f = files[i++];
-      try { await deleteObject(ref(storage, f.path)); } catch (e) { failed.push(f.name); }
+      try {
+        await deleteObject(ref(storage, f.path));
+        if (pxaVars.has(f.path)) await deleteObject(ref(storage, pxaVarPath(f.path))).catch(() => {});
+      } catch (e) { failed.push(f.name); }
     }
   }
   await Promise.all([worker(), worker(), worker(), worker()]);
@@ -437,3 +482,150 @@ window.pxaDeleteExam = async (exam) => {
   await pxaLoadList();
 };
 
+
+// ══════════════════════════════════════════
+// 📝 변형문제 — 원본 1개당 1개 (pastExamVariants/ + 원본과 같은 경로)
+// ══════════════════════════════════════════
+function pxaVarCheckFile(f) {
+  if (!/\.pdf$/i.test(f.name)) { alert('PDF 파일만 올릴 수 있습니다: ' + f.name); return false; }
+  if (f.size > PXA_MAX_MB * 1024 * 1024) { alert(`${PXA_MAX_MB}MB를 넘는 파일입니다: ` + f.name); return false; }
+  return true;
+}
+// 목록의 [변형 올리기]/[변형 교체] — 파일 하나 골라서 바로 올림
+window.pxaVarPick = (path) => {
+  if (pxaBusy) { alert('다른 작업이 진행 중입니다.'); return; }
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.pdf,application/pdf';
+  inp.onchange = async () => {
+    const f = inp.files[0];
+    if (!f || !pxaVarCheckFile(f)) return;
+    const orig = path.split('/').pop();
+    if (pxaVars.has(path) && !confirm(`"${orig}"의 변형문제를 "${f.name}"(으)로 교체할까요?`)) return;
+    pxaBusy = true;
+    try {
+      await uploadBytes(ref(storage, pxaVarPath(path)), f, { contentType: 'application/pdf' });
+      await pxaLoadList();
+      [...document.querySelectorAll('#pxa-list details')].forEach(d => { if (d.querySelector(`[data-path="${CSS.escape(path)}"]`)) d.open = true; });
+    } catch (e) { alert('변형문제 업로드 실패: ' + (e.code || e.message) + (/unauthorized/.test(e.code || '') ? '\n(storage.rules에 pastExamVariants 규칙이 반영됐는지 확인해주세요)' : '')); }
+    finally { pxaBusy = false; }
+  };
+  inp.click();
+};
+window.pxaVarDelete = async (path) => {
+  if (!confirm(`"${path.split('/').pop()}"의 변형문제를 삭제할까요?\n(원본 기출문제는 그대로 남습니다)`)) return;
+  try {
+    await deleteObject(ref(storage, pxaVarPath(path)));
+    await pxaLoadList();
+    [...document.querySelectorAll('#pxa-list details')].forEach(d => { if (d.querySelector(`[data-path="${CSS.escape(path)}"]`)) d.open = true; });
+  } catch (e) { alert('삭제 실패: ' + (e.code || e.message)); }
+};
+
+// ── 여러 개 한꺼번에: 파일 이름의 학교·학년으로 원본 자동 매칭 ──
+let pxvQueue = [];   // [{ file, target: 원본 경로 | '' }]
+function pxvNorm(s) {
+  return String(s).normalize('NFC').replace(/\.pdf$/i, '').replace(/[_\-\s]*\(?변형(문제)?\)?/g, '').replace(/\s+/g, '');
+}
+function pxvSchoolNorm(s) {
+  return String(s).normalize('NFC').replace(/\s/g, '').replace(/여자중학교$/, '여중').replace(/여자고등학교$/, '여고')
+    .replace(/중학교$/, '중').replace(/고등학교$/, '고');
+}
+// 파일 이름에서 학교 이름 후보 (예: [궁내중] → 궁내중, 백영고등학교 → 백영고)
+function pxvSchools(name) {
+  const out = [];
+  const t = String(name).normalize('NFC').replace(/\.pdf$/i, '');
+  t.split(/[\[\]\(\)_\s,·]+/).forEach(w => {
+    if (/^[가-힣A-Za-z0-9]{1,15}(여자중학교|여자고등학교|중학교|고등학교|여중|여고|중|고)$/.test(w) && !/(기말고|중간고|최고|참고)$/.test(w)) out.push(pxvSchoolNorm(w));
+  });
+  return [...new Set(out)];
+}
+function pxvGrade(name, school) {
+  const t = String(name).normalize('NFC');
+  const g = pxaGradeOf(t.replace(/^.*?([중고]\s*[123])/, '$1')) || '';
+  if (g) return g;
+  const m = t.match(/([123])\s*학년/);
+  if (!m) return '';
+  const lvl = /고$/.test(school || '') ? '고' : /중$/.test(school || '') ? '중' : '';
+  return lvl ? lvl + m[1] : '';
+}
+function pxvMatch(name, files) {
+  const n = pxvNorm(name);
+  const exact = files.filter(f => pxvNorm(f.name) === n);
+  if (exact.length === 1) return { path: exact[0].path, how: '이름 일치' };
+  const schools = pxvSchools(name);
+  if (!schools.length) return { path: '', how: '학교 이름을 못 찾음' };
+  let cands = files.filter(f => { const fs = pxvSchools(f.name); return schools.some(sc => fs.includes(sc) || pxvSchoolNorm(f.name).includes(sc)); });
+  const g = pxvGrade(name, schools[0]);
+  if (g && cands.some(f => f.grade === g)) cands = cands.filter(f => f.grade === g);
+  if (cands.length === 1) return { path: cands[0].path, how: `${schools[0]}${g ? ' · ' + g : ''}` };
+  if (!cands.length) return { path: '', how: `"${schools[0]}" 원본 없음` };
+  return { path: '', how: `후보 ${cands.length}개 — 직접 골라주세요` };
+}
+window.pxvOnFiles = (input) => {
+  const files = [...input.files].filter(pxaVarCheckFile);
+  pxvQueue = files.map(f => ({ file: f, target: '', how: '' }));
+  pxaMsg('pxv-msg', '');
+  pxvRematch(true);
+};
+window.pxvRematch = (fresh) => {
+  const box = document.getElementById('pxv-preview');
+  if (!box) return;
+  if (!pxvQueue.length) {
+    box.innerHTML = pxaVarErr ? `<div style="color:#D97B1A;font-size:12.5px;margin-bottom:8px;">변형문제 목록을 불러오지 못했습니다 (${pxaEsc(pxaVarErr)}) — storage.rules에 pastExamVariants 규칙이 반영됐는지 확인해주세요.</div>` : '';
+    return;
+  }
+  const exam = document.getElementById('pxv-exam').value;
+  const files = (pxaData[exam] || []).slice().sort((a, b) => pxaOrder(PXA_GRADES)(a.grade, b.grade) || a.name.localeCompare(b.name, 'ko', { numeric: true }));
+  pxvQueue.forEach(q => {
+    if (q.manual && q.exam === exam) return;   // 직접 고른 건 유지
+    const m = pxvMatch(q.file.name, files); q.target = m.path; q.how = m.how; q.manual = false; q.exam = exam;
+  });
+  const opts = cur => '<option value="">— 원본 선택 —</option>' + files.map(f =>
+    `<option value="${pxaEsc(f.path)}"${f.path === cur ? ' selected' : ''}>${pxaEsc(pxaLabel(f.grade, f.subject))} · ${pxaEsc(f.name.replace(/\.pdf$/i, ''))}${pxaVars.has(f.path) ? ' (변형 있음)' : ''}</option>`).join('');
+  const td = 'padding:7px 8px;border-bottom:1px solid rgba(30,24,56,0.06);vertical-align:middle;font-size:12.5px;';
+  box.innerHTML = `<div style="overflow-x:auto;"><table style="border-collapse:collapse;width:100%;min-width:560px;margin-bottom:12px;">
+    <tr><th style="${td}text-align:left;color:var(--muted);">변형문제 파일</th><th style="${td}text-align:left;color:var(--muted);">짝지을 원본 기출문제</th></tr>
+    ${pxvQueue.map((q, i) => `<tr>
+      <td style="${td}color:var(--off-white);max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${pxaEsc(q.file.name)}">📝 ${pxaEsc(q.file.name)}</td>
+      <td style="${td}"><select style="${PXA_SEL_STYLE}max-width:100%;width:100%;" data-i="${i}" onchange="pxvSet(this)">${opts(q.target)}</select>
+        <div style="font-size:11.5px;margin-top:3px;color:${q.target ? 'var(--muted)' : '#D97B1A'};">${q.target ? '자동 매칭: ' : ''}${pxaEsc(q.how)}${q.target && pxaVars.has(q.target) ? ' · 기존 변형문제를 교체합니다' : ''}</div></td>
+    </tr>`).join('')}</table></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn btn-primary" id="pxv-btn" onclick="pxvUpload()">변형문제 올리기</button>
+      <button class="btn btn-secondary" onclick="pxvCancel()">취소</button>
+    </div>`;
+};
+window.pxvSet = (sel) => { const q = pxvQueue[+sel.dataset.i]; if (q) { q.target = sel.value; q.how = sel.value ? '직접 선택' : '원본 선택 안 함'; q.manual = true; } };
+window.pxvCancel = () => {
+  pxvQueue = [];
+  document.getElementById('pxv-files').value = '';
+  document.getElementById('pxv-preview').innerHTML = '';
+  pxaMsg('pxv-msg', '');
+};
+window.pxvUpload = async () => {
+  // 화면에서 직접 고친 선택을 다시 읽음
+  document.querySelectorAll('#pxv-preview select[data-i]').forEach(sel => { const q = pxvQueue[+sel.dataset.i]; if (q) q.target = sel.value; });
+  const todo = pxvQueue.filter(q => q.target);
+  const skip = pxvQueue.length - todo.length;
+  if (!todo.length) { alert('짝지을 원본을 골라주세요.'); return; }
+  const dup = todo.map(q => q.target).filter((t, i, a) => a.indexOf(t) !== i);
+  if (dup.length) { alert('같은 원본에 변형문제 두 개를 짝지었습니다. 하나만 골라주세요:\n' + [...new Set(dup)].map(p => p.split('/').pop()).join('\n')); return; }
+  if (skip && !confirm(`원본을 고르지 않은 ${skip}개는 빼고 ${todo.length}개만 올릴까요?`)) return;
+  if (pxaBusy) { alert('다른 작업이 진행 중입니다.'); return; }
+  pxaBusy = true;
+  const btn = document.getElementById('pxv-btn'); if (btn) btn.disabled = true;
+  let done = 0; const failed = [];
+  for (const q of todo) {
+    pxaMsg('pxv-msg', `업로드 중... ${done + failed.length} / ${todo.length}`, 'success');
+    try { await uploadBytes(ref(storage, pxaVarPath(q.target)), q.file, { contentType: 'application/pdf' }); done++; }
+    catch (e) { failed.push(`${q.file.name} (${e.code || e.message})`); }
+  }
+  pxaBusy = false; if (btn) btn.disabled = false;
+  if (failed.length) {
+    pxaMsg('pxv-msg', `${done}개 완료 · <b>${failed.length}개 실패</b><br>${failed.map(pxaEsc).join('<br>')}` +
+      (failed.some(f => /unauthorized/.test(f)) ? '<br>※ storage.rules에 pastExamVariants 규칙이 반영됐는지 확인해주세요.' : ''), 'error');
+  } else {
+    pxaMsg('pxv-msg', `✓ 변형문제 ${done}개 업로드 완료 — 선생님 포털 "기출문제" 탭 [미리보기] 옆에 [변형문제] 버튼으로 보입니다.`, 'success');
+    pxvQueue = []; document.getElementById('pxv-files').value = '';
+  }
+  await pxaLoadList();
+};

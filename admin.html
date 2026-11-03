@@ -745,7 +745,7 @@
     </div>
   </div>
 
-  <!-- ══ 📚 기출문제 (선생님 포털 열람용 · Storage pastExams/시험명/학년/파일.pdf · 고2는 학년/과목/파일.pdf) ══ -->
+  <!-- ══ 📚 기출문제 (선생님 포털 열람용 · Storage pastExams/시험명/학년/파일.pdf · 고2는 학년/과목/파일.pdf · 변형문제는 pastExamVariants/ 아래 같은 경로) ══ -->
   <div class="tab-panel" id="tab-pastexams">
     <div class="card">
       <h3>📁 폴더 통째로 올리기</h3>
@@ -775,6 +775,21 @@
       <input type="file" id="pxa-m-files" accept=".pdf,application/pdf" multiple style="margin-bottom:12px;color:var(--muted);font-size:13px;">
       <div><button class="btn btn-primary" id="pxa-m-btn" onclick="pxaManualUpload()">업로드</button></div>
       <div class="msg" id="pxa-m-msg"></div>
+    </div>
+
+    <div class="card">
+      <h3>📝 변형문제 올리기</h3>
+      <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:14px;">
+        변형문제 PDF를 여러 개 한꺼번에 고르면 <span style="color:var(--off-white);">파일 이름의 학교·학년</span>으로 같은 시험의 원본 기출문제를 자동으로 찾아 짝지어 줍니다.<br>
+        선생님 포털 "기출문제" 탭에서 원본 줄의 <span style="color:var(--off-white);">[미리보기]</span> 옆에 <span style="color:var(--off-white);">[변형문제]</span> 버튼으로 보입니다. 원본 하나에 변형문제 하나 — 다시 올리면 교체됩니다.<br>
+        아래 "올라간 기출문제" 목록에서 파일마다 <span style="color:var(--off-white);">변형 올리기 · 변형 열기 · 변형 삭제</span>도 할 수 있습니다.
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>시험</label><select id="pxv-exam" onchange="pxvRematch()"></select></div>
+      </div>
+      <input type="file" id="pxv-files" accept=".pdf,application/pdf" multiple style="margin-bottom:12px;color:var(--muted);font-size:13px;" onchange="pxvOnFiles(this)">
+      <div id="pxv-preview"></div>
+      <div class="msg" id="pxv-msg"></div>
     </div>
 
     <div class="card">
@@ -2608,7 +2623,7 @@
 <script defer src="admin/js/videocode.js"></script>
 <script defer src="admin/js/schedule.js"></script>
 <script defer src="admin/js/meetings.js"></script>
-<script defer src="admin/js/pastexams.js?v=1793642000"></script>
+<script defer src="admin/js/pastexams.js?v=1793660000"></script>
 <script defer src="admin/js/textbooks.js"></script>
 <script defer src="admin/js/vimeo-upload.js?v=1793190000"></script>
 <script defer src="admin/js/weeklyclear.js?v=1793190000"></script>
