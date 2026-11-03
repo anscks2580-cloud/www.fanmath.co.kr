@@ -13,7 +13,7 @@
   const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   const DOW = ['일', '월', '화', '수', '목', '금', '토'];
   const md = (d) => `${d.getMonth() + 1}/${d.getDate()}(${DOW[d.getDay()]})`;
-  const TYPE_COLOR = { '휴무': '#D64545', '회의': '#2F7FD6', '설명회': '#6B4FBB', '시험기간': '#D97B1A', '행사': '#2E9E5B', '할 일': '#F5C518', '기타': '#6B6489' };
+  const TYPE_COLOR = { '휴무': '#D64545', '회의': '#2F7FD6', '상담': '#0E9384', '설명회': '#6B4FBB', '시험기간': '#D97B1A', '행사': '#2E9E5B', '할 일': '#F5C518', '기타': '#6B6489' };
 
   let loadedAt = 0;
   let loading = false;

@@ -11,7 +11,7 @@
 let schedEvents = [];
 let schedTeachers = [];
 let schedEditingId = null;
-const SCHED_TYPE_COLOR = { '휴무':'#D64545', '회의':'#2F7FD6', '설명회':'#6B4FBB', '시험기간':'#D97B1A', '행사':'#2E9E5B', '할 일':'#F5C518', '기타':'#6B6489' };
+const SCHED_TYPE_COLOR = { '휴무':'#D64545', '회의':'#2F7FD6', '상담':'#0E9384', '설명회':'#6B4FBB', '시험기간':'#D97B1A', '행사':'#2E9E5B', '할 일':'#F5C518', '기타':'#6B6489' };
 
 function schedYmd(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function schedEsc(t) { return String(t ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
