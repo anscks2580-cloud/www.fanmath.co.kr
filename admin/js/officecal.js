@@ -27,6 +27,8 @@
   let schedules = [];          // 이번 주 학원 일정
   let editingId = null;
   let loadedOnce = false;
+  let teacherBranch = {};      // 선생님 uid → 관 (학원 일정 '선생님 지정' 구분용)
+  let dayOpen = null;          // 지금 크게 열어 둔 날짜
 
   function weekStart(offset) {
     const d = new Date(); d.setHours(0, 0, 0, 0);
@@ -34,6 +36,26 @@
     return d;
   }
   const brClass = (b) => (String(b || '').includes('산본') ? 'sb' : 'pc');
+  const norm = (b) => (String(b || '').includes('산본') ? '산본관' : String(b || '').includes('평촌') ? '평촌관' : '');
+  const pass = (b) => branchFilter === '전체' || norm(b) === branchFilter;
+  // 학원 일정이 어느 관 것인지: 관 지정 → 그 관 / 선생님 지정 → 선생님 소속 관 / 전체 → 제목에 관 이름이 있으면 그 관, 없으면 두 관 공통
+  function schedBranches(x) {
+    if (x.target === 'branch' && norm(x.branch)) return [norm(x.branch)];
+    if (x.target === 'teachers' && Array.isArray(x.teacherUids) && x.teacherUids.length) {
+      const set = new Set(x.teacherUids.map((u) => teacherBranch[u]).filter(Boolean));
+      if (set.size) return [...set];
+    }
+    const t = String(x.title || '') + ' ' + String(x.memo || '');
+    const hasS = /산본/.test(t), hasP = /평촌/.test(t);
+    if (hasS && !hasP) return ['산본관'];
+    if (hasP && !hasS) return ['평촌관'];
+    return ['평촌관', '산본관'];
+  }
+  const schedPass = (x) => branchFilter === '전체' || schedBranches(x).includes(branchFilter);
+  const schedCls = (x) => { const b = schedBranches(x); return b.length === 1 ? brClass(b[0]) : ''; };
+  const schedTag = (x) => { const b = schedBranches(x); return b.length === 1 ? b[0].replace('관', '') : '공통'; };
+  const dayEventsOf = (key) => events.filter((x) => x.date === key && pass(x.branch)).sort((a, b) => (a.startTime || '99').localeCompare(b.startTime || '99'));
+  const daySchOf = (key) => schedules.filter((x) => (x.start || '') <= key && (x.end || x.start || '') >= key && schedPass(x));
 
   // ── 불러오기 ──
   async function load() {
@@ -44,7 +66,8 @@
       const [snap, sch] = await Promise.all([
         getDocs(query(collection(db, 'officeCalendar'), where('date', '>=', from), where('date', '<=', to))),
         getDocs(collection(db, 'scheduleEvents')).catch(() => null),
-      ]);
+        Object.keys(teacherBranch).length ? null : getDocs(collection(db, 'teachers')).catch(() => null),
+      ]).then((r) => { if (r[2]) r[2].forEach((d) => { const b = norm(d.data().branch); if (b) teacherBranch[d.id] = b; }); return r; });
       events = []; snap.forEach((d) => events.push({ id: d.id, ...d.data() }));
       schedules = [];
       if (sch) sch.forEach((d) => {
@@ -69,22 +92,18 @@
     const todayBtn = $('ocThisWeek'); if (todayBtn) todayBtn.hidden = weekOffset === 0;
     renderBranchMenu();
 
-    const norm = (b) => (String(b || '').includes('산본') ? '산본관' : String(b || '').includes('평촌') ? '평촌관' : '');
-    const pass = (b) => branchFilter === '전체' || norm(b) === branchFilter;
     let html = '<div class="oc-grid">';
     for (let i = 0; i < 7; i++) {
       const d = new Date(s); d.setDate(s.getDate() + i);
       const key = ymd(d);
       const isToday = key === today;
-      const dayEvents = events.filter((x) => x.date === key && pass(x.branch))
-        .sort((a, b) => (a.startTime || '99').localeCompare(b.startTime || '99'));
-      const daySch = schedules.filter((x) => (x.start || '') <= key && (x.end || x.start || '') >= key
-        && (x.target !== 'branch' || pass(x.branch)));
+      const dayEvents = dayEventsOf(key);
+      const daySch = daySchOf(key);
       const cnt = dayEvents.length;
       html += `<div class="oc-day${isToday ? ' today' : ''}${i === 0 ? ' sun' : i === 6 ? ' sat' : ''}${key < today ? ' past' : ''}" data-date="${key}">
         <div class="oc-dh"><span class="dw">${DOW[i]}</span><span class="dn">${d.getMonth() + 1}/${d.getDate()}</span>${isToday ? '<span class="oc-today-tag">오늘</span>' : ''}${cnt ? `<span class="oc-cnt">${cnt}</span>` : ''}<button type="button" class="oc-add" title="이 날짜에 일정 추가" onclick="event.stopPropagation();ocOpen(null,'${key}')">＋</button></div>
         <div class="oc-items">
-          ${daySch.map((x) => `<div class="oc-sch${x.target === 'branch' ? ' ' + brClass(x.branch) : ''}" title="학원 일정 (학원 일정 메뉴에서 수정)" onclick="event.stopPropagation();adminOpenMenu&&adminOpenMenu('schedule')">📌 ${esc(x.title || '')}${x.target === 'branch' && x.branch ? ` <small>${esc(x.branch.replace('관', ''))}</small>` : ''}</div>`).join('')}
+          ${daySch.map((x) => `<div class="oc-sch ${schedCls(x)}" title="학원 일정">📌 ${esc(x.title || '')} <small>${esc(schedTag(x))}</small></div>`).join('')}
           ${dayEvents.map(itemHtml).join('')}
           ${!cnt && !daySch.length ? '<div class="oc-none">일정 없음</div>' : ''}
         </div>
@@ -92,8 +111,13 @@
     }
     html += '</div>';
     box.innerHTML = html;
+    if (dayOpen && $('ocDayModal')?.classList.contains('show')) renderDay();
     box.querySelectorAll('.oc-day').forEach((el) => {
-      el.addEventListener('click', (ev) => { if (ev.target.closest('.oc-ev,.oc-sch,.oc-add')) return; ocOpen(null, el.dataset.date); });
+      el.addEventListener('click', (ev) => {
+        if (ev.target.closest('.oc-add')) return;
+        const evEl = ev.target.closest('.oc-ev');
+        ocDay(el.dataset.date, evEl ? evEl.dataset.id : null);
+      });
     });
   }
 
@@ -110,7 +134,7 @@
     } else {
       main = x.title || x.type || '일정';
     }
-    return `<div class="oc-ev ${brClass(x.branch)}${x.done ? ' done' : ''}" onclick="event.stopPropagation();ocOpen('${x.id}')" title="${esc((x.branch || '') + ' · ' + (x.type || '') + (x.memo ? '\n' + x.memo : ''))}">
+    return `<div class="oc-ev ${brClass(x.branch)}${x.done ? ' done' : ''}" data-id="${esc(x.id)}" title="${esc((x.branch || '') + ' · ' + (x.type || '') + (x.memo ? '\n' + x.memo : ''))}">
       <div class="l1"><span class="ty">${esc(x.type || '기타')}</span>${time ? `<span class="tm">${esc(time)}</span>` : ''}${branchFilter === '전체' ? `<span class="br">${esc((x.branch || '').replace('관', ''))}</span>` : ''}</div>
       <div class="l2">${esc(main)}</div>
       ${sub ? `<div class="l3">${esc(sub)}</div>` : ''}
@@ -141,6 +165,66 @@
 
   window.ocBranch = () => branchFilter;
   window.ocMoveWeek = function (step) { weekOffset = step === 0 ? 0 : weekOffset + step; load(); };
+
+  // ── 날짜 크게 보기 (날짜 칸이나 일정을 누르면) ──
+  function detailRows(x) {
+    const rows = [];
+    const add = (k, v) => { if (v) rows.push(`<div><span>${k}</span><b>${esc(v)}</b></div>`); };
+    if (x.type === '상담') {
+      add('학교', x.school); add('상담 방식', x.method); add('학부모 연락처', x.parentPhone); add('상담 담당', x.counselor);
+      add('내용', x.title);
+    } else {
+      if (x.type === '회의') add('참석자', x.attendees);
+    }
+    return rows.join('');
+  }
+  function renderDay() {
+    const m = $('ocDayModal'); if (!m || !dayOpen) return;
+    const d = parse(dayOpen), today = ymd(new Date());
+    const list = dayEventsOf(dayOpen), sch = daySchOf(dayOpen);
+    m.querySelector('.oc-dtitle').innerHTML = `${d.getMonth() + 1}월 ${d.getDate()}일 ${DOW[d.getDay()]}요일${dayOpen === today ? ' <span class="oc-today-tag">오늘</span>' : ''}<small>${esc(branchFilter)} · ${list.length}건</small>`;
+    m.querySelector('.oc-dbody').innerHTML =
+      (sch.length ? `<div class="oc-dsch">${sch.map((x) => `<div class="oc-sch ${schedCls(x)}">📌 ${esc(x.title || '')} <small>${esc(schedTag(x))} · 학원 일정${x.time ? ' · ' + esc(x.time) : ''}</small></div>`).join('')}</div>` : '') +
+      (list.length ? list.map((x) => `
+        <div class="oc-dcard ${brClass(x.branch)}${x.done ? ' done' : ''}" id="ocd-${esc(x.id)}">
+          <div class="oc-dtop">
+            <span class="tm">${esc(x.startTime ? x.startTime + (x.endTime ? ' ~ ' + x.endTime : '') : '시간 미정')}</span>
+            <span class="ty">${esc(x.type || '기타')}</span>
+            <span class="br">${esc(norm(x.branch) || x.branch || '')}</span>
+            ${x.done ? '<span class="dn">완료</span>' : ''}
+            <span style="flex:1"></span>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="ocToggleDone('${esc(x.id)}')">${x.done ? '완료 취소' : '완료'}</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="ocOpen('${esc(x.id)}')">수정</button>
+          </div>
+          <div class="oc-dhead">${esc(x.type === '상담' ? ([x.grade, x.studentName].filter(Boolean).join(' ') || x.title || '상담') : (x.title || x.type || '일정'))}</div>
+          <div class="oc-dgrid">${detailRows(x)}</div>
+          ${x.memo ? `<div class="oc-dmemo">${esc(x.memo)}</div>` : ''}
+        </div>`).join('') : `<div class="oc-dempty">${esc(branchFilter === '전체' ? '' : branchFilter + ' ')}등록된 일정이 없습니다.</div>`);
+  }
+  window.ocDay = function (date, focusId) {
+    let m = $('ocDayModal');
+    if (!m) {
+      m = document.createElement('div');
+      m.id = 'ocDayModal';
+      m.innerHTML = `<div class="oc-dbox" role="dialog" aria-modal="true">
+          <div class="oc-mh"><b class="oc-dtitle"></b><button type="button" class="oc-x" onclick="ocDayClose()">✕</button></div>
+          <div class="oc-dbody"></div>
+          <div class="oc-mf"><span style="flex:1"></span><button type="button" class="btn btn-secondary btn-sm" onclick="ocDayClose()">닫기</button><button type="button" class="btn btn-primary btn-sm" onclick="ocOpen(null, document.getElementById('ocDayModal').dataset.date)">＋ 이 날 일정 추가</button></div>
+        </div>`;
+      m.addEventListener('click', (e) => { if (e.target === m) ocDayClose(); });
+      document.body.appendChild(m);
+    }
+    dayOpen = date; m.dataset.date = date;
+    renderDay();
+    m.classList.add('show');
+    if (focusId) setTimeout(() => { const c = $('ocd-' + focusId); if (c) { c.scrollIntoView({ block: 'center' }); c.classList.add('focus'); setTimeout(() => c.classList.remove('focus'), 1600); } }, 30);
+  };
+  window.ocDayClose = function () { $('ocDayModal')?.classList.remove('show'); dayOpen = null; };
+  window.ocToggleDone = async function (id) {
+    const x = events.find((e) => e.id === id); if (!x) return;
+    try { await updateDoc(doc(db, 'officeCalendar', id), { done: !x.done, updatedAt: Timestamp.now(), updatedBy: auth.currentUser?.email || '' }); x.done = !x.done; render(); }
+    catch (e) { alert('저장 실패: ' + e.message); }
+  };
 
   // ── 등록 / 수정 창 ──
   function ensureModal() {
@@ -198,7 +282,7 @@
       const b = e.target.closest('button'); if (!b) return;
       setSeg(seg.id, b.dataset.v);
     }));
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && $('ocModal')?.classList.contains('show')) ocClose(); });
+    document.addEventListener('keydown', (e) => { if (e.key !== 'Escape') return; if ($('ocModal')?.classList.contains('show')) ocClose(); else if ($('ocDayModal')?.classList.contains('show')) ocDayClose(); });
   }
   function setSeg(id, v) {
     const seg = $(id); if (!seg) return;
@@ -267,6 +351,7 @@
       else await addDoc(collection(db, 'officeCalendar'), { ...data, createdAt: Timestamp.now(), createdBy: who });
       const wasEdit = !!editingId;
       ocClose();
+      if (dayOpen) { dayOpen = data.date; $('ocDayModal').dataset.date = data.date; }
       // 저장한 날짜가 보고 있는 주가 아니면 그 주로 이동
       const ws = weekStart(0); const diff = Math.floor((parse(data.date) - ws) / 86400000);
       weekOffset = Math.floor(diff / 7);
