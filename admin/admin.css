@@ -728,7 +728,7 @@ body.ck-lock { overflow:hidden; }
 .sr-body { font-size:13.5px; line-height:1.7; white-space:pre-wrap; color:var(--off-white); }
 
 /* ── 관리부 이번 주 달력 (홈 맨 위) — 평촌관 보라 · 산본관 노랑 ── */
-.oc-card { padding:20px 22px 22px; }
+.oc-card { padding:20px 20px 18px; }
 .oc-head { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
 .oc-head .oc-ttl { font-size:15px; font-weight:700; }
 .oc-head .oc-nav { display:flex; align-items:center; gap:6px; margin-left:auto; }
@@ -758,14 +758,15 @@ body.ck-lock { overflow:hidden; }
 .oc-br-list .sb { color:#A87A00; } .oc-br-list .sb .sw { background:#F5C518; }
 
 /* 7일 칸 */
-.oc-grid { display:grid; grid-template-columns:repeat(7, minmax(0,1fr)); gap:8px; }
-.oc-day { position:relative; min-height:150px; border:1px solid var(--border-soft); border-radius:11px; background:#fff; padding:8px 7px 9px; cursor:pointer; transition:border-color .15s, background .15s; display:flex; flex-direction:column; }
+.ad-main > #tab-home { max-width:1680px; }
+.oc-grid { display:grid; grid-template-columns:repeat(7, minmax(150px,1fr)); gap:10px; overflow-x:auto; padding:14px; margin:-10px -14px -12px; }
+.oc-day { position:relative; min-height:340px; border:1px solid var(--border-soft); border-radius:11px; background:#fff; padding:8px 7px 9px; cursor:pointer; transition:border-color .15s, background .15s; display:flex; flex-direction:column; }
 .oc-day:hover { border-color:rgba(91,63,166,.3); }
 .oc-day.past { background:rgba(30,24,56,.025); }
 .oc-day.past .oc-ev, .oc-day.past .oc-sch { opacity:.6; }
 .oc-dh { display:flex; align-items:center; gap:5px; padding:0 2px 7px; margin-bottom:6px; border-bottom:1px dashed var(--border-soft); }
-.oc-dh .dw { font-size:13px; font-weight:800; color:var(--off-white); }
-.oc-dh .dn { font-size:11.5px; color:var(--muted); }
+.oc-dh .dw { font-size:15px; font-weight:800; color:var(--off-white); }
+.oc-dh .dn { font-size:12.5px; color:var(--muted); }
 .oc-day.sun .dw { color:#D64545; } .oc-day.sat .dw { color:#2F7FD6; }
 .oc-dh .oc-cnt { font-size:10.5px; font-weight:700; color:#fff; background:#5B3FA6; border-radius:9px; padding:1px 6px; }
 .oc-dh .oc-add { margin-left:auto; width:22px; height:22px; border-radius:6px; border:1px solid var(--border-soft); background:#fff; color:var(--muted); font-size:13px; line-height:1; cursor:pointer; padding:0; opacity:0; transition:opacity .15s; }
@@ -781,27 +782,24 @@ body.ck-lock { overflow:hidden; }
 }
 @media (prefers-reduced-motion: reduce) { .oc-day.today { animation:none; box-shadow:0 0 16px 4px rgba(245,197,24,.4); } }
 
-.oc-items { display:flex; flex-direction:column; gap:5px; }
+.oc-items { display:flex; flex-direction:column; gap:7px; }
 .oc-none { font-size:11px; color:var(--muted); opacity:.6; padding:4px 2px; }
-.oc-ev { border-radius:7px; padding:6px 7px; border-left:3px solid; cursor:pointer; transition:transform .1s, box-shadow .15s; }
+.oc-ev { border-radius:8px; padding:8px 9px; border-left:3px solid; cursor:pointer; transition:transform .1s, box-shadow .15s; }
 .oc-ev:hover { box-shadow:0 3px 10px rgba(30,24,56,.1); }
 .oc-ev.pc { background:rgba(91,63,166,.07); border-left-color:#5B3FA6; color:#5B3FA6; }
 .oc-ev.sb { background:rgba(245,197,24,.14); border-left-color:#F5C518; color:#A87A00; }
-.oc-ev .l1 { display:flex; align-items:center; gap:4px; flex-wrap:wrap; font-size:10.5px; }
+.oc-ev .l1 { display:flex; align-items:center; gap:5px; flex-wrap:wrap; font-size:11.5px; }
 .oc-ev .ty { font-weight:800; }
 .oc-ev .tm { font-weight:700; opacity:.85; }
 .oc-ev .br { margin-left:auto; font-size:10px; font-weight:700; border:1px solid currentColor; border-radius:5px; padding:0 4px; opacity:.8; }
-.oc-ev .l2 { font-size:12.5px; font-weight:700; line-height:1.35; margin-top:2px; word-break:keep-all; overflow-wrap:anywhere; }
-.oc-ev .l3 { font-size:10.5px; opacity:.8; line-height:1.35; margin-top:1px; word-break:keep-all; overflow-wrap:anywhere; }
+.oc-ev .l2 { font-size:14px; font-weight:700; line-height:1.35; margin-top:2px; word-break:keep-all; overflow-wrap:anywhere; }
+.oc-ev .l3 { font-size:11.5px; opacity:.8; line-height:1.35; margin-top:1px; word-break:keep-all; overflow-wrap:anywhere; }
 .oc-ev.done { opacity:.5; }
 .oc-ev.done .l2 { text-decoration:line-through; }
 .oc-sch { font-size:11px; font-weight:600; color:#6B6489; background:rgba(30,24,56,.05); border-radius:6px; padding:4px 6px; line-height:1.35; cursor:pointer; }
 .oc-sch small { font-size:10px; }
 .oc-sch.pc { color:#5B3FA6; } .oc-sch.sb { color:#A87A00; }
 
-@media (max-width:1100px) {
-  .oc-grid { grid-template-columns:repeat(4, minmax(0,1fr)); }
-}
 @media (max-width:700px) {
   .oc-grid { grid-template-columns:1fr; }
   .oc-day { min-height:0; }
