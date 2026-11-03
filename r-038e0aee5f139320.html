@@ -213,7 +213,7 @@ a.lk:hover { text-decoration:underline; }
 .cl-empty { text-align:center; color:var(--muted); font-size:13.5px; padding:30px 0; }
 .btn-ok { background:var(--green) !important; color:#fff !important; border-color:var(--green) !important; }
 </style>
-<script src="session-limit.js?v=1793661000"></script>
+<script src="session-limit.js?v=1793706000"></script>
 </head>
 <body class="dr-locked">
 
@@ -935,7 +935,7 @@ function clStart(email) {
 onAuthStateChanged(auth, async (user) => {
   // 로그아웃 상태이거나 지정 계정이 아니면 로그인 화면 (다른 계정 로그인 상태는 건드리지 않음)
   if (!user || !DR_ALLOW.includes(String(user.email || '').toLowerCase())) { showLogin(); return; }
-  // 로그인 2시간 지나면 자동 로그아웃 (session-limit.js)
+  // 로그인 4시간 지나면 자동 로그아웃 (session-limit.js)
   if (window.swcSessionGuard && swcSessionGuard(user, () => signOut(auth))) return;
   let a;
   try { const s = await getDoc(doc(db, 'admins', user.uid)); a = s.exists() ? s.data() : null; }

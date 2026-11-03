@@ -398,7 +398,7 @@ select option:disabled { color:#6B6489; }
   .mr-acts { width:100%; justify-content:flex-end; }
 }
 </style>
-<script src="session-limit.js?v=1793661000"></script>
+<script src="session-limit.js?v=1793706000"></script>
 </head>
 <body>
 
@@ -1680,7 +1680,7 @@ function scoreBadge(score, total) {
 // ── 인증 상태 감시 ──
 onAuthStateChanged(auth, async user => {
   if (user) {
-    // 로그인 2시간 지나면 자동 로그아웃 (session-limit.js)
+    // 로그인 4시간 지나면 자동 로그아웃 (session-limit.js)
     if (window.swcSessionGuard && swcSessionGuard(user, () => signOut(auth))) return;
     const tDoc = await getDoc(doc(db, 'teachers', user.uid));
     if (!tDoc.exists()) { await signOut(auth); showLogin(); return; }

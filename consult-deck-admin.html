@@ -129,7 +129,7 @@ input[type=number]{width:140px}
   .img-fld{grid-template-columns:1fr}
 }
 </style>
-<script src="session-limit.js?v=1793661000"></script>
+<script src="session-limit.js?v=1793706000"></script>
 </head>
 <body>
 
@@ -653,7 +653,7 @@ if (!window.__CD_TEST__) (async () => {
   });
   fb.onAuthStateChanged(auth, async user => {
     if (!user) { load.classList.add('hide'); gate.classList.add('open'); return; }
-    // 로그인 2시간 지나면 자동 로그아웃 (session-limit.js)
+    // 로그인 4시간 지나면 자동 로그아웃 (session-limit.js)
     if (window.swcSessionGuard && swcSessionGuard(user, () => fb.signOut(auth))) return;
     const adm = await fb.getDoc(fb.doc(db, 'admins', user.uid)).catch(() => null);
     if (!adm || !adm.exists()) {
