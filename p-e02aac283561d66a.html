@@ -57,6 +57,7 @@ body { background:var(--bg, #F7F6FB); margin:0; }
   .pg-main { padding:16px; }
 }
 </style>
+<script src="session-limit.js?v=1793661000"></script>
 </head>
 <body>
 
@@ -184,6 +185,8 @@ body { background:var(--bg, #F7F6FB); margin:0; }
   function start() {
     onAuthStateChanged(auth, async (user) => {
       if (!user) { $('pgApp').hidden = true; $('pgLogin').hidden = false; return; }
+      // 로그인 2시간 지나면 자동 로그아웃 (session-limit.js)
+      if (window.swcSessionGuard && swcSessionGuard(user, () => signOut(auth))) return;
       try {
         const a = await getDoc(doc(db, 'admins', user.uid));
         if (!a.exists()) { $('pgErr').textContent = '관리자 계정만 들어올 수 있어요.'; await signOut(auth); return; }
