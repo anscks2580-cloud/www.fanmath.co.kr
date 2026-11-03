@@ -267,6 +267,7 @@
     if (!force && Date.now() - loadedAt < 60 * 1000) { renderHeader(); return; }
     loading = true;
     renderHeader(); renderOffice();
+    if (typeof window.ocRefresh === 'function') window.ocRefresh();
     await Promise.all([loadSchedule(), loadConsult(), loadSubmissions(), loadStudentsSummary()]);
     loadedAt = Date.now(); loading = false;
   }

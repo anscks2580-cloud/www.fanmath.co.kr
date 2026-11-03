@@ -7,7 +7,7 @@
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="portal.css?v=1793353000">
-<link rel="stylesheet" href="admin/admin.css?v=1793356000">
+<link rel="stylesheet" href="admin/admin.css?v=1793700000">
 <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.1.0/dist/tus.min.js"></script>
 <!-- SheetJS 엑셀 파싱 -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -119,6 +119,23 @@
       <div class="hm-quick" id="hmQuick"></div>
     </div>
     <div class="hm-grid">
+      <section class="card hm-card hm-wide oc-card" id="ocCard">
+        <div class="oc-head">
+          <div class="oc-br" id="ocBr">
+            <button type="button" class="oc-br-btn" id="ocBrBtn" onclick="ocToggleBranch()">전체 ▾</button>
+            <div class="oc-br-list" id="ocBrList"></div>
+          </div>
+          <span class="oc-ttl">🗓 이번 주 일정</span>
+          <button type="button" class="oc-new" onclick="ocOpen(null)">＋ 일정 등록</button>
+          <div class="oc-nav">
+            <span class="oc-wk" id="ocWeekLabel"></span>
+            <button type="button" onclick="ocMoveWeek(-1)" title="지난주">‹</button>
+            <button type="button" id="ocThisWeek" onclick="ocMoveWeek(0)" hidden>이번 주</button>
+            <button type="button" onclick="ocMoveWeek(1)" title="다음 주">›</button>
+          </div>
+        </div>
+        <div id="ocCal"><div class="hm-loading">불러오는 중...</div></div>
+      </section>
       <section class="card hm-card" id="hmScheduleCard" data-group="notice">
         <h3><span>📅 오늘 · 이번 주 일정</span><button class="go" type="button" data-open="schedule">학원 일정 ›</button></h3>
         <div id="hmSchedule"><div class="hm-loading">불러오는 중...</div></div>
@@ -2630,7 +2647,8 @@
 <script defer src="admin/js/weeklyclear.js?v=1793190000"></script>
 <script defer src="admin/js/exammaterials.js?v=1792850000"></script>
 <script defer src="admin/js/nav.js?v=1793360000"></script>
-<script defer src="admin/js/home.js?v=1793352000"></script>
+<script defer src="admin/js/officecal.js?v=1793700000"></script>
+<script defer src="admin/js/home.js?v=1793700000"></script>
 
 <div id="toast"></div>
 <div id="printSheet"></div>

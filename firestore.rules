@@ -318,6 +318,11 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // ── officeCalendar: 관리부 홈 화면 이번 주 달력(평촌관·산본관 상담·회의 일정). 관리자만 읽기·쓰기 ──
+    match /officeCalendar/{docId} {
+      allow read, write: if isAdmin();
+    }
+
     // ── teacherTodos: 선생님 '내 할 일' + '해야 할 업무' 완료 체크(kind: 'autoCheck').
     // 선생님은 본인(uid) 문서만 읽기·추가·수정·삭제, 관리자는 전체 ──
     match /teacherTodos/{docId} {
