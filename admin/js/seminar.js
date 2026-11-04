@@ -341,7 +341,7 @@ function sfRender() {
         <tr class="${x.contacted ? 'attended' : ''}">
           <td style="color:var(--muted);">${rows.length - i}</td>
           <td style="white-space:nowrap;">${smEsc(smDate(x.createdAt))}</td>
-          <td><span class="sm-branch ${x.branch === '산본관' ? 'sb' : 'pc'}">${smEsc(x.branch || '-')}</span></td>
+          <td><span class="sm-branch ${x.branch === '산본관' ? 'sb' : 'pc'}">${smEsc(x.branch || '-')}</span>${String(x.source || '').includes('미참석') ? '<br><span style="display:inline-block;margin-top:3px;font-size:11px;color:var(--muted);white-space:nowrap;">설명회 미참석</span>' : ''}</td>
           <td><b>${smEsc(x.parentName || '-')}</b></td>
           <td style="white-space:nowrap;"><a href="tel:${smEsc(x.parentPhone || '')}" style="color:inherit;text-decoration:none;">${smEsc(x.parentPhone || '-')}</a></td>
           <td><b>${smEsc(x.studentName || '-')}</b></td>

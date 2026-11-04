@@ -29,8 +29,11 @@
   .tabs { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:18px; }
   .tab-btn {
     padding:13px 10px; border-radius:12px; border:1.5px solid var(--border-soft); background:rgba(30,24,56,0.03);
-    font-size:13.5px; font-weight:700; color:var(--muted); font-family:inherit; transition:all .15s; text-align:center;
+    font-size:13.5px; font-weight:700; color:var(--muted); font-family:inherit; transition:all .15s; text-align:center; cursor:pointer;
   }
+  .tab-btn:hover:not(.active) { border-color:var(--gold); }
+  .skip-box { margin-bottom:18px; padding:13px 14px; border-radius:12px; border:1.5px dashed var(--gold); background:var(--gold-glow); font-size:13px; line-height:1.6; text-align:center; }
+  .skip-box button { margin-top:8px; padding:9px 16px; border-radius:10px; border:none; background:var(--purple, #5B3FA6); color:#fff; font-weight:700; font-size:13px; font-family:inherit; cursor:pointer; }
   .tab-btn.active { border-color:var(--gold); background:var(--gold-glow); color:var(--purple, #5B3FA6); box-shadow:0 0 0 1px rgba(245,197,24,0.35); }
   .pane { display:none; }
   .pane.active { display:block; }
@@ -144,23 +147,31 @@
   <div class="form-wrap">
     <div class="form-header">
       <div class="form-badge">AFTER SEMINAR</div>
-      <h1>설명회에 참석해 주셔서 감사합니다</h1>
-      <p id="headIntro">오늘 설명회가 어떠셨는지 <b>짧은 후기</b>를 남겨 주세요.<br>후기를 남기신 뒤, 궁금한 점이 있으면 <b>후속 상담</b>도 신청하실 수 있습니다.</p>
+      <h1>설명회 후기 · 후속 상담 신청</h1>
+      <p id="headIntro">설명회에 참석하셨다면 <b>짧은 후기</b>를 남겨 주세요.<br>설명회에 오지 못하셨거나 상담만 원하시면 <b>후기 없이 바로 후속 상담</b>을 신청하실 수 있습니다.</p>
     </div>
 
     <div class="tabs">
-      <div class="tab-btn active" id="tabReview">1단계 · ⭐ 설명회 후기</div>
-      <div class="tab-btn" id="tabConsult">2단계 · 📞 후속 상담 신청 <small style="font-weight:400;">(선택)</small></div>
+      <div class="tab-btn active" id="tabReview" onclick="showPane('review')">⭐ 설명회 후기</div>
+      <div class="tab-btn" id="tabConsult" onclick="showPane('consult')">📞 후속 상담 신청</div>
     </div>
 
     <!-- ══════════ 후속 상담 신청 ══════════ -->
     <div class="pane" id="paneConsult">
       <form id="consultForm">
         <div class="f-section">
-          <div class="f-label">참석하신 설명회<span class="f-sub">상담도 같은 관에서 진행됩니다</span></div>
+          <div class="f-label">상담 받으실 관<span class="req" style="color:var(--purple, #5B3FA6);">*</span></div>
           <div class="branch-grid">
             <label class="branch-card"><input type="radio" name="branch" value="평촌관" required><b>평촌관</b><small>안양 평촌 학원가</small></label>
             <label class="branch-card"><input type="radio" name="branch" value="산본관"><b>산본관</b><small>군포 산본</small></label>
+          </div>
+        </div>
+
+        <div class="f-section">
+          <div class="f-label">설명회 참석 여부<span class="req" style="color:var(--purple, #5B3FA6);">*</span><span class="f-sub">참석하지 않으셔도 신청하실 수 있습니다</span></div>
+          <div class="branch-grid">
+            <label class="branch-card"><input type="radio" name="attended" value="yes" required><b>참석했어요</b><small>설명회에 다녀왔어요</small></label>
+            <label class="branch-card"><input type="radio" name="attended" value="no"><b>참석 못 했어요</b><small>상담만 받고 싶어요</small></label>
           </div>
         </div>
 
@@ -260,6 +271,10 @@
 
     <!-- ══════════ 설명회 후기 ══════════ -->
     <div class="pane active" id="paneReview">
+      <div class="skip-box" id="skipBox">
+        설명회에 오지 못하셨거나, 후기 없이 <b>상담만</b> 원하시나요?<br>
+        <button type="button" onclick="showPane('consult')">📞 후기 없이 바로 후속 상담 신청하기</button>
+      </div>
       <form id="reviewForm">
         <div class="f-section">
           <div class="f-label">참석하신 설명회</div>
@@ -369,7 +384,7 @@ async function sendTelegram(text) {
   if (!res.ok) throw new Error('Telegram ' + res.status);
 }
 
-// ── 주소 파라미터: ?b=평촌관|산본관 (QR별로 관 미리 선택) · ?tab=review (후기 탭으로 바로) ──
+// ── 주소 파라미터: ?b=평촌관|산본관 (QR별로 관 미리 선택) · ?tab=consult (상담 탭으로 바로) ──
 const params = new URLSearchParams(location.search);
 const paramBranch = params.get('b') || '';
 const BRANCH = paramBranch.includes('산본') ? '산본관' : paramBranch.includes('평촌') ? '평촌관' : '';
@@ -391,7 +406,8 @@ window.showPane = function(name) {
   document.getElementById('tabReview').classList.toggle('active', name === 'review');
   window.scrollTo({ top: 0, behavior: 'smooth' });
 };
-// 1단계(후기) → 2단계(상담, 선택) 순서로 진행
+// 후기와 후속 상담은 서로 독립 — 후기를 쓰지 않아도 상담 신청 가능
+if (params.get('tab') === 'consult') showPane('consult');
 
 // ── 시간 선택지 ──
 const TIMES = ['오전 10시', '오전 11시', '낮 12시', '오후 1시', '오후 2시', '오후 3시', '오후 4시', '오후 5시', '오후 6시', '오후 7시', '오후 8시', '시간 상관없음 (원장님이 정해 주세요)'];
@@ -428,7 +444,9 @@ consultForm.addEventListener('submit', async (e) => {
   e.preventDefault();
   const fd = new FormData(consultForm);
   const branch = fd.get('branch');
-  if (!branch) { alert('참석하신 설명회(관)를 선택해 주세요.'); return; }
+  if (!branch) { alert('상담 받으실 관을 선택해 주세요.'); return; }
+  const attended = fd.get('attended');
+  if (!attended) { alert('설명회 참석 여부를 선택해 주세요.'); return; }
   const parentPhone = (fd.get('parentPhone') || '').trim();
   if (parentPhone.replace(/\D/g, '').length < 9) { alert('학부모 연락처를 정확히 입력해 주세요.'); return; }
 
@@ -446,7 +464,7 @@ consultForm.addEventListener('submit', async (e) => {
     note: (fd.get('note') || '').trim(),
     privacyAgreed: true,
     status: 'new',
-    source: 'seminar-followup.html',
+    source: attended === 'no' ? 'seminar-followup.html#미참석' : 'seminar-followup.html',
     createdAt: serverTimestamp(),
   };
 
@@ -456,6 +474,7 @@ consultForm.addEventListener('submit', async (e) => {
     const v = (x) => (x ? x : '-');
     const msg = [
       '📞 설명회 후속 상담 신청 [' + branch + ']',
+      attended === 'no' ? '🙋 설명회 미참석 (상담만 신청)' : '✅ 설명회 참석',
       '',
       '👨‍👩‍👧 학부모: ' + v(data.parentName) + ' / ' + v(data.parentPhone),
       '🧑‍🎓 학생: ' + v(data.studentName) + (data.grade ? ' (' + data.grade + ')' : ''),
