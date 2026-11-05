@@ -205,6 +205,7 @@ window.srDownloadPdfZip = async function () {
     const zip = new JSZip(); let n = 0; const fail = [];
     const safe = (x) => String(x || '').replace(/[\\/:*?"<>|]/g, '_');
     for (const t of tests) {
+      if (t.source === 'worksheet') continue; // 문제 DB 학습지(학습지만들기.html)로 출제한 시험은 PDF 없이 items가 이미 들어 있음
       srMsg(`PDF 받는 중... (${n + fail.length + 1}/${tests.length})`, 'success');
       try {
         let url = t.downloadURL;

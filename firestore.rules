@@ -214,6 +214,13 @@ service cloud.firestore {
       allow create: if isAdmin() || (isTeacher() && request.resource.data.teacherUid == request.auth.uid);
       allow update, delete: if isAdmin() || (isTeacher() && resource.data.teacherUid == request.auth.uid);
     }
+    // ── worksheets: 문제 DB로 만든 학습지(학습지만들기.html). 선생님 본인 것 생성·수정·삭제, 선생님·관리자 전체 읽기 ──
+    // 출제·오답 입력은 위 dailyTests / dailyTestResults(source == 'worksheet')에 그대로 저장 → 월말보고서 집계에 함께 들어감
+    match /worksheets/{docId} {
+      allow read: if isTeacher() || isAdmin();
+      allow create: if isAdmin() || (isTeacher() && request.resource.data.teacherUid == request.auth.uid);
+      allow update, delete: if isAdmin() || (isTeacher() && resource.data.teacherUid == request.auth.uid);
+    }
     // ── studentReports: 월말 학습 보고서(생성본). 관리자가 생성, 담당 선생님 검수·수정,
     // 발송 확정된 보고서(status == 'sent')는 해당 학생(=학부모 계정)이 본인 것만 열람 ──
     match /studentReports/{docId} {
