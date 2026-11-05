@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <title>송우찬수학학원 학습지 만들기</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
@@ -297,6 +297,48 @@ table.gt tr.absent td.cell{background:#f3f3f3;color:#bbb;cursor:default}
 table.gt td.sc{font-weight:700;min-width:80px}
 table.gt td.act{min-width:150px;padding:0 8px}
 table.gt td.act button{padding:4px 8px;font-size:11px;margin:0 2px}
+
+/* ===== 모바일 ===== */
+@media (max-width: 900px){
+  main{padding:10px}
+  .nav{height:auto;padding:8px 12px;gap:10px;flex-wrap:wrap}
+  .nav .logo{font-size:15px}.nav .menu{gap:14px;font-size:14px}.nav .user{margin-left:auto;font-size:12px}.nav .user .who{padding:4px 10px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .listhead{padding:12px}.listhead input{width:100%!important;order:5}
+  table.ws,table.ws tbody,table.ws tr,table.ws td{display:block;width:100%}
+  table.ws tbody:first-child{display:none}
+  table.ws tr{border-bottom:1px solid var(--line);padding:10px 12px}
+  table.ws td{padding:2px 0;border:0}table.ws td.mini{display:inline-block;width:auto;margin-right:8px}
+  table.ws td.t b{font-size:14px}table.ws td.t div{font-size:12px}
+  table.ws td button{margin:6px 4px 0 0}
+  table.gt td.nm,table.gt th.nm{white-space:nowrap}
+  .wiz .top{height:auto;padding:8px 12px;flex-wrap:wrap;gap:8px}.wiz .top h2{font-size:15px}.wiz .top .ind{display:none}
+  .wiz .body{padding:8px;overflow:auto}
+  .pane.on{flex-direction:column;gap:10px;height:auto;min-height:100%}
+  .s1left{flex:none;height:62vh}.chips{padding:8px 10px}.tabs div{padding:12px 12px;font-size:14px}
+  .node.d1{padding-left:20px}.node.d2{padding-left:34px}.node.d3{padding-left:48px}.node.d4{padding-left:64px}
+  .node .cnt .tag{font-size:10px;padding:1px 5px}
+  .s1right{width:100%;flex:none}.s1right .opt{padding:14px}.btnrow{margin-bottom:14px}.btnrow button{padding:10px 0}
+  .s1right .sum{font-size:15px;padding:12px}.s1right .act{position:sticky;bottom:0;background:#fff}
+  .s2left{width:100%;flex:none;height:50vh}.dark{flex:none;height:70vh}
+  .qcard .qh b{font-size:18px}.qcard .qb{padding:12px;gap:10px;flex-wrap:wrap}.qcard .meta{flex-direction:row;width:auto}.qcard .qa{width:100%;justify-content:flex-start}
+  .qcard .qtext{font-size:14px}.choices{grid-template-columns:repeat(2,1fr)}
+  .dark .df{flex-wrap:wrap;gap:6px;padding:10px}.dark .df .cnt{width:100%;text-align:center;margin:0;font-size:13px}.dark .df button{padding:10px 14px;font-size:14px}
+  .s3left{padding:14px;flex:none;overflow:visible}.frow{flex-direction:column;gap:10px}
+  .s3right{width:100%;flex:none;height:80vh}.s3right .pv .sheet{zoom:.42}
+  .s3right .pf{flex-wrap:wrap}.s3right .pf .cnt{width:100%;text-align:center;margin:0;font-size:14px}
+  .printview .pt{height:auto;padding:8px 10px;flex-wrap:wrap;gap:6px}.printview .pt b{width:100%}
+  .printview .pb{padding:8px}.printview .pb .sheet{zoom:.45}
+  .lesson{flex-direction:column;height:auto}.lesson .stu{width:100%;max-height:40vh}.lesson .asg .body{overflow:auto}
+  .modal .box,.modal .box.w{width:96vw}.modal .mb{padding:14px}
+  #a_list .gb{grid-template-columns:1fr 1fr!important}
+  .grade .top{height:auto;padding:8px 12px;flex-wrap:wrap;gap:6px}.grade .top h2{font-size:15px;width:100%}.grade .top .r{margin-left:0;flex-wrap:wrap}.grade .top .r button{padding:6px 10px;font-size:12px}
+  .grade .body{padding:8px;flex-direction:column}.grade .body #gprev{width:100%!important;position:static!important}
+  table.gt td.nm,table.gt th.nm{min-width:110px;padding:0 6px;font-size:12px}table.gt td.act{min-width:0;white-space:nowrap}table.gt td.act button{padding:3px 6px;font-size:11px}
+  .db{flex-direction:column;height:auto}.db .list{width:100%;height:40vh}.db .pv{width:100%}.g3{grid-template-columns:1fr}
+  .toast{width:90vw;text-align:center}
+}
+@media (max-width: 900px){ .sheet{zoom:1} .printview .pb .sheet,.s3right .pv .sheet{transform-origin:top left} }
+
 @media print{
   html,body{background:#fff}
   body>*{display:none!important}
