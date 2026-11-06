@@ -35,6 +35,8 @@
 
   var ICON = '/assets/icons/apple-touch-icon.png';
   var PROFILE_URL = '/songmath.mobileconfig';
+  // 설치 파일을 올바른 형식으로 내려줄 서버가 준비되면 true로 바꿈 (깃허브는 형식 지정 불가)
+  var USE_PROFILE = false;
   var deferredPrompt = null;
 
   // ── 스타일 ──
@@ -203,7 +205,7 @@
         return;
       }
       // 3) 아이폰·아이패드 사파리 → 설치 파일(설정 프로파일) 내려받기
-      if (isIOS && !isInApp && !isIOSChrome && !isIOSOtherBrowser) {
+      if (USE_PROFILE && isIOS && !isInApp && !isIOSChrome && !isIOSOtherBrowser) {
         location.href = PROFILE_URL;
         go.disabled = true;
         runProgress(sheet, go, status, {
