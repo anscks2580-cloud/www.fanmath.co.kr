@@ -6071,5 +6071,81 @@ window.addEventListener('message', (e) => { if (e.data && e.data.type === 'pcRea
   render();
 })();
 </script>
+<!-- ══════════ 🔔 새 기출문제 · 변형문제 업로드 알림 팝업
+     관리자 페이지에서 기출문제/변형문제를 올리면 settings/pastExamNotice에 기록됨 →
+     로그인한 선생님에게 실시간으로 팝업 (이미 본 알림은 이 컴퓨터에서 다시 안 뜸) ══════════ -->
+<div id="pxNoticeModal" onclick="if(event.target===this)pxNoticeClose()"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:10000;align-items:center;justify-content:center;padding:16px;">
+  <div style="width:100%;max-width:440px;max-height:86vh;overflow-y:auto;background:var(--bg-card,#fff);border:1px solid rgba(124,58,237,0.35);border-radius:16px;padding:24px;box-shadow:0 20px 60px rgba(30,24,56,0.2);">
+    <div style="font-size:30px;line-height:1;margin-bottom:8px;">📚</div>
+    <div style="font-size:19px;font-weight:700;margin-bottom:4px;">새 자료가 올라왔어요</div>
+    <div style="font-size:13px;color:var(--muted,#888);margin-bottom:14px;">자료실 › 기출문제에서 바로 볼 수 있습니다.</div>
+    <div id="pxNoticeBody"></div>
+    <div style="display:flex;gap:8px;margin-top:18px;">
+      <button class="btn btn-outline btn-sm" style="flex:1;" onclick="pxNoticeClose()">확인</button>
+      <button class="btn btn-gold btn-sm" style="flex:1;" onclick="pxNoticeGo()">기출문제 보러 가기</button>
+    </div>
+  </div>
+</div>
+<script type="module">
+import { getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+const db = getFirestore(getApp());
+const auth = getAuth(getApp());
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const FIRST_DAYS = 3;          // 이 컴퓨터에서 처음 볼 때는 최근 3일 치만 보여줌
+let unsub = null, curUid = null, shownMax = 0;
+const key = () => 'swc_px_notice_seen_' + curUid;
+function seenAt() {
+  try { const v = localStorage.getItem(key()); if (v) return +v; } catch (e) {}
+  return Date.now() - FIRST_DAYS * 86400000;
+}
+function when(ms) {
+  const d = new Date(ms), now = new Date();
+  const same = d.toDateString() === now.toDateString();
+  return same ? `오늘 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}` : `${d.getMonth() + 1}/${d.getDate()}`;
+}
+function show(items) {
+  const body = document.getElementById('pxNoticeBody');
+  body.innerHTML = items.map((it) => {
+    const isVar = it.kind === '변형문제';
+    return `<div style="border:1px solid ${isVar ? 'rgba(245,197,24,.55)' : 'rgba(124,58,237,.3)'};border-radius:12px;padding:12px 14px;margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:4px;">
+        <span style="font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:999px;background:${isVar ? 'rgba(245,197,24,.18)' : 'rgba(124,58,237,.1)'};color:${isVar ? '#a07800' : '#6d28d9'};">${isVar ? '📝 변형문제' : '📚 기출문제'}</span>
+        <span style="font-size:12px;color:var(--muted,#888);">${esc(when(it.at))}</span>
+      </div>
+      <div style="font-weight:700;font-size:15px;">${esc(it.exam || '')}</div>
+      <div style="font-size:13px;color:var(--muted,#888);margin-top:2px;">${esc((it.grades || []).join(' · '))}${(it.grades || []).length ? ' · ' : ''}${it.count || 0}개</div>
+    </div>`;
+  }).join('');
+  document.getElementById('pxNoticeModal').style.display = 'flex';
+}
+function markSeen() { if (curUid && shownMax) { try { localStorage.setItem(key(), String(shownMax)); } catch (e) {} } }
+window.pxNoticeClose = () => { document.getElementById('pxNoticeModal').style.display = 'none'; markSeen(); };
+window.pxNoticeGo = () => {
+  window.pxNoticeClose();
+  if (typeof window.calGoTab === 'function') window.calGoTab('pastexams', 'initPastExamsTab');
+};
+onAuthStateChanged(auth, async (user) => {
+  if (unsub) { unsub(); unsub = null; }
+  curUid = null; shownMax = 0;
+  document.getElementById('pxNoticeModal').style.display = 'none';
+  if (!user) return;
+  try { const t = await getDoc(doc(db, 'teachers', user.uid)); if (!t.exists()) return; } catch (e) { return; }
+  curUid = user.uid;
+  unsub = onSnapshot(doc(db, 'settings', 'pastExamNotice'), (snap) => {
+    const items = snap.exists() && Array.isArray(snap.data().items) ? snap.data().items : [];
+    const since = Math.max(seenAt(), shownMax);
+    const fresh = items.filter((it) => (it.at || 0) > since).sort((a, b) => b.at - a.at);
+    if (!fresh.length) return;
+    shownMax = Math.max(shownMax, ...fresh.map((it) => it.at || 0));
+    // 이미 떠 있는 알림이 있으면 합쳐서 다시 그림
+    const modal = document.getElementById('pxNoticeModal');
+    const all = modal.style.display === 'flex' ? items.filter((it) => (it.at || 0) > seenAt()).sort((a, b) => b.at - a.at) : fresh;
+    setTimeout(() => show(all.slice(0, 10)), 900);   // 로그인 직후 다른 팝업과 겹치지 않게 살짝 늦게
+  }, (e) => console.warn('[기출 알림]', e));
+});
+</script>
 </body>
 </html>

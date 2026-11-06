@@ -216,6 +216,34 @@ window.pxaCancelFolder = () => {
   pxaMsg('pxa-folder-msg', '');
 };
 
+// ── 🔔 선생님 알림: 기출문제·변형문제를 올리면 settings/pastExamNotice에 기록
+//    → teacher.html이 실시간으로 보고 "새 기출문제가 올라왔어요" 팝업을 띄움 (최근 30건 보관)
+async function pxaNotify(kind, paths) {
+  try {
+    paths = (paths || []).filter(Boolean);
+    if (!paths.length) return;
+    const groups = {};
+    paths.forEach((p) => {
+      const parts = String(p).replace(/^(pastExams|pastExamVariants)\//, '').split('/');
+      const exam = parts[0] || '', grade = parts.length > 2 ? parts[1] : '', subject = parts.length > 3 ? parts[2] : '';
+      const label = grade ? (subject ? `${grade} ${subject}` : grade) : '';
+      (groups[exam] = groups[exam] || { exam, grades: new Set(), files: [] });
+      if (label) groups[exam].grades.add(label);
+      groups[exam].files.push(parts[parts.length - 1]);
+    });
+    const now = Date.now();
+    const add = Object.values(groups).map((g, i) => ({
+      id: now.toString(36) + i, kind, exam: g.exam, grades: [...g.grades], count: g.files.length,
+      files: g.files.slice(0, 8), at: now,
+      by: (window.currentAdmin && (window.currentAdmin.name || '')) || '',
+    }));
+    const r = doc(db, 'settings', 'pastExamNotice');
+    const snap = await getDoc(r);
+    const old = snap.exists() && Array.isArray(snap.data().items) ? snap.data().items : [];
+    await setDoc(r, { items: add.concat(old).slice(0, 30), updatedAt: now });
+  } catch (e) { console.warn('[기출 알림] 기록 실패', e); }
+}
+
 // ── 공통 업로드 (동시에 4개씩) ──
 async function pxaUpload(items, msgId, btn) {
   if (pxaBusy) { alert('다른 업로드가 진행 중입니다.'); return false; }
@@ -223,7 +251,7 @@ async function pxaUpload(items, msgId, btn) {
   const btnText = btn ? btn.textContent : '';
   if (btn) btn.disabled = true;
   let done = 0, i = 0;
-  const failed = [];
+  const failed = [], okPaths = [];
   const tick = () => pxaMsg(msgId, `업로드 중... ${done + failed.length} / ${items.length}`, 'success');
   tick();
   async function worker() {
@@ -231,13 +259,14 @@ async function pxaUpload(items, msgId, btn) {
       const it = items[i++];
       try {
         await uploadBytes(ref(storage, pxaPath(it)), it.file, { contentType: 'application/pdf' });
-        done++;
+        done++; okPaths.push(pxaPath(it));
       } catch (e) { failed.push(`${pxaLabel(it.grade, it.subject)}/${it.name} (${e.code || e.message})`); }
       tick();
     }
   }
   await Promise.all([worker(), worker(), worker(), worker()]);
   pxaBusy = false;
+  await pxaNotify('기출문제', okPaths);
   if (btn) { btn.disabled = false; btn.textContent = btnText; }
   if (failed.length) {
     pxaMsg(msgId, `${done}개 완료 · <b>${failed.length}개 실패</b><br>${failed.slice(0, 30).map(pxaEsc).join('<br>')}`, 'error');
@@ -504,6 +533,7 @@ window.pxaVarPick = (path) => {
     pxaBusy = true;
     try {
       await uploadBytes(ref(storage, pxaVarPath(path)), f, { contentType: 'application/pdf' });
+      await pxaNotify('변형문제', [pxaVarPath(path)]);
       await pxaLoadList();
       [...document.querySelectorAll('#pxa-list details')].forEach(d => { if (d.querySelector(`[data-path="${CSS.escape(path)}"]`)) d.open = true; });
     } catch (e) { alert('변형문제 업로드 실패: ' + (e.code || e.message) + (/unauthorized/.test(e.code || '') ? '\n(storage.rules에 pastExamVariants 규칙이 반영됐는지 확인해주세요)' : '')); }
@@ -613,13 +643,14 @@ window.pxvUpload = async () => {
   if (pxaBusy) { alert('다른 작업이 진행 중입니다.'); return; }
   pxaBusy = true;
   const btn = document.getElementById('pxv-btn'); if (btn) btn.disabled = true;
-  let done = 0; const failed = [];
+  let done = 0; const failed = [], okVar = [];
   for (const q of todo) {
     pxaMsg('pxv-msg', `업로드 중... ${done + failed.length} / ${todo.length}`, 'success');
-    try { await uploadBytes(ref(storage, pxaVarPath(q.target)), q.file, { contentType: 'application/pdf' }); done++; }
+    try { await uploadBytes(ref(storage, pxaVarPath(q.target)), q.file, { contentType: 'application/pdf' }); done++; okVar.push(pxaVarPath(q.target)); }
     catch (e) { failed.push(`${q.file.name} (${e.code || e.message})`); }
   }
   pxaBusy = false; if (btn) btn.disabled = false;
+  await pxaNotify('변형문제', okVar);
   if (failed.length) {
     pxaMsg('pxv-msg', `${done}개 완료 · <b>${failed.length}개 실패</b><br>${failed.map(pxaEsc).join('<br>')}` +
       (failed.some(f => /unauthorized/.test(f)) ? '<br>※ storage.rules에 pastExamVariants 규칙이 반영됐는지 확인해주세요.' : ''), 'error');

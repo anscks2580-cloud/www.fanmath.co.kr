@@ -100,6 +100,7 @@
     <button class="admin-tab" onclick="switchTab('exammaterials',this);initExamMaterialsTab()">📝 기말고사 자료</button>
     <button class="admin-tab" onclick="switchTab('pastexams',this);initPastExamAdminTab()">📚 기출문제</button>
     <button class="admin-tab" onclick="switchTab('textbooks',this);initTextbookAdminTab()">📘 시중교재</button>
+    <button class="admin-tab" onclick="switchTab('covers',this);initCoversTab()">📕 교재 표지 · 안내문</button>
     <button class="admin-tab" onclick="switchTab('consult',this);initConsultTab()">📥 상담 신청</button>
     <button class="admin-tab" onclick="switchTab('consultdeck',this);initConsultDeckTab()">🎞 상담자료 관리</button>
     <button class="admin-tab" onclick="switchTab('seminar',this);initSeminarTab()">🎓 설명회 신청</button>
@@ -760,6 +761,84 @@
         <button class="btn btn-secondary btn-sm" onclick="mtaLoadList()">새로고침</button>
       </h3>
       <div id="mta-list"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <!-- ══ 📕 교재 표지 · 안내문 (배경은 그대로, 글자만 수정 · Firestore coverDesigns · admin/js/covers.js) ══ -->
+  <div class="tab-panel" id="tab-covers">
+    <style>
+      #tab-covers .cv-row{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--border,rgba(0,0,0,.08));flex-wrap:wrap;}
+      #tab-covers .cv-row.on{background:rgba(124,58,237,.06);border-radius:8px;}
+      #tab-covers .cv-row .cv-name{font-weight:600;cursor:pointer;flex:1;min-width:160px;}
+      #tab-covers .cv-row small{color:var(--muted);font-size:12px;}
+      #tab-covers .cv-row .cv-act{display:flex;gap:6px;}
+      #tab-covers .cv-badge{font-size:11.5px;font-weight:700;border:1px solid;border-radius:999px;padding:1px 8px;}
+      #tab-covers .cv-wrap{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap;}
+      #tab-covers #cv-stage{flex:1 1 420px;min-width:280px;max-width:660px;display:flex;justify-content:center;}
+      #tab-covers #cv-canvas{border-radius:6px;box-shadow:0 6px 24px rgba(30,24,56,.18);touch-action:none;background:#bcc8db;}
+      #tab-covers .cv-side{flex:1 1 320px;min-width:280px;}
+      #tab-covers .cv-layer{padding:7px 10px;border-radius:8px;cursor:pointer;font-size:13px;border:1px solid transparent;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+      #tab-covers .cv-layer:hover{background:rgba(124,58,237,.05);}
+      #tab-covers .cv-layer.on{border-color:#7c3aed;background:rgba(124,58,237,.08);font-weight:600;}
+      #tab-covers .cv-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+      #tab-covers .cv-sec{font-size:12px;font-weight:700;color:var(--muted);margin:14px 0 6px;}
+    </style>
+    <div class="card">
+      <h3 style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span>📕 교재 표지 · 안내문</span>
+        <span style="display:flex;gap:8px;flex-wrap:wrap;">
+          <select id="cv-template" onchange="cvTemplate(this.value)" style="padding:6px 10px;border-radius:8px;"></select>
+          <select onchange="cvFilter(this.value)" style="padding:6px 10px;border-radius:8px;"><option value="">전체</option><option>공용</option><option>평촌관</option><option>산본관</option></select>
+          <button class="btn btn-primary btn-sm" onclick="cvNew()">+ 새로 만들기</button>
+        </span>
+      </h3>
+      <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:8px;">
+        배경 그림은 그대로 두고 <span style="color:var(--off-white);">글자만</span> 고치거나 새로 넣을 수 있어요. 만든 안내문은 이름을 붙여 저장해 두고 다음에 열어서 다시 고치면 됩니다.<br>
+        완성되면 <span style="color:var(--off-white);">PDF(앞·뒤표지 A4)</span> 또는 <span style="color:var(--off-white);">PNG(지금 보는 면)</span>로 내려받아 인쇄소에 보내세요.
+      </div>
+      <div id="cv-list"></div>
+    </div>
+
+    <div class="card" id="cv-editor" style="display:none;">
+      <h3 style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span id="cv-title">편집</span>
+        <span id="cv-dirty" style="font-size:12.5px;color:#D97B1A;font-weight:600;"></span>
+      </h3>
+      <div class="form-row">
+        <div class="form-group" style="flex:2;"><label>안내문 이름</label><input type="text" id="cv-name" maxlength="80" placeholder="예: 2026 고2-2 기말고사 수컬"></div>
+        <div class="form-group"><label>관 구분</label><select id="cv-branch"><option>공용</option><option>평촌관</option><option>산본관</option></select></div>
+      </div>
+      <div class="cv-bar" style="margin-bottom:14px;">
+        <span id="cv-pagebtns" style="display:flex;gap:6px;"></span>
+        <span style="flex:1;"></span>
+        <button class="btn btn-secondary btn-sm" onclick="cvUndo()" title="Ctrl+Z">↶ 되돌리기</button>
+        <button class="btn btn-secondary btn-sm" onclick="cvRedo()" title="Ctrl+Shift+Z">↷ 다시</button>
+        <button class="btn btn-secondary btn-sm" onclick="cvDownloadPng()">PNG 받기</button>
+        <button class="btn btn-secondary btn-sm" onclick="cvDownloadPdf()">PDF 받기 (앞·뒤)</button>
+        <button class="btn btn-primary btn-sm" id="cv-savebtn" onclick="cvSave()">저장</button>
+      </div>
+      <div class="msg" id="cv-msg"></div>
+      <div class="cv-wrap">
+        <div id="cv-stage"><canvas id="cv-canvas"></canvas></div>
+        <div class="cv-side">
+          <div class="cv-bar">
+            <button class="btn btn-primary btn-sm" onclick="cvAddText()">+ 글자 추가</button>
+            <span id="cv-imgbtns" style="display:flex;gap:6px;flex-wrap:wrap;"></span>
+          </div>
+          <div class="cv-sec">이 면의 글자 (위가 맨 앞)</div>
+          <div id="cv-layers" style="max-height:220px;overflow-y:auto;"></div>
+          <div class="cv-bar" style="margin-top:8px;">
+            <button class="btn btn-secondary btn-sm" onclick="cvOrder(1)">앞으로</button>
+            <button class="btn btn-secondary btn-sm" onclick="cvOrder(-1)">뒤로</button>
+            <button class="btn btn-secondary btn-sm" onclick="cvDuplicate()">복제</button>
+            <button class="btn btn-secondary btn-sm" style="color:#dc2626;" onclick="cvDelete()">삭제</button>
+            <span style="flex:1;"></span>
+            <button class="btn btn-secondary btn-sm" onclick="cvResetPage()">이 면 처음 문구로</button>
+          </div>
+          <div class="cv-sec">선택한 글자</div>
+          <div id="cv-props"></div>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1931,7 +2010,7 @@
           <select id="wl-branch" style="width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
             <option value="평촌관">평촌관</option><option value="산본관">산본관</option>
           </select>
-          <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5;">평촌관: 이번 주 월~토 · 산본관: 지난주 토~이번 주 토 (오늘 기준 자동)</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;line-height:1.5;">평촌관: 이번 주 월~토 · 산본관: 지난주 토~이번 주 금 (오늘 기준 자동)</div>
         </div>
         <div class="form-group">
           <label>시작일</label>
@@ -2627,7 +2706,7 @@
 <script defer src="admin/js/satclinic.js?v=1792811435"></script>
 <script defer src="admin/js/dailyreport.js?v=1792760000"></script>
 <script defer src="admin/js/attendance.js?v=1792760000"></script>
-<script defer src="admin/js/weeklylog.js?v=1793354000"></script>
+<script defer src="admin/js/weeklylog.js?v=1794000000"></script>
 <script defer src="admin/js/drafts.js?v=1792760000"></script>
 <script defer src="admin/js/promotion.js"></script>
 <script defer src="admin/js/watchstatus.js"></script>
@@ -2642,12 +2721,13 @@
 <script defer src="admin/js/videocode.js"></script>
 <script defer src="admin/js/schedule.js?v=1793701000"></script>
 <script defer src="admin/js/meetings.js"></script>
-<script defer src="admin/js/pastexams.js?v=1793660000"></script>
+<script defer src="admin/js/pastexams.js?v=1794000000"></script>
 <script defer src="admin/js/textbooks.js"></script>
+<script defer src="admin/js/covers.js?v=1794000000"></script>
 <script defer src="admin/js/vimeo-upload.js?v=1793190000"></script>
 <script defer src="admin/js/weeklyclear.js?v=1793190000"></script>
 <script defer src="admin/js/exammaterials.js?v=1792850000"></script>
-<script defer src="admin/js/nav.js?v=1793360000"></script>
+<script defer src="admin/js/nav.js?v=1794000000"></script>
 <script defer src="admin/js/officecal.js?v=1793704000"></script>
 <script defer src="admin/js/home.js?v=1793703000"></script>
 

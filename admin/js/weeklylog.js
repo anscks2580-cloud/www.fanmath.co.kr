@@ -27,12 +27,12 @@ const WL_PLACEHOLDERS = {
 
 // 관별 기본 기간 (오늘 기준)
 //  · 평촌관: 이번 주 월 ~ 토
-//  · 산본관: 매주 금요일에 작성 — 지난주 토 ~ 이번 주 토
+//  · 산본관: 매주 금요일에 작성 — 지난주 토 ~ 이번 주 금 (2026.11.06 변경)
 function wlDefaultRange(branch) {
   const today = new Date(); today.setHours(0, 0, 0, 0);
   const mon = new Date(today); mon.setDate(today.getDate() - ((today.getDay() + 6) % 7));
   const sat = new Date(mon); sat.setDate(mon.getDate() + 5);
-  if (branch === '산본관') { const prevSat = new Date(sat); prevSat.setDate(sat.getDate() - 7); return [prevSat, sat]; }
+  if (branch === '산본관') { const prevSat = new Date(sat); prevSat.setDate(sat.getDate() - 7); const fri = new Date(sat); fri.setDate(sat.getDate() - 1); return [prevSat, fri]; }
   return [mon, sat];
 }
 function wlFmtDate(d) { return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
