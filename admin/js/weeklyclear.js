@@ -204,10 +204,18 @@ window.wcaDelPdf = async (id, i) => {
    - 영상을 틀어 놓고 해설이 시작될 때 「지금 위치에 찍기」를 누르면 한 줄씩 들어감
    - 직접 입력도 가능:  한 줄에 하나  "3:25 2번"
    ═══════════════════════════════════════════════════════════ */
+// 다음에 찍을 번호: 마지막 줄이 "2-3" 이면 "2-4", "3번" 이면 "4"
 function wcaChNextNum(text) {
-  let n = 0;
-  String(text || '').split(/\r?\n/).forEach((l) => { const m = l.match(/(\d{1,3})\s*번/); if (m) n = Math.max(n, +m[1]); });
-  return n + 1;
+  const lines = String(text || '').split(/\r?\n/).filter((l) => l.trim());
+  const last = lines[lines.length - 1] || '';
+  let m = last.match(/(\d{1,2})\s*-\s*(\d{1,2})/);
+  if (m) return `${m[1]}-${+m[2] + 1}`;
+  m = last.match(/(\d{1,3})\s*번/);
+  return m ? String(+m[1] + 1) : '1';
+}
+function wcaChLabel(v) {
+  v = String(v || '').trim();
+  return /^\d{1,3}$/.test(v) ? v + '번' : (v || '1번');
 }
 
 window.wcaOpenChapters = (id) => {
@@ -237,12 +245,11 @@ window.wcaOpenChapters = (id) => {
       <div style="flex:2 1 300px;padding:16px 18px;border-left:1px solid rgba(30,24,56,0.08);display:flex;flex-direction:column;gap:10px;">
         <div style="font-size:12px;color:#5C5677;line-height:1.7;background:rgba(91,63,166,0.06);border-radius:8px;padding:10px 12px;">
           ① 왼쪽 영상을 틀고, 해설이 시작되는 순간 <b>「지금 위치에 찍기」</b>를 누르세요.<br>
-          ② 번호는 자동으로 1씩 올라가요. (중간 번호부터면 숫자만 바꾸기)<br>
+          ② 번호는 자동으로 1씩 올라가요. (2-1처럼 쓰면 2-2, 2-3… / 숫자만 쓰면 1번, 2번…)<br>
           ③ 직접 써도 돼요 — 한 줄에 하나 <code style="background:#fff;padding:1px 5px;border-radius:4px;">3:25 2번</code>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-          <input type="number" id="wca-ch-num" min="1" max="999" value="${wcaChNextNum(text)}" style="width:72px;padding:8px;border-radius:8px;border:1px solid rgba(30,24,56,0.15);font-size:15px;text-align:center;">
-          <span style="font-size:13px;">번</span>
+          <input type="text" id="wca-ch-num" value="${wcaChNextNum(text)}" title="숫자만 쓰면 '3번', 2-1 처럼 쓰면 그대로" style="width:72px;padding:8px;border-radius:8px;border:1px solid rgba(30,24,56,0.15);font-size:15px;text-align:center;">
           <button class="btn btn-primary" id="wca-ch-mark" onclick="wcaChMark()" style="flex:1;">📍 지금 위치에 찍기</button>
         </div>
         <div style="display:flex;gap:6px;">
@@ -289,12 +296,12 @@ window.wcaChMark = async () => {
   try {
     const t = await p.getCurrentTime();
     const numEl = document.getElementById('wca-ch-num');
-    const n = Math.max(1, parseInt(numEl.value, 10) || 1);
+    const label = wcaChLabel(numEl.value);
     const ta = document.getElementById('wca-ch-text');
     const lines = ta.value.split(/\r?\n/).filter((l) => l.trim());
-    lines.push(`${VideoChapters.fmt(t)} ${n}번`);
+    lines.push(`${VideoChapters.fmt(t)} ${label}`);
     ta.value = VideoChapters.format(VideoChapters.parse(lines.join('\n')));
-    numEl.value = n + 1;
+    numEl.value = wcaChNextNum(`0:00 ${label}`);
     wcaChPreview();
   } catch (e) { alert('현재 위치를 읽지 못했어요: ' + e.message); }
 };
@@ -309,8 +316,8 @@ window.wcaChUndo = () => {
   const lines = ta.value.split(/\r?\n/).filter((l) => l.trim());
   const last = lines.pop();
   ta.value = lines.join('\n');
-  const m = String(last || '').match(/(\d{1,3})\s*번/);
-  if (m) document.getElementById('wca-ch-num').value = m[1];
+  const lbl = String(last || '').replace(/^\s*[\d:]+\s*/, '').trim();
+  if (lbl) document.getElementById('wca-ch-num').value = lbl.replace(/번$/, '');
   wcaChPreview();
 };
 
@@ -374,7 +381,9 @@ window.wcaChAuto = async (id) => {
       wcaChPreview();
       note.innerHTML = `<span style="color:#2E9E5B;">✓ ${wcaEsc(r.message)}</span> — 영상으로 몇 군데 확인하고 「저장」을 눌러 주세요.`;
     } else {
-      note.innerHTML = `<span style="color:#D64545;">${wcaEsc(r.message || '찾지 못했어요')}</span><br>비메오 자막은 업로드 후 만들어지기까지 시간이 걸려요. 급하면 「지금 위치에 찍기」로 직접 넣어 주세요.`;
+      note.innerHTML = `<span style="color:#D64545;">${wcaEsc(r.message || '찾지 못했어요')}</span><br>비메오 자막은 업로드 후 만들어지기까지 시간이 걸려요. 급하면 「지금 위치에 찍기」로 직접 넣어 주세요.`
+        + (r.seen ? `<br>번호처럼 보인 말: ${wcaEsc(r.seen)}` : '')
+        + (r.sample ? `<details style="margin-top:4px;"><summary style="cursor:pointer;">자막 앞부분 보기</summary><div style="max-height:140px;overflow:auto;background:#F7F6FB;padding:6px 8px;border-radius:6px;margin-top:4px;">${wcaEsc(r.sample)}</div></details>` : '');
     }
   } catch (e) {
     note.innerHTML = `<span style="color:#D64545;">자동 찾기 실패: ${wcaEsc(typeof auErr === 'function' ? auErr(e) : e.message)}</span><br>(서버 배포 전이면 영상인덱스_배포.bat 을 먼저 실행해 주세요)`;
