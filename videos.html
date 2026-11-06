@@ -16,7 +16,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="stylesheet" href="style.css">
 <script src="https://player.vimeo.com/api/player.js"></script>
-<script src="video-chapters.js?v=1794100000"></script>
+<script src="video-chapters.js?v=1794130000"></script>
 <style>
 .page-inner { max-width: 1080px; margin: 0 auto; padding: 40px 48px 96px; }
 
@@ -1784,8 +1784,10 @@ window.openModal = function(id, title, videoDocId, tag) {
 
   // 🔖 문제별 구간 인덱스 (영상 문서의 chapters)
   try {
-    const vdoc = allVideos.find(x => x.id === videoDocId) || myVideos.find(x => x.id === videoDocId);
-    if (window.VideoChapters) VideoChapters.mount(document.getElementById('modalChapters'), document.getElementById('modalIframe'), vdoc && vdoc.chapters, { autoplay: true });
+    // 같은 비메오 영상이 강의 목록에 두 번 있을 수 있어서, 인덱스가 붙은 쪽을 찾음
+    const hasCh = (x) => x && Array.isArray(x.chapters) && x.chapters.length;
+    const vdoc = [allVideos.find(x => x.id === videoDocId), ...allVideos.filter(x => String(x.vimeoId) === String(id))].find(hasCh);
+    if (window.VideoChapters) VideoChapters.mount(document.getElementById('modalChapters'), document.getElementById('modalIframe'), vdoc ? vdoc.chapters : null, { autoplay: true });
   } catch (e) { console.warn('구간 인덱스 표시 실패', e); }
 
   // 이전 재생 진행률 저장 후 새 재생 상태 초기화

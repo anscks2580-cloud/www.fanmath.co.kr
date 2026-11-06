@@ -400,7 +400,7 @@ select option:disabled { color:#6B6489; }
 </style>
 <script src="session-limit.js?v=1793706000"></script>
 <script src="https://player.vimeo.com/api/player.js"></script>
-<script src="video-chapters.js?v=1794100000"></script>
+<script src="video-chapters.js?v=1794130000"></script>
 </head>
 <body>
 
@@ -2863,8 +2863,9 @@ window.wcPdf = async function(id, i, btn) {
 window.wcOpen = function(vimeoId, title, docId) {
   const m = document.getElementById('videoModal');
   if (m && m.parentElement !== document.body) document.body.appendChild(m);
-  const v = docId ? wcVideos.find(x => x.id === docId) : null;
-  openVideoModal(vimeoId, title, v && v.chapters);
+  const hasCh = (x) => x && Array.isArray(x.chapters) && x.chapters.length;
+  const v = [wcVideos.find(x => x.id === docId), ...wcVideos.filter(x => String(x.vimeoId) === String(vimeoId))].find(hasCh);
+  openVideoModal(vimeoId, title, v ? v.chapters : null);
 };
 
 window.openVideoModal = function(vimeoId, title, chapters) {
