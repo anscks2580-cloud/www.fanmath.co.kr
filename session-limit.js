@@ -3,6 +3,7 @@
 // - 로그인한 시각(Firebase 계정의 마지막 로그인 시각)부터 4시간이 지나면 자동 로그아웃
 // - 페이지를 열어둔 채로 4시간이 지나도 로그아웃되고, 다음에 들어올 때는 무조건 다시 로그인
 // - 학생은 원래대로 브라우저를 닫으면 로그아웃, 학부모(앱)는 로그인 유지 — 이 파일과 무관
+// - 휴대폰에 설치한 학원 앱(홈 화면 아이콘)으로 연 경우에는 시간 제한 없이 로그인 유지 (개인 휴대폰이라서)
 // 사용: 각 페이지 onAuthStateChanged 안에서
 //   if (window.swcSessionGuard && swcSessionGuard(user, () => signOut(auth))) return;
 //   → 만료됐으면 로그아웃을 시작하고 true를 돌려줌 (이후 처리는 각 페이지의 로그아웃 흐름이 그대로 함)
@@ -40,6 +41,9 @@
   window.swcSessionGuard = function (user, doSignOut) {
     clearTimeout(window.__swcSessionT);
     current = null;
+    var inApp = false;
+    try { inApp = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; } catch (e) {}
+    if (inApp) return false; // 앱에서는 자동 로그아웃 안 함
     if (!user || user.isAnonymous) return false;
     current = { user: user, signOut: doSignOut };
     if (left(user) <= 0) { expire(false); return true; }

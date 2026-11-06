@@ -2,8 +2,47 @@
  * - 홈페이지가 자주 바뀌므로 화면(HTML)은 항상 인터넷에서 새로 받음(네트워크 우선)
  * - 인터넷이 끊겼을 때만 마지막으로 본 화면 또는 오프라인 안내를 보여줌
  * - 외부 서버(파이어베이스·비메오 등) 요청과 이미지·스크립트는 건드리지 않음
+ * - 학부모 앱 알림: 앱이 꺼져 있어도 알림을 받아 표시하고, 누르면 학부모 페이지를 엶
  */
-const CACHE = 'songmath-pwa-v1';
+
+// ── 앱 알림(파이어베이스 메시징) ──
+try {
+  importScripts(
+    'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',
+    'https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js'
+  );
+  firebase.initializeApp({
+    apiKey: 'AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA',
+    authDomain: 'songmath.firebaseapp.com',
+    projectId: 'songmath',
+    storageBucket: 'songmath.firebasestorage.app',
+    messagingSenderId: '936295436575',
+    appId: '1:936295436575:web:d1e201508719850cfbe02a'
+  });
+  // 알림 내용이 담긴 메시지는 자동으로 표시됨. 내용 없이 데이터만 온 경우만 직접 표시
+  firebase.messaging().onBackgroundMessage(function (payload) {
+    if (payload && payload.notification) return;
+    var d = (payload && payload.data) || {};
+    if (!d.title) return;
+    self.registration.showNotification(d.title, { body: d.body || '', icon: '/assets/icons/icon-192.png', data: { link: d.link || '/parent.html' } });
+  });
+} catch (e) { /* 알림을 못 쓰는 환경이면 건너뜀 */ }
+
+// 알림을 누르면 앱(학부모 페이지)을 열거나 이미 열린 창으로 이동
+self.addEventListener('notificationclick', function (e) {
+  var n = e.notification;
+  var data = n && n.data || {};
+  var link = data.link || (data.FCM_MSG && data.FCM_MSG.data && data.FCM_MSG.data.link) || '/parent.html';
+  n.close();
+  e.waitUntil((async function () {
+    var all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (var c of all) {
+      if (c.url.indexOf(self.location.origin) === 0) { try { await c.navigate(link); } catch (err) {} return c.focus(); }
+    }
+    return self.clients.openWindow(link);
+  })());
+});
+const CACHE = 'songmath-pwa-v2';
 const OFFLINE_HTML = `<!DOCTYPE html><html lang="ko"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>송우찬수학학원</title>

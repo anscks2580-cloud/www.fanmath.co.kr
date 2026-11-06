@@ -117,7 +117,36 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
 <meta name="apple-mobile-web-app-title" content="송우찬수학">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
-<script src="/pwa.js?v=6" defer></script>
+<script src="/pwa.js?v=7" defer></script>
+<!-- 앱 시작 로딩 화면 (앱으로 실행했을 때만, 처음 한 번) -->
+<style>
+#pwaSplash{position:fixed;inset:0;z-index:2147483000;background:#4B3391;overflow:hidden;transition:opacity .5s ease,transform .5s ease;-webkit-user-select:none;user-select:none}
+#pwaSplash.out{opacity:0;transform:scale(1.06);pointer-events:none}
+#pwaSplash .ps-glow{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(140,110,220,.55) 0,rgba(140,110,220,0) 55%)}
+#pwaSplash .ps-ring{position:absolute;left:50%;top:50%;width:min(46vw,210px);height:min(46vw,210px);margin:calc(min(46vw,210px)/-2) 0 0 calc(min(46vw,210px)/-2);border-radius:50%;box-shadow:0 0 0 0 rgba(245,197,24,.55);animation:psPulse 1.6s ease-out .35s infinite}
+#pwaSplash img{position:absolute;left:50%;top:50%;width:min(46vw,210px);height:min(46vw,210px);margin:calc(min(46vw,210px)/-2) 0 0 calc(min(46vw,210px)/-2);border-radius:50%;box-shadow:0 14px 40px rgba(20,10,50,.45);animation:psIn .7s cubic-bezier(.2,.9,.3,1.25) both}
+#pwaSplash .ps-bar{position:absolute;left:50%;top:calc(50% + min(23vw,105px) + 44px);width:120px;height:3px;margin-left:-60px;border-radius:3px;background:rgba(255,255,255,.18);overflow:hidden;animation:psFade .4s ease .25s both}
+#pwaSplash .ps-bar i{display:block;height:100%;width:0;border-radius:3px;background:#F5C518;box-shadow:0 0 10px rgba(245,197,24,.8);animation:psLoad 1.5s cubic-bezier(.4,0,.2,1) .3s forwards}
+#pwaSplash .ps-txt{position:absolute;left:0;right:0;top:calc(50% + min(23vw,105px) + 64px);text-align:center;color:rgba(255,255,255,.78);font:600 13px/1.4 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;letter-spacing:2px;animation:psFade .5s ease .45s both}
+#pwaSplash .ps-foot{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 34px);text-align:center;color:#F5C518;font:700 11px/1 -apple-system,BlinkMacSystemFont,sans-serif;letter-spacing:3px;opacity:.85;animation:psFade .5s ease .55s both}
+html.pwa-splashing,html.pwa-splashing body{overflow:hidden!important;background:#4B3391}
+@keyframes psIn{from{transform:scale(.82);opacity:.0}to{transform:none;opacity:1}}
+@keyframes psFade{from{opacity:0}to{opacity:1}}
+@keyframes psLoad{0%{width:0}60%{width:72%}100%{width:100%}}
+@keyframes psPulse{0%{box-shadow:0 0 0 0 rgba(245,197,24,.5)}100%{box-shadow:0 0 0 28px rgba(245,197,24,0)}}
+</style>
+<script>
+(function(){try{
+  var sa=window.matchMedia('(display-mode: standalone)').matches||window.matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true;
+  if(!sa||sessionStorage.getItem('pwaSplash'))return;
+  sessionStorage.setItem('pwaSplash','1');
+  var h=document.documentElement;h.classList.add('pwa-splashing');
+  var d=document.createElement('div');d.id='pwaSplash';
+  d.innerHTML='<div class="ps-glow"></div><div class="ps-ring"></div><img src="/assets/icons/splash-logo.png" alt=""><div class="ps-bar"><i></i></div><div class="ps-txt">평촌관 · 산본관</div><div class="ps-foot">SONG WOOCHAN MATH</div>';
+  h.appendChild(d);window.__pwaSplashAt=Date.now();
+  setTimeout(function(){var s=document.getElementById('pwaSplash');if(s){s.classList.add('out');h.classList.remove('pwa-splashing');setTimeout(function(){s.remove()},600);}},6000);
+}catch(e){}})();
+</script>
 </head>
 <body>
 <div class="login-wrap">
@@ -175,7 +204,7 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
     </div>
 
     <div class="login-footer">
-      로그인 문의: <span class="nw">평촌관 <a href="tel:031-386-8899">031-386-8899</a></span><br>
+      로그인 문의: <span class="nw">평촌관 <a href="tel:031-386-8899">031-386-8899</a></span> · <span class="nw">산본관 <a href="tel:031-346-8899">031-346-8899</a></span><br>
       <a href="index.html">← 홈으로 돌아가기</a>
     </div>
   </div>
@@ -183,7 +212,7 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, reauthenticateWithCredential, EmailAuthProvider, updatePassword, setPersistence, browserSessionPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, reauthenticateWithCredential, EmailAuthProvider, updatePassword, setPersistence, browserSessionPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
@@ -207,6 +236,50 @@ try {
     showErr('s-err', '로그인한 지 4시간이 지나 자동으로 로그아웃되었습니다. 다시 로그인해 주세요.');
   }
 } catch (e) {}
+
+
+// ── 앱(홈 화면 아이콘)으로 실행 중인지 ──
+const IN_APP = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+// 로그인한 계정 종류에 따라 이동 — 관리자 → admin.html, 조교 → ta.html, 선생님 → teacher.html, 학생 → index.html, 학부모 → parent.html
+// 이동했으면 true
+async function routeUser(user) {
+  const uid = user.uid;
+  const adminDoc = await getDoc(doc(db, 'admins', uid));
+  if (adminDoc.exists()) {
+    await setPersistence(auth, browserLocalPersistence);
+    window.location.replace('admin.html');
+    return true;
+  }
+  const teacherDoc = await getDoc(doc(db, 'teachers', uid));
+  if (teacherDoc.exists()) {
+    await setPersistence(auth, browserLocalPersistence);
+    window.location.replace(teacherDoc.data().role === 'ta' ? 'ta.html' : 'teacher.html');
+    return true;
+  }
+  const studentDoc = await getDoc(doc(db, 'students', uid));
+  if (studentDoc.exists()) {
+    window.location.replace('index.html');
+    return true;
+  }
+  const parentDoc = await getDoc(doc(db, 'parents', uid));
+  if (parentDoc.exists()) {
+    await setPersistence(auth, browserLocalPersistence); // 학부모는 로그인 유지
+    const next = new URLSearchParams(location.search).get('next');
+    window.location.replace(next && next.startsWith('report.html') ? next : 'parent.html');
+    return true;
+  }
+  return false;
+}
+
+// 앱에서는 한 번 로그인하면 계속 로그인 상태 — 다음에 앱을 켜면 로그인 화면을 건너뛰고 바로 이동
+if (IN_APP) {
+  const unsub = onAuthStateChanged(auth, async (user) => {
+    unsub();
+    if (!user) return;
+    try { if (await routeUser(user)) return; } catch (e) {}
+  });
+}
 
 // 저장된 아이디 불러오기
 const savedId = localStorage.getItem('swc_saved_id');
@@ -239,7 +312,7 @@ window.loginStudent = async function() {
   if (pwRaw.includes('-')) pwList.push(pwRaw.replace(/-/g, ''));
 
   try {
-    await setPersistence(auth, browserSessionPersistence);
+    await setPersistence(auth, IN_APP ? browserLocalPersistence : browserSessionPersistence); // 앱에서는 모든 계정 로그인 유지
     let cred = null, lastErr = null;
     const emails = id.includes('@') ? [email] : [email, id + '.p@songmath.kr']; // 학생 → 학부모 순서
     outer: for (const em of emails) {
@@ -249,32 +322,7 @@ window.loginStudent = async function() {
       }
     }
     if (!cred) throw lastErr;
-    const uid = cred.user.uid;
-
-    const adminDoc = await getDoc(doc(db, 'admins', uid));
-    if (adminDoc.exists()) {
-      await setPersistence(auth, browserLocalPersistence);
-      window.location.href = 'admin.html';
-      return;
-    }
-    const teacherDoc = await getDoc(doc(db, 'teachers', uid));
-    if (teacherDoc.exists()) {
-      await setPersistence(auth, browserLocalPersistence);
-      window.location.href = teacherDoc.data().role === 'ta' ? 'ta.html' : 'teacher.html';
-      return;
-    }
-    const studentDoc = await getDoc(doc(db, 'students', uid));
-    if (studentDoc.exists()) {
-      window.location.href = 'index.html';
-      return;
-    }
-    const parentDoc = await getDoc(doc(db, 'parents', uid));
-    if (parentDoc.exists()) {
-      await setPersistence(auth, browserLocalPersistence); // 학부모는 로그인 유지
-      const next = new URLSearchParams(location.search).get('next');
-      window.location.href = next && next.startsWith('report.html') ? next : 'parent.html';
-      return;
-    }
+    if (await routeUser(cred.user)) return;
     showErr('s-err','등록되지 않은 계정입니다. 원장님께 문의해주세요.');
     await auth.signOut();
     btn.disabled = false; btn.textContent = '로그인';

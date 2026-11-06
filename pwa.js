@@ -380,6 +380,9 @@
     openInstallSheet();
   }
 
+  // 다른 화면(학부모 페이지 등)에서 설치 화면을 열 수 있게
+  window.swcOpenInstall = function () { if (isStandalone()) { toast('이미 앱으로 실행 중이에요'); return; } openInstallSheet(); };
+
   window.addEventListener('beforeinstallprompt', function (e) {
     e.preventDefault();
     deferredPrompt = e;

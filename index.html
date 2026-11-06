@@ -28,7 +28,7 @@
 <meta name="apple-mobile-web-app-title" content="송우찬수학">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
-<script src="/pwa.js?v=6" defer></script>
+<script src="/pwa.js?v=7" defer></script>
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png">
 <link rel="apple-touch-startup-image" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/assets/splash/splash-1320x2868.png">
 <link rel="apple-touch-startup-image" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/assets/splash/splash-1206x2622.png">
@@ -41,6 +41,13 @@
 <link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/assets/splash/splash-1242x2688.png">
 <link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/assets/splash/splash-828x1792.png">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/assets/splash/splash-750x1334.png">
+<!-- 앱(홈 화면 아이콘)으로 켜면 홈페이지 대신 로그인 화면부터 — 로그인돼 있으면 로그인 화면이 알아서 역할별 페이지로 보냄 -->
+<script>
+(function(){try{
+  var sa=window.matchMedia('(display-mode: standalone)').matches||window.matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true;
+  if(sa&&/(^|[?&])source=pwa(&|$)/.test(location.search)){location.replace('/login.html?app=1');}
+}catch(e){}})();
+</script>
 <!-- 앱 시작 로딩 화면 (앱으로 실행했을 때만, 처음 한 번) -->
 <style>
 #pwaSplash{position:fixed;inset:0;z-index:2147483000;background:#4B3391;overflow:hidden;transition:opacity .5s ease,transform .5s ease;-webkit-user-select:none;user-select:none}
@@ -944,6 +951,8 @@ loadNoticePopups();
 window.doNavLogout = async function() {
   const auth = getAuth();
   await signOut(auth);
+  const inApp = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  if (inApp) { window.location.replace('login.html?app=1'); return; }
   window.location.reload();
 };
 </script>
