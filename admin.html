@@ -9,6 +9,8 @@
 <link rel="stylesheet" href="portal.css?v=1793353000">
 <link rel="stylesheet" href="admin/admin.css?v=1793704000">
 <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.1.0/dist/tus.min.js"></script>
+<script src="https://player.vimeo.com/api/player.js"></script>
+<script src="video-chapters.js?v=1794100000"></script>
 <!-- SheetJS 엑셀 파싱 -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 <!-- JSZip: PDF 일괄 다운로드용 -->
@@ -734,7 +736,7 @@
           <button class="btn btn-secondary btn-sm" onclick="wcaLoadVideos()">새로고침</button>
         </span>
       </h3>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">이미 올린 영상에 PDF만 붙일 때는 「+ PDF 추가」. 영상 제목·순서 수정이나 삭제는 강의 목록에서 해요.</div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">이미 올린 영상에 PDF만 붙일 때는 「+ PDF 추가」. 문제 번호별 해설 위치는 「🔖 인덱스」. 영상 제목·순서 수정이나 삭제는 강의 목록에서 해요.</div>
       <div id="wca-list"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
     </div>
   </div>
@@ -2725,7 +2727,7 @@
 <script defer src="admin/js/textbooks.js"></script>
 <script defer src="admin/js/covers.js?v=1794000000"></script>
 <script defer src="admin/js/vimeo-upload.js?v=1793190000"></script>
-<script defer src="admin/js/weeklyclear.js?v=1793190000"></script>
+<script defer src="admin/js/weeklyclear.js?v=1794100000"></script>
 <script defer src="admin/js/exammaterials.js?v=1792850000"></script>
 <script defer src="admin/js/nav.js?v=1794001000"></script>
 <script defer src="admin/js/officecal.js?v=1793704000"></script>
