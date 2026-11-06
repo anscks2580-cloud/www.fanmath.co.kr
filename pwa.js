@@ -34,9 +34,9 @@
   }
 
   var ICON = '/assets/icons/apple-touch-icon.png';
-  var PROFILE_URL = '/songmath.mobileconfig';
-  // 설치 파일을 올바른 형식으로 내려줄 서버가 준비되면 true로 바꿈 (깃허브는 형식 지정 불가)
-  var USE_PROFILE = false;
+  var PROFILE_URL = 'https://asia-northeast3-songmath.cloudfunctions.net/appProfile';
+  // 설치 파일은 학원 서버 함수(appProfile)에서 올바른 형식으로 내려줌 (깃허브는 형식 지정 불가)
+  var USE_PROFILE = true;
   var deferredPrompt = null;
 
   // ── 스타일 ──
