@@ -19,6 +19,16 @@
 <meta name="naver-site-verification" content="3745dc6aa859552829bab779414c1351fa739dfc">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "EducationalOrganization", "name": "송우찬수학학원", "url": "https://www.fanmath.co.kr/", "logo": "https://www.fanmath.co.kr/assets/og/og-image.jpg", "image": "https://www.fanmath.co.kr/assets/og/og-image.jpg", "description": "평촌·산본 고등 수학 전문학원. 내신·수능·수리논술 대비.", "department": [{"@type": "EducationalOrganization", "name": "송우찬수학학원 평촌관", "telephone": "031-386-8899", "address": {"@type": "PostalAddress", "streetAddress": "평촌대로 117 맵시프라자 4층", "addressLocality": "안양시 동안구", "addressRegion": "경기도", "addressCountry": "KR"}}, {"@type": "EducationalOrganization", "name": "송우찬수학학원 산본관", "telephone": "031-346-8899", "address": {"@type": "PostalAddress", "streetAddress": "산본로 390 5층", "addressLocality": "군포시", "addressRegion": "경기도", "addressCountry": "KR"}}]}</script>
 <link rel="stylesheet" href="style.css">
+<!-- 앱 설치(PWA) -->
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#5B3FA6">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="송우찬수학">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png">
+<script src="/pwa.js?v=1" defer></script>
 <style>
 /* ── HERO ── */
 .hero {
@@ -336,6 +346,7 @@
     <a href="press.html" >언론보도</a>
     <a href="consult.html" style="color:var(--purple, #5B3FA6);font-weight:600;">상담신청</a>
     <a href="apex.html" style="color:#C9A84C;font-weight:600;">✦ Apex관</a>
+    <a href="#" data-pwa-install style="color:#5B3FA6;font-weight:600;">📲 앱 설치하기</a>
   </div>
 
 <div class="page" style="padding-top:104px;">
@@ -353,6 +364,13 @@
       개념의 흐름을 이해하면 문제가 보입니다.<br>
       중등수학 · 고등수학 · 수리논술 전문
     </p>
+
+    <!-- 앱 설치 버튼 (pwa.js가 기기별로 설치 창/안내를 띄움 · 앱으로 실행 중이면 자동 숨김) -->
+    <button type="button" class="pwa-install-btn" data-pwa-install>
+      <img src="/assets/icons/icon-192.png" alt="">
+      <span>송우찬수학학원 앱 설치하기</span>
+      <span class="pwa-sub">무료 · 홈 화면에 추가</span>
+    </button>
 
     <!-- 설명회 참석 신청 메인 배너 (11/1 00:00 KST부터 자동 숨김 · 관리자 '설명회 신청'에서 접수를 끄면 즉시 숨김) -->
     <a href="seminar.html" id="seminarBanner" class="timed-banner" data-show-until="2026-11-01T00:00:00+09:00" style="
