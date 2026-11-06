@@ -12,11 +12,30 @@ async function loadStudents() {
   withdrawnCache = [];
   snap.forEach(d => { const s = {id: d.id, ...d.data()}; (s.status === '퇴원' ? withdrawnCache : studentsCache).push(s); });
   if (typeof renderWithdrawnList === 'function') renderWithdrawnList();
+  loadRosterReview();
   renderStudents();
   renderAssignSelect();
   const scEl = document.getElementById('studentCount');
   if (scEl) scEl.textContent = studentsCache.length;
 }
+
+// ── 학생 명단 자동 동기화 확인 목록 (서버가 1시간마다 홈페이지·수납 명단을 대조, 자동으로 못 맞춘 학생만 여기 표시) ──
+async function loadRosterReview() {
+  const el = document.getElementById('rosterReview'); if (!el) return;
+  try {
+    const d = await getDoc(doc(db, 'syncLogs', 'studentRosterReview'));
+    const r = d.exists() ? d.data() : null;
+    const list = (r && Array.isArray(r.review)) ? r.review : [];
+    if (!list.length) { el.style.display = 'none'; return; }
+    const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    el.style.display = 'block';
+    el.innerHTML = `<div class="card" style="border:1px solid rgba(214,69,69,0.35);background:rgba(214,69,69,0.04);">
+      <h3 style="color:#D64545;">⚠ 학생 명단 확인 필요 ${list.length}명</h3>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">홈페이지와 수납 명단이 다른데 자동으로 맞추지 않은 학생이에요. 실제로 퇴원했으면 아래 학생 목록에서 퇴원 처리, 다니는 학생이면 수납에서 재원으로 바꿔 주세요. (1시간마다 다시 확인 · 마지막 확인 ${esc(String(r.at || '').slice(0, 16).replace('T', ' '))})</div>
+      <ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.8;">${list.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>`;
+  } catch (e) { el.style.display = 'none'; }
+}
+window.loadRosterReview = loadRosterReview;
 
 window.renderStudents = function renderStudents() {
   const el = document.getElementById('studentList');
