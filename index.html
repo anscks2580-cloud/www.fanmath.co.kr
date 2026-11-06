@@ -827,6 +827,14 @@ onAuthStateChanged(auth, async (user) => {
     if (studentDoc.exists()) {
       const d = studentDoc.data();
       nameHtml = `${d.branch || ''} | ${d.grade || ''} <b style="color:var(--off-white);font-weight:700;">${d.name}</b> 학생`;
+      // 학생: 화면 아래 「출석 체크」 버튼
+      if (!document.getElementById('ckFab')) {
+        const fab = document.createElement('a');
+        fab.id = 'ckFab'; fab.href = 'checkin.html';
+        fab.innerHTML = '✅ 출석 체크';
+        fab.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 18px);z-index:150;background:#5B3FA6;color:#fff;font-weight:800;font-size:15px;padding:14px 26px;border-radius:999px;text-decoration:none;box-shadow:0 10px 28px rgba(75,51,145,.4);white-space:nowrap;';
+        document.body.appendChild(fab);
+      }
     } else {
       nameHtml = user.email;
     }
