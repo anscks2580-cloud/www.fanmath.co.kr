@@ -21,14 +21,54 @@
 <link rel="stylesheet" href="style.css">
 <!-- 앱 설치(PWA) -->
 <link rel="manifest" href="/manifest.webmanifest">
-<meta name="theme-color" content="#5B3FA6">
+<meta name="theme-color" content="#4B3391">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="송우찬수학">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+<script src="/pwa.js?v=2" defer></script>
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png">
-<script src="/pwa.js?v=1" defer></script>
+<link rel="apple-touch-startup-image" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/assets/splash/splash-1320x2868.png">
+<link rel="apple-touch-startup-image" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/assets/splash/splash-1206x2622.png">
+<link rel="apple-touch-startup-image" media="(device-width: 420px) and (device-height: 912px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/assets/splash/splash-1260x2736.png">
+<link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/assets/splash/splash-1290x2796.png">
+<link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/assets/splash/splash-1179x2556.png">
+<link rel="apple-touch-startup-image" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/assets/splash/splash-1284x2778.png">
+<link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/assets/splash/splash-1170x2532.png">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/assets/splash/splash-1125x2436.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/assets/splash/splash-1242x2688.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/assets/splash/splash-828x1792.png">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="/assets/splash/splash-750x1334.png">
+<!-- 앱 시작 로딩 화면 (앱으로 실행했을 때만, 처음 한 번) -->
+<style>
+#pwaSplash{position:fixed;inset:0;z-index:2147483000;background:#4B3391;overflow:hidden;transition:opacity .5s ease,transform .5s ease;-webkit-user-select:none;user-select:none}
+#pwaSplash.out{opacity:0;transform:scale(1.06);pointer-events:none}
+#pwaSplash .ps-glow{position:absolute;inset:0;background:radial-gradient(circle at 50% 50%,rgba(140,110,220,.55) 0,rgba(140,110,220,0) 55%)}
+#pwaSplash .ps-ring{position:absolute;left:50%;top:50%;width:min(46vw,210px);height:min(46vw,210px);margin:calc(min(46vw,210px)/-2) 0 0 calc(min(46vw,210px)/-2);border-radius:50%;box-shadow:0 0 0 0 rgba(245,197,24,.55);animation:psPulse 1.6s ease-out .35s infinite}
+#pwaSplash img{position:absolute;left:50%;top:50%;width:min(46vw,210px);height:min(46vw,210px);margin:calc(min(46vw,210px)/-2) 0 0 calc(min(46vw,210px)/-2);border-radius:50%;box-shadow:0 14px 40px rgba(20,10,50,.45);animation:psIn .7s cubic-bezier(.2,.9,.3,1.25) both}
+#pwaSplash .ps-bar{position:absolute;left:50%;top:calc(50% + min(23vw,105px) + 44px);width:120px;height:3px;margin-left:-60px;border-radius:3px;background:rgba(255,255,255,.18);overflow:hidden;animation:psFade .4s ease .25s both}
+#pwaSplash .ps-bar i{display:block;height:100%;width:0;border-radius:3px;background:#F5C518;box-shadow:0 0 10px rgba(245,197,24,.8);animation:psLoad 1.5s cubic-bezier(.4,0,.2,1) .3s forwards}
+#pwaSplash .ps-txt{position:absolute;left:0;right:0;top:calc(50% + min(23vw,105px) + 64px);text-align:center;color:rgba(255,255,255,.78);font:600 13px/1.4 -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;letter-spacing:2px;animation:psFade .5s ease .45s both}
+#pwaSplash .ps-foot{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom) + 34px);text-align:center;color:#F5C518;font:700 11px/1 -apple-system,BlinkMacSystemFont,sans-serif;letter-spacing:3px;opacity:.85;animation:psFade .5s ease .55s both}
+html.pwa-splashing,html.pwa-splashing body{overflow:hidden!important;background:#4B3391}
+@keyframes psIn{from{transform:scale(.82);opacity:.0}to{transform:none;opacity:1}}
+@keyframes psFade{from{opacity:0}to{opacity:1}}
+@keyframes psLoad{0%{width:0}60%{width:72%}100%{width:100%}}
+@keyframes psPulse{0%{box-shadow:0 0 0 0 rgba(245,197,24,.5)}100%{box-shadow:0 0 0 28px rgba(245,197,24,0)}}
+</style>
+<script>
+(function(){try{
+  var sa=window.matchMedia('(display-mode: standalone)').matches||window.matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true;
+  if(!sa||sessionStorage.getItem('pwaSplash'))return;
+  sessionStorage.setItem('pwaSplash','1');
+  var h=document.documentElement;h.classList.add('pwa-splashing');
+  var d=document.createElement('div');d.id='pwaSplash';
+  d.innerHTML='<div class="ps-glow"></div><div class="ps-ring"></div><img src="/assets/icons/splash-logo.png" alt=""><div class="ps-bar"><i></i></div><div class="ps-txt">평촌관 · 산본관</div><div class="ps-foot">SONG WOOCHAN MATH</div>';
+  h.appendChild(d);window.__pwaSplashAt=Date.now();
+  setTimeout(function(){var s=document.getElementById('pwaSplash');if(s){s.classList.add('out');h.classList.remove('pwa-splashing');setTimeout(function(){s.remove()},600);}},6000);
+}catch(e){}})();
+</script>
 <style>
 /* ── HERO ── */
 .hero {
@@ -368,8 +408,8 @@
     <!-- 앱 설치 버튼 (pwa.js가 기기별로 설치 창/안내를 띄움 · 앱으로 실행 중이면 자동 숨김) -->
     <button type="button" class="pwa-install-btn" data-pwa-install>
       <img src="/assets/icons/icon-192.png" alt="">
-      <span>송우찬수학학원 앱 설치하기</span>
-      <span class="pwa-sub">무료 · 홈 화면에 추가</span>
+      <span class="pwa-t"><small>무료 · 송우찬수학학원 공식 앱</small><b>앱 다운로드</b></span>
+      <span class="pwa-dl">↓</span>
     </button>
 
     <!-- 설명회 참석 신청 메인 배너 (11/1 00:00 KST부터 자동 숨김 · 관리자 '설명회 신청'에서 접수를 끄면 즉시 숨김) -->
