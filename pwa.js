@@ -34,6 +34,7 @@
   }
 
   var ICON = '/assets/icons/apple-touch-icon.png';
+  var PROFILE_URL = '/songmath.mobileconfig';
   var deferredPrompt = null;
 
   // ── 스타일 ──
@@ -190,7 +191,7 @@
         go.textContent = '설치 준비 중…';
         p.prompt();
         p.userChoice.then(function (r) {
-          if (r && r.outcome === 'accepted') runInstallAnimation(sheet, go, status);
+          if (r && r.outcome === 'accepted') runProgress(sheet, go, status, {});
           else close(ov);
         }).catch(function () { close(ov); });
         return;
@@ -201,8 +202,20 @@
         close(ov);
         return;
       }
+      // 3) 아이폰·아이패드 사파리 → 설치 파일(설정 프로파일) 내려받기
+      if (isIOS && !isInApp && !isIOSChrome && !isIOSOtherBrowser) {
+        location.href = PROFILE_URL;
+        go.disabled = true;
+        runProgress(sheet, go, status, {
+          dur: 2200,
+          working: '내려받는 중…',
+          workingStatus: '설치 파일을 내려받고 있어요',
+          onDone: function () { showProfileSteps(ov); }
+        });
+        return;
+      }
       close(ov);
-      // 3) 나머지는 기기에 맞는 안내
+      // 4) 나머지는 기기에 맞는 안내
       if (isInApp) guideInApp();
       else if (isIOS) guideIOS();
       else if (isAndroid) guideAndroid();
@@ -210,29 +223,53 @@
     };
   }
 
-  function runInstallAnimation(sheet, go, status) {
+  function runProgress(sheet, go, status, o) {
     var ring = sheet.querySelector('.pwa-ring .fg');
     sheet.classList.add('pwa-installing');
-    go.textContent = '설치 중…';
-    status.textContent = '앱을 휴대폰에 설치하고 있어요';
-    var start = null, dur = 2600;
+    go.textContent = o.working || '설치 중…';
+    status.textContent = o.workingStatus || '앱을 휴대폰에 설치하고 있어요';
+    var start = null, dur = o.dur || 2600;
     function step(ts) {
       if (!start) start = ts;
       var t = Math.min(1, (ts - start) / dur);
       var eased = 1 - Math.pow(1 - t, 2.2);
       ring.style.strokeDashoffset = String(264 * (1 - eased));
-      if (t < 1) requestAnimationFrame(step);
-      else {
-        sheet.classList.remove('pwa-installing');
-        sheet.classList.add('pwa-done');
-        status.textContent = '홈 화면에서 송우찬수학학원 아이콘을 눌러 실행하세요';
-        go.disabled = false;
-        go.classList.add('ok');
-        go.textContent = '설치 완료 ✓';
-        hideButtons();
-      }
+      if (t < 1) { requestAnimationFrame(step); return; }
+      sheet.classList.remove('pwa-installing');
+      sheet.classList.add('pwa-done');
+      if (o.onDone) { o.onDone(); return; }
+      status.textContent = '홈 화면에서 송우찬수학학원 아이콘을 눌러 실행하세요';
+      go.disabled = false;
+      go.classList.add('ok');
+      go.textContent = '설치 완료 ✓';
+      hideButtons();
     }
     requestAnimationFrame(step);
+  }
+
+  // 아이폰: 설치 파일을 받은 뒤 설정 앱에서 마무리하는 단계
+  function showProfileSteps(ov) {
+    var sheet = ov.querySelector('.pwa-sheet');
+    sheet.style.animation = 'none';
+    sheet.innerHTML =
+      '<button class="pwa-x" type="button" aria-label="닫기">✕</button>' +
+      '<div class="pwa-app" style="margin-bottom:6px">' +
+        '<div class="pwa-iconwrap"><img src="' + ICON + '" alt=""><span class="pwa-check" style="display:flex">✓</span></div>' +
+        '<div class="pwa-name"><b>내려받기 완료</b><span>이제 설정에서 「설치」만 누르면 끝!</span></div>' +
+      '</div>' +
+      '<ol class="pwa-steps" style="margin-top:14px">' +
+        '<li>방금 뜬 창에서 <em>허용</em> → <em>닫기</em>를 누르세요</li>' +
+        '<li>아이폰 <span class="pwa-key" style="color:#6B6489">⚙️</span> <em>설정</em> 앱을 열고 맨 위의 <em>프로파일이 다운로드됨</em>을 누르세요</li>' +
+        '<li>오른쪽 위 <em>설치</em> → 암호 입력 → <em>설치</em>를 누르세요</li>' +
+        '<li>홈 화면에 생긴 <em>송우찬수학</em> 아이콘을 누르면 앱이 실행돼요 🎉</li>' +
+      '</ol>' +
+      '<p class="pwa-note">「서명되지 않음」이라고 보이는 건 학원에서 직접 배포하는 앱이라 그래요. 안심하고 설치하셔도 됩니다. 「프로파일이 다운로드됨」이 안 보이면 설정 → 일반 → VPN 및 기기 관리에서 찾을 수 있어요.</p>' +
+      '<button class="pwa-go ok" type="button">확인</button>' +
+      '<p style="text-align:center;margin:12px 0 0;font-size:12.5px"><a href="' + PROFILE_URL + '" style="color:#5B3FA6;font-weight:700">다시 내려받기</a>' +
+      ' <span style="color:#C9C4DA">|</span> <a href="#" class="pwa-alt" style="color:#6B6489">다른 방법으로 설치</a></p>';
+    sheet.querySelector('.pwa-x').onclick = function () { close(ov); };
+    sheet.querySelector('.pwa-go').onclick = function () { close(ov); };
+    sheet.querySelector('.pwa-alt').onclick = function (e) { e.preventDefault(); close(ov); guideIOS(); };
   }
 
   // ── 기기별 안내 ──

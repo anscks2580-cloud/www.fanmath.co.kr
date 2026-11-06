@@ -19,6 +19,7 @@
 <meta name="naver-site-verification" content="3745dc6aa859552829bab779414c1351fa739dfc">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "EducationalOrganization", "name": "송우찬수학학원", "url": "https://www.fanmath.co.kr/", "logo": "https://www.fanmath.co.kr/assets/og/og-image.jpg", "image": "https://www.fanmath.co.kr/assets/og/og-image.jpg", "description": "평촌·산본 고등 수학 전문학원. 내신·수능·수리논술 대비.", "department": [{"@type": "EducationalOrganization", "name": "송우찬수학학원 평촌관", "telephone": "031-386-8899", "address": {"@type": "PostalAddress", "streetAddress": "평촌대로 117 맵시프라자 4층", "addressLocality": "안양시 동안구", "addressRegion": "경기도", "addressCountry": "KR"}}, {"@type": "EducationalOrganization", "name": "송우찬수학학원 산본관", "telephone": "031-346-8899", "address": {"@type": "PostalAddress", "streetAddress": "산본로 390 5층", "addressLocality": "군포시", "addressRegion": "경기도", "addressCountry": "KR"}}]}</script>
 <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="mobile.css?v=1">
 <!-- 앱 설치(PWA) -->
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#4B3391">
@@ -27,7 +28,7 @@
 <meta name="apple-mobile-web-app-title" content="송우찬수학">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
-<script src="/pwa.js?v=2" defer></script>
+<script src="/pwa.js?v=3" defer></script>
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png">
 <link rel="apple-touch-startup-image" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/assets/splash/splash-1320x2868.png">
 <link rel="apple-touch-startup-image" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/assets/splash/splash-1206x2622.png">
@@ -493,7 +494,7 @@ html.pwa-splashing,html.pwa-splashing body{overflow:hidden!important;background:
     </a>
 
     <!-- 설명회 후기 · 후속 상담 신청 배너 (설명회 참석자용 · 2026-11-15 00:00 KST부터 자동 숨김) -->
-    <a href="seminar-followup.html" class="timed-banner" data-show-until="2026-11-15T00:00:00+09:00" style="
+    <a href="seminar-followup.html" class="timed-banner fb-banner" data-show-until="2026-11-15T00:00:00+09:00" style="
       display:flex; align-items:center; justify-content:space-between; gap:14px;
       width:100%; max-width:720px; margin:0 0 20px; padding:16px 20px;
       border-radius:16px; text-decoration:none; position:relative; overflow:hidden;
@@ -602,7 +603,7 @@ html.pwa-splashing,html.pwa-splashing body{overflow:hidden!important;background:
     </script>
 
     <!-- Apex관 메인 배너 -->
-    <a href="apex.html" style="
+    <a href="apex.html" class="apex-banner" style="
       display:flex; align-items:center; justify-content:space-between;
       width:100%; max-width:720px;
       margin: 0 0 36px;
@@ -713,9 +714,9 @@ html.pwa-splashing,html.pwa-splashing body{overflow:hidden!important;background:
       <div class="section-title" style="font-size:22px;margin-bottom:10px;">지금 바로 상담 예약하세요</div>
       <p style="font-size:13px;color:var(--muted);margin-bottom:6px;">궁금한 점은 전화 또는 카카오톡으로 편하게 문의해 주세요.</p>
       <p style="font-size:13px;color:var(--muted);margin-bottom:24px;">
-        평촌관 <a href="tel:031-386-8899" style="color:var(--muted);text-decoration:none;">031-386-8899</a>
+        <span class="nw">평촌관 <a href="tel:031-386-8899" style="color:var(--muted);text-decoration:none;">031-386-8899</a></span>
         &nbsp;|&nbsp;
-        산본관 <a href="tel:031-346-8899" style="color:var(--muted);text-decoration:none;">031-346-8899</a>
+        <span class="nw">산본관 <a href="tel:031-346-8899" style="color:var(--muted);text-decoration:none;">031-346-8899</a></span>
       </p>
       <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:12px;">
         <a href="consult.html" style="display:inline-flex;align-items:center;gap:8px;background:transparent;color:var(--purple, #5B3FA6);font-weight:700;font-size:14px;padding:11px 22px;border-radius:10px;text-decoration:none;white-space:nowrap;border:1.5px solid var(--gold);">
@@ -756,12 +757,12 @@ html.pwa-splashing,html.pwa-splashing body{overflow:hidden!important;background:
     <span style="color:#1E1838;"><b>송우찬수학학원</b></span>
   </div>
     <div class="footer-info">
-    <span style="color:var(--purple, #5B3FA6);font-weight:600;">평촌관</span> 경기도 안양시 동안구 평촌대로 117 맵시프라자 4층 &nbsp;|&nbsp; <a href="tel:031-386-8899" style="color:inherit;text-decoration:none;">031-386-8899</a><br>
-    <span style="color:var(--purple, #5B3FA6);font-weight:600;">산본관</span> 경기도 군포시 산본로 390 5층 &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:inherit;text-decoration:none;">031-346-8899</a><br>
-    <span style="font-size:11px;opacity:0.55;">(주) 판수학 &nbsp;|&nbsp; 대표 조현주 &nbsp;|&nbsp; 사업자등록번호 828-86-01755</span><br>
+    <span style="color:var(--purple, #5B3FA6);font-weight:600;">평촌관</span> 경기도 안양시 동안구 평촌대로 117 맵시프라자 4층 &nbsp;|&nbsp; <a href="tel:031-386-8899" style="color:inherit;text-decoration:none;"><span class="nw">031-386-8899</span></a><br>
+    <span style="color:var(--purple, #5B3FA6);font-weight:600;">산본관</span> 경기도 군포시 산본로 390 5층 &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:inherit;text-decoration:none;"><span class="nw">031-346-8899</span></a><br>
+    <span style="font-size:11px;opacity:0.55;">(주) 판수학 &nbsp;|&nbsp; 대표 조현주 &nbsp;|&nbsp; 사업자등록번호 <span class="nw">828-86-01755</span></span><br>
     <span style="font-size:11px;opacity:0.55;">평촌관 : 제 99-079호 &nbsp;|&nbsp; 산본관 : 제 1928-2호</span><br>
     <span style="font-size:11px;opacity:0.45;">© Copyright 2026 송우찬수학학원. All Rights Reserved.</span><br>
-    <span style="font-size:12px;opacity:0.7;"><a href="tel:031-386-8899" style="color:var(--purple, #5B3FA6);text-decoration:none;">평촌관 031-386-8899</a> &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:var(--purple, #5B3FA6);text-decoration:none;">산본관 031-346-8899</a></span>
+    <span style="font-size:12px;opacity:0.7;"><a href="tel:031-386-8899" style="color:var(--purple, #5B3FA6);text-decoration:none;"><span class="nw">평촌관 031-386-8899</span></a> &nbsp;|&nbsp; <a href="tel:031-346-8899" style="color:var(--purple, #5B3FA6);text-decoration:none;"><span class="nw">산본관 031-346-8899</span></a></span>
   </div>
 
   <a href="https://pf.kakao.com/_KxaxdlX" target="_blank" class="kakao-footer-link"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3C6.477 3 2 6.477 2 10.8c0 2.7 1.47 5.08 3.72 6.56l-.95 3.54a.3.3 0 0 0 .44.33l4.07-2.72A11.5 11.5 0 0 0 12 18.6c5.523 0 10-3.477 10-7.8S17.523 3 12 3Z"/></svg> 카카오톡 문의</a>

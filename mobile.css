@@ -1,0 +1,30 @@
+/* ── 모바일 글자 정리 (공개 페이지 공통) ── */
+/* 한글 단어 중간에서 줄이 바뀌지 않게, 너무 긴 영문·주소만 필요할 때 끊기 */
+body { word-break: keep-all; overflow-wrap: break-word; }
+/* 전화번호·사업자번호 등은 절대 중간에서 끊지 않기 */
+.nw, a[href^="tel:"] { white-space: nowrap; }
+
+/* 첫 화면 배너: 좁은 화면에서는 위아래로 쌓기 */
+@media (max-width: 560px) {
+  .fb-banner { flex-direction: column; align-items: stretch !important; text-align: left; }
+  .fb-banner > div:last-child { text-align: center; }
+  .apex-banner-inner { flex-direction: column; align-items: stretch !important; gap: 14px !important; padding: 20px 18px !important; text-align: left; }
+  .apex-banner-inner > div:first-child > div > div:first-child { flex-wrap: wrap; }
+  .apex-banner-inner .apex-enter-btn { justify-content: center; }
+  .apex-banner-inner span { white-space: nowrap; }
+}
+
+/* 컴퓨터용으로 넣은 줄바꿈(class="dbr")은 휴대폰에서 없애고 자연스럽게 흐르게 */
+@media (max-width: 560px) {
+  br.dbr { display: none; }
+}
+
+/* 상담 신청서: 자가진단 항목 이름·제목이 쪼개지지 않게 */
+.self-check span:first-child { white-space: nowrap; flex: 0 0 auto !important; min-width: 72px; }
+.f-label { white-space: nowrap; }
+.f-label .f-sub { white-space: normal; }
+
+/* 동영상강의: 검색창이 휴대폰에서 너무 좁지 않게 */
+@media (max-width: 760px) {
+  .vid-search-box { width: 100% !important; }
+}
