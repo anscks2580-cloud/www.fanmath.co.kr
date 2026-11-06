@@ -261,11 +261,12 @@
       '</div>' +
       '<ol class="pwa-steps" style="margin-top:14px">' +
         '<li>방금 뜬 창에서 <em>허용</em> → <em>닫기</em>를 누르세요</li>' +
-        '<li>아이폰 <span class="pwa-key" style="color:#6B6489">⚙️</span> <em>설정</em> 앱을 열고 맨 위의 <em>프로파일이 다운로드됨</em>을 누르세요</li>' +
+        '<li>아이폰 <span class="pwa-key" style="color:#6B6489">⚙️</span> <em>설정</em> 앱을 열고 맨 위 <em>iPhone 설정 제안</em>의 <em>더 보기</em>를 누르세요</li>' +
+        '<li><em>프로파일이 다운로드됨</em> 아래 <em>프로파일 보기</em>를 누르세요</li>' +
         '<li>오른쪽 위 <em>설치</em> → 암호 입력 → <em>설치</em>를 누르세요</li>' +
         '<li>홈 화면에 생긴 <em>송우찬수학</em> 아이콘을 누르면 앱이 실행돼요 🎉</li>' +
       '</ol>' +
-      '<p class="pwa-note">「서명되지 않음」이라고 보이는 건 학원에서 직접 배포하는 앱이라 그래요. 안심하고 설치하셔도 됩니다. 「프로파일이 다운로드됨」이 안 보이면 설정 → 일반 → VPN 및 기기 관리에서 찾을 수 있어요.</p>' +
+      '<p class="pwa-note">「서명되지 않음」이라고 보이는 건 학원에서 직접 배포하는 앱이라 그래요. 안심하고 설치하셔도 됩니다. 설정 맨 위에 안 보이면 설정 → 일반 → VPN 및 기기 관리에서 찾을 수 있어요.</p>' +
       '<button class="pwa-go ok" type="button">확인</button>' +
       '<p style="text-align:center;margin:12px 0 0;font-size:12.5px"><a href="' + PROFILE_URL + '" style="color:#5B3FA6;font-weight:700">다시 내려받기</a>' +
       ' <span style="color:#C9C4DA">|</span> <a href="#" class="pwa-alt" style="color:#6B6489">다른 방법으로 설치</a></p>';
