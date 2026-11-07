@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>출석 체크 | 송우찬수학학원</title>
+<title>등원·하원 체크 | 송우찬수학학원</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="mobile.css?v=1">
@@ -37,13 +37,13 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
 <meta name="apple-mobile-web-app-title" content="송우찬수학">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
-<script src="/pwa.js?v=7" defer></script>
+<script src="/pwa.js?v=8" defer></script>
 </head>
 <body>
 <div class="ck-wrap">
   <div class="ck-card" id="ck">
     <img class="ck-logo" src="/assets/icons/apple-touch-icon.png" alt="">
-    <div class="ck-title">출석 체크</div>
+    <div class="ck-title">등원·하원 체크</div>
     <div class="ck-who" id="ckWho">확인 중…</div>
   </div>
   <a class="ck-link" href="index.html" style="text-align:center;">← 홈으로</a>
@@ -51,14 +51,14 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
 
 <script type="module">
 // ══════════════════════════════════════
-// 학생 출석 체크 (출결코드 방식)
-//  · 관리자 페이지 「학생 출결」에서 그날 발급한 4자리 출결코드를 입력하면 출석 기록(attendance)이 생김
-//  · 기록이 생기면 서버(학부모알림 함수)가 학부모 휴대폰으로 「등원 알림」을 보냄
-//  · 하루에 한 번만 (문서 id = 학생uid_날짜)
+// 학생 등원·하원 체크 (코드 방식)
+//  · 관리자 페이지 「학생 출결」에서 그날 발급한 4자리 등원 코드를 넣으면 출석 기록(attendance) 생성 → 학부모 「등원 알림」
+//  · 등원 뒤에는 하원 코드(별도 발급)를 넣으면 하원 시간 기록 → 학부모 「하원 알림」
+//  · 하루에 한 번씩만 (문서 id = 학생uid_날짜). 휴대폰 없는 학생은 관리자 페이지에서 수동 처리
 // ══════════════════════════════════════
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
@@ -80,28 +80,65 @@ function todayKST() {
 function nowKST() {
   return new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Seoul' });
 }
-const head = () => `<img class="ck-logo" src="/assets/icons/apple-touch-icon.png" alt=""><div class="ck-title">출석 체크</div>
+const head = (title) => `<img class="ck-logo" src="/assets/icons/apple-touch-icon.png" alt=""><div class="ck-title">${title || '등원·하원 체크'}</div>
   <div class="ck-who">${esc(stu.branch || '')} · ${esc(stu.grade || '')} <b>${esc(stu.name || '')}</b> 학생</div>`;
 
-function showDone(time, already) {
-  $ck.innerHTML = head() + `<div class="ck-done"><div class="big">✓</div>
-    <div class="t">${already ? '오늘 이미 출석했어요' : '출석 완료!'}</div>
-    <div class="s">${time ? esc(time) + ' 출석' : ''}${already ? '' : '<br>학부모님께 등원 알림이 전송돼요.'}</div></div>`;
-}
-function showForm() {
-  $ck.innerHTML = head() + `
-    <div class="ck-code"><input id="ckCode" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="0000"></div>
-    <div class="ck-hint">선생님이 알려주신 오늘의 출결코드 4자리를 입력하세요.</div>
-    <button class="ck-btn" id="ckBtn">출석하기</button>
+let rec = null; // 오늘 출석 기록
+const timeline = () => `<div style="display:flex;gap:10px;margin:4px 0 18px;">
+    <div style="flex:1;background:#F3EFFC;border-radius:14px;padding:12px 8px;"><div style="font-size:12px;color:var(--muted);font-weight:700;">등원</div><div style="font-size:19px;font-weight:800;color:var(--purple);">${rec && rec.time ? esc(rec.time) : '-'}</div></div>
+    <div style="flex:1;background:#E6F6EF;border-radius:14px;padding:12px 8px;"><div style="font-size:12px;color:var(--muted);font-weight:700;">하원</div><div style="font-size:19px;font-weight:800;color:#1E9A6C;">${rec && rec.outTime ? esc(rec.outTime) : '-'}</div></div>
+  </div>`;
+function codeForm(label, hint, btnText, color) {
+  return `<div class="ck-code"><input id="ckCode" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" placeholder="0000"></div>
+    <div class="ck-hint">${hint}</div>
+    <button class="ck-btn" id="ckBtn" style="background:${color};">${btnText}</button>
     <div class="ck-err" id="ckErr"></div>`;
+}
+function wireForm(fn) {
   const inp = document.getElementById('ckCode');
   inp.focus();
   inp.addEventListener('input', () => { inp.value = inp.value.replace(/\D/g, '').slice(0, 4); });
-  inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') submit(); });
-  document.getElementById('ckBtn').onclick = submit;
+  inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') fn(); });
+  document.getElementById('ckBtn').onclick = fn;
+}
+// 화면 상태: 등원 전 → 등원 코드 / 등원 후 → 하원 코드 / 하원 후 → 완료
+function showState(justDid) {
+  if (!rec) {
+    $ck.innerHTML = head('등원 체크') + codeForm('', '선생님이 알려주신 오늘의 <b>등원 코드</b> 4자리를 입력하세요.', '등원하기', 'var(--purple)');
+    wireForm(submitIn);
+  } else if (!rec.outTime) {
+    $ck.innerHTML = head(justDid === 'in' ? '등원 완료!' : '하원 체크') +
+      (justDid === 'in' ? `<div class="ck-done" style="padding:0 0 6px;"><div class="big" style="width:64px;height:64px;font-size:34px;">✓</div><div class="s" style="margin:0 0 10px;">학부모님께 등원 알림이 전송돼요.</div></div>` : '') +
+      timeline() + codeForm('', '수업이 끝나면 선생님께 <b>하원 코드</b>를 받아 입력하세요.', '하원하기', '#1E9A6C');
+    wireForm(submitOut);
+  } else {
+    $ck.innerHTML = head(justDid === 'out' ? '하원 완료!' : '오늘 출결 완료') +
+      `<div class="ck-done" style="padding:0 0 6px;"><div class="big">✓</div><div class="s" style="margin-bottom:14px;">${justDid === 'out' ? '학부모님께 하원 알림이 전송돼요.<br>조심히 들어가세요!' : '오늘 등원·하원 기록이 모두 끝났어요.'}</div></div>` + timeline();
+  }
 }
 
-async function submit() {
+async function submitOut() {
+  const btn = document.getElementById('ckBtn'), err = document.getElementById('ckErr');
+  const code = document.getElementById('ckCode').value.trim();
+  err.textContent = '';
+  if (code.length !== 4) { err.textContent = '4자리 숫자를 입력해 주세요.'; return; }
+  btn.disabled = true; btn.textContent = '확인 중…';
+  try {
+    const today = todayKST();
+    const cs = await getDoc(doc(db, 'settings', 'dailyOutCode'));
+    if (!cs.exists() || cs.data().date !== today) throw new Error('오늘 하원 코드가 아직 발급되지 않았어요. 선생님께 말씀해 주세요.');
+    if (String(cs.data().code) !== code) throw new Error('하원 코드가 맞지 않아요. 다시 확인해 주세요.');
+    const outTime = nowKST();
+    await updateDoc(doc(db, 'attendance', `${me.uid}_${today}`), { outTime, outAt: serverTimestamp(), outMethod: 'code' });
+    rec.outTime = outTime;
+    showState('out');
+  } catch (e) {
+    err.textContent = e.message && !e.code ? e.message : '하원 처리하지 못했어요. 잠시 후 다시 시도해 주세요.';
+    btn.disabled = false; btn.textContent = '하원하기';
+  }
+}
+
+async function submitIn() {
   const btn = document.getElementById('ckBtn'), err = document.getElementById('ckErr');
   const code = document.getElementById('ckCode').value.trim();
   err.textContent = '';
@@ -110,21 +147,22 @@ async function submit() {
   try {
     const today = todayKST();
     const cs = await getDoc(doc(db, 'settings', 'dailyCode'));
-    if (!cs.exists() || cs.data().date !== today) throw new Error('오늘 출결코드가 아직 발급되지 않았어요. 선생님께 말씀해 주세요.');
-    if (String(cs.data().code) !== code) throw new Error('출결코드가 맞지 않아요. 다시 확인해 주세요.');
+    if (!cs.exists() || cs.data().date !== today) throw new Error('오늘 등원 코드가 아직 발급되지 않았어요. 선생님께 말씀해 주세요.');
+    if (String(cs.data().code) !== code) throw new Error('등원 코드가 맞지 않아요. 다시 확인해 주세요.');
     const time = nowKST();
     await setDoc(doc(db, 'attendance', `${me.uid}_${today}`), {
       uid: me.uid, name: stu.name || '', branch: stu.branch || '', grade: stu.grade || '', classGroup: stu.classGroup || '',
       date: today, time, method: 'code', createdAt: serverTimestamp(),
     });
-    showDone(time, false);
+    rec = { time };
+    showState('in');
   } catch (e) {
     // 이미 오늘 기록이 있으면 덮어쓰기가 막혀 권한 오류가 남 → 이미 출석으로 안내
     if (e && e.code === 'permission-denied') {
-      try { const a = await getDoc(doc(db, 'attendance', `${me.uid}_${todayKST()}`)); if (a.exists()) { showDone(a.data().time, true); return; } } catch (x) {}
+      try { const a = await getDoc(doc(db, 'attendance', `${me.uid}_${todayKST()}`)); if (a.exists()) { rec = a.data(); showState(); return; } } catch (x) {}
     }
-    err.textContent = e.message && !e.code ? e.message : '출석하지 못했어요. 잠시 후 다시 시도해 주세요.';
-    btn.disabled = false; btn.textContent = '출석하기';
+    err.textContent = e.message && !e.code ? e.message : '등원 처리하지 못했어요. 잠시 후 다시 시도해 주세요.';
+    btn.disabled = false; btn.textContent = '등원하기';
   }
 }
 
@@ -133,10 +171,11 @@ onAuthStateChanged(auth, async (user) => {
   me = user;
   try {
     const sd = await getDoc(doc(db, 'students', user.uid));
-    if (!sd.exists()) { $ck.innerHTML = `<div class="ck-title">출석 체크</div><div class="ck-who" style="margin-top:10px;">학생 계정으로 로그인해야 출석할 수 있어요.</div>`; return; }
+    if (!sd.exists()) { $ck.innerHTML = `<div class="ck-title">출석 체크</div><div class="ck-who" style="margin-top:10px;">학생 계정으로 로그인해야 등원·하원 체크를 할 수 있어요.</div>`; return; }
     stu = sd.data();
     const a = await getDoc(doc(db, 'attendance', `${user.uid}_${todayKST()}`));
-    if (a.exists()) showDone(a.data().time, true); else showForm();
+    rec = a.exists() ? a.data() : null;
+    showState();
   } catch (e) {
     $ck.innerHTML = `<div class="ck-title">출석 체크</div><div class="ck-err">불러오지 못했어요: ${esc(e.message)}</div>`;
   }

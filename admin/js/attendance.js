@@ -24,6 +24,7 @@ window.initAttendanceTab = function() {
   attStatus = {};
   renderAttendance();
   loadDailyCode();
+  if (typeof initCheckInOut === 'function') initCheckInOut(); // 등원·하원 · 앱 설치 현황 (checkinout.js)
 };
 
 function todayKSTStr() {

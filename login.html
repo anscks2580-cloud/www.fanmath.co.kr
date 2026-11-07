@@ -117,7 +117,7 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
 <meta name="apple-mobile-web-app-title" content="송우찬수학">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
-<script src="/pwa.js?v=7" defer></script>
+<script src="/pwa.js?v=8" defer></script>
 <!-- 앱 시작 로딩 화면 (앱으로 실행했을 때만, 처음 한 번) -->
 <style>
 #pwaSplash{position:fixed;inset:0;z-index:2147483000;background:#4B3391;overflow:hidden;transition:opacity .5s ease,transform .5s ease;-webkit-user-select:none;user-select:none}
@@ -213,7 +213,7 @@ html.pwa-splashing,html.pwa-splashing body{overflow:hidden!important;background:
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, reauthenticateWithCredential, EmailAuthProvider, updatePassword, setPersistence, browserSessionPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
 const firebaseConfig = {
@@ -241,6 +241,22 @@ try {
 // ── 앱(홈 화면 아이콘)으로 실행 중인지 ──
 const IN_APP = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
 
+
+// 앱(홈 화면 아이콘)으로 로그인하면 「앱 설치」로 기록 → 관리자 페이지 학생 출결 탭에서 설치 현황 확인
+async function markApp(uid, role, studentId) {
+  if (!IN_APP) return;
+  const job = (async () => {
+    const ua = navigator.userAgent || '';
+    const platform = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ? '아이폰' : /Android/.test(ua) ? '안드로이드' : '컴퓨터';
+    const ref = doc(db, 'appStatus', uid);
+    const old = await getDoc(ref).catch(() => null);
+    const data = { role, platform, installed: true, lastSeen: serverTimestamp() };
+    if (studentId) data.studentId = studentId;
+    if (!old || !old.exists()) data.firstSeen = serverTimestamp();
+    await setDoc(ref, data, { merge: true });
+  })().catch(() => {});
+  await Promise.race([job, new Promise((r) => setTimeout(r, 2000))]); // 기록이 늦어도 화면 이동은 막지 않음
+}
 // 로그인한 계정 종류에 따라 이동 — 관리자 → admin.html, 조교 → ta.html, 선생님 → teacher.html, 학생 → index.html, 학부모 → parent.html
 // 이동했으면 true
 async function routeUser(user) {
@@ -248,23 +264,27 @@ async function routeUser(user) {
   const adminDoc = await getDoc(doc(db, 'admins', uid));
   if (adminDoc.exists()) {
     await setPersistence(auth, browserLocalPersistence);
+    await markApp(uid, 'admin');
     window.location.replace('admin.html');
     return true;
   }
   const teacherDoc = await getDoc(doc(db, 'teachers', uid));
   if (teacherDoc.exists()) {
     await setPersistence(auth, browserLocalPersistence);
+    await markApp(uid, teacherDoc.data().role === 'ta' ? 'ta' : 'teacher');
     window.location.replace(teacherDoc.data().role === 'ta' ? 'ta.html' : 'teacher.html');
     return true;
   }
   const studentDoc = await getDoc(doc(db, 'students', uid));
   if (studentDoc.exists()) {
+    await markApp(uid, 'student', uid);
     window.location.replace('index.html');
     return true;
   }
   const parentDoc = await getDoc(doc(db, 'parents', uid));
   if (parentDoc.exists()) {
     await setPersistence(auth, browserLocalPersistence); // 학부모는 로그인 유지
+    await markApp(uid, 'parent', parentDoc.data().studentId || '');
     const next = new URLSearchParams(location.search).get('next');
     window.location.replace(next && next.startsWith('report.html') ? next : 'parent.html');
     return true;

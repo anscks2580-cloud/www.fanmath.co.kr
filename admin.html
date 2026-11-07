@@ -24,7 +24,7 @@
 <meta name="apple-mobile-web-app-title" content="송우찬수학">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
-<script src="/pwa.js?v=7" defer></script>
+<script src="/pwa.js?v=8" defer></script>
 </head>
 <body>
 
@@ -1228,7 +1228,16 @@
     <div class="card">
       <h3>📢 학부모 앱 공지 작성</h3>
       <div style="font-size:13px;color:var(--muted);margin-bottom:20px;">
-        여기서 작성한 공지는 학부모 앱에 바로 노출됩니다. 대상을 전체 / 특정 반 / 특정 학생 중에서 고를 수 있어요.
+        여기서 작성한 공지는 학부모 앱 「공지」 탭에 바로 올라가고, 앱 알림을 켠 학부모님 휴대폰으로 푸시 알림이 갑니다. 대상은 전체 / 관 전체 / 특정 반 / 특정 학생 중에서 고를 수 있어요.
+      </div>
+
+      <div class="form-group" style="margin-bottom:14px;">
+        <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">분류 (학부모 앱 알림 제목 앞에 표시)</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;" id="notice-cat-wrap">
+          <button type="button" class="notice-target-btn active" data-cat="일반" onclick="setNoticeCategory('일반')">📢 일반</button>
+          <button type="button" class="notice-target-btn" data-cat="학원 일정" onclick="setNoticeCategory('학원 일정')">📅 학원 일정</button>
+          <button type="button" class="notice-target-btn" data-cat="반 배정" onclick="setNoticeCategory('반 배정')">🏫 반 배정</button>
+        </div>
       </div>
 
       <div class="form-group" style="margin-bottom:14px;">
@@ -1247,9 +1256,11 @@
         <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:6px;">보낼 대상</label>
         <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
           <button type="button" class="notice-target-btn active" id="notice-all-btn" onclick="toggleNoticeAll()">👨‍👩‍👧 전체 학부모</button>
+          <button type="button" class="notice-target-btn" id="notice-br-평촌관" onclick="toggleNoticeBranch('평촌관')" style="color:#5B3FA6;">평촌관 전체</button>
+          <button type="button" class="notice-target-btn" id="notice-br-산본관" onclick="toggleNoticeBranch('산본관')" style="color:#C99A0A;">산본관 전체</button>
         </div>
         <div style="font-size:12px;color:var(--muted);">
-          전체가 아니라 특정 반이나 학생만 골라 보내려면, 위 "전체 학부모"를 다시 눌러서 끄고 아래에서 반/학생을 여러 개 골라 선택하면 됩니다.
+          관 전체에 보내려면 「평촌관 전체」·「산본관 전체」를, 특정 반이나 학생만 보내려면 "전체 학부모"를 눌러 끈 뒤 아래에서 반/학생을 고르세요.
         </div>
       </div>
 
@@ -2101,16 +2112,49 @@
   <!-- 학생 출결 -->
   <div class="tab-panel" id="tab-attendance">
     <div class="card" style="border-color:rgba(245,197,24,0.4);">
-      <h3>📶 오늘의 출결코드 (학부모 앱 자가 출석체크용)</h3>
+      <h3>📶 오늘의 등원 · 하원 코드</h3>
       <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;">
-        학생/학부모가 학부모 앱에서 이 코드를 입력하면 자동으로 출석체크되고, 등록된 학부모에게 등원 알림이 발송됩니다.
-        매일 등원 전 코드를 새로 발급해주세요.
+        학생이 앱(홈페이지 첫 화면 「등원 · 하원 체크」)에서 코드를 입력하면 기록되고, 학부모님께 등원·하원 알림이 갑니다.
+        등원 코드는 수업 전에, 하원 코드는 수업이 끝날 때 발급해 주세요. (평촌관·산본관 공통 코드)
       </p>
-      <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-        <div id="dailyCodeDisplay" style="font-size:28px;font-weight:800;letter-spacing:6px;color:var(--purple, #5B3FA6);min-width:140px;">------</div>
-        <button class="btn btn-sm btn-primary" onclick="generateDailyCode()">🔄 오늘의 코드 새로 발급</button>
-        <span id="dailyCodeStatus" style="font-size:12px;color:var(--muted);"></span>
+      <div style="display:flex;gap:28px;flex-wrap:wrap;">
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px;">등원 코드</div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div id="dailyCodeDisplay" style="font-size:28px;font-weight:800;letter-spacing:6px;color:var(--purple, #5B3FA6);min-width:120px;">------</div>
+            <button class="btn btn-sm btn-primary" onclick="generateDailyCode()">🔄 등원 코드 발급</button>
+          </div>
+          <div id="dailyCodeStatus" style="font-size:12px;color:var(--muted);margin-top:4px;"></div>
+        </div>
+        <div>
+          <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:4px;">하원 코드</div>
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+            <div id="dailyOutCodeDisplay" style="font-size:28px;font-weight:800;letter-spacing:6px;color:#2E9E5B;min-width:120px;">------</div>
+            <button class="btn btn-sm" onclick="generateOutCode()" style="background:#2E9E5B;color:#fff;border:none;">🔄 하원 코드 발급</button>
+          </div>
+          <div id="dailyOutCodeStatus" style="font-size:12px;color:var(--muted);margin-top:4px;"></div>
+        </div>
       </div>
+    </div>
+    <div class="card">
+      <h3>📲 오늘 등원 · 하원 · 앱 설치 현황</h3>
+      <p style="font-size:12px;color:var(--muted);margin:-4px 0 12px;line-height:1.6;">
+        휴대폰이 없는 학생은 <b>[등원]</b>·<b>[하원]</b> 버튼으로 수동 처리하세요 (학부모 알림도 똑같이 갑니다). 학생이 앱으로 체크하면 이 표에 바로 반영돼요.<br>
+        앱 설치는 학생·학부모가 <b>앱(홈 화면 아이콘)으로 로그인했을 때</b> 기록됩니다. 🔔 = 학부모 앱 알림 켜짐
+      </p>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:6px;">
+        <div id="cioDateLabel" style="font-size:15px;font-weight:700;color:var(--purple, #5B3FA6);"></div>
+        <select id="cioBranch" onchange="renderCheckInOut()"
+          style="padding:7px 14px;background:#FFFFFF;border:1px solid rgba(245,197,24,0.4);border-radius:8px;color:#1E1838;font-size:13px;font-family:inherit;outline:none;cursor:pointer;color-scheme:light;">
+          <option value="">전체</option>
+          <option value="평촌관">평촌관</option>
+          <option value="산본관">산본관</option>
+        </select>
+        <label style="font-size:13px;display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="cioOnlyToday" checked onchange="renderCheckInOut()"> 오늘 수업 학생만</label>
+        <button class="btn btn-sm btn-secondary" onclick="cioRefreshApp()">↻ 앱 설치 현황 새로고침</button>
+      </div>
+      <div id="cioSummary" style="font-size:13px;margin:6px 0 4px;"></div>
+      <div id="cioList"><div style="color:var(--muted);font-size:13px;">불러오는 중…</div></div>
     </div>
     <div class="card">
       <h3>✅ 출결 체크</h3>
@@ -2717,7 +2761,8 @@
 <script defer src="admin/js/homeworklog.js?v=1792818255"></script>
 <script defer src="admin/js/satclinic.js?v=1792811435"></script>
 <script defer src="admin/js/dailyreport.js?v=1792760000"></script>
-<script defer src="admin/js/attendance.js?v=1792760000"></script>
+<script defer src="admin/js/attendance.js?v=1794200000"></script>
+<script defer src="admin/js/checkinout.js?v=1794200000"></script>
 <script defer src="admin/js/weeklylog.js?v=1794000000"></script>
 <script defer src="admin/js/drafts.js?v=1792760000"></script>
 <script defer src="admin/js/promotion.js"></script>
@@ -2725,7 +2770,7 @@
 <script defer src="admin/js/records.js?v=1792752000"></script>
 <script defer src="admin/js/adminmgmt.js"></script>
 <script defer src="admin/js/apex-promo.js"></script>
-<script defer src="admin/js/notice.js"></script>
+<script defer src="admin/js/notice.js?v=1794200000"></script>
 <script defer src="admin/js/consult.js?v=1793351000"></script>
 <script defer src="admin/js/homepopup.js"></script>
 <script defer src="admin/js/consult-qr.js"></script>

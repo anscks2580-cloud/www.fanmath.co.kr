@@ -8,6 +8,8 @@ let noticeAllSelected = true;
 let noticeSelectedClassGroups = new Set();
 let noticeSelectedStudentIds = new Set();
 let noticeTabInited = false;
+let noticeBranches = new Set();   // 관 전체 대상 (평촌관 / 산본관)
+let noticeCategory = '일반';       // 일반 / 학원 일정 / 반 배정
 
 window.initNoticeTab = async function() {
   if (!noticeTabInited) {
@@ -21,11 +23,27 @@ window.initNoticeTab = async function() {
 };
 
 // 전체 학부모 on/off. 켜면 반/학생 선택 영역 숨김, 끄면 반/학생 선택 가능.
+function syncNoticeTargetUI() {
+  document.getElementById('notice-all-btn').classList.toggle('active', noticeAllSelected);
+  ['평촌관', '산본관'].forEach((b) => { const el = document.getElementById('notice-br-' + b); if (el) el.classList.toggle('active', noticeBranches.has(b)); });
+  const pick = !noticeAllSelected && !noticeBranches.size; // 반/학생 직접 고르기
+  document.getElementById('notice-class-wrap').style.display = pick ? 'block' : 'none';
+  document.getElementById('notice-student-wrap').style.display = pick ? 'block' : 'none';
+}
 window.toggleNoticeAll = function() {
   noticeAllSelected = !noticeAllSelected;
-  document.getElementById('notice-all-btn').classList.toggle('active', noticeAllSelected);
-  document.getElementById('notice-class-wrap').style.display = noticeAllSelected ? 'none' : 'block';
-  document.getElementById('notice-student-wrap').style.display = noticeAllSelected ? 'none' : 'block';
+  if (noticeAllSelected) noticeBranches.clear();
+  syncNoticeTargetUI();
+};
+// 관 전체 (여러 관 동시 선택 가능)
+window.toggleNoticeBranch = function(b) {
+  if (noticeBranches.has(b)) noticeBranches.delete(b); else noticeBranches.add(b);
+  if (noticeBranches.size) noticeAllSelected = false;
+  syncNoticeTargetUI();
+};
+window.setNoticeCategory = function(c) {
+  noticeCategory = c;
+  document.querySelectorAll('#notice-cat-wrap [data-cat]').forEach((el) => el.classList.toggle('active', el.dataset.cat === c));
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -94,7 +112,7 @@ window.showNoticePreview = function() {
   const body = document.getElementById('notice-body').value.trim();
 
   if (!title || !body) { showMsg('notice-msg','제목과 내용을 입력해주세요.','error'); return; }
-  if (!noticeAllSelected && !noticeSelectedClassGroups.size && !noticeSelectedStudentIds.size) {
+  if (!noticeAllSelected && !noticeBranches.size && !noticeSelectedClassGroups.size && !noticeSelectedStudentIds.size) {
     showMsg('notice-msg','전체 학부모를 선택하거나, 반/학생을 한 개 이상 선택해주세요.','error');
     return;
   }
@@ -104,6 +122,8 @@ window.showNoticePreview = function() {
   let targetSummary = '';
   if (noticeAllSelected) {
     targetSummary = '👨‍👩‍👧 전체 학부모에게 발송됩니다.';
+  } else if (noticeBranches.size) {
+    targetSummary = `🏫 ${[...noticeBranches].join(' · ')} 전체 학부모에게 발송됩니다.`;
   } else {
     const parts = [];
     if (noticeSelectedClassGroups.size) parts.push(`반: ${[...noticeSelectedClassGroups].join(', ')}`);
@@ -114,7 +134,7 @@ window.showNoticePreview = function() {
     targetSummary = parts.join(' · ') + ' 학부모에게 발송됩니다.';
   }
   document.getElementById('notice-preview-target').textContent = targetSummary;
-  document.getElementById('notice-preview-title').textContent = title;
+  document.getElementById('notice-preview-title').textContent = (noticeCategory !== '일반' ? `[${noticeCategory}] ` : '') + title;
   document.getElementById('notice-preview-body').textContent = body;
 
   const imgInput = document.getElementById('notice-images');
@@ -136,10 +156,13 @@ window.submitNotice = async function() {
   const body = document.getElementById('notice-body').value.trim();
   const btn = document.getElementById('notice-confirm-btn');
 
-  const payload = { title, body, createdAt: Timestamp.now() };
+  const payload = { title, body, category: noticeCategory, createdAt: Timestamp.now() };
 
   if (noticeAllSelected) {
     payload.target = 'all';
+  } else if (noticeBranches.size) {
+    payload.target = 'branch';
+    payload.branches = [...noticeBranches];
   } else {
     payload.target = 'custom';
     if (noticeSelectedClassGroups.size) payload.classGroups = [...noticeSelectedClassGroups];
@@ -175,7 +198,8 @@ window.submitNotice = async function() {
     renderNoticeStudentList();
     renderNoticeClassOptions();
     closeNoticePreview();
-    showMsg('notice-msg','공지가 등록되었습니다. 학부모 앱에 바로 노출됩니다.','success');
+    noticeBranches.clear(); noticeAllSelected = true; syncNoticeTargetUI(); setNoticeCategory('일반');
+    showMsg('notice-msg','공지가 등록되었습니다. 학부모 앱 공지 탭에 올라가고, 알림을 켠 학부모님께 푸시 알림이 갑니다.','success');
     loadNotices();
   } catch (e) {
     console.error('공지 등록 오류:', e);
@@ -200,6 +224,8 @@ async function loadNotices() {
       let targetLabel;
       if (n.target === 'all') {
         targetLabel = '전체 학부모';
+      } else if (n.target === 'branch') {
+        targetLabel = `${(n.branches || []).join(' · ')} 전체`;
       } else {
         const parts = [];
         if (n.classGroups?.length) parts.push(`반 ${n.classGroups.length}개`);
@@ -209,7 +235,7 @@ async function loadNotices() {
       return `
         <div class="notice-item">
           <span class="notice-item-target">${targetLabel}</span>
-          <div style="font-weight:700;margin-bottom:4px;">${n.title}</div>
+          <div style="font-weight:700;margin-bottom:4px;">${n.category && n.category !== '일반' ? `<span style="font-size:11px;background:#F3EFFC;color:#5B3FA6;padding:1px 8px;border-radius:999px;margin-right:6px;">${n.category}</span>` : ''}${n.title}</div>
           <div style="font-size:13px;color:var(--off-white);white-space:pre-wrap;margin-bottom:8px;">${n.body}</div>
           ${(n.imageUrls && n.imageUrls.length) ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">${n.imageUrls.map(u => `<img src="${u}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--border-soft);">`).join('')}</div>` : ''}
           <div style="display:flex;justify-content:space-between;align-items:center;">

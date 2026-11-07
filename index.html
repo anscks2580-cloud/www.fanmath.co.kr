@@ -28,7 +28,7 @@
 <meta name="apple-mobile-web-app-title" content="송우찬수학">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
-<script src="/pwa.js?v=7" defer></script>
+<script src="/pwa.js?v=8" defer></script>
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png">
 <link rel="apple-touch-startup-image" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/assets/splash/splash-1320x2868.png">
 <link rel="apple-touch-startup-image" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/assets/splash/splash-1206x2622.png">
@@ -831,7 +831,7 @@ onAuthStateChanged(auth, async (user) => {
       if (!document.getElementById('ckFab')) {
         const fab = document.createElement('a');
         fab.id = 'ckFab'; fab.href = 'checkin.html';
-        fab.innerHTML = '✅ 출석 체크';
+        fab.innerHTML = '✅ 등원 · 하원 체크';
         fab.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 18px);z-index:150;background:#5B3FA6;color:#fff;font-weight:800;font-size:15px;padding:14px 26px;border-radius:999px;text-decoration:none;box-shadow:0 10px 28px rgba(75,51,145,.4);white-space:nowrap;';
         document.body.appendChild(fab);
       }

@@ -284,15 +284,29 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // attendance: 학생 본인 기록만 생성 가능(대리 출석 방지 위해 uid 일치 검증),
-    // 수정/삭제는 불가(한번 기록되면 고정), 관리자/선생님은 전체 조회 가능,
-    // 학생은 본인 기록만 조회 가능.
+    // attendance: 등원·하원 기록 (문서 id = 학생uid_날짜)
+    //  · 학생 본인: 등원 기록 생성(uid 일치), 등원 뒤 하원 칸(outTime·outAt·outMethod)만 한 번 추가
+    //  · 학부모: 자기 자녀 기록만 조회 (학부모 앱 「오늘 등원·하원」·출결 탭)
+    //  · 관리자: 휴대폰 없는 학생 수동 등원·하원, 수정·삭제
+    //  · 선생님: 조회
     match /attendance/{docId} {
       allow create: if isSignedIn() &&
-        request.resource.data.uid == request.auth.uid;
+        (request.resource.data.uid == request.auth.uid || isAdmin());
       allow read: if isSignedIn() &&
-        (resource == null || resource.data.uid == request.auth.uid || isTeacher() || isAdmin());
-      allow update, delete: if isAdmin();
+        (resource == null || resource.data.uid == request.auth.uid || isParentOf(resource.data.uid) || isTeacher() || isAdmin());
+      allow update: if isAdmin() ||
+        (isSignedIn() && resource.data.uid == request.auth.uid
+          && resource.data.get('outTime', null) == null
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['outTime', 'outAt', 'outMethod']));
+      allow delete: if isAdmin();
+    }
+
+    // appStatus: 앱(홈 화면 아이콘) 설치·알림 현황 — 본인이 앱으로 로그인할 때 기록, 관리자·선생님 조회
+    match /appStatus/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || isTeacher() || isAdmin());
+      allow create, update: if isSignedIn() && request.auth.uid == uid &&
+        request.resource.data.keys().hasOnly(['role', 'studentId', 'name', 'platform', 'installed', 'pushOn', 'firstSeen', 'lastSeen']);
+      allow delete: if isAdmin();
     }
 
     // ── timetables: 선생님 시간표 (클리닉실 자동계산용). 조교/선생님/관리자는 읽기만, 등록·수정은 관리자만 ──

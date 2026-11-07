@@ -17,9 +17,24 @@
   .head h1 { font-size:20px; font-weight:800; margin-top:2px; }
   .head .sub { font-size:12px; opacity:.65; margin-top:2px; }
   .head button { margin-left:auto; background:transparent; border:1px solid rgba(255,255,255,.3); color:#fff; border-radius:8px; padding:6px 10px; font-size:12px; font-family:inherit; cursor:pointer; }
-  .tabs { display:flex; gap:6px; margin-bottom:12px; }
-  .tab { flex:1; padding:10px; border-radius:10px; border:1px solid var(--line); background:var(--card); font-size:14px; font-weight:700; color:var(--muted); font-family:inherit; cursor:pointer; }
+  .tabs { display:flex; gap:6px; margin-bottom:12px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none; }
+  .tabs::-webkit-scrollbar { display:none; }
+  .tab { flex:1 0 auto; white-space:nowrap; padding:10px 12px; border-radius:10px; border:1px solid var(--line); background:var(--card); font-size:14px; font-weight:700; color:var(--muted); font-family:inherit; cursor:pointer; }
   .tab.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .att-today { display:flex; gap:10px; margin-bottom:12px; }
+  .att-box { flex:1; background:var(--card); border:1px solid var(--line); border-radius:14px; padding:12px 14px; }
+  .att-box .k { font-size:12px; color:var(--muted); font-weight:700; }
+  .att-box .v { font-size:20px; font-weight:800; margin-top:2px; letter-spacing:-.3px; }
+  .att-box.in .v { color:var(--accent); } .att-box.out .v { color:var(--good); } .att-box .v.none { color:#B9B3CC; font-size:15px; font-weight:700; padding-top:4px; }
+  .att-row { display:flex; flex-wrap:wrap; gap:4px 10px; justify-content:space-between; align-items:center; padding:11px 2px; border-bottom:1px solid var(--line); font-size:14px; }
+  .att-row:last-child { border-bottom:0; }
+  .att-row .d { font-weight:700; } .att-row .tt { color:var(--ink-2); font-size:13.5px; }
+  .nt { padding:14px; border:1px solid var(--line); border-radius:12px; margin-bottom:10px; }
+  .nt .cat { display:inline-block; font-size:11px; font-weight:800; padding:2px 9px; border-radius:999px; background:var(--accent-soft); color:var(--accent); margin-bottom:6px; }
+  .nt .cat.sch { background:var(--gold-soft); color:var(--gold); } .nt .cat.cls { background:var(--good-soft); color:var(--good); }
+  .nt .tt { font-weight:800; font-size:15px; } .nt .bd { font-size:14px; color:var(--ink); white-space:pre-wrap; margin-top:6px; line-height:1.6; }
+  .nt .dt { font-size:11.5px; color:var(--muted); margin-top:8px; }
+  .nt img { width:100%; border-radius:10px; margin-top:8px; display:block; }
   .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:10px; }
   .card h2 { font-size:14px; font-weight:800; margin-bottom:10px; }
   .item { display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px solid var(--line); border-radius:12px; margin-bottom:8px; text-decoration:none; color:inherit; }
@@ -83,7 +98,7 @@
 <meta name="apple-mobile-web-app-title" content="송우찬수학">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
-<script src="/pwa.js?v=7" defer></script>
+<script src="/pwa.js?v=8" defer></script>
 </head>
 <body>
 <div class="wrap" id="app"><div class="empty">불러오는 중...</div></div>
@@ -91,14 +106,15 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, getDocs, collection, query, where, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, getDocs, setDoc, collection, query, where, orderBy, limit, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getMessaging, getToken, onMessage, isSupported } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
 
 const app = initializeApp({ apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA", authDomain: "songmath.firebaseapp.com", projectId: "songmath", storageBucket: "songmath.firebasestorage.app", messagingSenderId: "936295436575", appId: "1:936295436575:web:d1e201508719850cfbe02a" });
 const auth = getAuth(app), db = getFirestore(app);
 const $app = document.getElementById('app');
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-let cur = 'homework', child = null, weekly = [], monthly = [], comments = [], homework = [], me = null;
+let cur = 'homework', child = null, weekly = [], monthly = [], comments = [], homework = [], me = null, attDays = [], notices = [], attErr = '';
+{ const t = new URLSearchParams(location.search).get('tab'); if (['homework', 'att', 'weekly', 'monthly', 'notice'].includes(t)) cur = t; }
 const openReports = new Set();   // 펼쳐진 보고서 id (최신 달은 자동)
 const frameHeights = {};
 window.addEventListener('message', (e) => { if (e.data && e.data.type === 'reportHeight' && e.data.id) { frameHeights[e.data.id] = e.data.h; const f = document.getElementById('rf-' + e.data.id); if (f) f.style.height = (e.data.h + 4) + 'px'; } });
@@ -146,12 +162,68 @@ onAuthStateChanged(auth, async (user) => {
     weekly.sort((a, b) => (b.weekKey || '').localeCompare(a.weekKey || ''));
     monthly = []; ms.forEach((d) => monthly.push({ id: d.id, ...d.data() }));
     monthly.sort((a, b) => (b.month || '').localeCompare(a.month || ''));
+    await Promise.all([loadAttendance(), loadNotices()]);
+    if (cur === 'notice') markNoticesSeen();
     render();
     pushInit();
   } catch (e) { $app.innerHTML = `<div class="empty">불러오지 못했습니다.<br><small>${esc(e.message)}</small></div>`; }
 });
 
-window.pTab = (t) => { cur = t; render(); if (t === 'monthly' && monthly[0] && !monthly[0].parentViewedAt && !isTeacherView()) pOpenNewReport(monthly[0].id); };
+
+// ══ 출결: 최근 14일 등원·하원 (문서 id = 학생uid_날짜) ══
+function kstDateStr(offsetDays) {
+  const k = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Seoul' }));
+  k.setDate(k.getDate() - (offsetDays || 0));
+  return `${k.getFullYear()}-${String(k.getMonth() + 1).padStart(2, '0')}-${String(k.getDate()).padStart(2, '0')}`;
+}
+async function loadAttendance() {
+  attDays = []; attErr = '';
+  try {
+    const days = Array.from({ length: 14 }, (_, i) => kstDateStr(i));
+    const snaps = await Promise.all(days.map((d) => getDoc(doc(db, 'attendance', `${child.id}_${d}`)).catch(() => null)));
+    snaps.forEach((sn, i) => { if (sn && sn.exists()) attDays.push({ date: days[i], ...sn.data() }); });
+  } catch (e) { attErr = e.message; }
+}
+// ══ 공지: 우리 아이에게 해당하는 공지만 (전체 / 우리 관 / 우리 반 / 우리 아이) ══
+async function loadNotices() {
+  notices = [];
+  try {
+    const ns = await getDocs(query(collection(db, 'notices'), orderBy('createdAt', 'desc'), limit(40)));
+    ns.forEach((d) => {
+      const n = d.data();
+      const mine = n.target === 'all'
+        || (n.target === 'branch' && (n.branches || []).includes(child.branch))
+        || (n.target === 'custom' && ((n.classGroups || []).includes(child.classGroup) || (n.studentIds || []).includes(child.id)));
+      if (mine) notices.push({ id: d.id, ...n });
+    });
+  } catch (e) { /* 공지를 못 불러와도 나머지 화면은 보이게 */ }
+}
+const NOTICE_SEEN_KEY = () => `swc_notice_seen_${me ? me.uid : ''}`;
+const newNoticeCount = () => { let seen = 0; try { seen = Number(localStorage.getItem(NOTICE_SEEN_KEY()) || 0); } catch (e) {} return notices.filter((n) => (n.createdAt?.seconds || 0) > seen).length; };
+function markNoticesSeen() { try { const top = notices[0]?.createdAt?.seconds || 0; if (top) localStorage.setItem(NOTICE_SEEN_KEY(), String(top)); } catch (e) {} }
+function attTodayHtml() {
+  const t = attDays.find((a) => a.date === kstDateStr(0));
+  return `<div class="att-today">
+    <div class="att-box in"><div class="k">오늘 등원</div><div class="v ${t ? '' : 'none'}">${t ? esc(t.time || '') : '아직 등원 전'}</div></div>
+    <div class="att-box out"><div class="k">오늘 하원</div><div class="v ${t && t.outTime ? '' : 'none'}">${t && t.outTime ? esc(t.outTime) : (t ? '수업 중' : '-')}</div></div>
+  </div>`;
+}
+function attTabHtml() {
+  const DOW = ['일', '월', '화', '수', '목', '금', '토'];
+  const rows = attDays.map((a) => { const d = new Date(a.date + 'T00:00:00'); return `<div class="att-row"><span class="d">${d.getMonth() + 1}월 ${d.getDate()}일 (${DOW[d.getDay()]})${a.date === kstDateStr(0) ? ' <span class="pill" style="font-size:11px;">오늘</span>' : ''}</span><span class="tt">등원 ${esc(a.time || '-')} · 하원 ${esc(a.outTime || '-')}${a.method === 'manual' || a.outMethod === 'manual' ? ' <small style="color:var(--muted);">(학원 확인)</small>' : ''}</span></div>`; }).join('');
+  return `<div class="card"><h2>출결 (최근 2주)</h2>${rows || `<div class="empty">최근 2주 등원 기록이 없습니다.${attErr ? '<br><small>' + esc(attErr) + '</small>' : ''}</div>`}</div>`;
+}
+function noticeTabHtml() {
+  const catCls = (c) => c === '학원 일정' ? 'sch' : c === '반 배정' ? 'cls' : '';
+  const items = notices.map((n) => { const dt = n.createdAt?.toDate ? n.createdAt.toDate() : null; return `<div class="nt">
+    ${n.category ? `<span class="cat ${catCls(n.category)}">${esc(n.category)}</span>` : ''}
+    <div class="tt">${esc(n.title || '')}</div>
+    <div class="bd">${esc(n.body || '')}</div>
+    ${(n.imageUrls || []).map((u) => `<img src="${esc(u)}" alt="">`).join('')}
+    <div class="dt">${dt ? `${dt.getFullYear()}.${dt.getMonth() + 1}.${dt.getDate()}` : ''}</div></div>`; }).join('');
+  return `<div class="card"><h2>공지사항</h2>${items || '<div class="empty">아직 공지가 없습니다.</div>'}</div>`;
+}
+window.pTab = (t) => { cur = t; if (t === 'notice') markNoticesSeen(); render(); if (t === 'monthly' && monthly[0] && !monthly[0].parentViewedAt && !isTeacherView()) pOpenNewReport(monthly[0].id); };
 const threadOf = (type, id) => comments.filter((c) => c.targetType === type && c.targetId === id);
 const isTeacherView = () => viewer.role === 'teacher';
 // 안 읽은 글: 학부모 화면에선 선생님 답글, 선생님 화면에선 학부모 댓글
@@ -163,6 +235,15 @@ window.pMarkRead = async (key) => {
   if (!unread.length) return;
   for (const c of unread) { try { await updateDoc(doc(db, 'reportComments', c.id), { [field]: true }); c[field] = true; } catch (e) {} }
   render(); try { window.parent.postMessage({ type: 'pcRead' }, '*'); } catch (e) {}
+};
+// 안 읽은 답글 알림 한 번에 지우기
+window.pReadAll = async () => {
+  const field = isTeacherView() ? 'readByTeacher' : 'readByParent';
+  const unread = comments.filter((c) => isTeacherView() ? (c.authorRole === 'parent' && !c.readByTeacher) : (c.authorRole === 'teacher' && !c.readByParent));
+  unread.forEach((c) => { c[field] = true; });
+  render();
+  for (const c of unread) { try { await updateDoc(doc(db, 'reportComments', c.id), { [field]: true }); } catch (e) {} }
+  try { window.parent.postMessage({ type: 'pcRead' }, '*'); } catch (e) {}
 };
 window.pToggle = async (key) => {
   if (openThreads.has(key)) openThreads.delete(key); else openThreads.add(key);
@@ -235,7 +316,7 @@ function notiHtml() {
     ${reps.map((r) => `<button onclick="pOpenNewReport('${r.id}')"><b>${r.month.replace('-', '년 ')}월 보고서</b><span>정답률 ${r.summary?.pct ?? '-'}% · ${r.summary?.gradeBand ?? '-'}등급 · ${esc(r.teacherName || '')} 선생님 의견</span><b>›</b></button>`).join('')}
   </div>`;
   if (unread.length) html += `<div class="noti">
-    <h3><span class="dot"></span>${isTeacherView() ? `학부모 댓글 ${unread.length}개가 답글을 기다려요` : `선생님 답글 ${unread.length}개가 도착했어요`}</h3>
+    <h3 style="display:flex;align-items:center;gap:8px;"><span class="dot"></span><span style="flex:1;">${isTeacherView() ? `학부모 댓글 ${unread.length}개가 답글을 기다려요` : `선생님 답글 ${unread.length}개가 도착했어요`}</span><a href="#" onclick="pReadAll();return false;" style="font-size:12px;font-weight:700;color:inherit;opacity:.85;text-decoration:underline;white-space:nowrap;">모두 읽음 ✕</a></h3>
     ${Object.entries(groups).map(([k, g]) => `<button onclick="pGoThread('${k}')"><b>${esc(g.c.targetLabel || '')}</b><span>${esc(g.c.authorName || '')}: ${esc(g.c.text)}</span><b>›</b></button>`).join('')}
   </div>`;
   return html;
@@ -261,15 +342,21 @@ ${editing ? `<textarea id="cm-edit-${c.id}">${esc(c.text)}</textarea><div class=
 window.pLogout = async () => { await signOut(auth); location.replace('login.html'); };
 
 const tabDot = (type) => comments.some((c) => c.targetType === type && (isTeacherView() ? (c.authorRole === 'parent' && !c.readByTeacher) : (c.authorRole === 'teacher' && !c.readByParent))) ? ' <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#C8541F;vertical-align:middle;margin-left:2px;"></span>' : '';
-// ══ 앱 알림(등원·숙제·주간성취도·월간보고서·선생님 답글·안내문) ══
+// ══ 앱 알림(등원·하원·숙제·주간성취도·월간보고서·선생님 답글·공지) ══
 //  · 학부모가 「알림 켜기」를 누르면 이 휴대폰의 알림 주소를 parents/{uid}.fcmToken 에 저장
 //  · 서버(학부모알림 함수)가 일이 생기면 그 주소로 알림을 보냄
 //  · 아이폰은 홈 화면에 설치한 앱에서만 알림을 받을 수 있음
 let savedFcm = null, pushState = 'hidden', pushErr = '', pushListening = false;
 const isIOSdev = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const isAppMode = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+// 앱을 열면 휴대폰 알림창에 쌓인 학원 알림은 지움 (이미 앱에서 확인하므로)
+async function clearShownNotifications() {
+  try { const reg = await navigator.serviceWorker.getRegistration('/'); if (!reg) return; (await reg.getNotifications()).forEach((n) => n.close()); } catch (e) {}
+}
 async function pushInit() {
   if (viewer.role !== 'parent') { pushState = 'hidden'; return; }
+  clearShownNotifications();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) clearShownNotifications(); });
   let ok = ('Notification' in window) && ('serviceWorker' in navigator);
   if (ok) { try { ok = await isSupported(); } catch (e) { ok = false; } }
   if (!ok) { pushState = (isIOSdev && !isAppMode()) ? 'need-app' : 'unsupported'; render(); return; }
@@ -283,6 +370,7 @@ async function pushSaveToken() {
   const messaging = getMessaging(app);
   const token = await getToken(messaging, { serviceWorkerRegistration: reg });
   if (token && token !== savedFcm) { await updateDoc(doc(db, 'parents', me.uid), { fcmToken: token }); savedFcm = token; }
+  try { await setDoc(doc(db, 'appStatus', me.uid), { role: 'parent', studentId: child.id, pushOn: true, lastSeen: serverTimestamp() }, { merge: true }); } catch (e) {}
   if (!pushListening) {
     pushListening = true;
     // 앱을 보고 있는 중에 온 알림은 화면 위에 잠깐 띄움
@@ -309,7 +397,7 @@ window.pInstallApp = () => { if (window.swcOpenInstall) window.swcOpenInstall();
 function pushHtml() {
   if (isTeacherView() || pushState === 'hidden') return '';
   const box = (bg, bd, inner) => `<div class="card" style="background:${bg};border-color:${bd};display:flex;align-items:center;gap:12px;">${inner}</div>`;
-  const what = '등원 · 숙제 · 주간 성취도 · 월간 보고서 · 선생님 답글 · 안내문';
+  const what = '등원·하원 · 숙제 · 주간 성취도 · 월간 보고서 · 선생님 답글 · 공지';
   if (pushState === 'off') return box('#FFF9E6', '#F0C040', `<div style="font-size:26px;">🔔</div><div style="flex:1;"><div style="font-weight:800;font-size:14.5px;">앱 알림 켜기</div><div style="font-size:12px;color:var(--ink-2);margin-top:2px;">${what}을 휴대폰 알림으로 바로 받아보세요.</div></div><button onclick="pEnablePush()" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-family:inherit;font-weight:800;font-size:13.5px;cursor:pointer;white-space:nowrap;">알림 켜기</button>`);
   if (pushState === 'need-app') return box('#FFF9E6', '#F0C040', `<div style="font-size:26px;">📲</div><div style="flex:1;"><div style="font-weight:800;font-size:14.5px;">앱으로 설치하면 알림을 받을 수 있어요</div><div style="font-size:12px;color:var(--ink-2);margin-top:2px;">아이폰은 홈 화면에 설치한 앱에서만 알림이 와요. 설치 후 앱에서 다시 로그인해 주세요.</div></div><button onclick="pInstallApp()" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-family:inherit;font-weight:800;font-size:13.5px;cursor:pointer;white-space:nowrap;">앱 설치</button>`);
   if (pushState === 'working') return box('#F7F5FC', '#E3DDF3', `<div style="font-size:22px;">⏳</div><div style="font-size:13.5px;">알림을 켜는 중이에요…</div>`);
@@ -329,11 +417,16 @@ function render() {
     </div>
     ${pushHtml()}
     ${notiHtml()}
+    ${attTodayHtml()}
     <div class="tabs">
       <button class="tab ${cur === 'homework' ? 'active' : ''}" onclick="pTab('homework')">숙제</button>
+      <button class="tab ${cur === 'att' ? 'active' : ''}" onclick="pTab('att')">출결</button>
       <button class="tab ${cur === 'weekly' ? 'active' : ''}" onclick="pTab('weekly')">주간 성취도${tabDot('weekly')}</button>
       <button class="tab ${cur === 'monthly' ? 'active' : ''}" onclick="pTab('monthly')">월간 보고서${tabDot('monthly') || (newReports().length ? ' <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#C8541F;vertical-align:middle;margin-left:2px;"></span>' : '')}</button>
+      <button class="tab ${cur === 'notice' ? 'active' : ''}" onclick="pTab('notice')">공지${newNoticeCount() ? ' <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#C8541F;vertical-align:middle;margin-left:2px;"></span>' : ''}</button>
     </div>
+    ${cur === 'att' ? attTabHtml() : ''}
+    ${cur === 'notice' ? noticeTabHtml() : ''}
     ${cur === 'homework' ? `<div class="card"><h2>숙제</h2>${homework.length ? homework.slice(0, 60).map((h) => { const d = new Date(h.date + 'T00:00:00'); const dow = ['일','월','화','수','목','금','토'][d.getDay()]; const isToday = h.date === new Date().toISOString().slice(0, 10); return `
         <div class="wk" style="${isToday ? 'border-color:var(--accent);' : ''}">
           <div class="t"><span>${d.getMonth() + 1}월 ${d.getDate()}일 (${dow})${isToday ? ' <span class="pill" style="font-size:11px;">오늘</span>' : ''}</span><small>${esc(h.teacherName || '')} 선생님 · ${esc(h.classGroup || '')}</small></div>
