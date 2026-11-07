@@ -2137,7 +2137,12 @@
       </div>
     </div>
     <div class="card">
-      <h3>📲 오늘 등원 · 하원 · 앱 설치 현황</h3>
+      <h3 onclick="toggleCioCard()" style="cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none;margin-bottom:0;">
+        <span style="flex:1;">📲 오늘 등원 · 하원 · 앱 설치 현황</span>
+        <span id="cioCardSum" style="font-size:12px;font-weight:600;color:var(--muted);"></span>
+        <span id="cioCardArrow" style="font-size:13px;color:var(--muted);transition:transform .2s;">▼</span>
+      </h3>
+      <div id="cioCardBody" style="margin-top:12px;">
       <p style="font-size:12px;color:var(--muted);margin:-4px 0 12px;line-height:1.6;">
         휴대폰이 없는 학생은 <b>[등원]</b>·<b>[하원]</b> 버튼으로 수동 처리하세요 (학부모 알림도 똑같이 갑니다). 학생이 앱으로 체크하면 이 표에 바로 반영돼요.<br>
         앱 설치는 학생·학부모가 <b>앱(홈 화면 아이콘)으로 로그인했을 때</b> 기록됩니다. 🔔 = 학부모 앱 알림 켜짐
@@ -2155,6 +2160,7 @@
       </div>
       <div id="cioSummary" style="font-size:13px;margin:6px 0 4px;"></div>
       <div id="cioList"><div style="color:var(--muted);font-size:13px;">불러오는 중…</div></div>
+      </div>
     </div>
     <div class="card">
       <h3>✅ 출결 체크</h3>
@@ -2762,7 +2768,7 @@
 <script defer src="admin/js/satclinic.js?v=1792811435"></script>
 <script defer src="admin/js/dailyreport.js?v=1792760000"></script>
 <script defer src="admin/js/attendance.js?v=1794200000"></script>
-<script defer src="admin/js/checkinout.js?v=1794200000"></script>
+<script defer src="admin/js/checkinout.js?v=1794210000"></script>
 <script defer src="admin/js/weeklylog.js?v=1794000000"></script>
 <script defer src="admin/js/drafts.js?v=1792760000"></script>
 <script defer src="admin/js/promotion.js"></script>

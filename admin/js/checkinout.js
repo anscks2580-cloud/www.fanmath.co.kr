@@ -159,8 +159,14 @@ window.renderCheckInOut = function () {
         <td style="${cell}">${parCell}</td>
       </tr>`;
     }).join('');
-    html += `<div style="font-weight:800;color:${branchColor(b)};margin:16px 0 6px;font-size:14px;">${cioEsc(b)} · ${byBranch[b].length}명</div>
-      <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:620px;">
+    const folded = !!cioGetFold()['br_' + b];
+    const bIn = byBranch[b].filter((x) => cioAtt[x.id]).length, bOut = byBranch[b].filter((x) => cioAtt[x.id] && cioAtt[x.id].outTime).length;
+    html += `<div onclick="toggleCioBranch('${cioEsc(b)}')" style="cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px;font-weight:800;color:${branchColor(b)};margin:16px 0 6px;font-size:14px;padding:6px 8px;border-radius:8px;background:rgba(30,24,56,0.03);">
+        <span style="display:inline-block;transition:transform .2s;${folded ? 'transform:rotate(-90deg);' : ''}">▼</span>
+        <span>${cioEsc(b)} · ${byBranch[b].length}명</span>
+        <span style="font-size:12px;font-weight:600;color:var(--muted);">등원 ${bIn} · 하원 ${bOut}</span>
+      </div>
+      <div style="overflow-x:auto;${folded ? 'display:none;' : ''}"><table style="width:100%;border-collapse:collapse;min-width:620px;">
         <thead><tr style="text-align:left;font-size:11.5px;color:var(--muted);">
           <th style="padding:6px;">반</th><th style="padding:6px;">이름</th><th style="padding:6px;">등원</th><th style="padding:6px;">하원</th><th style="padding:6px;">학생 앱</th><th style="padding:6px;">학부모 앱 · 알림</th>
         </tr></thead><tbody>${rows}</tbody></table></div>`;
@@ -169,6 +175,22 @@ window.renderCheckInOut = function () {
   const sum = document.getElementById('cioSummary');
   if (sum) sum.innerHTML = tot ? `대상 <b>${tot}</b>명 · 등원 <b style="color:#5B3FA6;">${nIn}</b> · 하원 <b style="color:#2E9E5B;">${nOut}</b> · 아직 등원 전 <b style="color:#C8541F;">${tot - nIn}</b>
     <span style="margin-left:10px;color:var(--muted);">| 학생 앱 ${nStuApp}/${tot} · 학부모 앱 ${nParApp}/${tot} (알림 켜짐 ${nPush})</span>` : '';
+  cioApplyCardFold();
 };
 
 window.cioRefreshApp = async function () { await cioLoadAppStatus(); renderCheckInOut(); };
+
+// ── 접기 / 펼치기 (카드 전체 · 관별 표) — 상태는 이 컴퓨터에 기억 ──
+function cioGetFold() { try { return JSON.parse(localStorage.getItem('cio_fold') || '{}'); } catch (e) { return {}; } }
+function cioSetFold(f) { try { localStorage.setItem('cio_fold', JSON.stringify(f)); } catch (e) {} }
+function cioApplyCardFold() {
+  const f = cioGetFold();
+  const body = document.getElementById('cioCardBody'), arrow = document.getElementById('cioCardArrow'), sum = document.getElementById('cioCardSum');
+  if (!body) return;
+  body.style.display = f.card ? 'none' : '';
+  if (arrow) arrow.style.transform = f.card ? 'rotate(-90deg)' : '';
+  // 접혀 있을 때도 핵심 숫자는 제목 옆에 보이게
+  if (sum) sum.textContent = f.card ? (document.getElementById('cioSummary')?.innerText.split('|')[0].trim() || '') : '';
+}
+window.toggleCioCard = function () { const f = cioGetFold(); f.card = !f.card; cioSetFold(f); cioApplyCardFold(); };
+window.toggleCioBranch = function (b) { const f = cioGetFold(); f['br_' + b] = !f['br_' + b]; cioSetFold(f); renderCheckInOut(); };
