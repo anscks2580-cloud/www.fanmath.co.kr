@@ -445,6 +445,7 @@ select option:disabled { color:#6B6489; }
   <div class="ad-top-title" id="tnavTitle">일정</div>
   <div class="ad-top-right">
     <button class="btn btn-outline btn-sm" onclick="openTodayPopup()" style="display:inline-flex;align-items:center;">📋 오늘 할 일<span class="cal-badge" id="calTodayBadge"></span></button>
+    <button class="btn btn-outline btn-sm" onclick="openTodayPopup()" style="display:inline-flex;align-items:center;" title="결석 사유서">📝<span class="cal-badge" id="absBadge"></span></button>
     <button class="btn btn-outline btn-sm" onclick="teacherOpenMenu('parentcomments')" style="display:inline-flex;align-items:center;" title="학부모 댓글">💬<span class="cal-badge" id="pcBadge"></span></button>
     <span class="badge-name" id="teacherBadge">선생님</span>
     <a href="index.html" class="btn btn-outline btn-sm ad-home-link" style="text-decoration:none;">🏠 홈</a>
@@ -3598,6 +3599,7 @@ async function calMyDocs(col) {
 
 // ── 자동 할 일 계산 ──
 async function calBuildAutoTodos() {
+  await loadMyAbsences(); // 결석 사유서도 같이 새로 불러옴
   const list = [];
   const now = new Date(); now.setHours(0,0,0,0);
   const dow = now.getDay();
@@ -3856,6 +3858,7 @@ function calRenderToday() {
   el.innerHTML = `
     <div class="card-title">📋 오늘 · ${d.getMonth()+1}월 ${d.getDate()}일 (${CAL_DOW[d.getDay()]})</div>
     ${calHolidayHtml(today)}
+    ${calAbsHtml()}
     ${calAutoSecHtml(calAutoTodos)}
     ${calAutoHtml(calAutoTodos)}
     ${calEventsOn(today).length ? `<div class="cal-sec">학원 일정</div>${calEventsHtml(today)}` : ''}
@@ -3967,6 +3970,40 @@ window.calGoTab = function (tab, init) {
   switchTab(tab, btn);
   if (init && typeof window[init] === 'function') window[init]();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+};
+
+// ── 📝 결석 사유서 — 내 담당 학생 (학부모 앱 제출 · 관리부 전화 접수) ──
+let tAbs = [];
+async function loadMyAbsences() {
+  if (!currentTeacher) return;
+  try {
+    const qs = await getDocs(query(collection(db, 'absences'), where('teacherUid', '==', currentTeacher.uid)));
+    tAbs = []; qs.forEach((d) => tAbs.push({ id: d.id, ...d.data() }));
+  } catch (e) { tAbs = []; }
+  const today = calTodayStr();
+  const unread = tAbs.filter((a) => !a.readByTeacher && (a.dates || []).some((d) => d >= today)).length;
+  const b = document.getElementById('absBadge'); if (b) { b.textContent = unread || ''; b.style.display = unread ? 'inline-flex' : 'none'; }
+}
+function calAbsHtml() {
+  const today = calTodayStr();
+  const md = (ds) => { const d = new Date(ds + 'T00:00:00'); return `${d.getMonth() + 1}/${d.getDate()}(${CAL_DOW[d.getDay()]})`; };
+  const rows = tAbs.filter((a) => (a.dates || []).some((d) => d >= today))
+    .map((a) => ({ a, ds: [...a.dates].filter((d) => d >= today).sort() }))
+    .sort((x, y) => x.ds[0].localeCompare(y.ds[0]));
+  if (!rows.length) return '';
+  const unread = rows.filter((r) => !r.a.readByTeacher).length;
+  return `<div class="cal-sec" style="display:flex;align-items:center;gap:8px;">📝 결석 사유서${unread ? ` <span style="color:#C8541F;">새로 ${unread}건</span><a href="#" onclick="absReadAll();return false;" style="margin-left:auto;font-size:12px;color:var(--muted);font-weight:600;">모두 확인</a>` : ''}</div>
+    ${rows.map(({ a, ds }) => `<div style="display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:10px;margin-bottom:6px;background:${ds[0] === today ? '#FFF1EA' : '#FAF8FF'};border:1px solid ${a.readByTeacher ? 'rgba(30,24,56,0.08)' : 'rgba(200,84,31,0.4)'};">
+      <div style="flex:1;font-size:13px;line-height:1.5;"><b>${calEsc(a.studentName || '')}</b> <span style="color:var(--muted);font-size:12px;">${calEsc(a.branch || '')} · ${calEsc(a.classGroup || '')}</span>${a.readByTeacher ? '' : ' <span style="color:#C8541F;font-size:11px;font-weight:800;">NEW</span>'}<br>
+        <span style="color:#C8541F;font-weight:700;">${ds.map((d) => d === today ? '오늘' : md(d)).join(', ')} 결석</span> · ${calEsc(a.reason || '')}${a.source === 'phone' ? ' (전화 접수)' : ''}${a.detail ? `<br><span style="color:var(--muted);">${calEsc(a.detail)}</span>` : ''}</div>
+    </div>`).join('')}`;
+}
+window.absReadAll = async function () {
+  const today = calTodayStr();
+  const list = tAbs.filter((a) => !a.readByTeacher && (a.dates || []).some((d) => d >= today));
+  list.forEach((a) => { a.readByTeacher = true; });
+  calRenderPopup(); loadMyAbsences();
+  for (const a of list) { try { await updateDoc(doc(db, 'absences', a.id), { readByTeacher: true }); } catch (e) {} }
 };
 
 // ── 오늘 할 일 팝업 ──

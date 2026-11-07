@@ -29,6 +29,35 @@
   .att-row { display:flex; flex-wrap:wrap; gap:4px 10px; justify-content:space-between; align-items:center; padding:11px 2px; border-bottom:1px solid var(--line); font-size:14px; }
   .att-row:last-child { border-bottom:0; }
   .att-row .d { font-weight:700; } .att-row .tt { color:var(--ink-2); font-size:13.5px; }
+  .ab-btn { width:100%; padding:13px; border:1.5px dashed var(--warn); border-radius:12px; background:var(--warn-soft); color:var(--warn); font-weight:800; font-size:14.5px; font-family:inherit; cursor:pointer; margin-bottom:12px; }
+  .ab-item { padding:12px 14px; border:1px solid var(--line); border-radius:12px; margin-bottom:8px; }
+  .ab-item .h { display:flex; justify-content:space-between; gap:8px; font-weight:800; font-size:14px; }
+  .ab-item .h small { color:var(--muted); font-weight:600; font-size:12px; white-space:nowrap; }
+  .ab-item .ds { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
+  .ab-item .ds span { background:var(--warn-soft); color:var(--warn); font-size:12px; font-weight:700; padding:2px 8px; border-radius:999px; }
+  .ab-item .r { font-size:13px; color:var(--ink-2); margin-top:6px; white-space:pre-wrap; }
+  .ab-ov { position:fixed; inset:0; z-index:9000; background:rgba(20,14,40,.5); display:flex; align-items:flex-end; justify-content:center; padding:10px; }
+  @media(min-width:600px){ .ab-ov { align-items:center; } }
+  .ab-sheet { background:#fff; width:100%; max-width:440px; max-height:92vh; overflow:auto; border-radius:20px; padding:20px 18px 18px; }
+  .ab-sheet h3 { margin:0 0 4px; font-size:18px; } .ab-sheet .sub { font-size:12.5px; color:var(--muted); margin-bottom:14px; }
+  .ab-lb { font-size:12.5px; font-weight:800; color:var(--ink-2); margin:14px 0 6px; }
+  .ab-cal { border:1px solid var(--line); border-radius:14px; padding:10px; }
+  .ab-cal .nav { display:flex; justify-content:space-between; align-items:center; font-weight:800; margin-bottom:6px; }
+  .ab-cal .nav button { border:0; background:var(--accent-soft); color:var(--accent); width:32px; height:32px; border-radius:8px; font-size:16px; cursor:pointer; }
+  .ab-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center; }
+  .ab-grid .w { font-size:11px; color:var(--muted); font-weight:700; padding:2px 0; }
+  .ab-grid .w.sun { color:#D64545; } .ab-grid .w.sat { color:#2F7FD6; }
+  .ab-grid button { border:0; background:transparent; height:38px; border-radius:10px; font-size:14px; font-family:inherit; cursor:pointer; color:var(--ink); }
+  .ab-grid button.today { box-shadow:inset 0 0 0 1.5px var(--accent); }
+  .ab-grid button.on { background:var(--warn); color:#fff; font-weight:800; }
+  .ab-grid button:disabled { color:#CFCADB; cursor:default; }
+  .ab-chips { display:flex; flex-wrap:wrap; gap:6px; }
+  .ab-chips button { border:1px solid var(--line); background:#fff; border-radius:999px; padding:8px 14px; font-size:13.5px; font-family:inherit; cursor:pointer; color:var(--ink-2); }
+  .ab-chips button.on { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:700; }
+  .ab-sheet textarea { width:100%; min-height:80px; border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-size:14px; font-family:inherit; resize:vertical; box-sizing:border-box; }
+  .ab-go { width:100%; padding:14px; border:0; border-radius:12px; background:var(--warn); color:#fff; font-size:15.5px; font-weight:800; font-family:inherit; cursor:pointer; margin-top:16px; }
+  .ab-go:disabled { opacity:.6; }
+  .ab-x { width:100%; padding:11px; border:0; background:transparent; color:var(--muted); font-family:inherit; font-size:14px; cursor:pointer; margin-top:4px; }
   .nt { padding:14px; border:1px solid var(--line); border-radius:12px; margin-bottom:10px; }
   .nt .cat { display:inline-block; font-size:11px; font-weight:800; padding:2px 9px; border-radius:999px; background:var(--accent-soft); color:var(--accent); margin-bottom:6px; }
   .nt .cat.sch { background:var(--gold-soft); color:var(--gold); } .nt .cat.cls { background:var(--good-soft); color:var(--good); }
@@ -113,7 +142,7 @@ const app = initializeApp({ apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA", a
 const auth = getAuth(app), db = getFirestore(app);
 const $app = document.getElementById('app');
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-let cur = 'homework', child = null, weekly = [], monthly = [], comments = [], homework = [], me = null, attDays = [], notices = [], attErr = '';
+let cur = 'homework', child = null, weekly = [], monthly = [], comments = [], homework = [], me = null, attDays = [], notices = [], attErr = '', absences = [];
 { const t = new URLSearchParams(location.search).get('tab'); if (['homework', 'att', 'weekly', 'monthly', 'notice'].includes(t)) cur = t; }
 const openReports = new Set();   // 펼쳐진 보고서 id (최신 달은 자동)
 const frameHeights = {};
@@ -162,7 +191,7 @@ onAuthStateChanged(auth, async (user) => {
     weekly.sort((a, b) => (b.weekKey || '').localeCompare(a.weekKey || ''));
     monthly = []; ms.forEach((d) => monthly.push({ id: d.id, ...d.data() }));
     monthly.sort((a, b) => (b.month || '').localeCompare(a.month || ''));
-    await Promise.all([loadAttendance(), loadNotices()]);
+    await Promise.all([loadAttendance(), loadNotices(), loadAbsences()]);
     if (cur === 'notice') markNoticesSeen();
     render();
     pushInit();
@@ -201,8 +230,116 @@ async function loadNotices() {
 const NOTICE_SEEN_KEY = () => `swc_notice_seen_${me ? me.uid : ''}`;
 const newNoticeCount = () => { let seen = 0; try { seen = Number(localStorage.getItem(NOTICE_SEEN_KEY()) || 0); } catch (e) {} return notices.filter((n) => (n.createdAt?.seconds || 0) > seen).length; };
 function markNoticesSeen() { try { const top = notices[0]?.createdAt?.seconds || 0; if (top) localStorage.setItem(NOTICE_SEEN_KEY(), String(top)); } catch (e) {} }
+
+// ══ 결석 사유서 (학부모만 제출) ══
+//  · absences 컬렉션: { studentId, dates:[YYYY-MM-DD...], reason, detail, source:'parent'|'phone', ... }
+//  · 제출하면 관리자 출결 체크에 자동으로 결석 표시 + 관리자 홈 · 담당 선생님 「오늘 할 일」에 바로 보임
+async function loadAbsences() {
+  absences = [];
+  try {
+    const qs = await getDocs(query(collection(db, 'absences'), where('studentId', '==', child.id)));
+    qs.forEach((d) => absences.push({ id: d.id, ...d.data() }));
+    absences.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+  } catch (e) { /* 규칙 반영 전이면 조용히 */ }
+}
+const absenceOn = (date) => absences.find((a) => (a.dates || []).includes(date));
+const fmtMD = (ds) => { const d = new Date(ds + 'T00:00:00'); return `${d.getMonth() + 1}/${d.getDate()}(${'일월화수목금토'[d.getDay()]})`; };
+function absListHtml() {
+  const canSubmit = viewer.role === 'parent';
+  const today = kstDateStr(0);
+  const items = absences.slice(0, 20).map((a) => {
+    const ds = [...(a.dates || [])].sort();
+    const past = ds.length && ds[ds.length - 1] < today;
+    const canCancel = canSubmit && a.source === 'parent' && ds.length && ds[0] > today;
+    return `<div class="ab-item" style="${past ? 'opacity:.6;' : ''}">
+      <div class="h"><span>📝 ${esc(a.reason || '결석')}${a.source === 'phone' ? ' <small style="color:var(--muted);font-weight:600;">(전화 접수)</small>' : ''}</span><small>${a.createdAt?.toDate ? (() => { const d = a.createdAt.toDate(); return `${d.getMonth() + 1}/${d.getDate()} 제출`; })() : ''}</small></div>
+      <div class="ds">${ds.map((x) => `<span>${fmtMD(x)}</span>`).join('')}</div>
+      ${a.detail ? `<div class="r">${esc(a.detail)}</div>` : ''}
+      ${canCancel ? `<div style="text-align:right;margin-top:6px;"><a href="#" onclick="pAbsCancel('${a.id}');return false;" style="font-size:12px;color:var(--muted);">제출 취소</a></div>` : ''}
+    </div>`;
+  }).join('');
+  return `<div class="card"><h2>결석 사유서</h2>
+    ${canSubmit ? '<button class="ab-btn" onclick="pAbsOpen()">📝 결석 사유서 제출하기</button>' : ''}
+    ${items || '<div class="empty" style="padding:14px 0;">제출한 결석 사유서가 없습니다.</div>'}
+  </div>`;
+}
+let abSel = new Set(), abMonth = null, abReason = '';
+function abCalHtml() {
+  const y = abMonth.getFullYear(), m = abMonth.getMonth();
+  const first = new Date(y, m, 1), last = new Date(y, m + 1, 0);
+  const today = kstDateStr(0), minD = kstDateStr(7); // 지난 7일까지 제출 가능
+  let cells = '';
+  for (let i = 0; i < first.getDay(); i++) cells += '<span></span>';
+  for (let d = 1; d <= last.getDate(); d++) {
+    const ds = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const dis = ds < minD;
+    cells += `<button type="button" class="${abSel.has(ds) ? 'on' : ''} ${ds === today ? 'today' : ''}" ${dis ? 'disabled' : ''} onclick="pAbsDay('${ds}')">${d}</button>`;
+  }
+  return `<div class="nav"><button type="button" onclick="pAbsMonth(-1)">‹</button><span>${y}년 ${m + 1}월</span><button type="button" onclick="pAbsMonth(1)">›</button></div>
+    <div class="ab-grid"><span class="w sun">일</span><span class="w">월</span><span class="w">화</span><span class="w">수</span><span class="w">목</span><span class="w">금</span><span class="w sat">토</span>${cells}</div>`;
+}
+function abRender() {
+  const ov = document.getElementById('abOv'); if (!ov) return;
+  const sel = [...abSel].sort();
+  ov.querySelector('.ab-cal').innerHTML = abCalHtml();
+  ov.querySelector('#abSelTxt').innerHTML = sel.length ? `선택한 날짜 <b>${sel.length}일</b> · ${sel.map(fmtMD).join(', ')}` : '결석할 날짜를 눌러서 고르세요 (여러 날 가능)';
+  ov.querySelectorAll('.ab-chips button').forEach((b) => b.classList.toggle('on', b.dataset.r === abReason));
+}
+window.pAbsOpen = () => {
+  abSel = new Set(); abReason = '';
+  const k = new Date(kstDateStr(0) + 'T00:00:00'); abMonth = new Date(k.getFullYear(), k.getMonth(), 1);
+  const ov = document.createElement('div'); ov.className = 'ab-ov'; ov.id = 'abOv';
+  ov.innerHTML = `<div class="ab-sheet">
+    <h3>📝 결석 사유서</h3>
+    <div class="sub">${esc(child.name)} 학생 · ${esc(child.branch || '')} ${esc(child.classGroup || '')}<br>제출하면 학원 출결에 바로 결석으로 처리되고, 관리부와 담당 선생님께 전달돼요.</div>
+    <div class="ab-lb">결석 날짜</div>
+    <div class="ab-cal"></div>
+    <div id="abSelTxt" style="font-size:12.5px;color:var(--ink-2);margin-top:8px;line-height:1.5;"></div>
+    <div class="ab-lb">결석 사유</div>
+    <div class="ab-chips">${['질병·병원', '가족 행사', '학교 행사', '여행', '기타'].map((r) => `<button type="button" data-r="${r}" onclick="pAbsReason('${r}')">${r}</button>`).join('')}</div>
+    <div class="ab-lb">자세한 내용 (선택)</div>
+    <textarea id="abDetail" maxlength="1000" placeholder="예) 감기 몸살로 병원 진료 예정입니다."></textarea>
+    <button class="ab-go" id="abGo" onclick="pAbsSubmit()">제출하기</button>
+    <button class="ab-x" onclick="pAbsClose()">닫기</button>
+  </div>`;
+  ov.addEventListener('click', (e) => { if (e.target === ov) pAbsClose(); });
+  document.body.appendChild(ov);
+  abRender();
+};
+window.pAbsClose = () => { const ov = document.getElementById('abOv'); if (ov) ov.remove(); };
+window.pAbsMonth = (d) => { abMonth = new Date(abMonth.getFullYear(), abMonth.getMonth() + d, 1); abRender(); };
+window.pAbsDay = (ds) => { if (abSel.has(ds)) abSel.delete(ds); else abSel.add(ds); abRender(); };
+window.pAbsReason = (r) => { abReason = r; abRender(); };
+window.pAbsSubmit = async () => {
+  const dates = [...abSel].sort();
+  if (!dates.length) { alert('결석할 날짜를 골라 주세요.'); return; }
+  if (!abReason) { alert('결석 사유를 골라 주세요.'); return; }
+  if (dates.length > 31) { alert('한 번에 31일까지 제출할 수 있어요.'); return; }
+  const btn = document.getElementById('abGo'); btn.disabled = true; btn.textContent = '제출 중…';
+  try {
+    await addDoc(collection(db, 'absences'), {
+      studentId: child.id, studentName: child.name || '', branch: child.branch || '', grade: child.grade || '', classGroup: child.classGroup || '',
+      teacherUid: child.teacherUid || '', teacherName: child.teacherName || '',
+      dates, reason: abReason, detail: (document.getElementById('abDetail').value || '').trim().slice(0, 1000),
+      source: 'parent', submittedBy: me.uid, readByAdmin: false, readByTeacher: false, createdAt: serverTimestamp(),
+    });
+    pAbsClose();
+    await loadAbsences(); cur = 'att'; render();
+    alert(`결석 사유서가 제출됐어요.\n${dates.map(fmtMD).join(', ')} 결석으로 처리됩니다.`);
+  } catch (e) {
+    alert('제출하지 못했어요. 잠시 후 다시 시도해 주세요.\n' + e.message);
+    btn.disabled = false; btn.textContent = '제출하기';
+  }
+};
+window.pAbsCancel = async (id) => {
+  if (!confirm('이 결석 사유서 제출을 취소할까요?')) return;
+  try { await deleteDoc(doc(db, 'absences', id)); await loadAbsences(); render(); }
+  catch (e) { alert('취소하지 못했어요: ' + e.message); }
+};
 function attTodayHtml() {
   const t = attDays.find((a) => a.date === kstDateStr(0));
+  const ab = !t && absenceOn(kstDateStr(0));
+  if (ab) return `<div class="att-today"><div class="att-box" style="border-color:#F0B9A0;background:var(--warn-soft);"><div class="k">오늘 출결</div><div class="v" style="color:var(--warn);">결석 <small style="font-size:13px;font-weight:700;">· ${esc(ab.reason || '')} (사유서 제출됨)</small></div></div></div>`;
   return `<div class="att-today">
     <div class="att-box in"><div class="k">오늘 등원</div><div class="v ${t ? '' : 'none'}">${t ? esc(t.time || '') : '아직 등원 전'}</div></div>
     <div class="att-box out"><div class="k">오늘 하원</div><div class="v ${t && t.outTime ? '' : 'none'}">${t && t.outTime ? esc(t.outTime) : (t ? '수업 중' : '-')}</div></div>
@@ -211,7 +348,7 @@ function attTodayHtml() {
 function attTabHtml() {
   const DOW = ['일', '월', '화', '수', '목', '금', '토'];
   const rows = attDays.map((a) => { const d = new Date(a.date + 'T00:00:00'); return `<div class="att-row"><span class="d">${d.getMonth() + 1}월 ${d.getDate()}일 (${DOW[d.getDay()]})${a.date === kstDateStr(0) ? ' <span class="pill" style="font-size:11px;">오늘</span>' : ''}</span><span class="tt">등원 ${esc(a.time || '-')} · 하원 ${esc(a.outTime || '-')}${a.method === 'manual' || a.outMethod === 'manual' ? ' <small style="color:var(--muted);">(학원 확인)</small>' : ''}</span></div>`; }).join('');
-  return `<div class="card"><h2>출결 (최근 2주)</h2>${rows || `<div class="empty">최근 2주 등원 기록이 없습니다.${attErr ? '<br><small>' + esc(attErr) + '</small>' : ''}</div>`}</div>`;
+  return `<div class="card"><h2>출결 (최근 2주)</h2>${rows || `<div class="empty">최근 2주 등원 기록이 없습니다.${attErr ? '<br><small>' + esc(attErr) + '</small>' : ''}</div>`}</div>` + absListHtml();
 }
 function noticeTabHtml() {
   const catCls = (c) => c === '학원 일정' ? 'sch' : c === '반 배정' ? 'cls' : '';

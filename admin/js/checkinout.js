@@ -29,6 +29,7 @@ window.initCheckInOut = async function () {
   loadOutCode();
   if (!studentsCache.length && typeof loadStudents === 'function') await loadStudents();
   await cioLoadAppStatus();
+  if (typeof absLoad === 'function') await absLoad();
   // 오늘 출석 기록은 실시간으로 (학생이 휴대폰으로 체크하면 바로 반영)
   if (cioUnsub) { try { cioUnsub(); } catch (e) {} }
   cioUnsub = onSnapshot(query(collection(db, 'attendance'), where('date', '==', cioToday)), (snap) => {
@@ -130,7 +131,8 @@ window.renderCheckInOut = function () {
   const branchColor = (b) => b === '산본관' ? '#C99A0A' : '#5B3FA6';
 
   let html = '';
-  let tot = 0, nIn = 0, nOut = 0, nStuApp = 0, nParApp = 0, nPush = 0;
+  let tot = 0, nIn = 0, nOut = 0, nStuApp = 0, nParApp = 0, nPush = 0, nAbs = 0;
+  const absToday = typeof absMapFor === 'function' ? absMapFor(cioToday) : null;
   const bOrder = (b) => b === '평촌관' ? 0 : b === '산본관' ? 1 : 2;
   Object.keys(byBranch).sort((x, y) => bOrder(x) - bOrder(y)).forEach((b) => {
     const rows = byBranch[b].map((s) => {
@@ -140,8 +142,11 @@ window.renderCheckInOut = function () {
       const sa = cioApp[s.id]; if (sa) nStuApp++;
       const pa = cioParentApp[s.id] || []; if (pa.length) nParApp++;
       const push = pa.some((x) => x.pushOn); if (push) nPush++;
+      const ab = !r && absToday ? absToday[s.id] : null;
+      if (ab) nAbs++;
       const inCell = r
         ? `${ok(cioEsc(r.time))} <small style="color:var(--muted);">${r.method === 'manual' ? '수동' : '앱'}</small>${small('취소', `cioUndo('${s.id}','in')`)}`
+        : ab ? `<span style="color:#C8541F;font-weight:800;" title="${cioEsc(ab.detail || '')}">결석</span> <small style="color:#C8541F;">📝 ${cioEsc(ab.reason || '')}${ab.source === 'phone' ? ' · 전화' : ''}</small>${small('등원', `cioManualIn('${s.id}')`)}`
         : btn('등원', `cioManualIn('${s.id}')`, '#5B3FA6');
       const outCell = !r ? no('-')
         : r.outTime ? `${ok(cioEsc(r.outTime))} <small style="color:var(--muted);">${r.outMethod === 'manual' ? '수동' : '앱'}</small>${small('취소', `cioUndo('${s.id}','out')`)}`
@@ -173,7 +178,7 @@ window.renderCheckInOut = function () {
   });
   el.innerHTML = html || `<div style="color:var(--muted);padding:12px 0;">${onlyToday ? dayName + '요일 수업 학생이 없습니다.' : '학생이 없습니다.'}</div>`;
   const sum = document.getElementById('cioSummary');
-  if (sum) sum.innerHTML = tot ? `대상 <b>${tot}</b>명 · 등원 <b style="color:#5B3FA6;">${nIn}</b> · 하원 <b style="color:#2E9E5B;">${nOut}</b> · 아직 등원 전 <b style="color:#C8541F;">${tot - nIn}</b>
+  if (sum) sum.innerHTML = tot ? `대상 <b>${tot}</b>명 · 등원 <b style="color:#5B3FA6;">${nIn}</b> · 하원 <b style="color:#2E9E5B;">${nOut}</b> · 결석(사유서) <b style="color:#C8541F;">${nAbs}</b> · 아직 등원 전 <b style="color:#C8541F;">${tot - nIn - nAbs}</b>
     <span style="margin-left:10px;color:var(--muted);">| 학생 앱 ${nStuApp}/${tot} · 학부모 앱 ${nParApp}/${tot} (알림 켜짐 ${nPush})</span>` : '';
   cioApplyCardFold();
 };

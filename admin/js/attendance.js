@@ -24,6 +24,7 @@ window.initAttendanceTab = function() {
   attStatus = {};
   renderAttendance();
   loadDailyCode();
+  if (typeof initAbsences === 'function') initAbsences();    // 결석 사유서 (absences.js)
   if (typeof initCheckInOut === 'function') initCheckInOut(); // 등원·하원 · 앱 설치 현황 (checkinout.js)
 };
 
@@ -145,6 +146,15 @@ window.renderAttendance = function() {
     return;
   }
 
+  // 결석 사유서(학부모 앱 제출 · 전화 접수)가 있는 날은 자동 결석 — absences.js
+  const attDateKey = toLocalDateStr(attCurrentDate);
+  if (window.attAbsDate !== attDateKey) {
+    window.attAbsDate = attDateKey; window.attAbsApplied = {};
+    if (typeof absLoad === 'function') absLoad().then(() => { if (window.attAbsDate === attDateKey) renderAttendance(); });
+  }
+  const attAbsMap = typeof absMapFor === 'function' ? absMapFor(attDateKey) : {};
+  filtered.forEach(s => { if (attAbsMap[s.id] && !window.attAbsApplied[s.id]) { attStatus[s.id] = 'absent'; window.attAbsApplied[s.id] = true; } });
+
   // 새 학생은 기본 출석으로 초기화
   filtered.forEach(s => { if (!attStatus[s.id]) attStatus[s.id] = 'present'; });
 
@@ -195,6 +205,7 @@ window.renderAttendance = function() {
             transition:background 0.15s,border-color 0.15s;user-select:none;">
           <span style="font-size:13px;font-weight:700;color:${c.text};">${s.name}</span>
           <span style="font-size:10px;color:${c.sub};margin-top:2px;">${s.grade || ''}</span>
+          ${attAbsMap[s.id] ? `<span title="${(attAbsMap[s.id].reason || '').replace(/"/g, '')} · ${attAbsMap[s.id].source === 'phone' ? '전화 접수' : '학부모 앱 제출'}" style="font-size:9.5px;font-weight:800;margin-top:3px;padding:1px 6px;border-radius:999px;background:#fff;color:#C8541F;border:1px solid #F0B9A0;">📝 ${attAbsMap[s.id].source === 'phone' ? '전화' : '사유서'}</span>` : ''}
         </div>`;
       });
 

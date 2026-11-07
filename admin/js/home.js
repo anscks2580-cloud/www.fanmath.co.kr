@@ -118,6 +118,29 @@
     }
   }
 
+  // ── 결석 사유서 (오늘 · 앞으로) ──
+  async function loadAbsences() {
+    const el = $('hmAbsence'); if (!el || el.closest('[hidden]')) return;
+    try {
+      const all = typeof window.absLoad === 'function' ? await window.absLoad(true) : [];
+      const now = new Date(); const today = ymd(now);
+      const bf = brFilter();
+      const rows = all.filter((a) => (a.dates || []).some((d) => d >= today) && (bf === '전체' || a.branch === bf));
+      const newCnt = rows.filter((a) => !a.readByAdmin).length;
+      const nb = $('hmAbsenceNew'); if (nb) nb.textContent = newCnt ? `새로 ${newCnt}건` : '';
+      if (!rows.length) { el.innerHTML = '<div class="hm-empty">예정된 결석이 없습니다.</div>'; return; }
+      const md2 = (ds) => { const d = new Date(ds + 'T00:00:00'); return `${d.getMonth() + 1}/${d.getDate()}`; };
+      el.innerHTML = '<div class="hm-list">' + rows.slice(0, 8).map((a) => {
+        const ds = [...(a.dates || [])].filter((d) => d >= today).sort();
+        const isToday = ds[0] === today;
+        const when = isToday ? '오늘' + (ds.length > 1 ? ` 외 ${ds.length - 1}일` : '') : md2(ds[0]) + (ds.length > 1 ? ` 외 ${ds.length - 1}일` : '');
+        return `<div class="hm-row${isToday ? ' today' : ''}"><span class="dot" style="background:${a.readByAdmin ? '#C9C4DA' : '#C8541F'}"></span><span class="t"><b>${esc(a.studentName || '')}${a.readByAdmin ? '' : ' <span style="color:#C8541F;font-size:11px;">NEW</span>'}</b><small>${esc(a.branch || '')} · ${esc(a.classGroup || '')} · ${esc(a.reason || '')}${a.source === 'phone' ? ' · 전화' : ''}</small></span><span class="r">${esc(when)}</span></div>`;
+      }).join('') + '</div>' + (rows.length > 8 ? `<div class="hm-foot">외 ${rows.length - 8}건 — 학생 출결에서 확인</div>` : '');
+    } catch (e) {
+      el.innerHTML = `<div class="hm-empty">결석 사유서를 불러오지 못했습니다 (${esc(e.message)})</div>`;
+    }
+  }
+
   // ── 상담 ──
   async function loadConsult() {
     const el = $('hmConsult'); if (!el || el.closest('[hidden]')) return;
@@ -291,7 +314,7 @@
     loading = true;
     renderHeader(); renderOffice(); markBranch();
     if (typeof window.ocRefresh === 'function') window.ocRefresh();
-    await Promise.all([loadSchedule(), loadConsult(), loadSubmissions(), loadStudentsSummary()]);
+    await Promise.all([loadSchedule(), loadAbsences(), loadConsult(), loadSubmissions(), loadStudentsSummary()]);
     loadedAt = Date.now(); loading = false;
   }
 

@@ -152,6 +152,10 @@
         <h3><span>📅 오늘 · 이번 주 일정</span><button class="go" type="button" data-open="schedule">학원 일정 ›</button></h3>
         <div id="hmSchedule"><div class="hm-loading">불러오는 중...</div></div>
       </section>
+      <section class="card hm-card" id="hmAbsenceCard" data-group="student">
+        <h3><span>📝 결석 사유서 <small id="hmAbsenceNew" style="color:#C8541F;font-weight:800;"></small></span><button class="go" type="button" data-open="attendance">학생 출결 ›</button></h3>
+        <div id="hmAbsence"><div class="hm-loading">불러오는 중...</div></div>
+      </section>
       <section class="card hm-card" id="hmConsultCard" data-group="consult">
         <h3><span>📥 상담</span><button class="go" type="button" data-open="consult">상담 신청 ›</button></h3>
         <div id="hmConsult"><div class="hm-loading">불러오는 중...</div></div>
@@ -2136,6 +2140,49 @@
         </div>
       </div>
     </div>
+    <div class="card" style="border-color:rgba(200,84,31,0.35);">
+      <h3 style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span>📝 결석 사유서</span>
+        <span id="absNewBadge" style="font-size:12px;font-weight:800;color:#C8541F;"></span>
+        <button class="btn btn-sm btn-primary" style="margin-left:auto;" onclick="absOpenForm()">📞 전화 접수 입력</button>
+      </h3>
+      <p style="font-size:12px;color:var(--muted);margin:-4px 0 10px;line-height:1.6;">
+        학부모님이 학부모 앱에서 제출하거나 여기서 입력한 날짜는 아래 출결 체크에 <b>자동으로 결석</b>, 등원·하원 표에 「결석」으로 표시돼요. 담당 선생님 「오늘 할 일」에도 바로 보입니다.
+      </p>
+      <div id="absForm" style="display:none;border:1px solid rgba(91,63,166,0.2);border-radius:12px;padding:14px;margin-bottom:12px;background:#FBFAFE;">
+        <div style="font-weight:800;margin-bottom:8px;">📞 전화 접수 결석 입력</div>
+        <input id="absFormSearch" oninput="absRenderForm()" placeholder="학생 이름 검색"
+          style="width:100%;max-width:280px;padding:8px 12px;border:1px solid rgba(91,63,166,0.25);border-radius:8px;font-family:inherit;font-size:13px;margin-bottom:8px;">
+        <div id="absFormPick" style="margin-bottom:10px;"></div>
+        <div style="display:flex;gap:16px;flex-wrap:wrap;">
+          <div style="width:280px;"><div id="absFormCal"></div><div id="absFormSel" style="font-size:12px;color:#C8541F;margin-top:6px;"></div></div>
+          <div style="flex:1;min-width:220px;">
+            <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:6px;">결석 사유</div>
+            <div id="absFormReasons" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;">
+              <button type="button" class="btn btn-sm btn-secondary" data-r="질병·병원" onclick="absFormSetReason('질병·병원')">질병·병원</button>
+              <button type="button" class="btn btn-sm btn-secondary" data-r="가족 행사" onclick="absFormSetReason('가족 행사')">가족 행사</button>
+              <button type="button" class="btn btn-sm btn-secondary" data-r="학교 행사" onclick="absFormSetReason('학교 행사')">학교 행사</button>
+              <button type="button" class="btn btn-sm btn-secondary" data-r="여행" onclick="absFormSetReason('여행')">여행</button>
+              <button type="button" class="btn btn-sm btn-secondary" data-r="기타" onclick="absFormSetReason('기타')">기타</button>
+            </div>
+            <textarea id="absFormDetail" rows="3" placeholder="통화 내용 메모 (선택)"
+              style="width:100%;padding:8px 12px;border:1px solid rgba(91,63,166,0.25);border-radius:8px;font-family:inherit;font-size:13px;resize:vertical;"></textarea>
+            <div style="display:flex;gap:8px;margin-top:10px;">
+              <button class="btn btn-sm btn-primary" id="absFormGo" onclick="absSubmitForm()">결석 입력</button>
+              <button class="btn btn-sm btn-secondary" onclick="absCloseForm()">닫기</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px;">
+        <select id="absBranch" onchange="renderAbsences()"
+          style="padding:7px 14px;background:#FFFFFF;border:1px solid rgba(245,197,24,0.4);border-radius:8px;color:#1E1838;font-size:13px;font-family:inherit;outline:none;cursor:pointer;color-scheme:light;">
+          <option value="">전체</option><option value="평촌관">평촌관</option><option value="산본관">산본관</option>
+        </select>
+        <label style="font-size:13px;display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="absShowPast" onchange="renderAbsences()"> 지난 결석도 보기</label>
+      </div>
+      <div id="absList"><div style="color:var(--muted);font-size:13px;">불러오는 중…</div></div>
+    </div>
     <div class="card">
       <h3 onclick="toggleCioCard()" style="cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none;margin-bottom:0;">
         <span style="flex:1;">📲 오늘 등원 · 하원 · 앱 설치 현황</span>
@@ -2767,8 +2814,9 @@
 <script defer src="admin/js/homeworklog.js?v=1792818255"></script>
 <script defer src="admin/js/satclinic.js?v=1792811435"></script>
 <script defer src="admin/js/dailyreport.js?v=1792760000"></script>
-<script defer src="admin/js/attendance.js?v=1794200000"></script>
-<script defer src="admin/js/checkinout.js?v=1794210000"></script>
+<script defer src="admin/js/attendance.js?v=1794300000"></script>
+<script defer src="admin/js/absences.js?v=1794300000"></script>
+<script defer src="admin/js/checkinout.js?v=1794300000"></script>
 <script defer src="admin/js/weeklylog.js?v=1794000000"></script>
 <script defer src="admin/js/drafts.js?v=1792760000"></script>
 <script defer src="admin/js/promotion.js"></script>
@@ -2792,7 +2840,7 @@
 <script defer src="admin/js/exammaterials.js?v=1792850000"></script>
 <script defer src="admin/js/nav.js?v=1794001000"></script>
 <script defer src="admin/js/officecal.js?v=1793704000"></script>
-<script defer src="admin/js/home.js?v=1793703000"></script>
+<script defer src="admin/js/home.js?v=1794300000"></script>
 
 <div id="toast"></div>
 <div id="printSheet"></div>
