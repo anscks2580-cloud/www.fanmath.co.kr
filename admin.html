@@ -100,6 +100,7 @@
     <button class="admin-tab" onclick="switchTab('monthly',this);initMonthlyTab()">📝 월말보고서</button>
     <button class="admin-tab" onclick="switchTab('studyreport',this);initStudyReportTab()">📈 학습보고서 생성</button>
     <button class="admin-tab" onclick="switchTab('homeworklog',this);initHomeworkLogTab()">📒 숙제 입력</button>
+    <button class="admin-tab" onclick="switchTab('parentmsg',this);initParentMsgTab()">💬 학부모 발송</button>
     <button class="admin-tab" onclick="switchTab('satclinic',this);initSatClinicTab()">🏥 토요클리닉</button>
     <button class="admin-tab" onclick="switchTab('dailyreport',this);initDailyReportTab()">📋 관리부 마감</button>
     <button class="admin-tab" onclick="switchTab('weeklylog',this);initWeeklyLogTab()">📅 주간업무일지</button>
@@ -1748,6 +1749,77 @@
   </div>
 
   <!-- 숙제 입력 (관리부): 날짜별 담당 › 반 › 학생 › 내용 → 학부모 페이지 "숙제" 탭 -->
+  <!-- ══ 학부모 발송 (카톡 · 문자 · 앱 알림) — admin/js/parentmsg.js ══ -->
+  <div class="tab-panel" id="tab-parentmsg">
+    <div class="card">
+      <h3>💬 학부모 발송 — 숙제 · 출결 · 주간성취도 · 월말보고서</h3>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
+        학부모 페이지에 올라간 내용을 학부모님 휴대폰으로 보냅니다. 받는 방법은 학생마다 자동으로 정해져요 —
+        <b style="color:#2E9E5B;">학원 앱 알림을 켠 학부모님은 앱 알림</b>(이미 자동으로 가요), 나머지는 <b style="color:#3A1D1D;background:#FEE500;padding:0 4px;border-radius:4px;">카톡</b>,
+        카톡을 못 받는 분은 같은 내용이 <b style="color:#5B3FA6;">문자</b>로 자동 대체됩니다. 카톡이 안 되는 분은 아래 「받는 방법 설정」에서 문자로 지정하세요.
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        <button type="button" class="notice-target-btn active" data-pmbr="평촌관" onclick="pmSetBranch('평촌관')" style="color:#5B3FA6;">평촌관</button>
+        <button type="button" class="notice-target-btn" data-pmbr="산본관" onclick="pmSetBranch('산본관')" style="color:#C99A0A;">산본관</button>
+      </div>
+      <div id="pmStatus" style="background:rgba(30,24,56,0.03);border-radius:10px;padding:12px 14px;"></div>
+    </div>
+
+    <div class="card">
+      <h3>📤 보내기</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        <button type="button" class="notice-target-btn active" data-pmtype="hw" onclick="pmSetType('hw')">📒 숙제</button>
+        <button type="button" class="notice-target-btn" data-pmtype="att" onclick="pmSetType('att')">✅ 출결</button>
+        <button type="button" class="notice-target-btn" data-pmtype="weekly" onclick="pmSetType('weekly')">📊 주간성취도</button>
+        <button type="button" class="notice-target-btn" data-pmtype="monthly" onclick="pmSetType('monthly')">📝 월말보고서</button>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <span id="pmDateWrap"><input type="date" id="pmDate" style="padding:8px 12px;border:1px solid rgba(30,24,56,0.15);border-radius:8px;font-family:inherit;font-size:13px;background:#fff;color:var(--off-white);"></span>
+        <span id="pmWeekWrap" style="display:none;"><select id="pmWeek" style="padding:8px 12px;border:1px solid rgba(30,24,56,0.15);border-radius:8px;font-family:inherit;font-size:13px;background:#fff;color:var(--off-white);"></select></span>
+        <span id="pmMonthWrap" style="display:none;"><input type="month" id="pmMonth" style="padding:8px 12px;border:1px solid rgba(30,24,56,0.15);border-radius:8px;font-family:inherit;font-size:13px;background:#fff;color:var(--off-white);"></span>
+        <button class="btn btn-primary btn-sm" onclick="pmLoad()">불러오기</button>
+        <label style="font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="pmIncApp" onchange="pmRenderList()"> 앱 알림 학부모님께도 다시 보내기</label>
+      </div>
+      <div id="pmList" style="margin-top:12px;"></div>
+      <button class="btn btn-primary" id="pmSendBtn" onclick="pmSend()" style="display:none;margin-top:12px;">보내기</button>
+      <div id="pmMsg" class="msg"></div>
+    </div>
+
+    <div class="card">
+      <h3>🚪 등원 · 하원 자동 알림</h3>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:10px;line-height:1.6;">
+        학생이 출결 코드를 넣거나 관리부가 수동으로 등원·하원을 누르면, 앱 알림을 켠 학부모님은 앱으로(지금처럼), <b>앱이 없는 학부모님은 카톡(안 되면 문자)</b>으로 바로 알림이 갑니다.
+      </div>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;font-size:13.5px;">
+        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-weight:700;"><input type="checkbox" id="pmAutoAtt"> 자동 알림 켜기</label>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;color:#5B3FA6;"><input type="checkbox" id="pmAutoBr-평촌관" checked> 평촌관</label>
+        <label style="display:flex;align-items:center;gap:5px;cursor:pointer;color:#C99A0A;"><input type="checkbox" id="pmAutoBr-산본관" checked> 산본관</label>
+        <button class="btn btn-primary btn-sm" onclick="pmSaveAuto()">저장</button>
+      </div>
+      <div id="pmAutoMsg" class="msg"></div>
+    </div>
+
+    <div class="card">
+      <h3>☎️ 받는 방법 설정 <span style="font-size:12px;font-weight:500;color:var(--muted);">— 카톡이 안 되는 학부모님은 「문자만」 + 번호 지정</span></h3>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+        <input type="text" id="pmRouteSearch" placeholder="학생 이름 검색" oninput="pmRenderRouteList()" style="padding:8px 12px;border:1px solid rgba(30,24,56,0.15);border-radius:8px;font-family:inherit;font-size:13px;background:#fff;color:var(--off-white);">
+        <label style="font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" id="pmRouteOdd" onchange="pmRenderRouteList()"> 문자 지정 · 보낼 수 없는 학생만</label>
+      </div>
+      <div id="pmRouteList"></div>
+      <div id="pmRouteMsg" class="msg"></div>
+    </div>
+
+    <div class="card">
+      <h3>🧾 이번 달 발송 기록</h3>
+      <div id="pmLogs" style="max-height:360px;overflow-y:auto;"></div>
+    </div>
+
+    <div class="card">
+      <h3>🔧 카톡 · 문자 연동 설정 <span style="font-size:12px;font-weight:500;color:var(--muted);">— 원장 계정 전용 · 솔라피</span></h3>
+      <div id="pmCfgBox"></div>
+    </div>
+  </div>
+
   <div class="tab-panel" id="tab-homeworklog">
     <style>
       .hl-cls { padding:7px 12px; border-radius:20px; border:1px solid rgba(30,24,56,0.15); background:rgba(30,24,56,0.05); color:var(--off-white); font-size:13px; font-family:inherit; cursor:pointer; }
@@ -2817,6 +2889,7 @@
 <script defer src="admin/js/attendance.js?v=1794300000"></script>
 <script defer src="admin/js/absences.js?v=1794300000"></script>
 <script defer src="admin/js/checkinout.js?v=1794310000"></script>
+<script defer src="admin/js/parentmsg.js?v=1794400000"></script>
 <script defer src="admin/js/weeklylog.js?v=1794000000"></script>
 <script defer src="admin/js/drafts.js?v=1792760000"></script>
 <script defer src="admin/js/promotion.js"></script>
@@ -2838,7 +2911,7 @@
 <script defer src="admin/js/vimeo-upload.js?v=1793190000"></script>
 <script defer src="admin/js/weeklyclear.js?v=1794120000"></script>
 <script defer src="admin/js/exammaterials.js?v=1792850000"></script>
-<script defer src="admin/js/nav.js?v=1794001000"></script>
+<script defer src="admin/js/nav.js?v=1794400000"></script>
 <script defer src="admin/js/officecal.js?v=1793704000"></script>
 <script defer src="admin/js/home.js?v=1794300000"></script>
 
