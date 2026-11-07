@@ -185,17 +185,18 @@ window.renderCheckInOut = function () {
 
 window.cioRefreshApp = async function () { await cioLoadAppStatus(); renderCheckInOut(); };
 
-// ── 접기 / 펼치기 (카드 전체 · 관별 표) — 상태는 이 컴퓨터에 기억 ──
+// ── 접기 / 펼치기 (카드 전체 · 관별 표) — 카드는 기본 접힘, 상태는 이 컴퓨터에 기억 ──
 function cioGetFold() { try { return JSON.parse(localStorage.getItem('cio_fold') || '{}'); } catch (e) { return {}; } }
 function cioSetFold(f) { try { localStorage.setItem('cio_fold', JSON.stringify(f)); } catch (e) {} }
 function cioApplyCardFold() {
   const f = cioGetFold();
   const body = document.getElementById('cioCardBody'), arrow = document.getElementById('cioCardArrow'), sum = document.getElementById('cioCardSum');
   if (!body) return;
-  body.style.display = f.card ? 'none' : '';
-  if (arrow) arrow.style.transform = f.card ? 'rotate(-90deg)' : '';
+  const folded = f.card !== false; // 기본은 접힘 — 한 번 펼치면 그 상태를 기억
+  body.style.display = folded ? 'none' : '';
+  if (arrow) arrow.style.transform = folded ? 'rotate(-90deg)' : '';
   // 접혀 있을 때도 핵심 숫자는 제목 옆에 보이게
-  if (sum) sum.textContent = f.card ? (document.getElementById('cioSummary')?.innerText.split('|')[0].trim() || '') : '';
+  if (sum) sum.textContent = folded ? (document.getElementById('cioSummary')?.innerText.split('|')[0].trim() || '') : '';
 }
-window.toggleCioCard = function () { const f = cioGetFold(); f.card = !f.card; cioSetFold(f); cioApplyCardFold(); };
+window.toggleCioCard = function () { const f = cioGetFold(); f.card = !(f.card !== false); cioSetFold(f); cioApplyCardFold(); };
 window.toggleCioBranch = function (b) { const f = cioGetFold(); f['br_' + b] = !f['br_' + b]; cioSetFold(f); renderCheckInOut(); };
