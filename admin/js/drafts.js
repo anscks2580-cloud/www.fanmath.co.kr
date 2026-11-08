@@ -116,6 +116,7 @@ function getAttData() {
     date:   toLocalDateStr(attCurrentDate),
     branch: branchFilter,
     status: statusSnapshot,
+    reasons: Object.assign({}, attReasons[toLocalDateStr(attCurrentDate)] || {}),
   };
 }
 
@@ -129,6 +130,7 @@ function setAttData(d) {
     if (sel) sel.value = d.branch;
   }
   if (d.status) Object.assign(attStatus, d.status);
+  if (d.reasons) attReasons[toLocalDateStr(attCurrentDate)] = Object.assign(attReasons[toLocalDateStr(attCurrentDate)] || {}, d.reasons);
   renderAttendance();
 }
 

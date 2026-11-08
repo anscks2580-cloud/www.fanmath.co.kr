@@ -9,6 +9,17 @@
 const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 let attCurrentDate = new Date();
 let attStatus = {};   // { studentId: 'present'|'absent' }
+let attReasons = {};  // 결석 사유 { 'YYYY-MM-DD': { studentId: '사유' } } — 날짜를 옮겨도 입력한 사유가 남음
+
+function attEsc(t) { return String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function attReasonMap() { const k = toLocalDateStr(attCurrentDate); if (!attReasons[k]) attReasons[k] = {}; return attReasons[k]; }
+// 학생 한 명의 결석 사유 (사유서가 있으면 사유서 내용, 없으면 관리부가 입력한 사유)
+function attReasonOf(s, absMap) {
+  const a = absMap && absMap[s.id];
+  if (a) return [a.reason, a.detail].filter(Boolean).join(' - ') + (a.source === 'phone' ? ' (전화 접수)' : ' (사유서)');
+  return (attReasonMap()[s.id] || '').trim();
+}
+function attCurAbsMap() { return typeof absMapFor === 'function' ? absMapFor(toLocalDateStr(attCurrentDate)) : {}; }
 
 // toISOString()은 UTC 기준이라 한국 시간대에서는 자정~오전 9시 사이에 하루 전 날짜로 잘못 저장되는 문제가 있음.
 // 로컬 날짜 그대로 YYYY-MM-DD 문자열로 변환하는 안전한 헬퍼.
@@ -86,7 +97,57 @@ window.toggleAttStatus = function(uid) {
   const chip = document.getElementById('att-chip-' + uid);
   if (!chip) return;
   applyChipStyle(chip, attStatus[uid]);
+  renderAttReasons();
   updateAttSummary();
+  // 결석으로 바뀌면 사유 칸에 바로 입력할 수 있게
+  if (attStatus[uid] === 'absent') {
+    const inp = document.getElementById('att-reason-' + uid);
+    if (inp) { inp.focus({ preventScroll: true }); inp.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }
+  }
+};
+
+window.setAttReason = function(uid, val) {
+  attReasonMap()[uid] = val;
+  updateAttSummary();
+};
+
+// 출결 체크 아래 「결석 사유」 칸 — 결석(빨간색)인 학생만 나옴
+window.renderAttReasons = function() {
+  const box = document.getElementById('attReasonBox');
+  if (!box) return;
+  const dayName = DAY_NAMES[attCurrentDate.getDay()];
+  const branchFilter = document.getElementById('attBranchFilter')?.value || '';
+  const absMap = attCurAbsMap();
+  const absent = studentsCache.filter(s =>
+    (s.days || []).includes(dayName) &&
+    (!branchFilter || s.branch === branchFilter) &&
+    attStatus[s.id] === 'absent'
+  );
+  if (!absent.length) { box.innerHTML = ''; box.style.display = 'none'; return; }
+  const rm = attReasonMap();
+  const branches = [...new Set(absent.map(s => s.branch))].sort();
+  const bc = (b) => b === '산본관' ? '#C99A0A' : '#5B3FA6';
+  let html = `<div style="font-size:14px;font-weight:800;color:#C62828;margin-bottom:10px;">📝 결석 사유 (${absent.length}명)</div>`;
+  branches.forEach(branch => {
+    const list = absent.filter(s => s.branch === branch);
+    html += `<div style="font-size:12px;font-weight:800;color:${bc(branch)};margin:8px 0 6px;">🏫 ${attEsc(branch || '')} (${list.length}명)</div>`;
+    list.forEach(s => {
+      const a = absMap[s.id];
+      html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 10px;border:1px solid rgba(239,68,68,0.3);background:#FFF5F5;border-radius:10px;margin-bottom:6px;">
+        <div style="min-width:120px;">
+          <b style="font-size:13px;color:#B91C1C;">${attEsc(s.name)}</b>
+          <span style="font-size:11px;color:var(--muted);margin-left:4px;">${attEsc(s.grade || '')}${s.classGroup ? ' · ' + attEsc(s.classGroup) : ''}</span>
+        </div>
+        ${a
+          ? `<div style="flex:1;min-width:200px;font-size:13px;color:#1E1838;"><span style="font-size:11px;font-weight:800;padding:1px 7px;border-radius:999px;background:#fff;color:#C8541F;border:1px solid #F0B9A0;margin-right:6px;">${a.source === 'phone' ? '📞 전화 접수' : '📱 학부모 사유서'}</span><b>${attEsc(a.reason || '')}</b>${a.detail ? ' — ' + attEsc(a.detail) : ''}</div>`
+          : `<input id="att-reason-${s.id}" type="text" value="${attEsc(rm[s.id] || '')}" placeholder="결석 사유를 입력하세요 (예: 감기, 가족 행사, 학교 행사)"
+              oninput="setAttReason('${s.id}', this.value)" maxlength="200"
+              style="flex:1;min-width:200px;padding:8px 10px;border:1px solid rgba(30,24,56,0.18);border-radius:8px;font-size:13px;font-family:inherit;background:#fff;color:#1E1838;outline:none;">`}
+      </div>`;
+    });
+  });
+  box.innerHTML = html;
+  box.style.display = 'block';
 };
 
 // 반 정렬용: 학년 순서(초→중→고) 기준, 미배정은 맨 뒤
@@ -214,8 +275,10 @@ window.renderAttendance = function() {
     html += `</div>`;
   });
 
+  html += `<div id="attReasonBox" style="display:none;margin-top:6px;padding-top:14px;border-top:1px dashed rgba(239,68,68,0.35);"></div>`;
   el.innerHTML = html;
   if (dlBtn) dlBtn.style.display = 'inline-flex';
+  renderAttReasons();
   updateAttSummary();
 };
 
@@ -235,10 +298,10 @@ function updateAttSummary() {
   const none    = filtered.filter(s => attStatus[s.id] === 'none').length;
   const present = total - absent - none;
 
-  const absentNames = filtered
-    .filter(s => attStatus[s.id] === 'absent')
-    .map(s => s.name)
-    .join(', ');
+  const absMap = attCurAbsMap();
+  const absentList = filtered.filter(s => attStatus[s.id] === 'absent');
+  const absentNames = absentList.map(s => attEsc(s.name)).join(', ');
+  const noReason = absentList.filter(s => !attReasonOf(s, absMap)).length;
 
   sumEl.innerHTML = `
     <div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
@@ -256,7 +319,11 @@ function updateAttSummary() {
         <span style="font-size:14px;font-weight:600;color:var(--muted);">해당없음 ${none}명</span>
       </div>
     </div>
-    ${absentNames ? `<div style="font-size:12px;color:#C62828;">결석: ${absentNames}</div>` : ''}`;
+    ${absentList.length ? `<div style="font-size:12px;color:#C62828;margin-bottom:6px;">결석: ${absentNames}</div>
+      <div style="display:flex;flex-direction:column;gap:3px;">
+        ${absentList.map(s => { const r = attReasonOf(s, absMap); return `<div style="font-size:12.5px;color:#1E1838;">• <b>${attEsc(s.name)}</b> <span style="color:var(--muted);">${attEsc(s.grade || '')}</span> — ${r ? attEsc(r) : '<span style="color:#D64545;">사유 미입력</span>'}</div>`; }).join('')}
+      </div>
+      ${noReason ? `<div style="font-size:11.5px;color:#D64545;margin-top:6px;">⚠ 사유를 입력하지 않은 결석 학생 ${noReason}명</div>` : ''}` : ''}`;
 }
 
 // 출결 이미지 다운로드
@@ -295,6 +362,9 @@ window.downloadAttendanceImage = function() {
     });
   });
   totalH += 60; // 요약 + 여백
+  const imgAbsMap = attCurAbsMap();
+  const imgAbsent = filtered.filter(s => attStatus[s.id] === 'absent');
+  if (imgAbsent.length) totalH += 24 + imgAbsent.length * 20; // 결석 사유 줄
 
   const canvas = document.getElementById('attCanvas');
   canvas.width = CW; canvas.height = totalH;
@@ -379,10 +449,16 @@ window.downloadAttendanceImage = function() {
   ctx.font = '13px "Apple SD Gothic Neo","Malgun Gothic",sans-serif';
   ctx.textAlign = 'left';
   ctx.fillText(`총 ${total}명 · 출석 ${present}명 · 결석 ${absent}명 · 해당없음 ${none}명`, PAD, y + 16);
-  const absentNames = filtered.filter(s => attStatus[s.id]==='absent').map(s=>s.name).join(', ');
-  if (absentNames) {
+  if (imgAbsent.length) {
     ctx.fillStyle = '#DC2626';
-    ctx.fillText(`결석: ${absentNames}`, PAD, y + 34);
+    ctx.font = 'bold 13px "Apple SD Gothic Neo","Malgun Gothic",sans-serif';
+    ctx.fillText(`결석 사유 (${imgAbsent.length}명)`, PAD, y + 40);
+    ctx.font = '13px "Apple SD Gothic Neo","Malgun Gothic",sans-serif';
+    imgAbsent.forEach((s, i) => {
+      const r = attReasonOf(s, imgAbsMap) || '사유 미입력';
+      ctx.fillStyle = '#333';
+      ctx.fillText(`• ${s.name} (${s.grade || ''}${branchFilter ? '' : ' · ' + (s.branch || '')}) — ${r}`, PAD, y + 62 + i * 20, CW - PAD * 2);
+    });
   }
 
   const link = document.createElement('a');
