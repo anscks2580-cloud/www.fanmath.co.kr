@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>자료 올리기 (선생님 전용) | 2026 2학기 기말고사 대비 · 평촌 학원 연합</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#0E1420;
+    --paper-soft:#171F2F;
+    --ink:#F1EFE8;
+    --ink-soft:#9CA3B5;
+    --line:#2B3348;
+    --coral:#E8583C;
+    --green:#2FA36B;
+    --card:#161E2E;
+    --gold:#D2AF6E;
+    --gold-soft:#E4D3AC;
+    --charcoal-deep:#0C0B08;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:'Pretendard','Noto Sans KR',sans-serif;line-height:1.6;}
+  a{color:inherit;}
+  header{padding:18px 6vw;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;border-bottom:1px solid var(--line);}
+  .brand{font-weight:700;font-size:0.92rem;text-decoration:none;}
+  .brand .brand-sub{display:block;font-size:0.62rem;font-weight:600;letter-spacing:0.18em;color:var(--gold);margin-bottom:3px;}
+  .head-right{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:0.85rem;color:var(--ink-soft);}
+  .ghost-btn{border:1px solid var(--line);background:transparent;color:var(--ink-soft);padding:7px 14px;border-radius:30px;font-size:0.8rem;cursor:pointer;text-decoration:none;}
+  .ghost-btn:hover{border-color:var(--gold);color:var(--gold);}
+
+  /* 로그인 게이트 */
+  .auth-gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .auth-card{width:100%;max-width:360px;text-align:center;padding:36px 30px;background:var(--paper-soft);border:1px solid var(--line);border-radius:10px;}
+  .auth-title{font-family:'Nanum Myeongjo',serif;font-size:1.3rem;font-weight:700;margin-bottom:8px;}
+  .auth-sub{font-size:0.84rem;color:var(--ink-soft);margin-bottom:22px;}
+  .auth-card input{width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);font-size:1rem;margin-bottom:14px;text-align:center;letter-spacing:0.2em;}
+  .auth-btn{width:100%;padding:12px;border:none;border-radius:6px;background:var(--gold);color:var(--charcoal-deep);font-weight:700;font-size:0.9rem;cursor:pointer;}
+  .auth-btn:hover{background:var(--gold-soft);}
+  .auth-error{color:var(--coral);font-size:0.82rem;margin-top:10px;min-height:1.2em;}
+
+  main{max-width:860px;margin:0 auto;padding:40px 5vw 70px;}
+  .eyebrow{font-size:0.7rem;font-weight:700;letter-spacing:0.3em;color:var(--gold);margin-bottom:6px;}
+  h1{font-family:'Nanum Myeongjo',serif;font-size:1.5rem;margin:0 0 6px;}
+  .lead{color:var(--ink-soft);font-size:0.88rem;margin:0 0 26px;}
+
+  .box{background:var(--paper-soft);border:1px solid var(--line);border-radius:10px;padding:22px;margin-bottom:28px;}
+  .kind-switch{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+  .kind-btn{padding:16px 10px;border:2px solid var(--line);border-radius:10px;background:var(--paper);color:var(--ink-soft);cursor:pointer;text-align:center;font-size:1rem;font-weight:700;}
+  .kind-btn small{display:block;font-size:0.74rem;font-weight:500;margin-top:4px;}
+  .kind-btn.on{border-color:var(--gold);color:var(--gold);background:rgba(210,175,110,0.08);}
+
+  .row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:12px;}
+  @media (max-width:640px){.row{grid-template-columns:1fr;}}
+  label{display:block;font-size:0.76rem;color:var(--ink-soft);margin-bottom:4px;}
+  input[type=text], select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);font-size:0.92rem;font-family:inherit;}
+  .field{margin-bottom:12px;}
+
+  .src-tabs{display:flex;gap:6px;margin-bottom:10px;}
+  .src-tab{padding:6px 14px;border:1px solid var(--line);border-radius:30px;background:transparent;color:var(--ink-soft);font-size:0.8rem;cursor:pointer;}
+  .src-tab.on{border-color:var(--gold);color:var(--gold);}
+
+  .drop{border:2px dashed var(--line);border-radius:10px;padding:26px 14px;text-align:center;color:var(--ink-soft);font-size:0.88rem;cursor:pointer;}
+  .drop.over, .drop:hover{border-color:var(--gold);color:var(--gold);}
+  .drop b{color:var(--ink);}
+  .prog{height:8px;background:var(--paper);border-radius:6px;overflow:hidden;margin-top:12px;display:none;}
+  .prog div{height:100%;width:0;background:var(--gold);transition:width .2s;}
+  .msg{font-size:0.82rem;margin-top:10px;min-height:1.2em;}
+  .msg.err{color:var(--coral);} .msg.ok{color:var(--green);}
+  .submit{width:100%;margin-top:14px;padding:13px;border:none;border-radius:8px;background:var(--gold);color:var(--charcoal-deep);font-weight:800;font-size:0.95rem;cursor:pointer;}
+  .submit:disabled{opacity:0.5;cursor:default;}
+  .notice{font-size:0.76rem;color:var(--ink-soft);margin-top:10px;}
+
+  .list-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;}
+  .list-head h2{font-size:1.05rem;margin:0;}
+  .filter{display:flex;gap:6px;}
+  .item{display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--line);border-radius:8px;background:var(--card);margin-bottom:8px;}
+  .badge{flex-shrink:0;font-size:0.68rem;font-weight:700;border-radius:20px;padding:2px 9px;}
+  .badge.video{background:rgba(91,127,255,0.15);color:#8FA6FF;}
+  .badge.pdf{background:rgba(210,175,110,0.15);color:var(--gold);}
+  .item-main{flex:1;min-width:0;}
+  .item-title{font-weight:700;font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .item-meta{font-size:0.72rem;color:var(--ink-soft);}
+  .item a, .item button{flex-shrink:0;font-size:0.76rem;border:1px solid var(--line);background:transparent;color:var(--ink-soft);border-radius:20px;padding:4px 11px;cursor:pointer;text-decoration:none;}
+  .item a:hover{border-color:var(--gold);color:var(--gold);}
+  .item button:hover{border-color:var(--coral);color:var(--coral);}
+  .empty{text-align:center;color:var(--ink-soft);font-size:0.86rem;padding:20px 0;}
+</style>
+</head>
+<body>
+
+<!-- ── 입장: 학원별 업로드 인증번호 ── -->
+<div class="auth-gate" id="authGate">
+  <div class="auth-card">
+    <div style="font-size:0.62rem;font-weight:600;letter-spacing:0.18em;color:var(--gold);margin-bottom:10px;">TEAM I:DEA</div>
+    <div class="auth-title">기말고사 자료 올리기</div>
+    <div class="auth-sub">연합 학원 선생님 전용 화면입니다.<br>학원별 업로드 인증번호를 입력해주세요.</div>
+    <input type="password" id="codeInput" placeholder="인증번호" autocomplete="off" inputmode="numeric">
+    <button class="auth-btn" id="enterBtn">입장하기</button>
+    <div class="auth-error" id="authError"></div>
+  </div>
+</div>
+
+<div id="site" style="display:none;">
+<header>
+  <a href="materials.html" class="brand"><span class="brand-sub">TEAM I:DEA</span>평촌 학원 연합 · 기말고사 자료 올리기</a>
+  <div class="head-right">
+    <span id="welcome"></span>
+    <a class="ghost-btn" href="materials.html" target="_blank" rel="noopener">자료실 보기</a>
+    <button class="ghost-btn" id="logoutBtn">나가기</button>
+  </div>
+</header>
+
+<main>
+  <div class="eyebrow">TEACHER UPLOAD</div>
+  <h1>자료 올리기</h1>
+  <p class="lead">올린 자료는 기말고사 자료실에 바로 올라갑니다. <b style="color:var(--ink)">영상은 학생·선생님 모두</b>, <b style="color:var(--ink)">PDF는 선생님 화면에만</b> 보이고 내려받을 수 있어요.</p>
+
+  <div class="box">
+    <div class="kind-switch">
+      <button class="kind-btn on" data-kind="video">🎬 영상<small>학생·선생님 모두 보임</small></button>
+      <button class="kind-btn" data-kind="pdf">📄 PDF<small>선생님만 보임·다운로드</small></button>
+    </div>
+
+    <div class="field">
+      <label>자료명</label>
+      <input type="text" id="title" maxlength="120" placeholder="예) 평촌고 고1 기말 대비 1회 해설">
+    </div>
+    <div class="row">
+      <div>
+        <label>학년</label>
+        <select id="grade">
+          <option value="">학년 선택</option>
+          <option>중1</option><option>중2</option><option>중3</option>
+          <option>고1</option><option>고2</option><option>고3</option>
+        </select>
+      </div>
+      <div id="typeWrap">
+        <label>자료 유형</label>
+        <select id="mtype"></select>
+      </div>
+      <div id="yearWrap" style="display:none;">
+        <label>기출 연도</label>
+        <select id="year"><option value="2025">2025년</option><option value="2024">2024년</option></select>
+      </div>
+    </div>
+
+    <div id="videoSrcTabs" class="src-tabs">
+      <button class="src-tab on" data-src="file">영상 파일 올리기</button>
+      <button class="src-tab" data-src="link">유튜브·비메오 링크</button>
+    </div>
+
+    <div id="fileArea">
+      <div class="drop" id="drop">
+        <div id="dropText">여기를 눌러 <b>영상 파일</b>을 고르거나 끌어다 놓으세요</div>
+      </div>
+      <input type="file" id="fileInput" style="display:none;">
+    </div>
+    <div id="linkArea" style="display:none;">
+      <input type="text" id="linkInput" placeholder="https://youtu.be/... 또는 https://vimeo.com/...">
+    </div>
+
+    <div class="prog" id="prog"><div id="progBar"></div></div>
+    <div class="msg" id="msg"></div>
+    <button class="submit" id="submitBtn">올리기</button>
+    <div class="notice">파일 한 개당 3GB까지 올릴 수 있어요. 올리는 중에는 창을 닫지 마세요.</div>
+  </div>
+
+  <div class="list-head">
+    <h2 id="listTitle">우리 학원이 올린 자료</h2>
+    <div class="filter">
+      <button class="src-tab on" data-f="">전체</button>
+      <button class="src-tab" data-f="video">영상</button>
+      <button class="src-tab" data-f="pdf">PDF</button>
+    </div>
+  </div>
+  <div id="list"><div class="empty">불러오는 중…</div></div>
+</main>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+// 이 화면은 학원 홈페이지의 선생님·관리자 페이지와 연결되지 않은 기말고사 전용 업로드 화면입니다.
+// (로그인 계정 없음 — 아래 학원별 업로드 인증번호로만 입장)
+const firebaseConfig = {
+  apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
+  authDomain: "songmath.firebaseapp.com",
+  projectId: "songmath",
+  storageBucket: "songmath.firebasestorage.app",
+  messagingSenderId: "936295436575",
+  appId: "1:936295436575:web:d1e201508719850cfbe02a"
+};
+const app = initializeApp(firebaseConfig, 'examUpload');
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+// ── 학원별 업로드 인증번호 (자료실 입장 번호와 별개, 값만 바꾸면 바로 변경됨) ──
+const UPLOAD_CODES = {
+  "731905": "송우찬수학학원",
+  "482617": "인어스수학학원",
+  "905364": "대치레몬학원",
+  "268471": "에이펙스영어학원",
+};
+const SUBJECT = { "송우찬수학학원": "수학", "인어스수학학원": "수학", "대치레몬학원": "영어", "에이펙스영어학원": "영어" };
+const MAX_SIZE = 3 * 1024 * 1024 * 1024;
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const sizeText = (b) => b >= 1024 ** 3 ? (b / 1024 ** 3).toFixed(2) + 'GB' : Math.max(1, Math.round(b / 1048576)) + 'MB';
+
+let academy = null;
+let kind = 'video';      // video | pdf
+let videoSrc = 'file';   // file | link
+let pickedFile = null;
+let busy = false;
+let items = [];
+let listFilter = '';
+
+// ── 입장 ──
+function enter(code) {
+  const name = UPLOAD_CODES[String(code || '').trim()];
+  if (!name) return false;
+  academy = name;
+  sessionStorage.setItem('examUploadCode', String(code).trim());
+  $('authGate').style.display = 'none';
+  $('site').style.display = 'block';
+  $('welcome').textContent = `${academy} 선생님`;
+  $('listTitle').textContent = `${academy}이 올린 자료`;
+  setupTypes();
+  loadList();
+  return true;
+}
+$('enterBtn').onclick = () => { if (!enter($('codeInput').value)) $('authError').textContent = '인증번호가 올바르지 않습니다.'; };
+$('codeInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('enterBtn').click(); });
+$('logoutBtn').onclick = () => { sessionStorage.removeItem('examUploadCode'); location.reload(); };
+{ const saved = sessionStorage.getItem('examUploadCode'); if (saved) enter(saved); }
+
+// ── 자료 유형 (자료실 분류와 동일) — 수학은 유형, 영어는 학년으로만 구분 ──
+function setupTypes() {
+  if (SUBJECT[academy] === '영어') { $('typeWrap').style.display = 'none'; $('mtype').innerHTML = '<option value=""></option>'; return; }
+  const types = ['고1 기출문제', '고2 기출문제', '유형정리', `${academy} 보충`];
+  $('mtype').innerHTML = '<option value="">유형 선택</option>' + types.map((t) => `<option>${esc(t)}</option>`).join('');
+}
+$('mtype').addEventListener('change', () => {
+  const t = $('mtype').value;
+  $('yearWrap').style.display = /기출문제/.test(t) ? '' : 'none';
+  const g = (t.match(/^(고[1-3])/) || [])[1];
+  if (g) $('grade').value = g;
+});
+
+// ── 영상 / PDF 선택 ──
+document.querySelectorAll('.kind-btn').forEach((b) => b.onclick = () => {
+  if (busy) return;
+  kind = b.dataset.kind;
+  document.querySelectorAll('.kind-btn').forEach((x) => x.classList.toggle('on', x === b));
+  $('videoSrcTabs').style.display = kind === 'video' ? '' : 'none';
+  if (kind === 'pdf') setSrc('file');
+  clearFile();
+});
+document.querySelectorAll('#videoSrcTabs .src-tab').forEach((b) => b.onclick = () => { if (!busy) setSrc(b.dataset.src); });
+function setSrc(s) {
+  videoSrc = s;
+  document.querySelectorAll('#videoSrcTabs .src-tab').forEach((x) => x.classList.toggle('on', x.dataset.src === s));
+  $('fileArea').style.display = s === 'file' ? '' : 'none';
+  $('linkArea').style.display = s === 'link' ? '' : 'none';
+}
+
+// ── 파일 고르기 ──
+function clearFile() {
+  pickedFile = null;
+  $('fileInput').value = '';
+  $('fileInput').accept = kind === 'pdf' ? 'application/pdf,.pdf' : 'video/*,.mp4,.mov,.m4v,.avi,.mkv,.wmv,.webm';
+  $('dropText').innerHTML = `여기를 눌러 <b>${kind === 'pdf' ? 'PDF 파일' : '영상 파일'}</b>을 고르거나 끌어다 놓으세요`;
+  setMsg('');
+}
+function isOkFile(f) {
+  if (kind === 'pdf') return f.type === 'application/pdf' || /\.pdf$/i.test(f.name);
+  return f.type.startsWith('video/') || /\.(mp4|mov|m4v|avi|mkv|wmv|webm)$/i.test(f.name);
+}
+function pick(f) {
+  if (!f) return;
+  if (!isOkFile(f)) { setMsg(kind === 'pdf' ? 'PDF 파일만 올릴 수 있어요.' : '영상 파일만 올릴 수 있어요.', 'err'); return; }
+  if (f.size >= MAX_SIZE) { setMsg('파일이 3GB를 넘어요. 용량을 줄여서 올려주세요.', 'err'); return; }
+  pickedFile = f;
+  $('dropText').innerHTML = `<b>${esc(f.name)}</b> · ${sizeText(f.size)}<br><span style="font-size:0.76rem">다른 파일로 바꾸려면 다시 누르세요</span>`;
+  if (!$('title').value.trim()) $('title').value = f.name.replace(/\.[^.]+$/, '').replace(/_+/g, ' ').trim();
+  setMsg('');
+}
+$('drop').onclick = () => { if (!busy) $('fileInput').click(); };
+$('fileInput').onchange = (e) => pick(e.target.files[0]);
+$('drop').addEventListener('dragover', (e) => { e.preventDefault(); $('drop').classList.add('over'); });
+$('drop').addEventListener('dragleave', () => $('drop').classList.remove('over'));
+$('drop').addEventListener('drop', (e) => { e.preventDefault(); $('drop').classList.remove('over'); if (!busy) pick(e.dataTransfer.files[0]); });
+clearFile();
+
+function setMsg(t, type) { $('msg').textContent = t; $('msg').className = 'msg' + (type ? ' ' + type : ''); }
+function setProg(p) { $('prog').style.display = p == null ? 'none' : 'block'; $('progBar').style.width = (p || 0) + '%'; }
+
+// 유튜브·비메오 링크 확인
+function parseLink(url) {
+  const u = String(url || '').trim();
+  let m = u.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  if (m) return { source: 'youtube', url: `https://www.youtube.com/watch?v=${m[1]}` };
+  m = u.match(/vimeo\.com\/(?:.*\/)?(\d{6,})(?:\/([0-9a-f]{6,}))?/);
+  if (m) return { source: 'vimeo', url: `https://vimeo.com/${m[1]}${m[2] ? '/' + m[2] : ''}` };
+  return null;
+}
+
+// ── 올리기 ──
+$('submitBtn').onclick = async () => {
+  if (busy) return;
+  const title = $('title').value.replace(/\s+/g, ' ').trim();
+  const grade = $('grade').value;
+  const subject = SUBJECT[academy];
+  const materialType = subject === '영어' ? '' : $('mtype').value;
+  const year = /기출문제/.test(materialType) ? $('year').value : '';
+  if (!title) return setMsg('자료명을 입력해주세요.', 'err');
+  if (!grade) return setMsg('학년을 선택해주세요.', 'err');
+  if (subject !== '영어' && !materialType) return setMsg('자료 유형을 선택해주세요.', 'err');
+
+  const base = { academy, subject, kind, title, grade, materialType, year, createdAt: new Date().toISOString() };
+
+  if (kind === 'video' && videoSrc === 'link') {
+    const link = parseLink($('linkInput').value);
+    if (!link) return setMsg('유튜브나 비메오 영상 주소를 확인해주세요.', 'err');
+    busy = true; $('submitBtn').disabled = true; setMsg('등록 중...');
+    try {
+      await addDoc(collection(db, 'examUploads'), { ...base, source: link.source, url: link.url, storagePath: '', size: 0 });
+      done();
+    } catch (e) { fail(e); }
+    return;
+  }
+
+  if (!pickedFile) return setMsg(kind === 'pdf' ? 'PDF 파일을 골라주세요.' : '영상 파일을 골라주세요.', 'err');
+  const f = pickedFile;
+  const safeName = f.name.replace(/[\\/#?\[\]*]/g, '_');
+  const path = `examUploads/${academy}/${Date.now()}_${safeName}`;
+  const contentType = kind === 'pdf' ? 'application/pdf' : (f.type && f.type.startsWith('video/') ? f.type : 'video/mp4');
+  busy = true; $('submitBtn').disabled = true; setProg(0); setMsg('올리는 중 0%');
+  try {
+    const task = uploadBytesResumable(ref(storage, path), f, { contentType });
+    window.onbeforeunload = () => '업로드 중입니다';
+    await new Promise((ok, no) => task.on('state_changed', (s) => {
+      const p = Math.round((s.bytesTransferred / s.totalBytes) * 100);
+      setProg(p); setMsg(`올리는 중 ${p}% (${sizeText(s.bytesTransferred)} / ${sizeText(s.totalBytes)})`);
+    }, no, ok));
+    const url = await getDownloadURL(task.snapshot.ref);
+    await addDoc(collection(db, 'examUploads'), { ...base, source: 'file', url, storagePath: path, size: f.size });
+    done();
+  } catch (e) { fail(e); }
+  finally { window.onbeforeunload = null; }
+};
+function done() {
+  busy = false; $('submitBtn').disabled = false; setProg(null);
+  $('title').value = ''; $('linkInput').value = '';
+  clearFile();
+  setMsg('올렸습니다! 자료실에 바로 반영됐어요.', 'ok');
+  loadList();
+}
+function fail(e) {
+  console.error(e);
+  busy = false; $('submitBtn').disabled = false; setProg(null);
+  setMsg('올리지 못했어요. 잠시 후 다시 시도해주세요. (' + ((e && e.code) || (e && e.message) || e) + ')', 'err');
+}
+
+// ── 우리 학원이 올린 자료 목록 ──
+async function loadList() {
+  try {
+    const snap = await getDocs(query(collection(db, 'examUploads'), where('academy', '==', academy)));
+    items = snap.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+    renderList();
+  } catch (e) { console.error(e); $('list').innerHTML = '<div class="empty">목록을 불러오지 못했어요.</div>'; }
+}
+function renderList() {
+  const list = items.filter((i) => !listFilter || i.kind === listFilter);
+  if (!list.length) { $('list').innerHTML = '<div class="empty">아직 올린 자료가 없어요.</div>'; return; }
+  $('list').innerHTML = list.map((i) => {
+    const meta = [i.grade, i.materialType, i.year && i.year + '년', i.kind === 'video' && i.source !== 'file' ? (i.source === 'youtube' ? '유튜브 링크' : '비메오 링크') : (i.size ? sizeText(i.size) : ''), String(i.createdAt || '').slice(0, 10)].filter(Boolean).join(' · ');
+    return `<div class="item">
+      <span class="badge ${i.kind}">${i.kind === 'pdf' ? 'PDF' : '영상'}</span>
+      <div class="item-main"><div class="item-title">${esc(i.title)}</div><div class="item-meta">${esc(meta)}</div></div>
+      <a href="${esc(i.url)}" target="_blank" rel="noopener">${i.kind === 'pdf' ? '열기' : '보기'}</a>
+      <button data-del="${esc(i.id)}">삭제</button>
+    </div>`;
+  }).join('');
+}
+document.querySelectorAll('.filter .src-tab').forEach((b) => b.onclick = () => {
+  listFilter = b.dataset.f;
+  document.querySelectorAll('.filter .src-tab').forEach((x) => x.classList.toggle('on', x === b));
+  renderList();
+});
+$('list').addEventListener('click', async (e) => {
+  const id = e.target.dataset && e.target.dataset.del;
+  if (!id) return;
+  const it = items.find((x) => x.id === id);
+  if (!it || !confirm(`「${it.title}」을(를) 삭제할까요?\n자료실에서도 바로 사라집니다.`)) return;
+  e.target.disabled = true;
+  try {
+    if (it.storagePath) { try { await deleteObject(ref(storage, it.storagePath)); } catch (err) { console.warn(err); } }
+    await deleteDoc(doc(db, 'examUploads', id));
+    loadList();
+  } catch (err) { console.error(err); alert('삭제하지 못했어요.'); e.target.disabled = false; }
+});
+</script>
+</body>
+</html>

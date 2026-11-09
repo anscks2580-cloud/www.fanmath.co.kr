@@ -626,6 +626,7 @@
     </div>
     <div style="position:relative;width:100%;padding-top:56.25%;">
       <iframe id="vimeoModalFrame" src="" style="position:absolute;top:0;left:0;width:100%;height:100%;border:none;" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+      <video id="fileVideoEl" controls playsinline controlslist="nodownload" oncontextmenu="return false;" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;background:#000;"></video>
     </div>
   </div>
 </div>
@@ -638,6 +639,7 @@
   <nav>
     <span id="authWelcome" style="margin-right:16px;color:var(--ink-soft);font-size:0.85rem;"></span>
     <a href="index.html" class="back-home-link">← 홈으로</a>
+    <a href="upload.html" id="uploadLink" style="display:none;">자료 올리기</a>
     <a href="qna.html">질문 게시판</a>
     <a href="index.html#scheduleSection">학교별 D-DAY</a>
   </nav>
@@ -690,6 +692,10 @@ function showSite(academyName, role){
   document.getElementById('siteContent').style.display = 'block';
   const roleLabel = role === 'student' ? '학생' : '선생님';
   document.getElementById('authWelcome').textContent = academyName ? `${academyName} ${roleLabel}, 안녕하세요` : '';
+  // 선생님이 직접 올린 PDF(examUploads)는 선생님 화면에서만 보여줌
+  window.__examRole = role;
+  document.getElementById('uploadLink').style.display = role === 'teacher' ? '' : 'none';
+  if(typeof window.__examRender === 'function') window.__examRender();
 }
 
 // 대소문자 구분 없이 매칭하기 위해 코드를 대문자로 정규화한 조회용 맵을 만듭니다.
@@ -902,6 +908,7 @@ function renderMaterials(){
   const keyword = document.getElementById('filterKeyword').value.trim().toLowerCase();
 
   let items = ALL_ITEMS.filter(i=>{
+    if(i._teacherOnly && window.__examRole !== 'teacher') return false;
     if(currentSubjectFilter && i['과목'] !== currentSubjectFilter) return false;
     if(currentTypeFilter && i[currentTypeField()] !== currentTypeFilter) return false;
     if(YEAR_FILTERABLE_TYPES.includes(currentTypeFilter) && currentYearFilter && i['연도'] !== currentYearFilter) return false;
@@ -1003,7 +1010,19 @@ function renderMaterials(){
         const a = document.createElement('a');
         a.className = 'material-row';
         a.href = item['링크'] || '#';
-        if(vimeoId){
+        const youtubeId = extractYoutubeId(item['링크']);
+        if(item._src === 'file'){
+          // 선생님이 직접 올린 영상 파일은 팝업에서 바로 재생
+          a.addEventListener('click', (e)=>{
+            e.preventDefault();
+            openFileVideoModal(item['링크'], item['자료명']||'');
+          });
+        }else if(youtubeId){
+          a.addEventListener('click', (e)=>{
+            e.preventDefault();
+            openPlayerModal(`https://www.youtube.com/embed/${youtubeId}?autoplay=1&rel=0`, item['자료명']||'');
+          });
+        }else if(vimeoId){
           // 비메오 영상은 새 탭으로 보내지 않고 팝업(모달)로 재생합니다.
           a.addEventListener('click', (e)=>{
             e.preventDefault();
@@ -1039,22 +1058,47 @@ function extractVimeoId(url){
   return m ? m[1] : null;
 }
 
+function extractYoutubeId(url){
+  if(!url) return null;
+  const m = url.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+}
+
 // 비메오 영상을 새 탭으로 보내지 않고 팝업(모달)에서 재생합니다.
 function openVimeoModal(vimeoId, title){
-  const modal = document.getElementById('vimeoModal');
+  openPlayerModal(`https://player.vimeo.com/video/${vimeoId}?autoplay=1`, title);
+}
+// 유튜브·비메오 등 iframe 재생
+function openPlayerModal(src, title){
   const frame = document.getElementById('vimeoModalFrame');
-  const titleEl = document.getElementById('vimeoModalTitle');
-  frame.src = `https://player.vimeo.com/video/${vimeoId}?autoplay=1`;
-  titleEl.textContent = title || '';
-  modal.style.display = 'flex';
+  const video = document.getElementById('fileVideoEl');
+  video.pause(); video.removeAttribute('src'); video.style.display = 'none';
+  frame.style.display = '';
+  frame.src = src;
+  document.getElementById('vimeoModalTitle').textContent = title || '';
+  document.getElementById('vimeoModal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+// 선생님이 직접 올린 영상 파일 재생
+function openFileVideoModal(url, title){
+  const frame = document.getElementById('vimeoModalFrame');
+  const video = document.getElementById('fileVideoEl');
+  frame.src = ''; frame.style.display = 'none';
+  video.style.display = '';
+  video.src = url;
+  video.play().catch(()=>{});
+  document.getElementById('vimeoModalTitle').textContent = title || '';
+  document.getElementById('vimeoModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
 }
 
 function closeVimeoModal(){
   const modal = document.getElementById('vimeoModal');
   const frame = document.getElementById('vimeoModalFrame');
+  const video = document.getElementById('fileVideoEl');
   modal.style.display = 'none';
   frame.src = ''; // 닫을 때 재생 중지
+  video.pause(); video.removeAttribute('src'); video.load();
   document.body.style.overflow = '';
 }
 window.closeVimeoModal = closeVimeoModal;
@@ -1121,11 +1165,35 @@ async function loadData(){
         '다운로드허용': !isVideo && v.downloadEnabled !== false && !!v.pdfUrl,
       });
     });
+    // 각 학원 선생님이 upload.html 에서 직접 올린 자료 (영상: 모두, PDF: 선생님 화면만)
+    try{
+      const up = await getDocs(collection(db, 'examUploads'));
+      const ups = up.docs.map(d=>d.data()).sort((a,b)=>String(a.createdAt||'').localeCompare(String(b.createdAt||'')));
+      ups.forEach(v=>{
+        const isPdf = v.kind === 'pdf';
+        items.push({
+          '학원명': v.academy || '',
+          '과목': v.subject || '',
+          '자료유형': v.materialType || '',
+          '연도': v.year || '',
+          '학년': v.grade || '',
+          '자료명': v.title || '(제목 없음)',
+          '링크': v.url || '',
+          '업로드일': (v.createdAt || '').slice(0,10),
+          '썸네일': '',
+          '형식': isPdf ? 'PDF' : '영상',
+          '다운로드허용': isPdf,
+          _teacherOnly: isPdf,
+          _src: v.source || '',
+        });
+      });
+    }catch(e){ console.error('선생님 업로드 자료 불러오기 실패', e); }
     ALL_ITEMS = items;
+    window.__examRender = renderMaterials;
     renderFilterGrade(ALL_ITEMS);
     renderMaterials();
     if(items.length === 0){
-      container.innerHTML = '<div class="empty-state">아직 등록된 자료가 없습니다. admin.html의 "기말고사 자료" 탭에서 Vimeo 폴더 또는 PDF를 불러와 추가해주세요.</div>';
+      container.innerHTML = '<div class="empty-state">아직 등록된 자료가 없습니다.</div>';
     }
   }catch(e){
     container.innerHTML = '<div class="empty-state">자료를 불러오지 못했습니다.</div>';
