@@ -7,6 +7,7 @@
 <title>자료 올리기 (선생님 전용) | 2026 2학기 기말고사 대비 · 평촌 학원 연합</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Nanum+Myeongjo:wght@400;700;800&family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.1.0/dist/tus.min.js"></script>
 <style>
   :root{
     --paper:#0E1420;
@@ -147,8 +148,9 @@
       </div>
     </div>
 
+    <div id="folderLine" class="notice" style="margin:0 0 10px;color:var(--gold);"></div>
     <div id="videoSrcTabs" class="src-tabs">
-      <button class="src-tab on" data-src="file">영상 파일 올리기</button>
+      <button class="src-tab on" data-src="file">영상 파일 올리기 (비메오)</button>
       <button class="src-tab" data-src="link">유튜브·비메오 링크</button>
     </div>
 
@@ -165,7 +167,7 @@
     <div class="prog" id="prog"><div id="progBar"></div></div>
     <div class="msg" id="msg"></div>
     <button class="submit" id="submitBtn">올리기</button>
-    <div class="notice">파일 한 개당 3GB까지 올릴 수 있어요. 올리는 중에는 창을 닫지 마세요.</div>
+    <div class="notice" id="sizeNotice">영상 파일은 비메오의 우리 학원 폴더로 바로 올라가요. 올리는 중에는 창을 닫지 마세요.</div>
   </div>
 
   <div class="list-head">
@@ -184,6 +186,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 
 // 이 화면은 학원 홈페이지의 선생님·관리자 페이지와 연결되지 않은 기말고사 전용 업로드 화면입니다.
 // (로그인 계정 없음 — 아래 학원별 업로드 인증번호로만 입장)
@@ -198,6 +201,10 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig, 'examUpload');
 const db = getFirestore(app);
 const storage = getStorage(app);
+// 영상 파일은 서버 함수(examVimeo)를 거쳐 비메오 「2026년 2학기 기말고사 › 학원」 폴더로 바로 올라감
+const vimeoCall = httpsCallable(getFunctions(app, 'asia-northeast3'), 'examVimeo', { timeout: 120000 });
+const vimeoApi = async (action, data = {}) => (await vimeoCall({ action, code: uploadCode, ...data })).data;
+let uploadCode = '';
 
 // ── 학원별 업로드 인증번호 (자료실 입장 번호와 별개, 값만 바꾸면 바로 변경됨) ──
 const UPLOAD_CODES = {
@@ -207,7 +214,8 @@ const UPLOAD_CODES = {
   "268471": "에이펙스영어학원",
 };
 const SUBJECT = { "송우찬수학학원": "수학", "인어스수학학원": "수학", "대치레몬학원": "영어", "에이펙스영어학원": "영어" };
-const MAX_SIZE = 3 * 1024 * 1024 * 1024;
+const MAX_PDF = 3 * 1024 * 1024 * 1024;
+const MAX_VIDEO = 20 * 1024 * 1024 * 1024;
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -226,6 +234,7 @@ function enter(code) {
   const name = UPLOAD_CODES[String(code || '').trim()];
   if (!name) return false;
   academy = name;
+  uploadCode = String(code).trim();
   sessionStorage.setItem('examUploadCode', String(code).trim());
   $('authGate').style.display = 'none';
   $('site').style.display = 'block';
@@ -233,12 +242,24 @@ function enter(code) {
   $('listTitle').textContent = `${academy}이 올린 자료`;
   setupTypes();
   loadList();
+  showFolder();
   return true;
 }
 $('enterBtn').onclick = () => { if (!enter($('codeInput').value)) $('authError').textContent = '인증번호가 올바르지 않습니다.'; };
 $('codeInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('enterBtn').click(); });
 $('logoutBtn').onclick = () => { sessionStorage.removeItem('examUploadCode'); location.reload(); };
 { const saved = sessionStorage.getItem('examUploadCode'); if (saved) enter(saved); }
+
+async function showFolder() {
+  const el = $('folderLine');
+  el.textContent = '비메오 폴더 확인 중...';
+  try {
+    let r;
+    try { r = await vimeoApi('folder'); } catch (e1) { await new Promise((ok) => setTimeout(ok, 1500)); r = await vimeoApi('folder'); }
+    el.textContent = `영상 올라갈 비메오 폴더: ${r.folderName}`;
+  } catch (e) { el.style.color = 'var(--coral)'; el.textContent = '비메오 폴더 확인 실패: ' + errText(e); }
+}
+const errText = (e) => ((e && e.message) || String(e)).replace(/^FirebaseError:\s*/, '');
 
 // ── 자료 유형 (자료실 분류와 동일) — 수학은 유형, 영어는 학년으로만 구분 ──
 function setupTypes() {
@@ -285,7 +306,7 @@ function isOkFile(f) {
 function pick(f) {
   if (!f) return;
   if (!isOkFile(f)) { setMsg(kind === 'pdf' ? 'PDF 파일만 올릴 수 있어요.' : '영상 파일만 올릴 수 있어요.', 'err'); return; }
-  if (f.size >= MAX_SIZE) { setMsg('파일이 3GB를 넘어요. 용량을 줄여서 올려주세요.', 'err'); return; }
+  if (f.size >= (kind === 'pdf' ? MAX_PDF : MAX_VIDEO)) { setMsg(kind === 'pdf' ? 'PDF가 3GB를 넘어요.' : '영상이 20GB를 넘어요. 용량을 줄여서 올려주세요.', 'err'); return; }
   pickedFile = f;
   $('dropText').innerHTML = `<b>${esc(f.name)}</b> · ${sizeText(f.size)}<br><span style="font-size:0.76rem">다른 파일로 바꾸려면 다시 누르세요</span>`;
   if (!$('title').value.trim()) $('title').value = f.name.replace(/\.[^.]+$/, '').replace(/_+/g, ' ').trim();
@@ -338,6 +359,37 @@ $('submitBtn').onclick = async () => {
 
   if (!pickedFile) return setMsg(kind === 'pdf' ? 'PDF 파일을 골라주세요.' : '영상 파일을 골라주세요.', 'err');
   const f = pickedFile;
+
+  if (kind === 'video') {
+    if (!window.tus) return setMsg('업로드 도구를 불러오지 못했어요. 새로고침 후 다시 해주세요.', 'err');
+    busy = true; $('submitBtn').disabled = true; setProg(0); setMsg('비메오 업로드 준비 중...');
+    let vimeoId = '';
+    window.onbeforeunload = () => '업로드 중입니다';
+    try {
+      const r = await vimeoApi('createUpload', { title, size: f.size });
+      vimeoId = r.vimeoId;
+      await new Promise((ok, no) => {
+        new window.tus.Upload(f, {
+          uploadUrl: r.uploadLink,
+          chunkSize: 64 * 1024 * 1024,
+          retryDelays: [0, 2000, 5000, 10000, 20000, 30000],
+          onProgress: (sent, total) => {
+            const p = Math.round((sent / total) * 100);
+            setProg(p); setMsg(`비메오로 올리는 중 ${p}% (${sizeText(sent)} / ${sizeText(total)})`);
+          },
+          onSuccess: ok, onError: no,
+        }).start();
+      });
+      setMsg('자료실에 등록 중...');
+      await vimeoApi('finalize', { vimeoId, title, grade, materialType, year });
+      done('비메오에 올렸습니다! 자료실에 바로 반영됐어요. (비메오 변환이 끝나기까지 몇 분 걸릴 수 있어요)');
+    } catch (e) {
+      if (vimeoId) vimeoApi('cancel', { vimeoId }).catch(() => {});
+      fail({ message: errText(e) });
+    } finally { window.onbeforeunload = null; }
+    return;
+  }
+
   const safeName = f.name.replace(/[\\/#?\[\]*]/g, '_');
   const path = `examUploads/${academy}/${Date.now()}_${safeName}`;
   const contentType = kind === 'pdf' ? 'application/pdf' : (f.type && f.type.startsWith('video/') ? f.type : 'video/mp4');
@@ -355,11 +407,11 @@ $('submitBtn').onclick = async () => {
   } catch (e) { fail(e); }
   finally { window.onbeforeunload = null; }
 };
-function done() {
+function done(text) {
   busy = false; $('submitBtn').disabled = false; setProg(null);
   $('title').value = ''; $('linkInput').value = '';
   clearFile();
-  setMsg('올렸습니다! 자료실에 바로 반영됐어요.', 'ok');
+  setMsg(text || '올렸습니다! 자료실에 바로 반영됐어요.', 'ok');
   loadList();
 }
 function fail(e) {
@@ -380,7 +432,7 @@ function renderList() {
   const list = items.filter((i) => !listFilter || i.kind === listFilter);
   if (!list.length) { $('list').innerHTML = '<div class="empty">아직 올린 자료가 없어요.</div>'; return; }
   $('list').innerHTML = list.map((i) => {
-    const meta = [i.grade, i.materialType, i.year && i.year + '년', i.kind === 'video' && i.source !== 'file' ? (i.source === 'youtube' ? '유튜브 링크' : '비메오 링크') : (i.size ? sizeText(i.size) : ''), String(i.createdAt || '').slice(0, 10)].filter(Boolean).join(' · ');
+    const meta = [i.grade, i.materialType, i.year && i.year + '년', i.kind === 'video' && i.source !== 'file' ? (i.source === 'youtube' ? '유튜브 링크' : i.vimeoId ? '비메오 업로드' + (i.size ? ' ' + sizeText(i.size) : '') : '비메오 링크') : (i.size ? sizeText(i.size) : ''), String(i.createdAt || '').slice(0, 10)].filter(Boolean).join(' · ');
     return `<div class="item">
       <span class="badge ${i.kind}">${i.kind === 'pdf' ? 'PDF' : '영상'}</span>
       <div class="item-main"><div class="item-title">${esc(i.title)}</div><div class="item-meta">${esc(meta)}</div></div>
@@ -401,8 +453,13 @@ $('list').addEventListener('click', async (e) => {
   if (!it || !confirm(`「${it.title}」을(를) 삭제할까요?\n자료실에서도 바로 사라집니다.`)) return;
   e.target.disabled = true;
   try {
-    if (it.storagePath) { try { await deleteObject(ref(storage, it.storagePath)); } catch (err) { console.warn(err); } }
-    await deleteDoc(doc(db, 'examUploads', id));
+    if (it.vimeoId) {
+      // 비메오에 올린 영상은 서버에서 비메오 영상까지 함께 삭제
+      await vimeoApi('delete', { docId: id });
+    } else {
+      if (it.storagePath) { try { await deleteObject(ref(storage, it.storagePath)); } catch (err) { console.warn(err); } }
+      await deleteDoc(doc(db, 'examUploads', id));
+    }
     loadList();
   } catch (err) { console.error(err); alert('삭제하지 못했어요.'); e.target.disabled = false; }
 });
