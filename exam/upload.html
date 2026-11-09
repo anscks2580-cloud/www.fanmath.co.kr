@@ -87,6 +87,7 @@
   .item a, .item button{flex-shrink:0;font-size:0.76rem;border:1px solid var(--line);background:transparent;color:var(--ink-soft);border-radius:20px;padding:4px 11px;cursor:pointer;text-decoration:none;}
   .item a:hover{border-color:var(--gold);color:var(--gold);}
   .item button:hover{border-color:var(--coral);color:var(--coral);}
+  .item button.dl:hover{border-color:var(--gold);color:var(--gold);}
   .empty{text-align:center;color:var(--ink-soft);font-size:0.86rem;padding:20px 0;}
 </style>
 </head>
@@ -117,12 +118,12 @@
 <main>
   <div class="eyebrow">TEACHER UPLOAD</div>
   <h1>자료 올리기</h1>
-  <p class="lead">올린 자료는 기말고사 자료실에 바로 올라갑니다. <b style="color:var(--ink)">영상은 학생·선생님 모두</b>, <b style="color:var(--ink)">PDF는 선생님 화면에만</b> 보이고 내려받을 수 있어요.</p>
+  <p class="lead" id="leadText"></p>
 
   <div class="box">
     <div class="kind-switch">
       <button class="kind-btn on" data-kind="video">🎬 영상<small>학생·선생님 모두 보임</small></button>
-      <button class="kind-btn" data-kind="pdf">📄 PDF<small>선생님만 보임·다운로드</small></button>
+      <button class="kind-btn" data-kind="pdf">📄 PDF<small id="pdfKindSub">선생님만 보임·다운로드</small></button>
     </div>
 
     <div class="field">
@@ -148,6 +149,13 @@
       </div>
     </div>
 
+    <div id="dlWrap" class="field" style="display:none;">
+      <label>자료실에서 학생 다운로드 (저작권 확인 후 선택)</label>
+      <div class="src-tabs" style="margin:0;">
+        <button class="src-tab" data-dl="yes">다운로드 허용</button>
+        <button class="src-tab" data-dl="no">목록만 보기 (다운로드 불가)</button>
+      </div>
+    </div>
     <div id="folderLine" class="notice" style="margin:0 0 10px;color:var(--gold);"></div>
     <div id="videoSrcTabs" class="src-tabs">
       <button class="src-tab on" data-src="file">영상 파일 올리기 (비메오)</button>
@@ -228,6 +236,7 @@ let pickedFile = null;
 let busy = false;
 let items = [];
 let listFilter = '';
+let dlChoice = '';   // 영어 PDF: yes(학생 다운로드 허용) | no(목록만)
 
 // ── 입장 ──
 function enter(code) {
@@ -263,7 +272,12 @@ const errText = (e) => ((e && e.message) || String(e)).replace(/^FirebaseError:\
 
 // ── 자료 유형 (자료실 분류와 동일) — 수학은 유형, 영어는 학년으로만 구분 ──
 function setupTypes() {
-  if (SUBJECT[academy] === '영어') { $('typeWrap').style.display = 'none'; $('mtype').innerHTML = '<option value=""></option>'; return; }
+  const eng = SUBJECT[academy] === '영어';
+  $('leadText').innerHTML = eng
+    ? '올린 자료는 기말고사 자료실에 바로 올라갑니다. <b style="color:var(--ink)">영상은 학생·선생님 모두</b> 볼 수 있고, <b style="color:var(--ink)">PDF는 올릴 때 학생 다운로드 허용 / 목록만 보기</b>를 골라주세요. 선생님은 언제든 내려받을 수 있어요.'
+    : '올린 자료는 기말고사 자료실에 바로 올라갑니다. <b style="color:var(--ink)">영상은 학생·선생님 모두</b>, <b style="color:var(--ink)">PDF는 선생님 화면에만</b> 보이고 내려받을 수 있어요.';
+  $('pdfKindSub').textContent = eng ? '학생 다운로드 허용 여부 선택' : '선생님만 보임·다운로드';
+  if (eng) { $('typeWrap').style.display = 'none'; $('mtype').innerHTML = '<option value=""></option>'; return; }
   const types = ['고1 기출문제', '고2 기출문제', '유형정리', `${academy} 보충`];
   $('mtype').innerHTML = '<option value="">유형 선택</option>' + types.map((t) => `<option>${esc(t)}</option>`).join('');
 }
@@ -280,10 +294,16 @@ document.querySelectorAll('.kind-btn').forEach((b) => b.onclick = () => {
   kind = b.dataset.kind;
   document.querySelectorAll('.kind-btn').forEach((x) => x.classList.toggle('on', x === b));
   $('videoSrcTabs').style.display = kind === 'video' ? '' : 'none';
+  $('dlWrap').style.display = kind === 'pdf' && SUBJECT[academy] === '영어' ? '' : 'none';
   if (kind === 'pdf') setSrc('file');
   clearFile();
 });
 document.querySelectorAll('#videoSrcTabs .src-tab').forEach((b) => b.onclick = () => { if (!busy) setSrc(b.dataset.src); });
+document.querySelectorAll('#dlWrap .src-tab').forEach((b) => b.onclick = () => {
+  if (busy) return;
+  dlChoice = b.dataset.dl;
+  document.querySelectorAll('#dlWrap .src-tab').forEach((x) => x.classList.toggle('on', x === b));
+});
 function setSrc(s) {
   videoSrc = s;
   document.querySelectorAll('#videoSrcTabs .src-tab').forEach((x) => x.classList.toggle('on', x.dataset.src === s));
@@ -343,8 +363,11 @@ $('submitBtn').onclick = async () => {
   if (!title) return setMsg('자료명을 입력해주세요.', 'err');
   if (!grade) return setMsg('학년을 선택해주세요.', 'err');
   if (subject !== '영어' && !materialType) return setMsg('자료 유형을 선택해주세요.', 'err');
+  if (kind === 'pdf' && subject === '영어' && !dlChoice) return setMsg('학생 다운로드 허용 / 목록만 보기 중 하나를 골라주세요.', 'err');
 
   const base = { academy, subject, kind, title, grade, materialType, year, createdAt: new Date().toISOString() };
+  // PDF: 수학은 선생님만(학생 다운로드 불가), 영어는 고른 대로
+  if (kind === 'pdf') base.downloadable = subject === '영어' && dlChoice === 'yes';
 
   if (kind === 'video' && videoSrc === 'link') {
     const link = parseLink($('linkInput').value);
@@ -410,6 +433,7 @@ $('submitBtn').onclick = async () => {
 function done(text) {
   busy = false; $('submitBtn').disabled = false; setProg(null);
   $('title').value = ''; $('linkInput').value = '';
+  dlChoice = ''; document.querySelectorAll('#dlWrap .src-tab').forEach((x) => x.classList.remove('on'));
   clearFile();
   setMsg(text || '올렸습니다! 자료실에 바로 반영됐어요.', 'ok');
   loadList();
@@ -432,11 +456,13 @@ function renderList() {
   const list = items.filter((i) => !listFilter || i.kind === listFilter);
   if (!list.length) { $('list').innerHTML = '<div class="empty">아직 올린 자료가 없어요.</div>'; return; }
   $('list').innerHTML = list.map((i) => {
-    const meta = [i.grade, i.materialType, i.year && i.year + '년', i.kind === 'video' && i.source !== 'file' ? (i.source === 'youtube' ? '유튜브 링크' : i.vimeoId ? '비메오 업로드' + (i.size ? ' ' + sizeText(i.size) : '') : '비메오 링크') : (i.size ? sizeText(i.size) : ''), String(i.createdAt || '').slice(0, 10)].filter(Boolean).join(' · ');
+    const dlLabel = i.kind === 'pdf' && i.subject === '영어' ? (i.downloadable ? '학생 다운로드 허용' : '목록만(다운로드 불가)') : '';
+    const meta = [dlLabel, i.grade, i.materialType, i.year && i.year + '년', i.kind === 'video' && i.source !== 'file' ? (i.source === 'youtube' ? '유튜브 링크' : i.vimeoId ? '비메오 업로드' + (i.size ? ' ' + sizeText(i.size) : '') : '비메오 링크') : (i.size ? sizeText(i.size) : ''), String(i.createdAt || '').slice(0, 10)].filter(Boolean).join(' · ');
     return `<div class="item">
       <span class="badge ${i.kind}">${i.kind === 'pdf' ? 'PDF' : '영상'}</span>
       <div class="item-main"><div class="item-title">${esc(i.title)}</div><div class="item-meta">${esc(meta)}</div></div>
       <a href="${esc(i.url)}" target="_blank" rel="noopener">${i.kind === 'pdf' ? '열기' : '보기'}</a>
+      ${i.kind === 'pdf' ? `<button class="dl" data-dl-id="${esc(i.id)}">다운로드</button>` : ''}
       <button data-del="${esc(i.id)}">삭제</button>
     </div>`;
   }).join('');
@@ -446,7 +472,23 @@ document.querySelectorAll('.filter .src-tab').forEach((b) => b.onclick = () => {
   document.querySelectorAll('.filter .src-tab').forEach((x) => x.classList.toggle('on', x === b));
   renderList();
 });
+// PDF 내려받기 (파일 이름 = 자료명.pdf)
+async function downloadPdf(url, name, btn) {
+  const old = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = '받는 중...'; }
+  try {
+    const blob = await (await fetch(url)).blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = String(name || '자료').replace(/[\\/:*?"<>|]/g, '_') + '.pdf';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+  } catch (err) { window.open(url, '_blank'); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = old; } }
+}
 $('list').addEventListener('click', async (e) => {
+  const dlId = e.target.dataset && e.target.dataset.dlId;
+  if (dlId) { const it = items.find((x) => x.id === dlId); if (it) downloadPdf(it.url, it.title, e.target); return; }
   const id = e.target.dataset && e.target.dataset.del;
   if (!id) return;
   const it = items.find((x) => x.id === id);

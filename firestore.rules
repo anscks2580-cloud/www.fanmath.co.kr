@@ -491,12 +491,13 @@ service cloud.firestore {
     // 학생 화면(materials.html)에는 영상만, PDF는 선생님 인증번호로 들어온 화면에만 노출 ──
     match /examUploads/{docId} {
       allow read: if true;
-      allow create: if request.resource.data.keys().hasOnly(['academy', 'subject', 'kind', 'source', 'title', 'grade', 'materialType', 'year', 'url', 'storagePath', 'size', 'createdAt'])
+      allow create: if request.resource.data.keys().hasOnly(['academy', 'subject', 'kind', 'source', 'title', 'grade', 'materialType', 'year', 'url', 'storagePath', 'size', 'createdAt', 'downloadable'])
         && request.resource.data.academy in ['송우찬수학학원', '인어스수학학원', '대치레몬학원', '에이펙스영어학원']
         && request.resource.data.kind in ['video', 'pdf']
         && request.resource.data.source in ['file', 'youtube', 'vimeo']
         && request.resource.data.title is string && request.resource.data.title.size() >= 1 && request.resource.data.title.size() <= 120
-        && request.resource.data.url is string && request.resource.data.url.size() <= 2000;
+        && request.resource.data.url is string && request.resource.data.url.size() <= 2000
+        && (!('downloadable' in request.resource.data) || request.resource.data.downloadable is bool);
       allow update: if false;
       allow delete: if true;
     }

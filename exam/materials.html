@@ -991,8 +991,9 @@ function renderMaterials(){
           // "다운로드"와 "미리보기" 두 버튼을 보여줍니다.
           const row = document.createElement('div');
           row.className = 'material-row';
-          const actionsHtml = item['다운로드허용']
-            ? `<a class="material-action-btn" href="${item['링크']}" download target="_blank" rel="noopener">다운로드</a>
+          const canDl = item['다운로드허용'] || (item._teacherDl && window.__examRole === 'teacher');
+          const actionsHtml = canDl
+            ? `<a class="material-action-btn" href="${item['링크']}" data-pdf-name="${String(item['자료명']||'자료').replace(/"/g,'&quot;')}" target="_blank" rel="noopener">다운로드</a>
                <a class="material-action-btn" href="${item['링크']}" target="_blank" rel="noopener" style="margin-left:6px;">미리보기</a>`
             : `<span class="material-action-btn" style="cursor:default;opacity:0.85;">담당 선생님께 요청</span>`;
           row.innerHTML = `
@@ -1057,6 +1058,24 @@ function extractVimeoId(url){
   const m = url.match(/vimeo\.com\/(?:.*\/)?(\d+)/);
   return m ? m[1] : null;
 }
+
+// PDF 다운로드: 파일로 바로 내려받기 (파일 이름 = 자료명.pdf), 안 되면 새 탭으로 열기
+document.addEventListener('click', async (e)=>{
+  const a = e.target.closest && e.target.closest('a[data-pdf-name]');
+  if(!a) return;
+  e.preventDefault();
+  const url = a.getAttribute('href'), old = a.textContent;
+  a.textContent = '받는 중...';
+  try{
+    const blob = await (await fetch(url)).blob();
+    const t = document.createElement('a');
+    t.href = URL.createObjectURL(blob);
+    t.download = a.dataset.pdfName.replace(/[\\/:*?"<>|]/g, '_') + '.pdf';
+    document.body.appendChild(t); t.click(); t.remove();
+    setTimeout(()=>URL.revokeObjectURL(t.href), 10000);
+  }catch(err){ window.open(url, '_blank'); }
+  finally{ a.textContent = old; }
+});
 
 function extractYoutubeId(url){
   if(!url) return null;
@@ -1182,8 +1201,10 @@ async function loadData(){
           '업로드일': (v.createdAt || '').slice(0,10),
           '썸네일': '',
           '형식': isPdf ? 'PDF' : '영상',
-          '다운로드허용': isPdf,
-          _teacherOnly: isPdf,
+          // 영어 PDF: 올린 선생님이 고른 대로(학생 다운로드 허용 / 목록만), 수학 PDF: 선생님 화면에만
+          '다운로드허용': isPdf && v.downloadable === true,
+          _teacherOnly: isPdf && v.subject !== '영어',
+          _teacherDl: isPdf,
           _src: v.source || '',
         });
       });
