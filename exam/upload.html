@@ -152,6 +152,13 @@
       </div>
     </div>
 
+    <div id="pubWrap" class="field">
+      <label>자료실 공개 여부 (나중에 목록에서 바꿀 수 있어요)</label>
+      <div class="src-tabs" style="margin:0;">
+        <button class="src-tab on" data-pub="open">공개</button>
+        <button class="src-tab" data-pub="hide">비공개 (자료실에 안 보임)</button>
+      </div>
+    </div>
     <div id="dlWrap" class="field" style="display:none;">
       <label>자료실에서 학생 다운로드 (저작권 확인 후 선택)</label>
       <div class="src-tabs" style="margin:0;">
@@ -253,7 +260,8 @@ let busy = false;
 let items = [];
 let listFilter = '';
 let dlChoice = '';
-let attachPdf = null;  // 영상과 함께 올릴 PDF   // 영어 PDF: yes(학생 다운로드 허용) | no(목록만)
+let attachPdf = null;
+let isHidden = false;   // 비공개면 자료실(materials.html)에 안 보임  // 영상과 함께 올릴 PDF   // 영어 PDF: yes(학생 다운로드 허용) | no(목록만)
 
 // ── 입장 ──
 function enter(code) {
@@ -338,6 +346,11 @@ $('attachDrop').addEventListener('dragover', (e) => { e.preventDefault(); $('att
 $('attachDrop').addEventListener('dragleave', () => $('attachDrop').classList.remove('over'));
 $('attachDrop').addEventListener('drop', (e) => { e.preventDefault(); $('attachDrop').classList.remove('over'); if (!busy) setAttach(e.dataTransfer.files[0]); });
 
+document.querySelectorAll('#pubWrap .src-tab').forEach((b) => b.onclick = () => {
+  if (busy) return;
+  isHidden = b.dataset.pub === 'hide';
+  document.querySelectorAll('#pubWrap .src-tab').forEach((x) => x.classList.toggle('on', x === b));
+});
 document.querySelectorAll('#dlWrap .src-tab').forEach((b) => b.onclick = () => {
   if (busy) return;
   dlChoice = b.dataset.dl;
@@ -405,7 +418,7 @@ $('submitBtn').onclick = async () => {
   const withPdf = kind === 'video' ? attachPdf : null;
   if ((kind === 'pdf' || withPdf) && subject === '영어' && !dlChoice) return setMsg('PDF의 학생 다운로드 허용 / 목록만 보기 중 하나를 골라주세요.', 'err');
 
-  const base = { academy, subject, kind, title, grade, materialType, year, createdAt: new Date().toISOString() };
+  const base = { academy, subject, kind, title, grade, materialType, year, hidden: isHidden, createdAt: new Date().toISOString() };
   // PDF: 수학은 선생님만(학생 다운로드 불가), 영어는 고른 대로
   const pdfBase = { ...base, kind: 'pdf', downloadable: subject === '영어' && dlChoice === 'yes' };
 
@@ -459,6 +472,8 @@ $('submitBtn').onclick = async () => {
       setMsg('자료실에 등록 중...');
       const fin = await vimeoApi('finalize', { vimeoId, title, grade, materialType, year });
       vimeoId = '';
+      // 비메오 영상은 서버에서 등록되므로 비공개로 고른 경우 여기서 표시
+      if (isHidden) { try { await updateDoc(doc(db, 'examUploads', fin.id), { hidden: true }); } catch (e) { console.error(e); } }
       await afterVideo(fin.id, '비메오에 올렸습니다! 자료실에 바로 반영됐어요. (비메오 변환이 끝나기까지 몇 분 걸릴 수 있어요)');
     } catch (e) {
       if (vimeoId) vimeoApi('cancel', { vimeoId }).catch(() => {});
@@ -497,6 +512,7 @@ function done(text) {
   dlChoice = ''; document.querySelectorAll('#dlWrap .src-tab').forEach((x) => x.classList.remove('on'));
   setAttach(null);
   $('pairSel').value = '';
+  isHidden = false; document.querySelectorAll('#pubWrap .src-tab').forEach((x) => x.classList.toggle('on', x.dataset.pub === 'open'));
   clearFile();
   setMsg(text || '올렸습니다! 자료실에 바로 반영됐어요.', 'ok');
   loadList();
@@ -541,11 +557,12 @@ function renderList() {
     const pairHtml = i.kind === 'pdf'
       ? `<div class="item-pair">연결된 영상 <select data-pair="${esc(i.id)}">${videoOpts(videoIds.has(i.videoDocId) ? i.videoDocId : '')}</select></div>`
       : (pdfCount ? `<div class="item-pair">📎 연결된 PDF ${pdfCount}개</div>` : '');
-    return `<div class="item${i._sub ? ' sub' : ''}">
+    return `<div class="item${i._sub ? ' sub' : ''}"${i.hidden ? ' style="opacity:0.6;"' : ''}>
       <span class="badge ${i.kind}">${i.kind === 'pdf' ? 'PDF' : '영상'}</span>
       <div class="item-main"><div class="item-title">${esc(i.title)}</div><div class="item-meta">${esc(meta)}</div>${pairHtml}</div>
       <a href="${esc(i.url)}" target="_blank" rel="noopener">${i.kind === 'pdf' ? '열기' : '보기'}</a>
       ${i.kind === 'pdf' ? `<button class="dl" data-dl-id="${esc(i.id)}">다운로드</button>` : ''}
+      <button class="dl" data-pub-id="${esc(i.id)}" title="누르면 바뀜">${i.hidden ? '🔒 비공개' : '공개 중'}</button>
       <button data-del="${esc(i.id)}">삭제</button>
     </div>`;
   }).join('');
@@ -582,6 +599,17 @@ $('list').addEventListener('change', async (e) => {
   } catch (err) { console.error(err); alert('연결하지 못했어요. 잠시 후 다시 시도해주세요.'); e.target.disabled = false; }
 });
 $('list').addEventListener('click', async (e) => {
+  const pubId = e.target.dataset && e.target.dataset.pubId;
+  if (pubId) {
+    const it = items.find((x) => x.id === pubId);
+    if (!it) return;
+    const next = !it.hidden;
+    if (!confirm(next ? `「${it.title}」을(를) 비공개로 바꿀까요?\n자료실에서 안 보이게 됩니다.` : `「${it.title}」을(를) 자료실에 공개할까요?`)) return;
+    e.target.disabled = true;
+    try { await updateDoc(doc(db, 'examUploads', pubId), { hidden: next }); it.hidden = next; renderList(); }
+    catch (err) { console.error(err); alert('바꾸지 못했어요. 잠시 후 다시 시도해주세요.'); e.target.disabled = false; }
+    return;
+  }
   const dlId = e.target.dataset && e.target.dataset.dlId;
   if (dlId) { const it = items.find((x) => x.id === dlId); if (it) downloadPdf(it.url, it.title, e.target); return; }
   const id = e.target.dataset && e.target.dataset.del;

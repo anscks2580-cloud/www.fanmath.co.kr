@@ -1199,6 +1199,7 @@ async function loadData(){
       const up = await getDocs(collection(db, 'examUploads'));
       const ups = up.docs.map(d=>({ _docId: d.id, ...d.data() })).sort((a,b)=>String(a.createdAt||'').localeCompare(String(b.createdAt||'')));
       ups.forEach(v=>{
+        if(v.hidden === true) return; // 업로드 화면에서 비공개로 둔 자료는 자료실에 안 보임
         const isPdf = v.kind === 'pdf';
         items.push({
           '학원명': v.academy || '',
