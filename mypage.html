@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<title>마이페이지 | 송우찬수학학원</title>
+<link rel="icon" href="swc-logo.svg">
+<!--
+  학생 마이페이지
+  - 학생 계정 전용: 기본정보 + 선생님·관리부가 등록한 숙제(homeworkLogs)를 날짜별로 확인
+  - 숙제 데이터: homeworkLogs { date, branch, teacherName, classGroup, studentIds[], content, absent }
+  - 앱 알림: 「알림 켜기」 → 이 휴대폰 알림 주소를 students/{uid}.fcmToken 에 저장
+             → 숙제가 등록되면 서버(notifyParentOnHomework)가 학부모와 함께 학생에게도 알림
+-->
+<style>
+  :root { --ink:#1A1230; --ink-2:#4A4160; --muted:#8B86A0; --line:#E8E5F0; --paper:#F6F5FA; --card:#FFFFFF;
+          --accent:#5B3FA6; --accent-soft:#EEE9F8; --gold:#C49A28; --gold-soft:#FBF3DA; --good:#2E8B57; --good-soft:#E3F3EA; --warn:#C8541F; --warn-soft:#FBE9E0; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif; background:var(--paper); color:var(--ink); line-height:1.5; word-break:keep-all; overflow-wrap:break-word; }
+  .wrap { max-width:720px; margin:0 auto; padding:16px 16px 48px; padding-top:calc(env(safe-area-inset-top) + 16px); }
+  .head { background:var(--ink); color:#fff; border-radius:16px; padding:20px; margin-bottom:14px; display:flex; align-items:center; gap:12px; }
+  .head .brand { font-size:11px; letter-spacing:2px; color:#F0C040; font-weight:700; }
+  .head h1 { font-size:20px; font-weight:800; margin-top:2px; }
+  .head .sub { font-size:12px; opacity:.7; margin-top:2px; }
+  .head .btns { margin-left:auto; display:flex; gap:6px; flex-shrink:0; }
+  .head .btns a, .head .btns button { background:transparent; border:1px solid rgba(255,255,255,.3); color:#fff; border-radius:8px; padding:6px 10px; font-size:12px; font-family:inherit; cursor:pointer; text-decoration:none; white-space:nowrap; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; margin-bottom:10px; }
+  .card h2 { font-size:15px; font-weight:800; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+  .card h2 small { margin-left:auto; font-size:12px; color:var(--muted); font-weight:600; }
+  .info { display:grid; grid-template-columns:repeat(2, 1fr); gap:8px; }
+  .info div { background:var(--paper); border-radius:10px; padding:10px 12px; }
+  .info .k { font-size:11.5px; color:var(--muted); font-weight:700; }
+  .info .v { font-size:15px; font-weight:800; margin-top:1px; }
+  .br-p { color:var(--accent); } .br-s { color:#B8860B; }
+  .push { display:flex; align-items:center; gap:10px; background:var(--accent-soft); border:1px solid #DCD2F2; border-radius:14px; padding:12px 14px; margin-bottom:10px; font-size:13.5px; color:var(--ink-2); }
+  .push b { color:var(--accent); }
+  .push button { margin-left:auto; background:var(--accent); color:#fff; border:0; border-radius:10px; padding:9px 14px; font-size:13.5px; font-weight:800; font-family:inherit; cursor:pointer; white-space:nowrap; }
+  .push.on { background:var(--good-soft); border-color:#C6E6D3; }
+  .push.on b { color:var(--good); }
+  .tabs { display:flex; gap:6px; margin-bottom:12px; }
+  .tab { flex:1; padding:9px 10px; border-radius:10px; border:1px solid var(--line); background:var(--card); font-size:13.5px; font-weight:700; color:var(--muted); font-family:inherit; cursor:pointer; }
+  .tab.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .cal .nav { display:flex; justify-content:space-between; align-items:center; font-weight:800; margin-bottom:8px; }
+  .cal .nav button { border:0; background:var(--accent-soft); color:var(--accent); width:34px; height:34px; border-radius:9px; font-size:16px; cursor:pointer; font-family:inherit; }
+  .grid { display:grid; grid-template-columns:repeat(7,1fr); gap:4px; text-align:center; }
+  .grid .w { font-size:11px; color:var(--muted); font-weight:700; padding:2px 0; }
+  .grid .w.sun { color:#D64545; } .grid .w.sat { color:#2F7FD6; }
+  .grid button { position:relative; border:0; background:transparent; height:42px; border-radius:10px; font-size:14px; font-family:inherit; cursor:pointer; color:var(--ink); }
+  .grid button.today { box-shadow:inset 0 0 0 1.5px var(--accent); }
+  .grid button.has::after { content:''; position:absolute; left:50%; bottom:5px; width:6px; height:6px; margin-left:-3px; border-radius:50%; background:var(--gold); }
+  .grid button.on { background:var(--accent); color:#fff; font-weight:800; }
+  .grid button.on.has::after { background:#fff; }
+  .grid button.empty { visibility:hidden; }
+  .day-title { font-size:14px; font-weight:800; margin:16px 2px 8px; display:flex; align-items:center; gap:6px; }
+  .tag { font-size:11px; padding:2px 8px; border-radius:999px; background:var(--accent); color:#fff; font-weight:700; }
+  .hw { padding:12px 14px; border:1px solid var(--line); border-radius:12px; margin-bottom:8px; }
+  .hw.today { border-color:var(--accent); box-shadow:0 4px 16px rgba(91,63,166,.10); }
+  .hw .t { display:flex; justify-content:space-between; gap:8px; font-weight:700; font-size:13px; color:var(--ink-2); }
+  .hw .t small { color:var(--muted); font-weight:600; }
+  .hw .c { font-size:15px; color:var(--ink); margin-top:6px; white-space:pre-wrap; line-height:1.6; }
+  .hw.abs .c { color:#D64545; font-weight:700; }
+  .grp { margin-bottom:6px; }
+  .grp .d { font-size:13px; font-weight:800; color:var(--ink-2); margin:14px 2px 6px; }
+  .empty { text-align:center; color:var(--muted); padding:30px 0; font-size:14px; }
+  .more { width:100%; padding:11px; border:1px dashed var(--line); background:transparent; color:var(--accent); border-radius:12px; font-family:inherit; font-size:13.5px; font-weight:700; cursor:pointer; margin-top:4px; }
+  .foot { font-size:11px; color:var(--muted); text-align:center; margin-top:16px; }
+</style>
+<!-- 앱 설치(PWA) -->
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#4B3391">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="송우찬수학">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+<script src="/pwa.js?v=8" defer></script>
+</head>
+<body>
+<div class="wrap" id="app"><div class="empty">불러오는 중...</div></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, getDocs, setDoc, updateDoc, collection, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getMessaging, getToken, onMessage, isSupported } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
+
+const app = initializeApp({ apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA", authDomain: "songmath.firebaseapp.com", projectId: "songmath", storageBucket: "songmath.firebasestorage.app", messagingSenderId: "936295436575", appId: "1:936295436575:web:d1e201508719850cfbe02a" });
+const auth = getAuth(app), db = getFirestore(app);
+const $app = document.getElementById('app');
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const p2 = (n) => String(n).padStart(2, '0');
+const ymd = (d) => `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+const TODAY = ymd(new Date());
+const DOW = ['일', '월', '화', '수', '목', '금', '토'];
+const dLabel = (s) => { const d = new Date(s + 'T00:00:00'); return `${d.getMonth() + 1}월 ${d.getDate()}일 (${DOW[d.getDay()]})`; };
+
+let me = null, stu = null, homework = [], byDate = {};
+let view = new URLSearchParams(location.search).get('view') === 'list' ? 'list' : 'cal';
+let calMonth = null, selDate = null, listShow = 20;
+let savedFcm = null, pushState = 'hidden', pushErr = '', pushListening = false;
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.replace('login.html'); return; }
+  me = user;
+  try {
+    const s = await getDoc(doc(db, 'students', user.uid));
+    if (!s.exists()) { $app.innerHTML = '<div class="empty">학생 계정 전용 페이지입니다.<br><a href="index.html" style="color:var(--accent);">홈으로</a></div>'; return; }
+    stu = { id: user.uid, ...s.data() };
+    if (stu.status === '퇴원') { $app.innerHTML = '<div class="empty">퇴원 처리된 계정입니다. 학원에 문의해 주세요.</div>'; try { await signOut(auth); } catch (e) {} return; }
+    savedFcm = stu.fcmToken || null;
+    const hs = await getDocs(query(collection(db, 'homeworkLogs'), where('studentIds', 'array-contains', user.uid)));
+    homework = []; hs.forEach((d) => homework.push({ id: d.id, ...d.data() }));
+    homework.sort((a, b) => (b.date || '').localeCompare(a.date || '') || String(a.teacherName || '').localeCompare(String(b.teacherName || ''), 'ko'));
+    byDate = {}; homework.forEach((h) => { if (h.date) (byDate[h.date] = byDate[h.date] || []).push(h); });
+    // 처음 선택 날짜: 오늘 숙제가 있으면 오늘, 없으면 가장 최근 숙제 날짜
+    const qd = new URLSearchParams(location.search).get('date');
+    selDate = (qd && /^\d{4}-\d{2}-\d{2}$/.test(qd)) ? qd : (byDate[TODAY] ? TODAY : (homework.find((h) => h.date && h.date <= TODAY)?.date || TODAY));
+    calMonth = selDate.slice(0, 7);
+    render();
+    pushInit();
+  } catch (e) { $app.innerHTML = `<div class="empty">불러오지 못했습니다.<br><small>${esc(e.message)}</small></div>`; }
+});
+
+function branchHtml(b) {
+  if (!b) return '-';
+  return `<span class="${String(b).includes('산본') ? 'br-s' : 'br-p'}">${esc(b)}</span>`;
+}
+function daysText(d) { return Array.isArray(d) ? d.join('·') : (d || '-'); }
+
+function hwHtml(h) {
+  const isToday = h.date === TODAY;
+  return `<div class="hw ${isToday ? 'today' : ''} ${h.absent ? 'abs' : ''}">
+    <div class="t"><span>${esc(h.teacherName || '')}${h.teacherName ? ' 선생님' : ''}</span><small>${esc(h.classGroup || '')}</small></div>
+    <div class="c">${h.absent ? '🚫 결석' : esc(h.content)}</div>
+  </div>`;
+}
+
+function calHtml() {
+  const [y, m] = calMonth.split('-').map(Number);
+  const first = new Date(y, m - 1, 1), last = new Date(y, m, 0).getDate();
+  let cells = DOW.map((w, i) => `<div class="w ${i === 0 ? 'sun' : i === 6 ? 'sat' : ''}">${w}</div>`).join('');
+  for (let i = 0; i < first.getDay(); i++) cells += '<button class="empty" disabled></button>';
+  for (let d = 1; d <= last; d++) {
+    const k = `${y}-${p2(m)}-${p2(d)}`;
+    const cls = [k === TODAY ? 'today' : '', byDate[k] ? 'has' : '', k === selDate ? 'on' : ''].join(' ');
+    cells += `<button class="${cls}" onclick="mpPick('${k}')">${d}</button>`;
+  }
+  const list = byDate[selDate] || [];
+  return `<div class="cal">
+      <div class="nav"><button onclick="mpMonth(-1)">‹</button><span>${y}년 ${m}월</span><button onclick="mpMonth(1)">›</button></div>
+      <div class="grid">${cells}</div>
+    </div>
+    <div class="day-title">${dLabel(selDate)}${selDate === TODAY ? ' <span class="tag">오늘</span>' : ''}</div>
+    ${list.length ? list.map(hwHtml).join('') : '<div class="empty" style="padding:18px 0;">이 날은 등록된 숙제가 없어요.</div>'}
+    <div style="font-size:11.5px;color:var(--muted);margin-top:6px;">● 노란 점이 있는 날짜에 숙제가 있어요.</div>`;
+}
+
+function listHtml() {
+  const dates = Object.keys(byDate).sort((a, b) => b.localeCompare(a));
+  if (!dates.length) return '<div class="empty">아직 등록된 숙제가 없어요.</div>';
+  const shown = dates.slice(0, listShow);
+  return shown.map((k) => `<div class="grp"><div class="d">${dLabel(k)}${k === TODAY ? ' <span class="tag">오늘</span>' : ''}</div>${byDate[k].map(hwHtml).join('')}</div>`).join('')
+    + (dates.length > listShow ? `<button class="more" onclick="mpMore()">이전 숙제 더 보기 (${dates.length - listShow}일)</button>` : '');
+}
+
+function pushHtml() {
+  if (pushState === 'hidden' || pushState === 'unsupported') return '';
+  if (pushState === 'on') return `<div class="push on">🔔 <span><b>알림 켜짐</b> · 숙제가 등록되면 이 휴대폰으로 알려드려요.</span></div>`;
+  if (pushState === 'need-app') return `<div class="push">📲 <span>아이폰은 <b>학원 앱을 설치</b>해야 숙제 알림을 받을 수 있어요.</span><button onclick="swcOpenInstall && swcOpenInstall()">앱 설치</button></div>`;
+  if (pushState === 'denied') return `<div class="push">🔕 <span>알림이 꺼져 있어요. 휴대폰 <b>설정 › 알림</b>에서 학원 앱 알림을 허용해 주세요.</span></div>`;
+  if (pushState === 'working') return `<div class="push">⏳ <span>알림 설정 중...</span></div>`;
+  if (pushState === 'error') return `<div class="push">⚠️ <span>알림 설정 오류: ${esc(pushErr)}</span><button onclick="mpEnablePush()">다시 시도</button></div>`;
+  return `<div class="push">🔔 <span>숙제가 등록되면 <b>앱 알림</b>으로 받아보세요.</span><button onclick="mpEnablePush()">알림 켜기</button></div>`;
+}
+
+function render() {
+  const todayCnt = (byDate[TODAY] || []).filter((h) => !h.absent).length;
+  $app.innerHTML = `
+    <div class="head">
+      <div><div class="brand">SONG WOO CHAN MATH</div><h1>${esc(stu.name || '')} 학생</h1><div class="sub">마이페이지</div></div>
+      <div class="btns"><a href="index.html">홈</a><button onclick="mpLogout()">로그아웃</button></div>
+    </div>
+    ${pushHtml()}
+    <div class="card">
+      <h2>기본정보</h2>
+      <div class="info">
+        <div><div class="k">이름</div><div class="v">${esc(stu.name || '-')}</div></div>
+        <div><div class="k">소속</div><div class="v">${branchHtml(stu.branch)}</div></div>
+        <div><div class="k">학년</div><div class="v">${esc(stu.grade || '-')}</div></div>
+        <div><div class="k">반</div><div class="v">${esc(stu.classGroup || '-')}</div></div>
+        <div><div class="k">담당 선생님</div><div class="v">${stu.teacherName ? esc(stu.teacherName) + ' 선생님' : '-'}</div></div>
+        <div><div class="k">수업 요일</div><div class="v">${esc(daysText(stu.days))}</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>📝 숙제 <small>${todayCnt ? `오늘 숙제 ${todayCnt}건` : '오늘 등록된 숙제 없음'}</small></h2>
+      <div class="tabs">
+        <button class="tab ${view === 'cal' ? 'active' : ''}" onclick="mpView('cal')">날짜별 보기</button>
+        <button class="tab ${view === 'list' ? 'active' : ''}" onclick="mpView('list')">전체 목록</button>
+      </div>
+      ${view === 'cal' ? calHtml() : listHtml()}
+    </div>
+    <div class="foot">송우찬수학학원 · 숙제는 선생님·관리부가 등록한 내용이에요.</div>`;
+}
+
+window.mpView = (v) => { view = v; render(); };
+window.mpPick = (k) => { selDate = k; render(); };
+window.mpMonth = (dir) => { const [y, m] = calMonth.split('-').map(Number); const d = new Date(y, m - 1 + dir, 1); calMonth = `${d.getFullYear()}-${p2(d.getMonth() + 1)}`; render(); };
+window.mpMore = () => { listShow += 20; render(); };
+window.mpLogout = async () => { await signOut(auth); location.replace('login.html'); };
+
+// ══ 앱 알림 (숙제 등록) ══
+const isIOSdev = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const isAppMode = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+async function clearShownNotifications() {
+  try { const reg = await navigator.serviceWorker.getRegistration('/'); if (!reg) return; (await reg.getNotifications()).forEach((n) => n.close()); } catch (e) {}
+}
+async function pushInit() {
+  clearShownNotifications();
+  let ok = ('Notification' in window) && ('serviceWorker' in navigator);
+  if (ok) { try { ok = await isSupported(); } catch (e) { ok = false; } }
+  if (!ok) { pushState = (isIOSdev && !isAppMode()) ? 'need-app' : 'unsupported'; render(); return; }
+  if (Notification.permission === 'granted') { pushState = 'on'; render(); try { await pushSaveToken(); } catch (e) { pushState = 'error'; pushErr = e.message; render(); } }
+  else if (Notification.permission === 'denied') { pushState = 'denied'; render(); }
+  else { pushState = 'off'; render(); }
+}
+async function pushSaveToken() {
+  const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+  await navigator.serviceWorker.ready;
+  const messaging = getMessaging(app);
+  const token = await getToken(messaging, { serviceWorkerRegistration: reg });
+  if (token && token !== savedFcm) { await updateDoc(doc(db, 'students', me.uid), { fcmToken: token }); savedFcm = token; }
+  try { await setDoc(doc(db, 'appStatus', me.uid), { role: 'student', pushOn: true, lastSeen: serverTimestamp() }, { merge: true }); } catch (e) {}
+  if (!pushListening) {
+    pushListening = true;
+    onMessage(messaging, (m) => {
+      const n = m.notification || m.data || {};
+      const t = document.createElement('div');
+      t.style.cssText = 'position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top) + 12px);z-index:9999;background:#1A1230;color:#fff;border-radius:14px;padding:13px 16px;box-shadow:0 10px 30px rgba(0,0,0,.3);font-size:14px;line-height:1.45;';
+      t.innerHTML = `<b>${esc(n.title || '알림')}</b><div style="opacity:.85;margin-top:2px;">${esc(n.body || '')}</div>`;
+      t.onclick = () => location.reload();
+      document.body.appendChild(t);
+      setTimeout(() => t.remove(), 6000);
+    });
+  }
+}
+window.mpEnablePush = async () => {
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') { pushState = 'working'; render(); await pushSaveToken(); pushState = 'on'; }
+    else pushState = perm === 'denied' ? 'denied' : 'off';
+  } catch (e) { pushState = 'error'; pushErr = e.message; }
+  render();
+};
+</script>
+</body>
+</html>

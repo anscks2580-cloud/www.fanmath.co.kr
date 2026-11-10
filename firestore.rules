@@ -133,9 +133,9 @@ service cloud.firestore {
     match /students/{uid} {
       allow read: if isSignedIn() && (request.auth.uid == uid || isParentOf(uid) || isTeacher() || isAdmin());
       allow write: if isAdmin() || isTeacher();
-      // 학부모 앱 푸시 토큰: 본인 계정이 parentFcmToken 필드만 수정하는 건 허용
+      // 앱 푸시 토큰: 본인 계정이 parentFcmToken(예전 학부모 방식)·fcmToken(학생 마이페이지 숙제 알림) 필드만 수정하는 건 허용
       allow update: if isSignedIn() && request.auth.uid == uid &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['parentFcmToken']);
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['parentFcmToken', 'fcmToken']);
     }
 
     // ── consultForms: 상담 기록 ──
