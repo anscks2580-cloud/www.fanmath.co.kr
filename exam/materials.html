@@ -968,7 +968,16 @@ function renderMaterials(){
 
       const list = document.createElement('div');
       list.className = 'material-list';
-      gradeItems.forEach(item=>{
+      // 연결된 PDF는 해당 영상 바로 아래에 붙여서 보여줌
+      const vidIds = new Set(gradeItems.filter(i=>i._id && i['형식'] !== 'PDF').map(i=>i._id));
+      const isAttached = (i)=> i['형식'] === 'PDF' && i._videoDocId && vidIds.has(i._videoDocId);
+      const orderedItems = [];
+      gradeItems.forEach(i=>{
+        if(isAttached(i)) return;
+        orderedItems.push(i);
+        if(i._id && i['형식'] !== 'PDF') gradeItems.filter(p=>isAttached(p) && p._videoDocId === i._id).forEach(p=>orderedItems.push(Object.assign({}, p, { _attached: true })));
+      });
+      orderedItems.forEach(item=>{
         const vimeoId = extractVimeoId(item['링크']);
         const isPdf = item['형식'] === 'PDF';
         const rowAcademy = ACADEMIES.find(ac=>ac.school === item['학원명']);
@@ -991,6 +1000,7 @@ function renderMaterials(){
           // "다운로드"와 "미리보기" 두 버튼을 보여줍니다.
           const row = document.createElement('div');
           row.className = 'material-row';
+          if(item._attached){ row.style.marginLeft = '28px'; row.style.borderLeft = '2px solid var(--gold)'; }
           const canDl = item['다운로드허용'] || (item._teacherDl && window.__examRole === 'teacher');
           const actionsHtml = canDl
             ? `<a class="material-action-btn" href="${item['링크']}" data-pdf-name="${String(item['자료명']||'자료').replace(/"/g,'&quot;')}" target="_blank" rel="noopener">다운로드</a>
@@ -998,7 +1008,7 @@ function renderMaterials(){
             : `<span class="material-action-btn" style="cursor:default;opacity:0.85;">담당 선생님께 요청</span>`;
           row.innerHTML = `
             <span class="grade-tag">${rowLogoHtml}${item['학원명']||''}</span>
-            ${formatBadge}${yearBadge}<span class="material-row-title">${item['자료명']||'(제목 없음)'}</span>
+            ${formatBadge}${yearBadge}<span class="material-row-title">${item._attached ? '↳ 영상 자료 · ' : ''}${item['자료명']||'(제목 없음)'}</span>
             <span class="meta">${item['업로드일']||''}</span>
             <span class="material-row-actions">
               ${actionsHtml}
@@ -1187,7 +1197,7 @@ async function loadData(){
     // 각 학원 선생님이 upload.html 에서 직접 올린 자료 (영상: 모두, PDF: 선생님 화면만)
     try{
       const up = await getDocs(collection(db, 'examUploads'));
-      const ups = up.docs.map(d=>d.data()).sort((a,b)=>String(a.createdAt||'').localeCompare(String(b.createdAt||'')));
+      const ups = up.docs.map(d=>({ _docId: d.id, ...d.data() })).sort((a,b)=>String(a.createdAt||'').localeCompare(String(b.createdAt||'')));
       ups.forEach(v=>{
         const isPdf = v.kind === 'pdf';
         items.push({
@@ -1205,6 +1215,9 @@ async function loadData(){
           '다운로드허용': isPdf && v.downloadable === true,
           _teacherOnly: isPdf && v.subject !== '영어',
           _teacherDl: isPdf,
+          // 영상↔PDF 연결 (PDF 쪽에 연결된 영상 문서 id 저장)
+          _id: v._docId,
+          _videoDocId: isPdf ? (v.videoDocId || '') : '',
           _src: v.source || '',
         });
       });

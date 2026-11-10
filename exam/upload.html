@@ -84,6 +84,9 @@
   .item-main{flex:1;min-width:0;}
   .item-title{font-weight:700;font-size:0.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
   .item-meta{font-size:0.72rem;color:var(--ink-soft);}
+  .item-pair{margin-top:5px;font-size:0.74rem;color:var(--ink-soft);display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+  .item-pair select{width:auto;max-width:100%;padding:4px 8px;font-size:0.74rem;}
+  .item.sub{margin-left:26px;border-style:dashed;}
   .item a, .item button{flex-shrink:0;font-size:0.76rem;border:1px solid var(--line);background:transparent;color:var(--ink-soft);border-radius:20px;padding:4px 11px;cursor:pointer;text-decoration:none;}
   .item a:hover{border-color:var(--gold);color:var(--gold);}
   .item button:hover{border-color:var(--coral);color:var(--coral);}
@@ -172,6 +175,19 @@
       <input type="text" id="linkInput" placeholder="https://youtu.be/... 또는 https://vimeo.com/...">
     </div>
 
+    <!-- 영상과 함께 올릴 PDF → 자동 연결 -->
+    <div id="attachWrap" class="field" style="margin-top:14px;">
+      <label>함께 올릴 PDF (선택) — 올리면 이 영상과 자동으로 연결돼요</label>
+      <div class="drop" id="attachDrop" style="padding:14px;"><div id="attachText">여기를 눌러 <b>PDF</b>를 고르세요</div></div>
+      <input type="file" id="attachInput" accept="application/pdf,.pdf" style="display:none;">
+      <button type="button" id="attachClear" class="ghost-btn" style="display:none;margin-top:6px;">PDF 빼기</button>
+    </div>
+    <!-- PDF만 올릴 때 이미 올린 영상과 연결 -->
+    <div id="pairWrap" class="field" style="display:none;margin-top:14px;">
+      <label>연결할 영상 (선택)</label>
+      <select id="pairSel"><option value="">연결 안 함</option></select>
+    </div>
+
     <div class="prog" id="prog"><div id="progBar"></div></div>
     <div class="msg" id="msg"></div>
     <button class="submit" id="submitBtn">올리기</button>
@@ -192,7 +208,7 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, updateDoc, doc, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
 
@@ -236,7 +252,8 @@ let pickedFile = null;
 let busy = false;
 let items = [];
 let listFilter = '';
-let dlChoice = '';   // 영어 PDF: yes(학생 다운로드 허용) | no(목록만)
+let dlChoice = '';
+let attachPdf = null;  // 영상과 함께 올릴 PDF   // 영어 PDF: yes(학생 다운로드 허용) | no(목록만)
 
 // ── 입장 ──
 function enter(code) {
@@ -294,11 +311,33 @@ document.querySelectorAll('.kind-btn').forEach((b) => b.onclick = () => {
   kind = b.dataset.kind;
   document.querySelectorAll('.kind-btn').forEach((x) => x.classList.toggle('on', x === b));
   $('videoSrcTabs').style.display = kind === 'video' ? '' : 'none';
-  $('dlWrap').style.display = kind === 'pdf' && SUBJECT[academy] === '영어' ? '' : 'none';
+  $('attachWrap').style.display = kind === 'video' ? '' : 'none';
+  $('pairWrap').style.display = kind === 'pdf' ? '' : 'none';
+  updateDlWrap();
   if (kind === 'pdf') setSrc('file');
   clearFile();
 });
 document.querySelectorAll('#videoSrcTabs .src-tab').forEach((b) => b.onclick = () => { if (!busy) setSrc(b.dataset.src); });
+function updateDlWrap() {
+  $('dlWrap').style.display = SUBJECT[academy] === '영어' && (kind === 'pdf' || (kind === 'video' && attachPdf)) ? '' : 'none';
+}
+// 함께 올릴 PDF 고르기
+function setAttach(f) {
+  if (f && !(f.type === 'application/pdf' || /\.pdf$/i.test(f.name))) { setMsg('PDF 파일만 함께 올릴 수 있어요.', 'err'); return; }
+  if (f && f.size >= MAX_PDF) { setMsg('PDF가 3GB를 넘어요.', 'err'); return; }
+  attachPdf = f || null;
+  $('attachInput').value = '';
+  $('attachText').innerHTML = attachPdf ? `<b>${esc(attachPdf.name)}</b> · ${sizeText(attachPdf.size)}` : '여기를 눌러 <b>PDF</b>를 고르세요';
+  $('attachClear').style.display = attachPdf ? '' : 'none';
+  updateDlWrap();
+}
+$('attachDrop').onclick = () => { if (!busy) $('attachInput').click(); };
+$('attachInput').onchange = (e) => setAttach(e.target.files[0]);
+$('attachClear').onclick = () => { if (!busy) setAttach(null); };
+$('attachDrop').addEventListener('dragover', (e) => { e.preventDefault(); $('attachDrop').classList.add('over'); });
+$('attachDrop').addEventListener('dragleave', () => $('attachDrop').classList.remove('over'));
+$('attachDrop').addEventListener('drop', (e) => { e.preventDefault(); $('attachDrop').classList.remove('over'); if (!busy) setAttach(e.dataTransfer.files[0]); });
+
 document.querySelectorAll('#dlWrap .src-tab').forEach((b) => b.onclick = () => {
   if (busy) return;
   dlChoice = b.dataset.dl;
@@ -363,19 +402,33 @@ $('submitBtn').onclick = async () => {
   if (!title) return setMsg('자료명을 입력해주세요.', 'err');
   if (!grade) return setMsg('학년을 선택해주세요.', 'err');
   if (subject !== '영어' && !materialType) return setMsg('자료 유형을 선택해주세요.', 'err');
-  if (kind === 'pdf' && subject === '영어' && !dlChoice) return setMsg('학생 다운로드 허용 / 목록만 보기 중 하나를 골라주세요.', 'err');
+  const withPdf = kind === 'video' ? attachPdf : null;
+  if ((kind === 'pdf' || withPdf) && subject === '영어' && !dlChoice) return setMsg('PDF의 학생 다운로드 허용 / 목록만 보기 중 하나를 골라주세요.', 'err');
 
   const base = { academy, subject, kind, title, grade, materialType, year, createdAt: new Date().toISOString() };
   // PDF: 수학은 선생님만(학생 다운로드 불가), 영어는 고른 대로
-  if (kind === 'pdf') base.downloadable = subject === '영어' && dlChoice === 'yes';
+  const pdfBase = { ...base, kind: 'pdf', downloadable: subject === '영어' && dlChoice === 'yes' };
+
+  // 영상이 등록된 뒤 함께 고른 PDF를 올려 그 영상과 연결
+  const afterVideo = async (videoDocId, okText) => {
+    if (!withPdf) return done(okText);
+    try {
+      await uploadPdf(withPdf, pdfBase, videoDocId, '함께 올린 PDF ');
+      done(okText + ' PDF도 함께 올려 영상과 연결했어요.');
+    } catch (e) {
+      console.error(e);
+      done(okText);
+      setMsg('영상은 올라갔지만 PDF는 올리지 못했어요. PDF만 다시 올리면서 이 영상을 연결해주세요.', 'err');
+    }
+  };
 
   if (kind === 'video' && videoSrc === 'link') {
     const link = parseLink($('linkInput').value);
     if (!link) return setMsg('유튜브나 비메오 영상 주소를 확인해주세요.', 'err');
     busy = true; $('submitBtn').disabled = true; setMsg('등록 중...');
     try {
-      await addDoc(collection(db, 'examUploads'), { ...base, source: link.source, url: link.url, storagePath: '', size: 0 });
-      done();
+      const r = await addDoc(collection(db, 'examUploads'), { ...base, source: link.source, url: link.url, storagePath: '', size: 0 });
+      await afterVideo(r.id, '올렸습니다! 자료실에 바로 반영됐어요.');
     } catch (e) { fail(e); }
     return;
   }
@@ -404,8 +457,9 @@ $('submitBtn').onclick = async () => {
         }).start();
       });
       setMsg('자료실에 등록 중...');
-      await vimeoApi('finalize', { vimeoId, title, grade, materialType, year });
-      done('비메오에 올렸습니다! 자료실에 바로 반영됐어요. (비메오 변환이 끝나기까지 몇 분 걸릴 수 있어요)');
+      const fin = await vimeoApi('finalize', { vimeoId, title, grade, materialType, year });
+      vimeoId = '';
+      await afterVideo(fin.id, '비메오에 올렸습니다! 자료실에 바로 반영됐어요. (비메오 변환이 끝나기까지 몇 분 걸릴 수 있어요)');
     } catch (e) {
       if (vimeoId) vimeoApi('cancel', { vimeoId }).catch(() => {});
       fail({ message: errText(e) });
@@ -413,27 +467,36 @@ $('submitBtn').onclick = async () => {
     return;
   }
 
-  const safeName = f.name.replace(/[\\/#?\[\]*]/g, '_');
-  const path = `examUploads/${academy}/${Date.now()}_${safeName}`;
-  const contentType = kind === 'pdf' ? 'application/pdf' : (f.type && f.type.startsWith('video/') ? f.type : 'video/mp4');
-  busy = true; $('submitBtn').disabled = true; setProg(0); setMsg('올리는 중 0%');
+  // PDF만 올리기 (고른 영상이 있으면 연결)
+  busy = true; $('submitBtn').disabled = true;
+  window.onbeforeunload = () => '업로드 중입니다';
   try {
-    const task = uploadBytesResumable(ref(storage, path), f, { contentType });
-    window.onbeforeunload = () => '업로드 중입니다';
-    await new Promise((ok, no) => task.on('state_changed', (s) => {
-      const p = Math.round((s.bytesTransferred / s.totalBytes) * 100);
-      setProg(p); setMsg(`올리는 중 ${p}% (${sizeText(s.bytesTransferred)} / ${sizeText(s.totalBytes)})`);
-    }, no, ok));
-    const url = await getDownloadURL(task.snapshot.ref);
-    await addDoc(collection(db, 'examUploads'), { ...base, source: 'file', url, storagePath: path, size: f.size });
+    await uploadPdf(f, pdfBase, $('pairSel').value, '');
     done();
   } catch (e) { fail(e); }
   finally { window.onbeforeunload = null; }
 };
+// PDF를 파이어베이스 저장소에 올리고 목록에 등록 (videoDocId 가 있으면 그 영상과 연결)
+async function uploadPdf(f, b, videoDocId, label) {
+  const safeName = f.name.replace(/[\\/#?\[\]*]/g, '_');
+  const path = `examUploads/${academy}/${Date.now()}_${safeName}`;
+  setProg(0); setMsg(label + '올리는 중 0%');
+  const task = uploadBytesResumable(ref(storage, path), f, { contentType: 'application/pdf' });
+  await new Promise((ok, no) => task.on('state_changed', (s) => {
+    const p = Math.round((s.bytesTransferred / s.totalBytes) * 100);
+    setProg(p); setMsg(`${label}올리는 중 ${p}% (${sizeText(s.bytesTransferred)} / ${sizeText(s.totalBytes)})`);
+  }, no, ok));
+  const url = await getDownloadURL(task.snapshot.ref);
+  const docData = { ...b, kind: 'pdf', source: 'file', url, storagePath: path, size: f.size };
+  if (videoDocId) docData.videoDocId = videoDocId;
+  await addDoc(collection(db, 'examUploads'), docData);
+}
 function done(text) {
   busy = false; $('submitBtn').disabled = false; setProg(null);
   $('title').value = ''; $('linkInput').value = '';
   dlChoice = ''; document.querySelectorAll('#dlWrap .src-tab').forEach((x) => x.classList.remove('on'));
+  setAttach(null);
+  $('pairSel').value = '';
   clearFile();
   setMsg(text || '올렸습니다! 자료실에 바로 반영됐어요.', 'ok');
   loadList();
@@ -453,14 +516,34 @@ async function loadList() {
   } catch (e) { console.error(e); $('list').innerHTML = '<div class="empty">목록을 불러오지 못했어요.</div>'; }
 }
 function renderList() {
-  const list = items.filter((i) => !listFilter || i.kind === listFilter);
+  const videos = items.filter((i) => i.kind === 'video');
+  const videoIds = new Set(videos.map((v) => v.id));
+  const videoOpts = (sel) => '<option value="">영상 연결 안 함</option>' + videos.map((v) => `<option value="${esc(v.id)}"${v.id === sel ? ' selected' : ''}>${esc(v.title)}${v.grade ? ' (' + esc(v.grade) + ')' : ''}</option>`).join('');
+  // PDF만 올릴 때 고르는 영상 목록
+  const cur = $('pairSel').value;
+  $('pairSel').innerHTML = videoOpts(cur).replace('영상 연결 안 함', '연결 안 함');
+  // 순서: 영상 바로 아래에 연결된 PDF
+  const linked = (i) => i.kind === 'pdf' && i.videoDocId && videoIds.has(i.videoDocId);
+  let ordered = [];
+  if (!listFilter) {
+    items.forEach((i) => {
+      if (linked(i)) return;
+      ordered.push(i);
+      if (i.kind === 'video') items.filter((p) => linked(p) && p.videoDocId === i.id).forEach((p) => ordered.push({ ...p, _sub: true }));
+    });
+  } else ordered = items.filter((i) => i.kind === listFilter);
+  const list = ordered;
   if (!list.length) { $('list').innerHTML = '<div class="empty">아직 올린 자료가 없어요.</div>'; return; }
   $('list').innerHTML = list.map((i) => {
     const dlLabel = i.kind === 'pdf' && i.subject === '영어' ? (i.downloadable ? '학생 다운로드 허용' : '목록만(다운로드 불가)') : '';
     const meta = [dlLabel, i.grade, i.materialType, i.year && i.year + '년', i.kind === 'video' && i.source !== 'file' ? (i.source === 'youtube' ? '유튜브 링크' : i.vimeoId ? '비메오 업로드' + (i.size ? ' ' + sizeText(i.size) : '') : '비메오 링크') : (i.size ? sizeText(i.size) : ''), String(i.createdAt || '').slice(0, 10)].filter(Boolean).join(' · ');
-    return `<div class="item">
+    const pdfCount = i.kind === 'video' ? items.filter((p) => linked(p) && p.videoDocId === i.id).length : 0;
+    const pairHtml = i.kind === 'pdf'
+      ? `<div class="item-pair">연결된 영상 <select data-pair="${esc(i.id)}">${videoOpts(videoIds.has(i.videoDocId) ? i.videoDocId : '')}</select></div>`
+      : (pdfCount ? `<div class="item-pair">📎 연결된 PDF ${pdfCount}개</div>` : '');
+    return `<div class="item${i._sub ? ' sub' : ''}">
       <span class="badge ${i.kind}">${i.kind === 'pdf' ? 'PDF' : '영상'}</span>
-      <div class="item-main"><div class="item-title">${esc(i.title)}</div><div class="item-meta">${esc(meta)}</div></div>
+      <div class="item-main"><div class="item-title">${esc(i.title)}</div><div class="item-meta">${esc(meta)}</div>${pairHtml}</div>
       <a href="${esc(i.url)}" target="_blank" rel="noopener">${i.kind === 'pdf' ? '열기' : '보기'}</a>
       ${i.kind === 'pdf' ? `<button class="dl" data-dl-id="${esc(i.id)}">다운로드</button>` : ''}
       <button data-del="${esc(i.id)}">삭제</button>
@@ -486,6 +569,18 @@ async function downloadPdf(url, name, btn) {
   } catch (err) { window.open(url, '_blank'); }
   finally { if (btn) { btn.disabled = false; btn.textContent = old; } }
 }
+// 이미 올린 PDF ↔ 영상 연결 바꾸기
+$('list').addEventListener('change', async (e) => {
+  const id = e.target.dataset && e.target.dataset.pair;
+  if (!id) return;
+  e.target.disabled = true;
+  try {
+    await updateDoc(doc(db, 'examUploads', id), { videoDocId: e.target.value });
+    const it = items.find((x) => x.id === id);
+    if (it) it.videoDocId = e.target.value;
+    renderList();
+  } catch (err) { console.error(err); alert('연결하지 못했어요. 잠시 후 다시 시도해주세요.'); e.target.disabled = false; }
+});
 $('list').addEventListener('click', async (e) => {
   const dlId = e.target.dataset && e.target.dataset.dlId;
   if (dlId) { const it = items.find((x) => x.id === dlId); if (it) downloadPdf(it.url, it.title, e.target); return; }
