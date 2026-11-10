@@ -159,7 +159,7 @@ function showPortal() { document.getElementById('loginScreen').style.display='no
 // 관리자 확인
 onAuthStateChanged(auth, async (user) => {
   if (!user) { showLogin(); return; }
-  // 로그인 4시간 지나면 자동 로그아웃 (session-limit.js)
+  // 로그인 8시간 지나면 자동 로그아웃 (session-limit.js)
   if (window.swcSessionGuard && swcSessionGuard(user, () => signOut(auth))) return;
   try {
     const adminDoc = await getDoc(doc(db, 'admins', user.uid));

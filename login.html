@@ -229,11 +229,11 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-// 관리자·선생님·조교·원장 화면에서 로그인 4시간이 지나 자동 로그아웃된 경우 안내 (session-limit.js)
+// 관리자·선생님·조교·원장 화면에서 로그인 8시간이 지나 자동 로그아웃된 경우 안내 (session-limit.js)
 try {
   if (sessionStorage.getItem('swc_session_expired')) {
     sessionStorage.removeItem('swc_session_expired');
-    showErr('s-err', '로그인한 지 4시간이 지나 자동으로 로그아웃되었습니다. 다시 로그인해 주세요.');
+    showErr('s-err', '로그인한 지 8시간이 지나 자동으로 로그아웃되었습니다. 다시 로그인해 주세요.');
   }
 } catch (e) {}
 
@@ -312,7 +312,7 @@ if (savedId) {
 //  · 로그인 후 계정 종류 확인: 관리자 → admin.html, 조교 → ta.html, 선생님 → teacher.html, 학생 → index.html(첫 화면), 학부모 → parent.html
 //  · 학부모: 같은 학생 이름으로 입력하되 비밀번호가 학부모 전화번호 → 학생 계정 로그인이 실패하면 이름.p@songmath.kr(학부모 계정)로 한 번 더 시도
 //  · 학생은 브라우저를 닫으면 로그아웃(기존 방식), 학부모는 로그인 유지
-//  · 관리자·선생님·조교·원장은 로그인 유지하되 4시간이 지나면 자동 로그아웃 (session-limit.js)
+//  · 관리자·선생님·조교·원장은 로그인 유지하되 8시간이 지나면 자동 로그아웃 (session-limit.js)
 window.loginStudent = async function() {
   const id = document.getElementById('s-name').value.trim();
   const pwRaw = document.getElementById('s-pw').value.trim();

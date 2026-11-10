@@ -87,9 +87,9 @@ async function roleOf(db, uid) {
     if (!user || user.isAnonymous) { removeLinks(); return; }
     const r = await roleOf(db, user.uid);
     if (my !== seq) return;
-    // 관리자·선생님·조교는 로그인 4시간이 지나면 자동 로그아웃 (session-limit.js와 같은 기준)
+    // 관리자·선생님·조교는 로그인 8시간이 지나면 자동 로그아웃 (session-limit.js와 같은 기준)
     const at = Date.parse((user.metadata && user.metadata.lastSignInTime) || '');
-    if (r && (isNaN(at) || Date.now() - at > 4 * 60 * 60 * 1000)) {
+    if (r && (isNaN(at) || Date.now() - at > 8 * 60 * 60 * 1000)) {
       removeLinks();
       try { await signOut(auth); } catch (_) {}
       return;
