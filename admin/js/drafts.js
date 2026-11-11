@@ -59,51 +59,41 @@ function setDrData(d) {
 }
 
 function getWlData() {
-  const secs = ['new','leave','pause','upcoming','cash','consult'];
   const data = {
     branch: document.getElementById('wl-branch')?.value || '',
     from:   document.getElementById('wl-from')?.value || '',
     to:     document.getElementById('wl-to')?.value || '',
-    consultNote: document.getElementById('wl-consult-note')?.value || '',
-    textbook:    document.getElementById('wl-textbook')?.value || '',
-    absent:      document.getElementById('wl-absent')?.value || '',
   };
-  // 중첩 배열 대신 { sec_ri_ci: value } 평탄화 형태로 저장
-  const flat = {};
-  secs.forEach(sec => {
-    document.querySelectorAll(`[data-sec="${sec}"]`).forEach(inp => {
-      flat[`${sec}_${inp.dataset.row}_${inp.dataset.col}`] = inp.value;
-    });
-    flat[`${sec}__count`] = document.getElementById('wl-' + sec + '-rows')?.children.length || 0;
-  });
-  data.flat = flat;
+  // 2026.11.12부터 모든 칸 한 칸 텍스트 — texts: { new, leave, pause, upcoming, cash, consult, textbook }
+  const texts = {};
+  WL_KEYS.forEach((k) => { texts[k] = wlGetText(k); });
+  data.texts = texts;
+  data.textbook = texts.textbook;
   return data;
+}
+
+// 예전 형식(이름·학년 칸 나눔)으로 저장된 임시저장도 한 줄씩 합쳐서 불러옴
+const WL_OLD_SECS = ['new','leave','pause','upcoming','cash','consult'];
+function wlOldFlatToText(flat, sec) {
+  const count = flat[`${sec}__count`] || 0, out = [];
+  for (let ri = 0; ri < count; ri++) {
+    const row = [0,1,2,3,4].map((ci) => (flat[`${sec}_${ri}_${ci}`] || '').trim()).filter(Boolean);
+    if (row.length) out.push(row.join(' '));
+  }
+  return out.join('\n');
 }
 
 function setWlData(d) {
   if (d.branch) document.getElementById('wl-branch').value = d.branch;
   if (d.from)   document.getElementById('wl-from').value   = d.from;
   if (d.to)     document.getElementById('wl-to').value     = d.to;
-  if (d.consultNote !== undefined) document.getElementById('wl-consult-note').value = d.consultNote;
-  if (d.textbook !== undefined)    document.getElementById('wl-textbook').value     = d.textbook;
-  if (d.absent !== undefined && document.getElementById('wl-absent')) document.getElementById('wl-absent').value = d.absent;
-
+  if (d.texts) {
+    WL_KEYS.forEach((k) => wlSetText(k, d.texts[k] || ''));
+    return;
+  }
   const flat = d.flat || {};
-  const secs = ['new','leave','pause','upcoming','cash','consult'];
-  secs.forEach(sec => {
-    const container = document.getElementById('wl-' + sec + '-rows');
-    if (!container) return;
-    container.innerHTML = '';
-    const count = flat[`${sec}__count`] || 1;
-    for (let ri = 0; ri < count; ri++) {
-      wlAddRow(sec);
-      const inputs = container.querySelectorAll(`[data-row="${ri}"]`);
-      inputs.forEach(inp => {
-        const key = `${sec}_${ri}_${inp.dataset.col}`;
-        if (flat[key] !== undefined) inp.value = flat[key];
-      });
-    }
-  });
+  WL_OLD_SECS.forEach((sec) => wlSetText(sec, wlOldFlatToText(flat, sec)));
+  wlSetText('textbook', d.textbook || '');
 }
 
 function getAttData() {

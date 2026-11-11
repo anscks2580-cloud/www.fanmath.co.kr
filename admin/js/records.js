@@ -109,32 +109,29 @@ function recRenderDetail(type, d) {
         </tr>`).join('') + `</table>`;
   }
   if (type === 'wl') {
-    const secLabels = { new:'신입생', leave:'퇴원생', pause:'휴원생', upcoming:'신규등원예정', cash:'현금입금내역', consult:'상담' };
-    const WL_COLS_local = {
-      new:['이름','학년','학교','담당T','반배정'], leave:['이름','학년','학교','담당T','반배정'],
-      pause:['이름','학년','학교','담당T','반배정'], upcoming:['이름','학년','학교','담당T','반배정'],
-      cash:['이름/발행일','수납처리','현금영수증','금액','번호'], consult:['이름','학년','학교','상담자','반배정'],
-    };
-    const flat = d.flat || {};
-    let html = `<div style="margin-bottom:8px;font-size:12px;color:var(--muted);">${d.branch} / ${d.from} ~ ${d.to}</div>`;
-    Object.entries(secLabels).forEach(([sec, label]) => {
-      const count = flat[`${sec}__count`] || 0;
-      const rows = [];
-      for (let ri=0; ri<count; ri++) {
-        const cols = WL_COLS_local[sec] || [];
-        const row = cols.map((_,ci) => flat[`${sec}_${ri}_${ci}`] || '');
-        if (row.some(v=>v)) rows.push(row);
-      }
-      if (!rows.length) return;
-      html += `<div style="margin-bottom:12px;">
-        <div style="font-size:12px;font-weight:700;color:var(--purple, #5B3FA6);margin-bottom:6px;">${label}</div>
-        <table style="width:100%;border-collapse:collapse;font-size:12px;">
-          <tr>${(WL_COLS_local[sec]||[]).map(c=>`<th style="padding:5px 8px;background:rgba(245,197,24,0.1);color:var(--purple, #5B3FA6);text-align:left;border-bottom:1px solid rgba(30,24,56,0.1);">${c}</th>`).join('')}</tr>
-          ${rows.map(row=>`<tr>${row.map(v=>`<td style="padding:5px 8px;border-bottom:1px solid rgba(30,24,56,0.05);color:var(--off-white);">${v||'-'}</td>`).join('')}</tr>`).join('')}
-        </table></div>`;
-    });
-    if (d.consultNote) html += `<div style="font-size:12px;"><span style="color:var(--purple, #5B3FA6);font-weight:600;">상담요형처리:</span> ${d.consultNote}</div>`;
-    if (d.textbook)    html += `<div style="font-size:12px;margin-top:8px;"><span style="color:var(--purple, #5B3FA6);font-weight:600;">교재입출고:</span><br><span style="white-space:pre-wrap;">${d.textbook}</span></div>`;
+    const secLabels = { new:'신입생', leave:'퇴원생', pause:'휴원생', upcoming:'신규등원예정', cash:'현금입금내역', consult:'상담', textbook:'교재입출고' };
+    const esc = (v) => String(v || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    // 새 형식(texts) 우선, 예전 형식(칸 나눔 flat)은 한 줄씩 합쳐서 보여줌
+    const texts = d.texts || (() => {
+      const flat = d.flat || {}, t = {};
+      ['new','leave','pause','upcoming','cash','consult'].forEach((sec) => {
+        const count = flat[`${sec}__count`] || 0, out = [];
+        for (let ri = 0; ri < count; ri++) {
+          const row = [0,1,2,3,4].map((ci) => (flat[`${sec}_${ri}_${ci}`] || '').trim()).filter(Boolean);
+          if (row.length) out.push(row.join(' '));
+        }
+        t[sec] = out.join('\n');
+      });
+      t.textbook = d.textbook || '';
+      return t;
+    })();
+    let html = `<div style="margin-bottom:8px;font-size:12px;color:var(--muted);">${esc(d.branch)} / ${esc(d.from)} ~ ${esc(d.to)}</div>`;
+    html += `<table style="width:100%;border-collapse:collapse;">` +
+      Object.entries(secLabels).map(([k, label]) => `
+        <tr style="border-bottom:1px solid rgba(30,24,56,0.06);">
+          <td style="padding:6px 12px;color:var(--purple, #5B3FA6);font-weight:600;width:120px;font-size:12px;vertical-align:top;">${label}</td>
+          <td style="padding:6px 12px;color:var(--off-white);font-size:13px;white-space:pre-wrap;">${esc(texts[k]) || '-'}</td>
+        </tr>`).join('') + `</table>`;
     return html;
   }
   if (type === 'att') {
