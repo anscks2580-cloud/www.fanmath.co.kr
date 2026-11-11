@@ -254,7 +254,7 @@ a.lk:hover { text-decoration:underline; }
     <button class="dr-tab on" data-tab="day" onclick="drTab('day')">오늘 · 하루 마감</button>
     <button class="dr-tab" data-tab="week" onclick="drTab('week')">이번 주 · 주간</button>
     <button class="dr-tab" data-tab="month" onclick="drTab('month')">이번 달 · 월말보고서</button>
-    <button class="dr-tab" data-tab="comment" onclick="drTab('comment')">학부모 댓글</button>
+    <button class="dr-tab" data-tab="comment" onclick="drTab('comment')">학부모 댓글 · 출결</button>
   </div>
 
   <!-- ══ 하루 ══ -->
@@ -391,7 +391,7 @@ window.drTab = (t) => {
   if (t === 'comment') renderComments();
 };
 window.drSetBranch = (b) => { S.branch = b; try { localStorage.setItem('swc_director_branch', b); } catch (e) {} renderAll(); clRender(); };
-window.drReload = async () => { await loadBase(); S.comments = null; renderAll(); };
+window.drReload = async () => { await loadBase(); S.comments = null; S.absences = null; renderAll(); };
 window.drDayMove = (n) => { S.day = ymd(addDays(parseYmd(S.day), n)); renderDay(); };
 window.drDaySet = (v) => { if (v) { S.day = v; renderDay(); } };
 window.drWeekMove = (n) => { S.weekMon = addDays(S.weekMon, 7 * n); renderWeek(); };
@@ -416,6 +416,13 @@ async function loadComments() {
   const snap = await getDocs(collection(db, 'reportComments'));
   S.comments = []; snap.forEach((d) => S.comments.push({ id: d.id, ...d.data() }));
   return S.comments;
+}
+// 출결 관련 — 학부모가 학부모 앱으로 낸 결석 사유서 (absences, source='parent')
+async function loadAbsences() {
+  if (S.absences) return S.absences;
+  const snap = await getDocs(collection(db, 'absences'));
+  S.absences = []; snap.forEach((d) => { const a = { id: d.id, ...d.data() }; if (a.source !== 'phone') S.absences.push(a); });
+  return S.absences;
 }
 
 // ══════════════════════════════════════
@@ -731,8 +738,14 @@ async function renderMonth() {
 // ══════════════════════════════════════
 // 학부모 댓글 — reportComments (주간성취도·월말보고서에 단 댓글과 선생님 답글)
 // ══════════════════════════════════════
-const CM = { filter: 'all', teacher: '' };
+const CM = { filter: 'all', teacher: '', kind: 'all' };
 window.cmSet = (k, v) => { CM[k] = v; renderComments(); };
+const CM_KINDS = [
+  { key: 'weekly',  label: '주간성취도', icon: '📊' },
+  { key: 'monthly', label: '월말보고서', icon: '📄' },
+  { key: 'att',     label: '출결 (결석 사유서)', icon: '📝' },
+];
+const kindOf = (t) => t.first.targetType === 'monthly' ? 'monthly' : 'weekly';
 function threadsOf(comments) {
   const scopeIds = new Set(scopeStudents().map((s) => s.id));
   const g = {};
@@ -749,38 +762,83 @@ function threadsOf(comments) {
     return { list, first: list[0], last, unanswered, checked, waiting: unanswered && !checked, at: tsDate(last.createdAt) };
   }).sort((a, b) => (b.waiting - a.waiting) || ((b.at || 0) - (a.at || 0)));
 }
+// 결석 사유서: 관(지점)·최근 60일 범위, 관리부 확인 대기 먼저
+function absOf(list) {
+  const scopeIds = new Set(scopeStudents().map((s) => s.id));
+  const cut = ymd(addDays(new Date(), -60));
+  return (list || []).filter((a) => (!S.branch || a.branch === S.branch || scopeIds.has(a.studentId)) && (a.dates || []).some((d) => d >= cut))
+    .map((a) => ({ a, waiting: !a.verified, at: tsDate(a.createdAt) }))
+    .sort((x, y) => (y.waiting - x.waiting) || ((y.at || 0) - (x.at || 0)));
+}
+function threadHtml(t) {
+  const label = t.first.targetLabel || (t.first.targetType === 'weekly' ? '주간성취도' : t.first.targetType === 'monthly' ? '월말보고서' : '');
+  const typeChip = t.first.targetType === 'monthly' ? '<span class="chip pur">월말보고서</span>' : '<span class="chip warn">주간성취도</span>';
+  const link = t.first.targetType === 'monthly' ? ` <a class="lk" style="font-size:12px" href="report.html?id=${encodeURIComponent(t.first.targetId)}" target="_blank" rel="noopener">보고서 보기</a>` : '';
+  return `<div class="th${t.waiting ? ' wait' : ''}"><div class="th-hd">${typeChip}<b>${esc(t.first.studentName || '')}</b><span class="sm">${esc(label)} · 담당 ${esc(t.first.teacherName || '-')}</span>${link}<span class="r">${t.waiting ? `<span class="chip bad">답글 대기</span><button class="btn btn-ok" onclick="cmCheck('${esc(t.last.id)}')">✅ 확인함</button>` : t.checked ? `<span class="chip mute">답글 전 · 확인함</span><button class="btn" onclick="cmUncheck('${esc(t.last.id)}')">되돌리기</button>` : '<span class="chip ok">답글 완료</span>'}</span></div>
+    <div class="msgs">${t.list.map((c) => { const d = tsDate(c.createdAt); return `<div class="msg ${c.authorRole === 'teacher' ? 't' : 'p'}"><small>${esc(c.authorName || (c.authorRole === 'teacher' ? '선생님' : '학부모'))} · ${d ? esc(md(d) + ' ' + hm(d)) : ''}${c.editedAt ? ' · 수정됨' : ''}${c.authorRole === 'parent' && c.readByTeacher ? ' · 선생님 읽음' : c.authorRole === 'parent' ? ' · 선생님 안 읽음' : ''}</small>${esc(c.text || '')}</div>`; }).join('')}</div>${t.unanswered ? cmCheckLine(t.last) : ''}</div>`;
+}
+function absHtml(x) {
+  const a = x.a, d = x.at;
+  const ds = [...(a.dates || [])].sort().map((v) => `<span class="chip ${v === ymd(new Date()) ? 'bad' : 'mute'}">${esc(md(parseYmd(v)))}</span>`).join(' ');
+  const replies = (Array.isArray(a.replies) ? a.replies : []).map((r) => { const t = new Date(r.at); return `<div class="msg t"><small>🏫 ${esc(r.by || '관리부')}${isNaN(t) ? '' : ' · ' + esc(md(t) + ' ' + hm(t))}</small>${esc(r.text || '')}</div>`; }).join('');
+  const vAt = a.verifiedAt ? new Date(a.verifiedAt) : null;
+  return `<div class="th${x.waiting ? ' wait' : ''}"><div class="th-hd"><span class="chip ok">출결</span><b>${esc(a.studentName || '')}</b><span class="sm">${esc(a.branch || '')} · ${esc(a.grade || '')} ${esc(a.classGroup || '')} · 담당 ${esc(a.teacherName || '-')}</span><span class="r">${x.waiting ? '<span class="chip bad">관리부 확인 대기</span>' : `<span class="chip ok">관리부 확인 · 출결 반영</span>`}</span></div>
+    <div style="margin-bottom:8px;display:flex;gap:4px;flex-wrap:wrap;">${ds}</div>
+    <div class="msgs"><div class="msg p"><small>${esc((a.studentName || '') + ' 학부모')} · ${d ? esc(md(d) + ' ' + hm(d)) : ''} · 결석 사유서</small><b>${esc(a.reason || '결석')}</b>${a.detail ? ' — ' + esc(a.detail) : ''}</div>${replies}</div>
+    ${!x.waiting ? `<div class="th-ck"><span class="ok">✅ ${esc(a.verifiedBy || '관리부')} 확인${vAt && !isNaN(vAt) ? ` <span style="font-weight:400;color:var(--muted)">${esc(md(vAt) + ' ' + hm(vAt))}</span>` : ''}</span></div>` : ''}</div>`;
+}
 async function renderComments() {
   const box = $('cmBox');
   if (!S.comments) box.innerHTML = '<div class="empty">불러오는 중...</div>';
-  let comments;
+  let comments, absList = [];
   try { comments = await loadComments(); } catch (e) { box.innerHTML = `<div class="err">불러오지 못했습니다 (${esc(e.message)})</div>`; return; }
+  try { absList = await loadAbsences(); } catch (e) { absList = []; }
   const all = threadsOf(comments);
+  const absAll = absOf(absList);
   const wait = all.filter((t) => t.waiting).length;
-  S.alerts.comment = wait; renderAlerts();
-  const teachers = [...new Map(all.map((t) => [t.first.teacherUid, t.first.teacherName])).entries()].filter(([u]) => u).sort((a, b) => koCmp(a[1], b[1]));
-  let list = all;
-  const nChecked = all.filter((t) => t.checked).length;
-  const nDone = all.filter((t) => !t.unanswered).length;
-  if (CM.filter === 'wait') list = list.filter((t) => t.waiting);
-  if (CM.filter === 'checked') list = list.filter((t) => t.checked);
-  if (CM.filter === 'done') list = list.filter((t) => !t.unanswered);
-  if (CM.teacher) list = list.filter((t) => t.first.teacherUid === CM.teacher);
-  const label = (t) => t.first.targetLabel || (t.first.targetType === 'weekly' ? '주간성취도' : t.first.targetType === 'monthly' ? '월말보고서' : '');
-  const typeChip = (t) => t.first.targetType === 'monthly' ? '<span class="chip pur">월말보고서</span>' : t.first.targetType === 'weekly' ? '<span class="chip warn">주간성취도</span>' : '';
-  box.innerHTML = `<div class="card-hd"><h3>💬 학부모 댓글 · 선생님 답글</h3><div class="r">${wait ? `<span class="st bad">답글 대기 ${wait}건</span>${wait > 1 ? ` <button class="btn btn-ok" onclick="cmCheckAll()">✅ ${wait}건 모두 확인함</button>` : ''}` : '<span class="st ok">대기 중인 댓글 없음</span>'}</div></div>
+  const absWait = absAll.filter((x) => x.waiting).length;
+  S.alerts.comment = wait; S.alerts.absWait = absWait; renderAlerts();
+
+  // 종류별 묶음
+  const byKind = { weekly: all.filter((t) => kindOf(t) === 'weekly'), monthly: all.filter((t) => kindOf(t) === 'monthly') };
+  const waitOf = (k) => k === 'att' ? absWait : byKind[k].filter((t) => t.waiting).length;
+  const totalOf = (k) => k === 'att' ? absAll.length : byKind[k].length;
+
+  const teachers = [...new Map([...all.map((t) => [t.first.teacherUid, t.first.teacherName]), ...absAll.map((x) => [x.a.teacherUid, x.a.teacherName])]).entries()].filter(([u]) => u).sort((a, b) => koCmp(a[1] || '', b[1] || ''));
+  const fT = (list) => CM.teacher ? list.filter((t) => t.first.teacherUid === CM.teacher) : list;
+  const fS = (list) => CM.filter === 'wait' ? list.filter((t) => t.waiting) : CM.filter === 'checked' ? list.filter((t) => t.checked) : CM.filter === 'done' ? list.filter((t) => !t.unanswered) : list;
+  const fA = (list) => (CM.teacher ? list.filter((x) => x.a.teacherUid === CM.teacher) : list)
+    .filter((x) => CM.filter === 'wait' ? x.waiting : CM.filter === 'done' ? !x.waiting : CM.filter === 'checked' ? false : true);
+
+  const kinds = CM.kind === 'all' ? CM_KINDS : CM_KINDS.filter((k) => k.key === CM.kind);
+  const sections = kinds.map((k) => {
+    const body = k.key === 'att'
+      ? fA(absAll).map(absHtml).join('')
+      : fS(fT(byKind[k.key])).map(threadHtml).join('');
+    const w = waitOf(k.key);
+    return `<div id="cm-${k.key}" style="margin-top:${CM.kind === 'all' ? 18 : 4}px;">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:6px;border-bottom:2px solid var(--border-soft);">
+        <b style="font-size:14.5px;">${k.icon} ${esc(k.label)}</b><span class="sm" style="font-size:12px;color:var(--muted);">${totalOf(k.key)}건</span>
+        ${w ? `<span class="chip bad" style="margin-left:auto;">${k.key === 'att' ? '관리부 확인 대기' : '답글 대기'} ${w}</span>` : '<span class="chip ok" style="margin-left:auto;">대기 없음</span>'}
+      </div>
+      ${body || `<div class="empty">${totalOf(k.key) ? '조건에 맞는 내용이 없습니다.' : (k.key === 'att' ? '최근 60일 동안 학부모가 낸 결석 사유서가 없습니다.' : '아직 학부모 댓글이 없습니다.')}</div>`}
+    </div>`;
+  }).join('');
+
+  const kindPill = (key, label, n, w) => `<button class="pill${CM.kind === key ? ' on' : ''}" onclick="cmSet('kind','${key}')">${label} ${n}${w ? ` <span style="color:var(--red);">· 대기 ${w}</span>` : ''}</button>`;
+  box.innerHTML = `<div class="card-hd"><h3>💬 학부모 댓글 · 출결</h3><div class="r">${wait ? `<span class="st bad">답글 대기 ${wait}건</span>${wait > 1 ? ` <button class="btn btn-ok" onclick="cmCheckAll()">✅ ${wait}건 모두 확인함</button>` : ''}` : '<span class="st ok">답글 대기 없음</span>'}${absWait ? ` <span class="st bad">결석 사유서 확인 대기 ${absWait}건</span>` : ''}</div></div>
     <div class="flt">
-      <button class="pill${CM.filter === 'all' ? ' on' : ''}" onclick="cmSet('filter','all')">전체 ${all.length}</button>
-      <button class="pill${CM.filter === 'wait' ? ' on' : ''}" onclick="cmSet('filter','wait')">답글 대기 ${wait}</button>
-      <button class="pill${CM.filter === 'checked' ? ' on' : ''}" onclick="cmSet('filter','checked')">확인함 ${nChecked}</button>
-      <button class="pill${CM.filter === 'done' ? ' on' : ''}" onclick="cmSet('filter','done')">답글 완료 ${nDone}</button>
+      ${kindPill('all', '전체', all.length + absAll.length, wait + absWait)}
+      ${CM_KINDS.map((k) => kindPill(k.key, k.label, totalOf(k.key), waitOf(k.key))).join('')}
+    </div>
+    <div class="flt">
+      <button class="pill${CM.filter === 'all' ? ' on' : ''}" onclick="cmSet('filter','all')">모두</button>
+      <button class="pill${CM.filter === 'wait' ? ' on' : ''}" onclick="cmSet('filter','wait')">대기</button>
+      <button class="pill${CM.filter === 'checked' ? ' on' : ''}" onclick="cmSet('filter','checked')">답글 전 · 확인함</button>
+      <button class="pill${CM.filter === 'done' ? ' on' : ''}" onclick="cmSet('filter','done')">완료</button>
       <select class="dr-select" onchange="cmSet('teacher',this.value)"><option value="">전체 선생님</option>${teachers.map(([u, n]) => `<option value="${esc(u)}"${CM.teacher === u ? ' selected' : ''}>${esc(n || '(이름 없음)')}</option>`).join('')}</select>
-    </div>` +
-    (list.length ? list.map((t) => {
-      const link = t.first.targetType === 'monthly' ? ` <a class="lk" style="font-size:12px" href="report.html?id=${encodeURIComponent(t.first.targetId)}" target="_blank" rel="noopener">보고서 보기</a>` : '';
-      return `<div class="th${t.waiting ? ' wait' : ''}"><div class="th-hd">${typeChip(t)}<b>${esc(t.first.studentName || '')}</b><span class="sm">${esc(label(t))} · 담당 ${esc(t.first.teacherName || '-')}</span>${link}<span class="r">${t.waiting ? `<span class="chip bad">답글 대기</span><button class="btn btn-ok" onclick="cmCheck('${esc(t.last.id)}')">✅ 확인함</button>` : t.checked ? `<span class="chip mute">답글 전 · 확인함</span><button class="btn" onclick="cmUncheck('${esc(t.last.id)}')">되돌리기</button>` : '<span class="chip ok">답글 완료</span>'}</span></div>
-        <div class="msgs">${t.list.map((c) => { const d = tsDate(c.createdAt); return `<div class="msg ${c.authorRole === 'teacher' ? 't' : 'p'}"><small>${esc(c.authorName || (c.authorRole === 'teacher' ? '선생님' : '학부모'))} · ${d ? esc(md(d) + ' ' + hm(d)) : ''}${c.editedAt ? ' · 수정됨' : ''}${c.authorRole === 'parent' && c.readByTeacher ? ' · 선생님 읽음' : c.authorRole === 'parent' ? ' · 선생님 안 읽음' : ''}</small>${esc(c.text || '')}</div>`; }).join('')}</div>${t.unanswered ? cmCheckLine(t.last) : ''}</div>`;
-    }).join('') : `<div class="empty">${all.length ? '조건에 맞는 댓글이 없습니다.' : '아직 학부모 댓글이 없습니다.'}</div>`) +
-    '<div class="note">답글은 담당 선생님이 선생님 페이지에서 답니다. 마지막 글이 학부모 댓글이면 "답글 대기"로 표시되고, "✅ 확인함"을 누르면 확인 필요 알람에서 빠집니다 (원장님별로 따로 표시). 확인한 뒤에 학부모 댓글이 새로 달리면 다시 답글 대기로 돌아옵니다.</div>';
+    </div>` + sections +
+    '<div class="note">주간성취도·월말보고서 댓글: 답글은 담당 선생님이 선생님 페이지에서 답니다. 마지막 글이 학부모 댓글이면 "답글 대기"로 표시되고, "✅ 확인함"을 누르면 확인 필요 알람에서 빠집니다 (원장님별로 따로 표시).<br>출결(결석 사유서): 학부모가 앱으로 낸 결석 사유서입니다. 관리부가 관리자 페이지에서 「확인 완료」하면 해당 날짜 출결에 결석으로 자동 반영되고 여기서도 「관리부 확인」으로 바뀝니다. (최근 60일)</div>';
 }
 function cmCheckLine(c) {
   const ck = c.dirChecks || {};
@@ -815,10 +873,11 @@ function renderAlerts() {
   if (a.sat) items.push(['sat', 'weekSat', `${a.satDate ? md(parseYmd(a.satDate)) + ' ' : ''}토요클리닉 미제출 ${a.sat}명`]);
   if (a.month) items.push(['month', 'monthReport', `지난달 월말보고서 ${a.month}명 안 나감${a.monthPastDue ? ' (마감 지남)' : ''}`]);
   if (a.comment) items.push(['comment', 'cmBox', `학부모 댓글 답글 대기 ${a.comment}건`]);
+  if (a.absWait) items.push(['comment', 'cm-att', `결석 사유서 관리부 확인 대기 ${a.absWait}건`]);
   $('drAlerts').innerHTML = '<span class="lb">확인 필요</span>' + (items.length
     ? items.map(([tab, anchor, txt]) => `<button class="dr-alert" onclick="${tab === 'day' ? `drJumpDay('${anchor}')` : tab === 'sat' ? `drJumpSat()` : `drJump('${tab}','${anchor}')`}"><i></i>${esc(txt)}</button>`).join('')
     : '<span class="dr-alert ok"><i></i>지금 빨간불이 없습니다</span>');
-  const cnt = { day: (a.closing ? 1 : 0) + (a.att ? 1 : 0) + (a.hw ? 1 : 0), week: (a.weekly ? 1 : 0) + (a.sat ? 1 : 0), month: a.month ? 1 : 0, comment: a.comment || 0 };
+  const cnt = { day: (a.closing ? 1 : 0) + (a.att ? 1 : 0) + (a.hw ? 1 : 0), week: (a.weekly ? 1 : 0) + (a.sat ? 1 : 0), month: a.month ? 1 : 0, comment: (a.comment || 0) + (a.absWait || 0) };
   document.querySelectorAll('.dr-tab').forEach((b) => {
     const n = cnt[b.dataset.tab]; const old = b.querySelector('.cnt'); if (old) old.remove();
     if (n) b.insertAdjacentHTML('beforeend', `<span class="cnt">${n}</span>`);

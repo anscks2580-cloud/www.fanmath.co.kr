@@ -85,7 +85,11 @@ window.absMarkRead = async function (id) {
 window.absDelete = async function (id) {
   const a = absAll.find((x) => x.id === id); if (!a) return;
   if (!confirm(`${a.studentName} 학생의 결석 사유서(${(a.dates || []).map(absMD).join(', ')})를 삭제할까요?\n출결 체크의 자동 결석도 같이 풀립니다.`)) return;
-  try { await deleteDoc(doc(db, 'absences', id)); absAll = absAll.filter((x) => x.id !== id); renderAbsences(); afterAbsChange(); }
+  try {
+    await deleteDoc(doc(db, 'absences', id)); absAll = absAll.filter((x) => x.id !== id);
+    if (a.source === 'phone' || a.verified) await absApplyToAttendance(a, false);   // 출결에 넣었던 결석 되돌림
+    renderAbsences(); afterAbsChange();
+  }
   catch (e) { alert('삭제 실패: ' + e.message); }
 };
 function afterAbsChange() {
@@ -142,12 +146,14 @@ window.absSubmitForm = async function () {
   if (!absFormReason) { alert('결석 사유를 골라 주세요.'); return; }
   const btn = document.getElementById('absFormGo'); btn.disabled = true;
   try {
-    await addDoc(collection(db, 'absences'), {
+    const absData = {
       studentId: s.id, studentName: s.name || '', branch: s.branch || '', grade: s.grade || '', classGroup: s.classGroup || '',
       teacherUid: s.teacherUid || '', teacherName: s.teacherName || '',
       dates, reason: absFormReason, detail: (document.getElementById('absFormDetail').value || '').trim().slice(0, 1000),
       source: 'phone', submittedBy: (window.currentAdmin && window.currentAdmin.uid) || '', readByAdmin: true, readByTeacher: false, createdAt: Timestamp.now(),
-    });
+    };
+    await addDoc(collection(db, 'absences'), absData);
+    await absApplyToAttendance(absData, true);   // 전화 접수는 바로 출결에 결석 반영
     absCloseForm();
     await absLoad(true); renderAbsences(); afterAbsChange();
     alert(`${s.name} 학생 결석 입력 완료 (${dates.map(absMD).join(', ')})`);
@@ -206,7 +212,9 @@ window.absReplySend = async function (id) {
   const btn = document.getElementById('absReplyBtn'); if (btn) btn.disabled = true;
   try {
     await updateDoc(doc(db, 'absences', id), { replies, verified: true, verifiedBy: me.name || me.email || '', verifiedAt: new Date().toISOString(), readByAdmin: true });
+    const wasVerified = !!a.verified;
     Object.assign(a, { replies, verified: true, readByAdmin: true });
+    if (!wasVerified && a.source !== 'phone') await absApplyToAttendance(a, true);   // 확인 댓글 = 확인 완료 → 출결에 결석 반영
     absReplyOpenId = '';
     renderAbsences();
     if (typeof renderAttReasons === 'function') { try { renderAttReasons(); } catch (e) {} }

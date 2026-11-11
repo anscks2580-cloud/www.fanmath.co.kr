@@ -276,6 +276,8 @@ window.renderAttendance = function() {
       // 사유서 사유를 결석 사유 칸에도 자동 입력 (저장·이미지·보고서에 같이 들어감)
       const rm = attReasons[attDateKey] = attReasons[attDateKey] || {};
       if (!String(rm[s.id] || '').trim()) rm[s.id] = typeof absReasonText === 'function' ? absReasonText(a) : (a.reason || '');
+      // 관리부가 확인한 사유서(전화 접수 포함)는 출결 기록에도 저장 — 이전에 확인한 것도 화면을 열면 채워짐
+      if (a.source === 'phone' || a.verified) attAutoSave(s.id);
     }
   });
 

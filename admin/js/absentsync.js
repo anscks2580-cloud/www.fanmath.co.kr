@@ -104,13 +104,60 @@ window.absentWarnHtml = function (items, refreshFn) {
   </div>`;
 };
 
-// 관리부 사실 확인 — verified 표시 (읽음 표시도 같이)
+// ══════════════════════════════════════════
+// 결석 사유서 → 출결 기록에 자동 반영 (2026.11.12)
+//  관리부가 「확인 완료」(또는 확인 댓글)하거나 전화 접수로 입력하면
+//  사유서의 날짜마다 dailyDrafts/att_{학생 관}_{날짜} 에 그 학생을 결석 + 사유로 저장
+//  → 출결 체크 · 일일 업무보고 · 원장 페이지 출결에 그대로 잡힘
+//  사유서를 지우면, 그 사유서로 들어간 결석(사유가 같은 것)만 출석으로 되돌림
+// ══════════════════════════════════════════
+window.absApplyToAttendance = async function (a, on) {
+  if (!a || !a.studentId || !Array.isArray(a.dates) || !a.dates.length) return 0;
+  const s = (typeof studentsCache !== 'undefined' ? studentsCache : []).find((x) => x.id === a.studentId);
+  const branch = a.branch || (s && s.branch) || '';
+  if (!branch) return 0;
+  const reason = absReasonText(a);
+  let n = 0;
+  for (const date of a.dates) {
+    const ref = doc(db, 'dailyDrafts', `att_${branch}_${date}`);
+    try {
+      if (on) {
+        await setDoc(ref, { date, branch, status: { [a.studentId]: 'absent' }, reasons: { [a.studentId]: reason }, savedAt: new Date().toISOString() }, { merge: true });
+        n++;
+      } else {
+        const sn = await getDoc(ref);
+        if (!sn.exists()) continue;
+        const d = sn.data();
+        if ((d.status || {})[a.studentId] !== 'absent') continue;
+        const r = String((d.reasons || {})[a.studentId] || '').trim();
+        if (r && r !== reason) continue;   // 관리부가 따로 바꾼 사유면 그대로 둠
+        await setDoc(ref, { status: { [a.studentId]: 'present' }, reasons: { [a.studentId]: '' }, savedAt: new Date().toISOString() }, { merge: true });
+        n++;
+      }
+    } catch (e) { console.warn('출결 반영 실패', date, e); }
+  }
+  // 출결 체크 화면을 보고 있으면 바로 맞춤
+  try {
+    if (typeof attCurrentDate !== 'undefined' && a.dates.includes(toLocalDateStr(attCurrentDate))) {
+      const k = toLocalDateStr(attCurrentDate);
+      attStatus[a.studentId] = on ? 'absent' : 'present';
+      const rm = attReasons[k] = attReasons[k] || {};
+      rm[a.studentId] = on ? reason : '';
+      if (window.attAbsApplied) window.attAbsApplied[a.studentId] = on;
+      if (typeof renderAttendance === 'function') renderAttendance();
+    }
+  } catch (e) {}
+  return n;
+};
+
+// 관리부 사실 확인 — verified 표시 (읽음 표시도 같이) + 출결 기록에 결석 반영
 window.absVerify = async function (id, after) {
   try {
     const a = window.currentAdmin || {};
     await updateDoc(doc(db, 'absences', id), { verified: true, verifiedBy: a.name || a.email || '', verifiedAt: new Date().toISOString(), readByAdmin: true });
     const x = (typeof absAll !== 'undefined') ? absAll.find((r) => r.id === id) : null;
     if (x) { x.verified = true; x.readByAdmin = true; }
+    if (x) { const n = await absApplyToAttendance(x, true); if (typeof showToast === 'function' && n) showToast(`✅ ${x.studentName} ${n}일 결석으로 출결에 반영했습니다`); }
     if (typeof renderAbsences === 'function') { try { renderAbsences(); } catch (e) {} }
     if (typeof renderAttReasons === 'function') { try { renderAttReasons(); } catch (e) {} }
     if (typeof after === 'function') after();
