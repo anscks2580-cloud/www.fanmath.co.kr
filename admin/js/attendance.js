@@ -16,19 +16,16 @@ window.attTouched = new Set();   // 이 화면에서 직접 바꾼 학생 (저�
 // 출결·사유를 바꾸면 그 학생 것만 dailyDrafts/att_{학생 관}_{날짜} 에 바로 합쳐 저장
 // → 일일 업무보고 「출결 현황(결석자)」·주간 업무일지에 자동으로 들어감 (absentsync.js)
 const attSaveTimers = {};
-function attAutoSave(uid) {
+function attAutoSave(uid, statusOnly) {
   clearTimeout(attSaveTimers[uid]);
   attSaveTimers[uid] = setTimeout(async () => {
     const s = studentsCache.find((x) => x.id === uid);
     if (!s || !s.branch) return;
     const date = toLocalDateStr(attCurrentDate);
     try {
-      await setDoc(doc(db, 'dailyDrafts', `att_${s.branch}_${date}`), {
-        date, branch: s.branch,
-        status: { [uid]: attStatus[uid] || 'present' },
-        reasons: { [uid]: (attReasons[date] || {})[uid] || '' },
-        savedAt: new Date().toISOString(),
-      }, { merge: true });
+      const data = { date, branch: s.branch, status: { [uid]: attStatus[uid] || 'present' }, savedAt: new Date().toISOString() };
+      if (!statusOnly) data.reasons = { [uid]: (attReasons[date] || {})[uid] || '' };   // 사유서 자동 결석 저장 때는 입력해 둔 사유를 건드리지 않음
+      await setDoc(doc(db, 'dailyDrafts', `att_${s.branch}_${date}`), data, { merge: true });
       const el = document.getElementById('att-draft-status');
       if (el) { el.textContent = '✅ 자동 저장됨'; el.style.color = '#2E9E5B'; setTimeout(() => { if (el.textContent === '✅ 자동 저장됨') el.textContent = ''; }, 2000); }
     } catch (e) { console.warn('출결 자동 저장 실패', e); }
@@ -61,10 +58,8 @@ async function attLoadSaved(dateKey) {
 
 function attEsc(t) { return String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function attReasonMap() { const k = toLocalDateStr(attCurrentDate); if (!attReasons[k]) attReasons[k] = {}; return attReasons[k]; }
-// 학생 한 명의 결석 사유 (사유서가 있으면 사유서 내용, 없으면 관리부가 입력한 사유)
+// 학생 한 명의 결석 사유 — 관리부가 입력한 사유만 (2026.11.12: 사유서 내용은 참고로만 보여주고 자동 입력 안 함)
 function attReasonOf(s, absMap) {
-  const a = absMap && absMap[s.id];
-  if (a) return [a.reason, a.detail].filter(Boolean).join(' - ') + (a.source === 'phone' ? ' (전화 접수)' : ' (사유서)');
   return (attReasonMap()[s.id] || '').trim();
 }
 function attCurAbsMap() { return typeof absMapFor === 'function' ? absMapFor(toLocalDateStr(attCurrentDate)) : {}; }
@@ -192,11 +187,14 @@ window.renderAttReasons = function() {
           <b style="font-size:13px;color:#B91C1C;">${attEsc(s.name)}</b>
           <span style="font-size:11px;color:var(--muted);margin-left:4px;">${attEsc(s.grade || '')}${s.classGroup ? ' · ' + attEsc(s.classGroup) : ''}</span>
         </div>
+        <div style="flex:1;min-width:200px;">
         ${a
-          ? `<div style="flex:1;min-width:200px;font-size:13px;color:#1E1838;"><span style="font-size:11px;font-weight:800;padding:1px 7px;border-radius:999px;background:#fff;color:#C8541F;border:1px solid #F0B9A0;margin-right:6px;">${a.source === 'phone' ? '📞 전화 접수' : '📱 학부모 사유서'}</span><b>${attEsc(a.reason || '')}</b>${a.detail ? ' — ' + attEsc(a.detail) : ''}${(a.source !== 'phone' && !a.verified) ? `<div style="margin-top:6px;padding:6px 10px;border:1.5px solid #E8A33D;background:#FFF8E8;border-radius:8px;font-size:12px;color:#B26A00;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">⚠ 학부모가 앱으로 입력한 결석입니다 — 사실인지 확인해 주세요<button type="button" onclick="absVerify('${a.id}')" style="margin-left:auto;background:#2E9E5B;color:#fff;border:0;border-radius:6px;padding:3px 10px;font-size:12px;font-family:inherit;cursor:pointer;">✓ 확인 완료</button></div>` : (a.source !== 'phone' ? '<span style="font-size:11px;color:#2E9E5B;font-weight:700;margin-left:6px;">✓ 관리부 확인</span>' : '')}</div>`
-          : `<input id="att-reason-${s.id}" type="text" value="${attEsc(rm[s.id] || '')}" placeholder="결석 사유를 입력하세요 (예: 감기, 가족 행사, 학교 행사)"
+          ? `<div style="font-size:12.5px;color:#1E1838;margin-bottom:6px;"><span style="font-size:11px;font-weight:800;padding:1px 7px;border-radius:999px;background:#fff;color:#C8541F;border:1px solid #F0B9A0;margin-right:6px;">${a.source === 'phone' ? '📞 전화 접수' : '📱 학부모 사유서'}</span><b>${attEsc(a.reason || '')}</b>${a.detail ? ' — ' + attEsc(a.detail) : ''}${(a.source !== 'phone' && !a.verified) ? `<div style="margin-top:6px;padding:6px 10px;border:1.5px solid #E8A33D;background:#FFF8E8;border-radius:8px;font-size:12px;color:#B26A00;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">⚠ 학부모가 앱으로 입력한 결석입니다 — 사실인지 확인해 주세요<button type="button" onclick="absVerify('${a.id}')" style="margin-left:auto;background:#2E9E5B;color:#fff;border:0;border-radius:6px;padding:3px 10px;font-size:12px;font-family:inherit;cursor:pointer;">✓ 확인 완료</button></div>` : (a.source !== 'phone' ? '<span style="font-size:11px;color:#2E9E5B;font-weight:700;margin-left:6px;">✓ 관리부 확인</span>' : '')}</div>`
+          : ''}
+          <input id="att-reason-${s.id}" type="text" value="${attEsc(rm[s.id] || '')}" placeholder="결석 사유를 입력하세요 (예: 감기, 가족 행사, 학교 행사)"
               oninput="setAttReason('${s.id}', this.value)" maxlength="200"
-              style="flex:1;min-width:200px;padding:8px 10px;border:1px solid rgba(30,24,56,0.18);border-radius:8px;font-size:13px;font-family:inherit;background:#fff;color:#1E1838;outline:none;">`}
+              style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid rgba(30,24,56,0.18);border-radius:8px;font-size:13px;font-family:inherit;background:#fff;color:#1E1838;outline:none;">
+        </div>
       </div>`;
     });
   });
@@ -273,11 +271,9 @@ window.renderAttendance = function() {
     const a = attAbsMap[s.id];
     if (a && !window.attAbsApplied[s.id]) {
       attStatus[s.id] = 'absent'; window.attAbsApplied[s.id] = true;
-      // 사유서 사유를 결석 사유 칸에도 자동 입력 (저장·이미지·보고서에 같이 들어감)
-      const rm = attReasons[attDateKey] = attReasons[attDateKey] || {};
-      if (!String(rm[s.id] || '').trim()) rm[s.id] = typeof absReasonText === 'function' ? absReasonText(a) : (a.reason || '');
-      // 관리부가 확인한 사유서(전화 접수 포함)는 출결 기록에도 저장 — 이전에 확인한 것도 화면을 열면 채워짐
-      if (a.source === 'phone' || a.verified) attAutoSave(s.id);
+      // 사유는 자동 입력하지 않음 — 관리부가 아래 결석 사유 칸에 직접 입력
+      // 관리부가 확인한 사유서(전화 접수 포함)는 출결 기록(결석)에도 저장 — 이전에 확인한 것도 화면을 열면 채워짐
+      if (a.source === 'phone' || a.verified) attAutoSave(s.id, true);
     }
   });
 

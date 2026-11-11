@@ -71,7 +71,7 @@ window.absentBuild = async function (branch, dateStr) {
     out.push({
       sid: s.id, name: s.name || '', grade: s.grade || '', cls: s.classGroup || '',
       teacher: absTeacherLabel(s.teacherName),
-      reason: abs ? absReasonText(abs) : String(reasons[s.id] || '').trim(),
+      reason: String(reasons[s.id] || '').trim(),   // 사유는 관리부가 출결 체크에서 입력한 것만
       abs, warn: absNeedsCheck(abs),
     });
   });
@@ -107,31 +107,28 @@ window.absentWarnHtml = function (items, refreshFn) {
 // ══════════════════════════════════════════
 // 결석 사유서 → 출결 기록에 자동 반영 (2026.11.12)
 //  관리부가 「확인 완료」(또는 확인 댓글)하거나 전화 접수로 입력하면
-//  사유서의 날짜마다 dailyDrafts/att_{학생 관}_{날짜} 에 그 학생을 결석 + 사유로 저장
+//  사유서의 날짜마다 dailyDrafts/att_{학생 관}_{날짜} 에 그 학생을 결석으로만 저장 (사유는 관리부가 직접 입력)
 //  → 출결 체크 · 일일 업무보고 · 원장 페이지 출결에 그대로 잡힘
-//  사유서를 지우면, 그 사유서로 들어간 결석(사유가 같은 것)만 출석으로 되돌림
+//  사유서를 지우면 그 날짜 결석을 출석으로 되돌림 (입력한 사유는 그대로 둠)
 // ══════════════════════════════════════════
 window.absApplyToAttendance = async function (a, on) {
   if (!a || !a.studentId || !Array.isArray(a.dates) || !a.dates.length) return 0;
   const s = (typeof studentsCache !== 'undefined' ? studentsCache : []).find((x) => x.id === a.studentId);
   const branch = a.branch || (s && s.branch) || '';
   if (!branch) return 0;
-  const reason = absReasonText(a);
   let n = 0;
   for (const date of a.dates) {
     const ref = doc(db, 'dailyDrafts', `att_${branch}_${date}`);
     try {
       if (on) {
-        await setDoc(ref, { date, branch, status: { [a.studentId]: 'absent' }, reasons: { [a.studentId]: reason }, savedAt: new Date().toISOString() }, { merge: true });
+        await setDoc(ref, { date, branch, status: { [a.studentId]: 'absent' }, savedAt: new Date().toISOString() }, { merge: true });
         n++;
       } else {
         const sn = await getDoc(ref);
         if (!sn.exists()) continue;
         const d = sn.data();
         if ((d.status || {})[a.studentId] !== 'absent') continue;
-        const r = String((d.reasons || {})[a.studentId] || '').trim();
-        if (r && r !== reason) continue;   // 관리부가 따로 바꾼 사유면 그대로 둠
-        await setDoc(ref, { status: { [a.studentId]: 'present' }, reasons: { [a.studentId]: '' }, savedAt: new Date().toISOString() }, { merge: true });
+        await setDoc(ref, { status: { [a.studentId]: 'present' }, savedAt: new Date().toISOString() }, { merge: true });
         n++;
       }
     } catch (e) { console.warn('출결 반영 실패', date, e); }
@@ -141,8 +138,6 @@ window.absApplyToAttendance = async function (a, on) {
     if (typeof attCurrentDate !== 'undefined' && a.dates.includes(toLocalDateStr(attCurrentDate))) {
       const k = toLocalDateStr(attCurrentDate);
       attStatus[a.studentId] = on ? 'absent' : 'present';
-      const rm = attReasons[k] = attReasons[k] || {};
-      rm[a.studentId] = on ? reason : '';
       if (window.attAbsApplied) window.attAbsApplied[a.studentId] = on;
       if (typeof renderAttendance === 'function') renderAttendance();
     }
