@@ -40,7 +40,6 @@ function getDrData() {
     note:     document.getElementById('dr-note')?.value || '',
     phone:    document.getElementById('dr-phone')?.value || '',
     nextday:  document.getElementById('dr-nextday')?.value || '',
-    homework: document.getElementById('dr-homework')?.value || '',
   };
 }
 
@@ -56,10 +55,9 @@ function setDrData(d) {
   if (d.note !== undefined)     document.getElementById('dr-note').value     = d.note;
   if (d.phone !== undefined)    document.getElementById('dr-phone').value    = d.phone;
   if (d.nextday !== undefined)  document.getElementById('dr-nextday').value  = d.nextday;
-  if (document.getElementById('dr-homework')) document.getElementById('dr-homework').value = d.homework || '';
   if (typeof drSyncFromText === 'function') drSyncFromText();   // 요일별 수업반 체크 맞추기
-  // 불러오기: 저장해 둔 숙제가 없으면 그 날짜·관의 「숙제 입력」 내용으로 채움
-  if (typeof drFillHomework === 'function') { drHwAuto = ''; drFillHomework(false); }
+  // 불러오기: 그 날짜·관의 「숙제 입력」 표를 다시 받아 보고서에 붙임
+  if (typeof drFillHomework === 'function') drFillHomework();
 }
 
 function getWlData() {

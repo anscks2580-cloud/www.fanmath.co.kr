@@ -24,13 +24,12 @@ window.initDailyReportTab = function() {
     document.getElementById('dr-date').addEventListener('change', () => drFillAbsent(false));
     // 손으로 고치면 그 뒤로는 자동으로 덮어쓰지 않음 (「출결에서 불러오기」 버튼으로만)
     document.getElementById('dr-absent').addEventListener('input', () => { drAbsentAuto = null; });
-    // 숙제도 같은 방식: 관·날짜 바꾸면 자동, 손으로 고치면 버튼으로만
-    document.getElementById('dr-branch').addEventListener('change', () => drFillHomework(false));
-    document.getElementById('dr-date').addEventListener('change', () => drFillHomework(false));
-    document.getElementById('dr-homework').addEventListener('input', () => { drHwAuto = null; });
+    // 숙제 표: 관·날짜 바꾸면 다시 받음
+    document.getElementById('dr-branch').addEventListener('change', () => drFillHomework());
+    document.getElementById('dr-date').addEventListener('change', () => drFillHomework());
   }
   drFillAbsent(false);
-  drFillHomework(false);
+  drFillHomework();
   // 이미 적어 둔 수업반이 있으면(불러오기 등) 그대로 두고 체크만 맞춤, 비어 있으면 자동 선택
   const apply = () => {
     if (document.getElementById('dr-classes').value.trim()) drSyncFromText();
@@ -238,19 +237,22 @@ function getDRValues() {
     note:     document.getElementById('dr-note').value.trim() || '-',
     phone:    document.getElementById('dr-phone').value.trim() || '-',
     nextday:  document.getElementById('dr-nextday').value.trim() || '-',
-    homework: (document.getElementById('dr-homework')?.value || '').trim() || '-',
   };
 }
 
 function drawDailyReport(canvas, data) {
-  const W = 860, H = 1340;
+  const W = 860, H = 1120;
+  // 숙제 입력 표(있으면)를 보고서 아래에 그대로 붙임
+  const hw = drHwImage();
+  const hwW = W - 80, hwH = hw ? Math.round(hw.height * hwW / hw.width) : 0;
+  const totalH = H + (hw ? hwH + 40 : 0);
   canvas.width = W;
-  canvas.height = H;
+  canvas.height = totalH;
   const ctx = canvas.getContext('2d');
 
   // 배경
   ctx.fillStyle = '#FFFFFF';
-  ctx.fillRect(0, 0, W, H);
+  ctx.fillRect(0, 0, W, totalH);
 
   // 제목
   ctx.fillStyle = '#222';
@@ -273,14 +275,13 @@ function drawDailyReport(canvas, data) {
 
   // 행 비율: row1(날짜)·row2(수업반)·row3(상담/현금)·row4(출결/교재)·row5(비고/전화)·row6(익일)
   // 비율: 1 : 0.8 : 2 : 3.5 : 2 : 1.2  → 합계 10.5
-  const unit = tableH / 13;
+  const unit = tableH / 10.5;
   const row1H = unit * 1;
   const row2H = unit * 0.8;
   const row3H = unit * 2;
   const row4H = unit * 3.5;
   const row5H = unit * 2;
   const row6H = unit * 1.2;
-  const row7H = unit * 2.5;   // 금일 숙제
 
   let y = tableTop;
 
@@ -372,13 +373,6 @@ function drawDailyReport(canvas, data) {
 
   twoColRow('비고\n(신규/ 퇴원)', data.note,    '현금영수증\n발행 현황', data.receipt,  row5H);
 
-  // === 금일 숙제 (숙제 입력에서 불러온 내용) ===
-  rect(tl,          y, labelW,          row7H, headerBg);
-  cellText('금일 숙제', tl, y, labelW, row7H, { bold: true, size: 12 });
-  rect(tl + labelW, y, tableW - labelW, row7H);
-  cellText(data.homework, tl + labelW, y, tableW - labelW, row7H, { size: drFit(data.homework, row7H), align: data.homework === '-' ? 'center' : 'left' });
-  y += row7H;
-
   // === Row 6: 익일 상담 및 신규원생 ===
   rect(tl,          y, labelW,             row6H, headerBg);
   cellText('익일 상담 및\n신규 원생', tl, y, labelW, row6H, { bold: true, size: 12 });
@@ -395,6 +389,7 @@ function drawDailyReport(canvas, data) {
   y += 17;
   ctx.fillText('수(시간표정산) 목(현금영수증정산) 금(아카사진체크,학년, 학교체크) 토(주간업무보고)', W / 2, y);
   ctx.textAlign = 'left';
+  if (hw) ctx.drawImage(hw, tl, H + 20, hwW, hwH);
 }
 
 window.previewDailyReport = function() {
@@ -481,43 +476,41 @@ window.drFillAbsent = async function (force) {
 
 
 // ══════════════════════════════════════════
-// 금일 숙제 자동 채우기 (2026.11.12)
-//  - 「숙제 입력」(관리부·선생님 페이지)에 그 날짜로 적힌 숙제(homeworkLogs) 중 이 관 것만 모아서
-//      고1-3A(송문찬T) 쎈 p135~137
-//    같은 반·같은 선생님·같은 내용은 한 줄로, 결석 기록은 뺌
-//  - 칸이 비어 있거나 자동으로 채운 그대로면 관·날짜 바꿀 때·📂 불러오기 할 때 자동으로 채움
-//  - 손으로 고친 뒤에는 「🔄 숙제 입력에서 불러오기」 버튼으로만 덮어씀
+// 금일 숙제 표 (2026.11.12)
+//  - 「숙제 입력」(관리부·선생님 페이지)에 그 날짜로 저장된 이 관 숙제(homeworkLogs)를
+//    숙제 입력 탭의 마감 이미지와 똑같은 표로 그려서 일일업무보고 이미지 아래에 붙임
+//  - 관·날짜 바꿀 때, 📂 불러오기 할 때, 「🔄 숙제 입력에서 불러오기」 누를 때 다시 받음
 // ══════════════════════════════════════════
-let drHwAuto = '';
-let drHwSeq = 0;
-window.drFillHomework = async function (force) {
-  const ta = document.getElementById('dr-homework');
+let drHwRows = [], drHwKey = '', drHwSeq = 0;
+function drHwImage() {
+  if (!drHwRows.length || typeof hlDrawTable !== 'function') return null;
+  const [branch, date] = drHwKey.split('|');
+  return hlDrawTable(document.createElement('canvas'), drHwRows, hlTitle(branch, date));
+}
+window.drFillHomework = async function () {
   const note = document.getElementById('drHwNote');
+  const cv = document.getElementById('drHwCanvas');
   const branch = document.getElementById('dr-branch')?.value;
   const date = document.getElementById('dr-date')?.value;
-  if (!ta || !branch || !date) return;
+  if (!branch || !date) return;
   const my = ++drHwSeq;
+  if (note) note.textContent = '숙제 표 불러오는 중...';
   let rows = [];
   try {
     if ((typeof studentsCache === 'undefined' || !studentsCache.length) && typeof loadStudents === 'function') await loadStudents();
     const snap = await getDocs(query(collection(db, 'homeworkLogs'), where('date', '==', date)));
     snap.forEach((d) => rows.push({ id: d.id, ...d.data() }));
-  } catch (e) { if (note && my === drHwSeq) note.textContent = '❌ 숙제 불러오기 실패: ' + e.message; return; }
+  } catch (e) { if (my === drHwSeq && note) note.textContent = '❌ 숙제 불러오기 실패: ' + e.message; return; }
   if (my !== drHwSeq) return;
-  const brOf = (r) => (typeof hlLogBranch === 'function') ? hlLogBranch(r) : (r.branch || '');
-  rows = rows.filter((r) => !r.absent && String(r.content || '').trim() && brOf(r) === branch);
-  const cmp = (typeof hlClsCmp === 'function') ? hlClsCmp : ((a, b) => String(a || '').localeCompare(String(b || ''), 'ko'));
-  rows.sort((a, b) => cmp(a.classGroup, b.classGroup) || (a.teacherName || '').localeCompare(b.teacherName || '', 'ko'));
-  const seen = new Set(), lines = [];
-  rows.forEach((r) => {
-    const content = String(r.content).trim().split('\n').map((l) => l.trim()).filter(Boolean).join(' / ');
-    const line = `${r.classGroup || ''}${r.teacherName ? `(${r.teacherName}T)` : ''} ${content}`.trim();
-    if (seen.has(line)) return; seen.add(line); lines.push(line);
-  });
-  const text = lines.join('\n');
-  const cur = ta.value.trim();
-  const canAuto = !cur || cur === '-' || (drHwAuto !== null && cur === String(drHwAuto).trim());
-  if (force && cur && !canAuto && cur !== text && !confirm('금일 숙제 칸에 직접 적은 내용이 있습니다.\n「숙제 입력」에 적힌 숙제로 바꿀까요?')) return;
-  if (force || canAuto) { ta.value = text; drHwAuto = text; }
-  if (note) note.textContent = lines.length ? `「숙제 입력」 기준 ${branch} 숙제 ${lines.length}건` : `「숙제 입력」에 ${branch} ${date} 숙제가 아직 없습니다`;
+  drHwRows = rows.filter((r) => (typeof hlLogBranch === 'function' ? hlLogBranch(r) : r.branch) === branch);
+  drHwKey = branch + '|' + date;
+  const img = drHwImage();
+  if (cv) {
+    cv.style.display = img ? 'block' : 'none';
+    if (img) { cv.width = img.width; cv.height = img.height; cv.getContext('2d').drawImage(img, 0, 0); }
+  }
+  if (note) note.textContent = drHwRows.length
+    ? `「숙제 입력」 ${branch} 숙제 ${drHwRows.length}건 — 이 표가 보고서 이미지 아래에 그대로 붙어요`
+    : `「숙제 입력」에 ${branch} ${date} 숙제가 아직 없어요 (입력하면 「🔄 숙제 입력에서 불러오기」를 눌러 주세요)`;
+  if (document.getElementById('drPreviewWrap')?.style.display === 'block' && typeof previewDailyReport === 'function') previewDailyReport();
 };

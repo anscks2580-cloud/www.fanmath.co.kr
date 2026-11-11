@@ -212,23 +212,28 @@ window.hlCopyPrev = async function () {
 };
 
 // ══ 마감용 이미지: 입력된 숙제를 사진 표와 같은 모양으로 그려서 PNG 저장/복사 ══
-function hlDrawImage() {
-  const date = document.getElementById('hlDate').value;
+function hlTitle(branch, date) {
   const d = new Date(date + 'T00:00:00');
-  const title = `${hlBranch} 숙제 · ${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 ${['일', '월', '화', '수', '목', '금', '토'][d.getDay()]}요일`;
+  return `${branch} 숙제 · ${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 ${['일', '월', '화', '수', '목', '금', '토'][d.getDay()]}요일`;
+}
+function hlDrawImage() {
+  return hlDrawTable(document.getElementById('hlCanvas'), hlRows, hlTitle(hlBranch, document.getElementById('hlDate').value));
+}
+// 숙제 표 그리기 (숙제 입력 마감 이미지·일일업무보고 이미지에서 같이 씀)
+function hlDrawTable(canvas, rowsIn, title) {
   const S = 2; // 선명하게 2배
   const W = 500, colW = [70, 80, 90, 260];       // 담당 · 반 · 학생 · 내용
   const rowH = 22, titleH = 32, headH = 24, pad = 4;
   const font = (b, px) => `${b ? 'bold ' : ''}${px}px "Malgun Gothic","Apple SD Gothic Neo",sans-serif`;
   const bands = ['#FFF2CC', '#DDEBF7', '#E2EFDA', '#FCE4D6', '#EDEDED', '#D9E1F2'];
-  const rows = hlRows.slice();
+  const rows = rowsIn.slice();
   rows.sort((a, b) => (a.teacherName || '').localeCompare(b.teacherName || '', 'ko') || hlClsCmp(a.classGroup, b.classGroup));
   // 선생님별 묶음 → 반별 묶음(학생 1명 = 1줄, 내용은 반 단위 병합)
   const groups = [];
   rows.forEach((r) => { let g = groups.find((x) => x.teacher === r.teacherName); if (!g) { g = { teacher: r.teacherName, classes: [] }; groups.push(g); } g.classes.push(r); });
   // 칸 높이 미리 계산: 내용·반 이름이 길어 줄이 늘어나면 그 반 칸 전체를 그만큼 키움
   const lh = 16, vpad = 6;
-  const mctx = document.getElementById('hlCanvas').getContext('2d');
+  const mctx = canvas.getContext('2d');
   const wrap = (text, w) => {
     mctx.font = font(false, 12);
     return String(text || '').replace(/\r/g, '').split(/\n/).flatMap((line) => {
@@ -246,7 +251,6 @@ function hlDrawImage() {
     layout.set(r, { names, cLines, kLines, h });
   });
   const H = titleH + headH + rows.reduce((a, r) => a + layout.get(r).h, 0) + 2;
-  const canvas = document.getElementById('hlCanvas');
   canvas.width = W * S; canvas.height = H * S;
   const ctx = canvas.getContext('2d'); ctx.scale(S, S);
   ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, W, H);
