@@ -366,7 +366,7 @@ table.gt td.act button{padding:4px 8px;font-size:11px;margin:0 2px}
   <div class="card">
     <div class="listhead">
       <h2>내 학습지</h2>
-      <span class="chip on" data-g="">전체</span><span class="chip" data-g="중">중</span><span class="chip" data-g="고">고</span>
+      <span class="chip on" data-g="">전체</span><span class="chip" data-g="초">초</span><span class="chip" data-g="중">중</span><span class="chip" data-g="고">고</span>
       <input id="wsq" placeholder="학습지명, 태그, 출제자" style="width:220px" oninput="renderWS()">
       <button class="pri" onclick="openWiz()">＋ 학습지 만들기</button>
     </div>
@@ -759,11 +759,12 @@ function goStep(n){
 // --- 중/고 · 과목 선택 칩
 const subjects=()=>UNITS.map(u=>u.name);
 const isMiddle=n=>/^중|^초/.test(n);
+const lvlOf=n=>/^초/.test(n)?'초':/^중/.test(n)?'중':'고';
 function renderLvlChips(){
-  const subs=curLvl?subjects().filter(n=>curLvl==='중'?isMiddle(n):!isMiddle(n)):[];
+  const subs=curLvl?subjects().filter(n=>lvlOf(n)===curLvl):[];
   if(!subs.includes(curSubject)) curSubject='';
   const has=n=>DB.some(p=>subjectOf(p.unit)===n);
-  $('lvlChips').innerHTML=`<span class="chip sq ${curLvl==='중'?'on':''}" onclick="setLvl('중')">중</span><span class="chip sq ${curLvl==='고'?'on':''}" onclick="setLvl('고')">고</span><span class="sep"></span>`+subs.map(n=>`<span class="chip ${n===curSubject?'on':''} ${has(n)?'':'dis'}" onclick="${has(n)?`setSubject('${n}')`:''}">${subjShort(n)}</span>`).join('');
+  $('lvlChips').innerHTML=`<span class="chip sq ${curLvl==='초'?'on':''}" onclick="setLvl('초')">초</span><span class="chip sq ${curLvl==='중'?'on':''}" onclick="setLvl('중')">중</span><span class="chip sq ${curLvl==='고'?'on':''}" onclick="setLvl('고')">고</span><span class="sep"></span>`+subs.map(n=>`<span class="chip ${n===curSubject?'on':''} ${has(n)?'':'dis'}" onclick="${has(n)?`setSubject('${n}')`:''}">${subjShort(n)}</span>`).join('');
   if(srcTab==='book') renderBookChips();
 }
 function setLvl(l){ curLvl=l; curSubject=''; checked.clear(); SEL=[]; renderLvlChips(); renderTree(); updateSum(); }
@@ -957,7 +958,7 @@ function fillStep3Defaults(){
   const subj=subjShort(curSubject);
   if(!$('f_title').value) $('f_title').value=rangeText(sel);
   if(!$('f_subj').value) $('f_subj').value=subj;
-  const g={'중1-1':'중1','중2-1':'중2','중3-1':'중3','공통수학1':'고1','공통수학2':'고1','대수':'고2','미적분1':'고2'}[subj]; if(g) $('f_grade').value=g;
+  const g={'초5-1':'초5','초6-1':'초6','중1-1':'중1','중2-1':'중2','중3-1':'중3','공통수학1':'고1','공통수학2':'고1','대수':'고2','미적분1':'고2'}[subj]; if(g) $('f_grade').value=g;
   if(!$('f_sub').value) $('f_sub').value=`${$('f_grade').value} ${subj}`;
   if(ME) $('f_author').value=ME.name;
 }
@@ -1094,7 +1095,7 @@ function makeWrongSheet(){
     ids.forEach(id=>{ const p=DB.find(x=>x.id===id); if(!p) return; const base=p.parent?DB.find(x=>x.id===p.parent)||p:p;
       const fam=DB.filter(x=>x.parent===base.id&&x.variant==='similar'); const sim=DB.filter(x=>x.unit===base.unit&&mfOf(x)===mfOf(base)&&!x.parent&&x.id!==base.id&&!ids.includes(x.id));
       const pick=fam[0]||shuffle(sim)[0]||base; out.push(pick.id); const more=shuffle(sim.filter(x=>x.id!==pick.id))[0]; if(more) out.push(more.id); });
-    SEL=[...new Set(out)]; curSubject=subjectOf((DB.find(x=>x.id===SEL[0])||{}).unit)||curSubject; curLvl=isMiddle(curSubject)?'중':'고';
+    SEL=[...new Set(out)]; curSubject=subjectOf((DB.find(x=>x.id===SEL[0])||{}).unit)||curSubject; curLvl=lvlOf(curSubject);
     closeGrade(); $('wiz').classList.add('on'); renderLvlChips(); renderTree(); goStep(2);
     $('f_title').value=`[오답] ${who.res.studentName} · ${t.title}`; $('f_sub').value=`${who.res.studentGrade||''} ${who.res.classGroup||''}`.trim(); document.querySelectorAll('#tagRow .chip').forEach(c=>c.classList.toggle('on',c.textContent==='오답'));
     toast(`오답 ${who.wrong.size}문제의 변형·유사 ${SEL.length}문제로 구성했어요`);
