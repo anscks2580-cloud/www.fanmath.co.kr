@@ -221,7 +221,13 @@ window.downloadWeeklyLog = function() {
   ctx.fillStyle = WHITE; ctx.fillRect(PAD + LABEL_W, y, tableW - LABEL_W, abH);
   ctx.strokeStyle = '#999'; ctx.lineWidth = 0.5; ctx.strokeRect(PAD + LABEL_W, y, tableW - LABEL_W, abH);
   ctx.fillStyle = '#222'; ctx.font = F(10); ctx.textAlign = 'left';
-  abLines.forEach((ln, i) => ctx.fillText(ln, PAD + LABEL_W + 6, y + 16 + i * 18, tableW - LABEL_W - 10));
+  abLines.forEach((ln, i) => {
+    const isHead = !/^\s/.test(ln) && /T$|^담당 미지정$/.test(ln.trim());
+    ctx.font = isHead ? F(10.5, true) : F(10);
+    ctx.fillStyle = isHead ? '#3E2A86' : '#222';
+    ctx.fillText(ln.trim(), PAD + LABEL_W + (isHead ? 6 : 22), y + 16 + i * 18, tableW - LABEL_W - (isHead ? 10 : 26));
+  });
+  ctx.fillStyle = '#222';
   y += abH + 4;
 
   // 교재입출고
@@ -315,6 +321,30 @@ function wlAbsentLines(ds, text) {
   flush();
   return out;
 }
+// 일일 보고 결석자 칸 → [{teacher, txt}] (결석 줄만: 「이름 - 사유」 / 「이름(…)-사유」 형식, 출석·전원출석 같은 줄은 뺌)
+function wlAbsentFromText(text) {
+  const out = []; let head = '담당 미지정';
+  wlLines(text).forEach((l) => {
+    if (/^[^\s\-]+T$|^담당 미지정$/.test(l)) { head = l; return; }
+    if (/출석|전원|없음|이상\s*무/.test(l) && !/결석/.test(l)) return;
+    const m = l.match(/^([가-힣]{2,4})\s*(?:\(([^)]*)\))?\s*[-–:]\s*(.+)$/);
+    if (!m) return;
+    let t = head;
+    if (m[2] && /^[가-힣]{2,4}[Tt]$/.test(m[2].trim())) t = m[2].trim().replace(/t$/, 'T');
+    out.push({ teacher: t, txt: `${m[1]}-${m[3].trim()}` });
+  });
+  return out;
+}
+// 선생님별 → 날짜별
+//   송문찬T
+//     11/10(월) 김근우-병결, 홍길동-감기
+function wlAbsentFormat(list) {
+  const byT = {};
+  list.forEach((x) => { const t = x.teacher || '담당 미지정'; ((byT[t] = byT[t] || {})[x.ds] = byT[t][x.ds] || []).push(x.txt); });
+  return Object.keys(byT).sort((a, b) => (a === '담당 미지정') - (b === '담당 미지정') || a.localeCompare(b, 'ko'))
+    .map((t) => [t, ...Object.keys(byT[t]).sort().map((ds) => `   ${wlMD(ds)}  ${byT[t][ds].join(', ')}`)].join('\n'))
+    .join('\n');
+}
 window.wlRenderAbsentWarn = function () {
   const el = document.getElementById('wlAbsentWarn'); if (!el) return;
   wlAbsentItems.forEach((it) => { if (it.abs) it.warn = it.abs.source !== 'phone' && !it.abs.verified; });
@@ -373,13 +403,14 @@ window.wlFillFromDaily = async function (force) {
       // 교재 입/출고
       wlLines(d.textbook).forEach((l) => tb.push(`${wlMD(ds)} ${l}`));
     }
-    // 출결 현황(결석자): 일일 보고에 적은 내용 우선, 없으면 출결 체크 기준
-    const dAbs = d && wlLines(d.absent).length ? d.absent : (absByDate[ds] || []).length ? absentText(absByDate[ds]) : '';
-    if (dAbs) ab.push(...wlAbsentLines(ds, dAbs));
+    // 출결 현황(결석자): 결석한 학생만 — 출결 체크·사유서 기준, 그날 기록이 없으면 일일 보고의 결석자 줄
+    const items = absByDate[ds] || [];
+    if (items.length) items.forEach((it) => ab.push({ teacher: it.teacher, ds, txt: `${it.name}-${it.reason || '사유 미입력'}` }));
+    else if (d) wlAbsentFromText(d.absent).forEach((x) => ab.push(Object.assign(x, { ds })));
   });
   WL_SYNC_SECS.forEach((sec) => wlSetRows(sec, rows[sec]));
   document.getElementById('wl-textbook').value = tb.join('\n');
-  document.getElementById('wl-absent').value = ab.join('\n');
+  document.getElementById('wl-absent').value = wlAbsentFormat(ab);
   if (st) st.textContent = found
     ? `✅ ${wlMD(dates[0])}~${wlMD(dates[dates.length - 1])} 일일 업무보고 ${found}일치를 채웠습니다 · 내용 확인 후 수정해 주세요`
     : `기간 안에 저장된 일일 업무보고가 없습니다 (결석자는 출결 체크 기준으로 채움)`;
