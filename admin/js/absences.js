@@ -66,8 +66,12 @@ window.renderAbsences = function () {
       </div>
       <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:7px;">${ds.map((d) => `<span style="font-size:12px;font-weight:700;padding:2px 8px;border-radius:999px;background:${d === today ? '#C8541F' : '#FBE9E0'};color:${d === today ? '#fff' : '#C8541F'};">${absMD(d)}${d === today ? ' 오늘' : ''}</span>`).join('')}</div>
       <div style="font-size:13px;margin-top:6px;"><b>${absEsc(a.reason || '')}</b>${a.detail ? ` — <span style="white-space:pre-wrap;">${absEsc(a.detail)}</span>` : ''}</div>
-      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:6px;font-size:12px;">
-        ${a.readByAdmin ? '<span style="color:#2E9E5B;">✓ 확인함</span>' : `<a href="#" onclick="absMarkRead('${a.id}');return false;" style="color:#5B3FA6;font-weight:700;">확인</a>`}
+      ${(a.source !== 'phone' && !a.verified) ? `<div style="margin-top:7px;padding:6px 10px;border:1.5px solid #E8A33D;background:#FFF8E8;border-radius:8px;font-size:12px;color:#B26A00;font-weight:700;">⚠ 학부모가 앱으로 입력한 결석입니다 — 사실인지 확인 후 「확인 완료」 또는 확인 댓글을 남겨 주세요</div>` : ''}
+      ${absRepliesHtml(a)}
+      <div style="display:flex;gap:10px;justify-content:flex-end;align-items:center;margin-top:6px;font-size:12px;">
+        ${a.source !== 'phone' ? `<a href="#" onclick="absReplyOpen('${a.id}');return false;" style="color:#5B3FA6;font-weight:700;">💬 확인 댓글</a>` : ''}
+        ${(a.source !== 'phone' && !a.verified) ? `<a href="#" onclick="absVerify('${a.id}');return false;" style="color:#2E9E5B;font-weight:700;">✓ 확인 완료</a>` : (a.source !== 'phone' ? '<span style="color:#2E9E5B;">✓ 관리부 확인</span>' : '')}
+        ${a.readByAdmin ? '<span style="color:#2E9E5B;">✓ 읽음</span>' : `<a href="#" onclick="absMarkRead('${a.id}');return false;" style="color:#5B3FA6;font-weight:700;">읽음</a>`}
         <a href="#" onclick="absDelete('${a.id}');return false;" style="color:var(--muted);">삭제</a>
       </div>
     </div>`;
@@ -149,4 +153,70 @@ window.absSubmitForm = async function () {
     alert(`${s.name} 학생 결석 입력 완료 (${dates.map(absMD).join(', ')})`);
   } catch (e) { alert('입력 실패: ' + e.message); }
   finally { btn.disabled = false; }
+};
+
+
+// ══════════════════════════════════════════
+// 확인 댓글 (2026.11.11) — 학부모가 낸 결석 사유서에 관리부가 확인·보충 안내를 남김
+//  absences/{id}.replies: [{ text, by, at }]  → 학부모 앱 결석 사유서에 「학원 확인」으로 보이고 앱 알림 발송
+//  댓글을 남기면 사실 확인(verified)·읽음도 같이 표시
+// ══════════════════════════════════════════
+const ABS_REPLY_PRESETS = [
+  '확인했습니다. 결석 처리해 두겠습니다.',
+  '확인했습니다. 결석한 날 진도와 숙제는 학원 앱 숙제 탭에서 확인 부탁드립니다.',
+  '확인했습니다. 보강 일정은 담당 선생님께서 따로 안내드리겠습니다.',
+];
+let absReplyOpenId = '';
+function absRepliesHtml(a) {
+  const list = Array.isArray(a.replies) ? a.replies : [];
+  const fmt = (iso) => { const t = new Date(iso); return isNaN(t) ? '' : `${t.getMonth() + 1}/${t.getDate()} ${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}`; };
+  let html = list.map((r, i) => `<div style="margin-top:6px;padding:7px 10px;background:#F3EFFB;border-radius:8px;font-size:12.5px;display:flex;gap:8px;align-items:flex-start;">
+      <span style="flex:1;white-space:pre-wrap;"><b style="color:#5B3FA6;">🏫 ${absEsc(r.by || '관리부')}</b> ${absEsc(r.text)}</span>
+      <span style="font-size:11px;color:var(--muted);white-space:nowrap;">${fmt(r.at)}</span>
+      <a href="#" onclick="absReplyDelete('${a.id}', ${i});return false;" title="댓글 삭제" style="font-size:11px;color:var(--muted);text-decoration:none;">✕</a>
+    </div>`).join('');
+  if (absReplyOpenId === a.id) {
+    html += `<div style="margin-top:8px;padding:10px;border:1px solid rgba(91,63,166,0.3);border-radius:10px;background:#fff;">
+      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px;">${ABS_REPLY_PRESETS.map((t, i) => `<button type="button" onclick="absReplyPreset(${i})" style="font-size:11.5px;padding:3px 9px;border-radius:999px;border:1px solid rgba(91,63,166,0.3);background:#F7F5FC;color:#5B3FA6;cursor:pointer;font-family:inherit;">${absEsc(t.length > 22 ? t.slice(0, 22) + '…' : t)}</button>`).join('')}</div>
+      <textarea id="absReplyText" rows="3" maxlength="500" placeholder="확인 내용이나 보충 안내를 적어 주세요 (학부모 앱에 보이고 알림이 갑니다)" style="width:100%;box-sizing:border-box;padding:8px 10px;border:1px solid rgba(30,24,56,0.18);border-radius:8px;font-size:13px;font-family:inherit;resize:vertical;"></textarea>
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:6px;">
+        <button type="button" onclick="absReplyOpen('')" style="font-size:12.5px;padding:6px 12px;border-radius:8px;border:1px solid rgba(30,24,56,0.15);background:#fff;cursor:pointer;font-family:inherit;">취소</button>
+        <button type="button" id="absReplyBtn" onclick="absReplySend('${a.id}')" style="font-size:12.5px;padding:6px 14px;border-radius:8px;border:0;background:#5B3FA6;color:#fff;font-weight:700;cursor:pointer;font-family:inherit;">등록 (학부모에게 알림)</button>
+      </div>
+    </div>`;
+  }
+  return html;
+}
+window.absReplyOpen = function (id) {
+  absReplyOpenId = id;
+  renderAbsences();
+  if (id) setTimeout(() => document.getElementById('absReplyText')?.focus(), 30);
+};
+window.absReplyPreset = function (i) {
+  const ta = document.getElementById('absReplyText'); if (!ta) return;
+  ta.value = ABS_REPLY_PRESETS[i] || ''; ta.focus();
+};
+window.absReplySend = async function (id) {
+  const ta = document.getElementById('absReplyText');
+  const text = (ta?.value || '').trim();
+  if (!text) { alert('댓글 내용을 입력해 주세요.'); return; }
+  const a = absAll.find((x) => x.id === id); if (!a) return;
+  const me = window.currentAdmin || {};
+  const replies = [...(Array.isArray(a.replies) ? a.replies : []), { text, by: me.name || '관리부', at: new Date().toISOString() }];
+  const btn = document.getElementById('absReplyBtn'); if (btn) btn.disabled = true;
+  try {
+    await updateDoc(doc(db, 'absences', id), { replies, verified: true, verifiedBy: me.name || me.email || '', verifiedAt: new Date().toISOString(), readByAdmin: true });
+    Object.assign(a, { replies, verified: true, readByAdmin: true });
+    absReplyOpenId = '';
+    renderAbsences();
+    if (typeof renderAttReasons === 'function') { try { renderAttReasons(); } catch (e) {} }
+    if (typeof window.refreshHomeTab === 'function') window.refreshHomeTab();
+  } catch (e) { alert('댓글 등록 실패: ' + e.message); if (btn) btn.disabled = false; }
+};
+window.absReplyDelete = async function (id, idx) {
+  const a = absAll.find((x) => x.id === id); if (!a || !Array.isArray(a.replies)) return;
+  if (!confirm('이 댓글을 삭제할까요? (학부모 앱에서도 사라집니다)')) return;
+  const replies = a.replies.filter((_, i) => i !== idx);
+  try { await updateDoc(doc(db, 'absences', id), { replies }); a.replies = replies; renderAbsences(); }
+  catch (e) { alert('삭제 실패: ' + e.message); }
 };

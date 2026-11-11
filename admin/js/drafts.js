@@ -66,6 +66,7 @@ function getWlData() {
     to:     document.getElementById('wl-to')?.value || '',
     consultNote: document.getElementById('wl-consult-note')?.value || '',
     textbook:    document.getElementById('wl-textbook')?.value || '',
+    absent:      document.getElementById('wl-absent')?.value || '',
   };
   // 중첩 배열 대신 { sec_ri_ci: value } 평탄화 형태로 저장
   const flat = {};
@@ -85,6 +86,7 @@ function setWlData(d) {
   if (d.to)     document.getElementById('wl-to').value     = d.to;
   if (d.consultNote !== undefined) document.getElementById('wl-consult-note').value = d.consultNote;
   if (d.textbook !== undefined)    document.getElementById('wl-textbook').value     = d.textbook;
+  if (d.absent !== undefined && document.getElementById('wl-absent')) document.getElementById('wl-absent').value = d.absent;
 
   const flat = d.flat || {};
   const secs = ['new','leave','pause','upcoming','cash','consult'];

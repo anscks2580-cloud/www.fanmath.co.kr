@@ -2120,6 +2120,10 @@
           <input type="date" id="wl-to" style="color-scheme:light;width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
         </div>
       </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:6px;">
+        <button class="btn btn-secondary btn-sm" onclick="wlFillFromDaily(true)" style="border-color:rgba(91,63,166,0.35);color:#5B3FA6;font-weight:700;">📥 일일 업무보고에서 불러오기</button>
+        <span id="wl-sync-status" style="font-size:11.5px;color:var(--muted);">기간 안의 일일 업무보고(상담·비고·현금영수증·교재·결석자)를 자동으로 채웁니다. 비어 있을 때는 열 때 자동으로 채워져요.</span>
+      </div>
     </div>
 
     <!-- 신입생 -->
@@ -2166,6 +2170,15 @@
         <label>상담요형처리</label>
         <input type="text" id="wl-consult-note" placeholder="상담 요청 처리 내용" style="width:100%;">
       </div>
+    </div>
+
+    <!-- 출결 현황 (결석자) — 일일 업무보고에서 자동 -->
+    <div class="card">
+      <h3>📋 출결 현황 (결석자)</h3>
+      <textarea id="wl-absent" rows="6" placeholder="예: 11/10(월) 송문찬T: 김근우-병결, 홍길동-감기"
+        style="width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);
+        border-radius:8px;color:var(--off-white);font-size:13px;font-family:inherit;outline:none;resize:vertical;"></textarea>
+      <div id="wlAbsentWarn"></div>
     </div>
 
     <!-- 교재입출고 -->
@@ -2885,13 +2898,14 @@
 <script defer src="admin/js/parents.js?v=1792681350"></script>
 <script defer src="admin/js/homeworklog.js?v=1792818255"></script>
 <script defer src="admin/js/satclinic.js?v=1792811435"></script>
-<script defer src="admin/js/dailyreport.js?v=1792760000"></script>
-<script defer src="admin/js/attendance.js?v=1794400000"></script>
-<script defer src="admin/js/absences.js?v=1794300000"></script>
+<script defer src="admin/js/dailyreport.js?v=1794500000"></script>
+<script defer src="admin/js/attendance.js?v=1794500000"></script>
+<script defer src="admin/js/absences.js?v=1794500000"></script>
+<script defer src="admin/js/absentsync.js?v=1794500000"></script>
 <script defer src="admin/js/checkinout.js?v=1794310000"></script>
 <script defer src="admin/js/parentmsg.js?v=1794400000"></script>
-<script defer src="admin/js/weeklylog.js?v=1794000000"></script>
-<script defer src="admin/js/drafts.js?v=1794400000"></script>
+<script defer src="admin/js/weeklylog.js?v=1794500000"></script>
+<script defer src="admin/js/drafts.js?v=1794500000"></script>
 <script defer src="admin/js/promotion.js"></script>
 <script defer src="admin/js/watchstatus.js"></script>
 <script defer src="admin/js/records.js?v=1792752000"></script>

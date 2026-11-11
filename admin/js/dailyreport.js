@@ -19,7 +19,13 @@ window.initDailyReportTab = function() {
     // 관·날짜를 바꾸면 그 날짜 요일의 수업반을 자동 선택
     document.getElementById('dr-branch').addEventListener('change', drAutoSelectByDate);
     document.getElementById('dr-date').addEventListener('change', drAutoSelectByDate);
+    // 관·날짜를 바꾸면 출결 체크의 결석자도 자동으로 다시 채움
+    document.getElementById('dr-branch').addEventListener('change', () => drFillAbsent(false));
+    document.getElementById('dr-date').addEventListener('change', () => drFillAbsent(false));
+    // 손으로 고치면 그 뒤로는 자동으로 덮어쓰지 않음 (「출결에서 불러오기」 버튼으로만)
+    document.getElementById('dr-absent').addEventListener('input', () => { drAbsentAuto = null; });
   }
+  drFillAbsent(false);
   // 이미 적어 둔 수업반이 있으면(불러오기 등) 그대로 두고 체크만 맞춤, 비어 있으면 자동 선택
   const apply = () => {
     if (document.getElementById('dr-classes').value.trim()) drSyncFromText();
@@ -332,10 +338,23 @@ function drawDailyReport(canvas, data) {
   }
 
   twoColRow('상담 및\n테스트',    data.consult,  '전화문의',             data.phone,    row3H);
-  twoColRow('출결 현황\n<결석자>', data.absent,  '교재\n입/출고',        data.textbook, row4H);
+  // 결석자가 많으면 칸에 다 들어가도록 글자 크기를 줄임
+  const drFit = (t, h) => { const n = String(t).split('\n').length; return Math.max(8, Math.min(12, Math.floor((h - 10) / n) - 5)); };
+  (function () {
+    const halfW = tableW / 2;
+    rect(tl, y, labelW, row4H, headerBg);
+    cellText('출결 현황\n<결석자>', tl, y, labelW, row4H, { bold: true, size: 12 });
+    rect(tl + labelW, y, halfW - labelW, row4H);
+    cellText(data.absent, tl + labelW, y, halfW - labelW, row4H, { size: drFit(data.absent, row4H) });
+    rect(tl + halfW, y, labelW, row4H, headerBg);
+    cellText('교재\n입/출고', tl + halfW, y, labelW, row4H, { bold: true, size: 12 });
+    rect(tl + halfW + labelW, y, halfW - labelW, row4H);
+    cellText(data.textbook, tl + halfW + labelW, y, halfW - labelW, row4H, { size: drFit(data.textbook, row4H) });
+    y += row4H;
+  })();
 
   // 결석자 수 (출결 셀 하단 우측)
-  const absentCount = (data.absent === '-') ? 0 : data.absent.split('\n').filter(l => l.trim()).length;
+  const absentCount = (data.absent === '-') ? 0 : data.absent.split('\n').filter(l => l.trim() && !/^[^\s\-]+T$|^담당 미지정$/.test(l.trim())).length;
   if (absentCount > 0) {
     ctx.fillStyle = '#555';
     ctx.font = '11px "Apple SD Gothic Neo", "Malgun Gothic", sans-serif';
@@ -372,6 +391,8 @@ window.previewDailyReport = function() {
 };
 
 window.downloadDailyReport = function() {
+  const warnN = drAbsentItems.filter((it) => it.warn).length;
+  if (warnN && !confirm(`⚠ 학부모가 앱으로 입력한 결석 ${warnN}건을 아직 관리부에서 확인하지 않았습니다.\n사실인지 확인한 뒤 저장하는 것을 권장합니다.\n\n그래도 이미지를 저장할까요?`)) return;
   const data = getDRValues();
   const canvas = document.getElementById('drCanvas');
   drawDailyReport(canvas, data);
@@ -384,3 +405,62 @@ window.downloadDailyReport = function() {
   if (typeof recordClosing === 'function') recordClosing('dr', canvas);   // 마감 기록 + 원장 페이지로 이미지 제출
 };
 
+
+
+// ══════════════════════════════════════════
+// 출결 현황(결석자) 자동 채우기 (2026.11.11)
+//  - 출결 체크(결석·사유) + 결석 사유서(학부모 앱·전화 접수) → 선생님별로
+//      송문찬T
+//      김근우 - 병결
+//  - 칸이 비어 있거나 자동으로 채운 내용 그대로면 관·날짜 바꿀 때 자동 갱신
+//  - 손으로 고친 뒤에는 「🔄 출결에서 불러오기」 버튼으로만 덮어씀
+//  - 학부모가 앱으로 입력한 결석(관리부 미확인)은 칸 아래 경고 + 이미지 저장 때 한 번 더 확인
+// ══════════════════════════════════════════
+let drAbsentAuto = '';        // 마지막으로 자동 입력한 내용 (null = 손으로 고침)
+let drAbsentItems = [];
+let drAbsentSeq = 0;
+function drAbsentWarnBox() {
+  let el = document.getElementById('drAbsentWarn');
+  if (el) return el;
+  const ta = document.getElementById('dr-absent');
+  if (!ta) return null;
+  // 라벨 옆 「출결에서 불러오기」 버튼
+  const lbl = ta.parentElement.querySelector('label');
+  if (lbl && !document.getElementById('drAbsentBtn')) {
+    lbl.style.display = 'flex'; lbl.style.alignItems = 'center'; lbl.style.gap = '8px';
+    const b = document.createElement('button');
+    b.type = 'button'; b.id = 'drAbsentBtn';
+    b.textContent = '🔄 출결에서 불러오기';
+    b.style.cssText = 'margin-left:auto;font-size:11.5px;padding:3px 9px;border-radius:6px;border:1px solid rgba(91,63,166,0.35);background:#fff;color:#5B3FA6;cursor:pointer;font-family:inherit;font-weight:700;';
+    b.onclick = () => drFillAbsent(true);
+    lbl.appendChild(b);
+  }
+  el = document.createElement('div');
+  el.id = 'drAbsentWarn';
+  ta.insertAdjacentElement('afterend', el);
+  return el;
+}
+function drRenderAbsentWarn() {
+  const el = drAbsentWarnBox(); if (!el) return;
+  drAbsentItems.forEach((it) => { if (it.abs) it.warn = it.abs.source !== 'phone' && !it.abs.verified; });
+  const n = drAbsentItems.length;
+  el.innerHTML = (n ? `<div style="font-size:11.5px;color:var(--muted);margin-top:4px;">출결 체크 기준 결석 ${n}명 (${document.getElementById('dr-branch').value})</div>` : '')
+    + absentWarnHtml(drAbsentItems, 'drRenderAbsentWarn');
+}
+window.drRenderAbsentWarn = drRenderAbsentWarn;
+window.drFillAbsent = async function (force) {
+  const ta = document.getElementById('dr-absent');
+  const branch = document.getElementById('dr-branch')?.value;
+  const date = document.getElementById('dr-date')?.value;
+  if (!ta || !branch || !date || typeof absentBuild !== 'function') return;
+  const my = ++drAbsentSeq;
+  const items = await absentBuild(branch, date);
+  if (my !== drAbsentSeq) return;
+  drAbsentItems = items;
+  const text = absentText(items);
+  const cur = ta.value.trim();
+  const canAuto = !cur || cur === '-' || (drAbsentAuto !== null && cur === String(drAbsentAuto).trim());
+  if (force && cur && !canAuto && cur !== text && !confirm('출결 현황 칸에 직접 적은 내용이 있습니다.\n출결 체크 기준 결석자로 바꿀까요?')) { drRenderAbsentWarn(); return; }
+  if (force || canAuto) { ta.value = text; drAbsentAuto = text; }
+  drRenderAbsentWarn();
+};

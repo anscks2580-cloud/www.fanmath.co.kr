@@ -10,6 +10,54 @@ const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
 let attCurrentDate = new Date();
 let attStatus = {};   // { studentId: 'present'|'absent' }
 let attReasons = {};  // 결석 사유 { 'YYYY-MM-DD': { studentId: '사유' } } — 날짜를 옮겨도 입력한 사유가 남음
+window.attTouched = new Set();   // 이 화면에서 직접 바꾼 학생 (저장본보다 화면이 최신)
+
+// ── 자동 저장 (2026.11.11) ──
+// 출결·사유를 바꾸면 그 학생 것만 dailyDrafts/att_{학생 관}_{날짜} 에 바로 합쳐 저장
+// → 일일 업무보고 「출결 현황(결석자)」·주간 업무일지에 자동으로 들어감 (absentsync.js)
+const attSaveTimers = {};
+function attAutoSave(uid) {
+  clearTimeout(attSaveTimers[uid]);
+  attSaveTimers[uid] = setTimeout(async () => {
+    const s = studentsCache.find((x) => x.id === uid);
+    if (!s || !s.branch) return;
+    const date = toLocalDateStr(attCurrentDate);
+    try {
+      await setDoc(doc(db, 'dailyDrafts', `att_${s.branch}_${date}`), {
+        date, branch: s.branch,
+        status: { [uid]: attStatus[uid] || 'present' },
+        reasons: { [uid]: (attReasons[date] || {})[uid] || '' },
+        savedAt: new Date().toISOString(),
+      }, { merge: true });
+      const el = document.getElementById('att-draft-status');
+      if (el) { el.textContent = '✅ 자동 저장됨'; el.style.color = '#2E9E5B'; setTimeout(() => { if (el.textContent === '✅ 자동 저장됨') el.textContent = ''; }, 2000); }
+    } catch (e) { console.warn('출결 자동 저장 실패', e); }
+  }, 800);
+}
+// 날짜를 열면 저장해 둔 출결(관별·전체)을 화면에 자동으로 불러옴 (직접 바꾼 학생은 그대로)
+async function attLoadSaved(dateKey) {
+  try {
+    const ids = [`att_all_${dateKey}`, `att_평촌관_${dateKey}`, `att_산본관_${dateKey}`];
+    const snaps = await Promise.all(ids.map((id) => getDoc(doc(db, 'dailyDrafts', id))));
+    if (toLocalDateStr(attCurrentDate) !== dateKey) return;
+    const absMap = attCurAbsMap();
+    const rm = attReasons[dateKey] = attReasons[dateKey] || {};
+    let changed = false;
+    snaps.forEach((sn) => {
+      if (!sn.exists()) return;
+      const d = sn.data();
+      Object.entries(d.status || {}).forEach(([uid, st]) => {
+        if (window.attTouched.has(uid) || absMap[uid]) return;
+        if (attStatus[uid] !== st) { attStatus[uid] = st; changed = true; }
+      });
+      Object.entries(d.reasons || {}).forEach(([uid, r]) => {
+        if (window.attTouched.has(uid) || !String(r || '').trim() || rm[uid]) return;
+        rm[uid] = r; changed = true;
+      });
+    });
+    if (changed) renderAttendance();
+  } catch (e) { console.warn('출결 저장본 자동 불러오기 실패', e); }
+}
 
 function attEsc(t) { return String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function attReasonMap() { const k = toLocalDateStr(attCurrentDate); if (!attReasons[k]) attReasons[k] = {}; return attReasons[k]; }
@@ -33,6 +81,7 @@ function toLocalDateStr(d) {
 window.initAttendanceTab = function() {
   attCurrentDate = new Date();
   attStatus = {};
+  window.attTouched = new Set(); window.attAbsDate = '';
   renderAttendance();
   loadDailyCode();
   if (typeof initAbsences === 'function') initAbsences();    // 결석 사유서 (absences.js)
@@ -82,18 +131,22 @@ window.changeAttDay = function(delta) {
   attCurrentDate = new Date(attCurrentDate);
   attCurrentDate.setDate(attCurrentDate.getDate() + delta);
   attStatus = {};
+  window.attTouched = new Set();
   renderAttendance();
 };
 
 window.resetAttDay = function() {
   attCurrentDate = new Date();
   attStatus = {};
+  window.attTouched = new Set();
   renderAttendance();
 };
 
 window.toggleAttStatus = function(uid) {
   const cur = attStatus[uid] || 'present';
   attStatus[uid] = cur === 'present' ? 'absent' : cur === 'absent' ? 'none' : 'present';
+  window.attTouched.add(uid);
+  attAutoSave(uid);
   const chip = document.getElementById('att-chip-' + uid);
   if (!chip) return;
   applyChipStyle(chip, attStatus[uid]);
@@ -109,6 +162,7 @@ window.toggleAttStatus = function(uid) {
 window.setAttReason = function(uid, val) {
   attReasonMap()[uid] = val;
   updateAttSummary();
+  attAutoSave(uid);
 };
 
 // 출결 체크 아래 「결석 사유」 칸 — 결석(빨간색)인 학생만 나옴
@@ -139,7 +193,7 @@ window.renderAttReasons = function() {
           <span style="font-size:11px;color:var(--muted);margin-left:4px;">${attEsc(s.grade || '')}${s.classGroup ? ' · ' + attEsc(s.classGroup) : ''}</span>
         </div>
         ${a
-          ? `<div style="flex:1;min-width:200px;font-size:13px;color:#1E1838;"><span style="font-size:11px;font-weight:800;padding:1px 7px;border-radius:999px;background:#fff;color:#C8541F;border:1px solid #F0B9A0;margin-right:6px;">${a.source === 'phone' ? '📞 전화 접수' : '📱 학부모 사유서'}</span><b>${attEsc(a.reason || '')}</b>${a.detail ? ' — ' + attEsc(a.detail) : ''}</div>`
+          ? `<div style="flex:1;min-width:200px;font-size:13px;color:#1E1838;"><span style="font-size:11px;font-weight:800;padding:1px 7px;border-radius:999px;background:#fff;color:#C8541F;border:1px solid #F0B9A0;margin-right:6px;">${a.source === 'phone' ? '📞 전화 접수' : '📱 학부모 사유서'}</span><b>${attEsc(a.reason || '')}</b>${a.detail ? ' — ' + attEsc(a.detail) : ''}${(a.source !== 'phone' && !a.verified) ? `<div style="margin-top:6px;padding:6px 10px;border:1.5px solid #E8A33D;background:#FFF8E8;border-radius:8px;font-size:12px;color:#B26A00;font-weight:700;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">⚠ 학부모가 앱으로 입력한 결석입니다 — 사실인지 확인해 주세요<button type="button" onclick="absVerify('${a.id}')" style="margin-left:auto;background:#2E9E5B;color:#fff;border:0;border-radius:6px;padding:3px 10px;font-size:12px;font-family:inherit;cursor:pointer;">✓ 확인 완료</button></div>` : (a.source !== 'phone' ? '<span style="font-size:11px;color:#2E9E5B;font-weight:700;margin-left:6px;">✓ 관리부 확인</span>' : '')}</div>`
           : `<input id="att-reason-${s.id}" type="text" value="${attEsc(rm[s.id] || '')}" placeholder="결석 사유를 입력하세요 (예: 감기, 가족 행사, 학교 행사)"
               oninput="setAttReason('${s.id}', this.value)" maxlength="200"
               style="flex:1;min-width:200px;padding:8px 10px;border:1px solid rgba(30,24,56,0.18);border-radius:8px;font-size:13px;font-family:inherit;background:#fff;color:#1E1838;outline:none;">`}
@@ -212,9 +266,18 @@ window.renderAttendance = function() {
   if (window.attAbsDate !== attDateKey) {
     window.attAbsDate = attDateKey; window.attAbsApplied = {};
     if (typeof absLoad === 'function') absLoad().then(() => { if (window.attAbsDate === attDateKey) renderAttendance(); });
+    attLoadSaved(attDateKey);   // 저장해 둔 출결·사유 자동 불러오기
   }
   const attAbsMap = typeof absMapFor === 'function' ? absMapFor(attDateKey) : {};
-  filtered.forEach(s => { if (attAbsMap[s.id] && !window.attAbsApplied[s.id]) { attStatus[s.id] = 'absent'; window.attAbsApplied[s.id] = true; } });
+  filtered.forEach(s => {
+    const a = attAbsMap[s.id];
+    if (a && !window.attAbsApplied[s.id]) {
+      attStatus[s.id] = 'absent'; window.attAbsApplied[s.id] = true;
+      // 사유서 사유를 결석 사유 칸에도 자동 입력 (저장·이미지·보고서에 같이 들어감)
+      const rm = attReasons[attDateKey] = attReasons[attDateKey] || {};
+      if (!String(rm[s.id] || '').trim()) rm[s.id] = typeof absReasonText === 'function' ? absReasonText(a) : (a.reason || '');
+    }
+  });
 
   // 새 학생은 기본 출석으로 초기화
   filtered.forEach(s => { if (!attStatus[s.id]) attStatus[s.id] = 'present'; });
