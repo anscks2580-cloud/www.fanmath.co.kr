@@ -6,7 +6,7 @@
 <title>선생님 포털 | 송우찬수학학원</title>
 <meta name="robots" content="noindex,nofollow">
 <link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="portal.css">
+<link rel="stylesheet" href="portal.css?v=1794800000">
 <script src="https://cdn.jsdelivr.net/npm/tus-js-client@4.1.0/dist/tus.min.js"></script>
 <style>
 /* ── 레이아웃 ── */
@@ -438,7 +438,7 @@ select option:disabled { color:#6B6489; }
 <div id="portalScreen">
 <nav class="ad-top">
   <button class="ad-menu-btn" id="tnavMenuBtn" type="button" aria-label="메뉴 열기" aria-controls="tnavSide">☰</button>
-  <a href="index.html" class="ad-brand">
+  <a href="teacher.html" class="ad-brand" title="선생님 포털 첫 화면" onclick="event.preventDefault();if(window.teacherOpenMenu)teacherOpenMenu('calendar');">
     <img src="swc-logo.svg" alt="SWC">
     <span>선생님 포털</span>
   </a>
@@ -456,6 +456,7 @@ select option:disabled { color:#6B6489; }
 <div class="ad-backdrop" id="tnavBackdrop"></div>
 <aside class="ad-side always-open" id="tnavSide" aria-label="선생님 메뉴">
   <div class="ad-groups" id="tnavGroups" style="padding-top:12px;"></div>
+  <a href="index.html" class="ad-side-home">🏠 홈페이지 첫 화면으로</a>
   <div class="ad-side-foot"><span id="tnavWho"></span><span class="role">선생님</span></div>
 </aside>
 
