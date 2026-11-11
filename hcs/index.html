@@ -66,7 +66,7 @@ main{padding:20px 24px;max-width:1840px;margin:0 auto}
 .listhead input{height:46px}.listhead #wsq{margin-left:auto}
 .listhead button.pri{height:46px;padding:0 26px;font-size:16px}
 table.ws{width:100%;border-collapse:collapse}
-table.ws th{font-weight:400;color:#888;font-size:13.5px;text-align:left;padding:14px 16px;border-bottom:1px solid var(--line);border-top:1px solid var(--line)}
+table.ws th{font-weight:400;color:#888;font-size:13.5px;text-align:left;white-space:nowrap;padding:14px 16px;border-bottom:1px solid var(--line);border-top:1px solid var(--line)}
 table.ws td{padding:18px 16px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:15px}
 table.ws tbody tr{transition:background .12s}table.ws tbody tr:hover{background:#fafbfc}
 table.ws td.t b{font-size:17px;font-weight:500}
@@ -347,6 +347,18 @@ table.ws td button{height:44px;padding:0 18px;vertical-align:middle}
 table.ws td button.pv{width:44px;padding:0;display:inline-flex;align-items:center;justify-content:center;color:#444}
 table.ws td button.pv svg{width:18px;height:18px}
 table.ws td button.as{width:124px}
+/* 학습지 선택 막대 */
+table.ws td.ck,table.ws th:first-child{text-align:center;padding-left:10px;padding-right:0}
+table.ws td.ck input,#wsAll{width:22px;height:22px}
+table.ws tbody tr.sel{background:var(--p2)}table.ws tbody tr.sel:hover{background:#ebe5fb}
+.wsbar{position:fixed;left:50%;bottom:18px;transform:translate(-50%,160%);width:min(1792px,calc(100% - 48px));background:#3a3b40;color:#fff;border-radius:10px;display:flex;align-items:center;gap:4px;padding:12px 18px 12px 30px;z-index:25;box-shadow:0 10px 30px rgba(0,0,0,.25);transition:transform .28s cubic-bezier(.2,.8,.2,1);pointer-events:none}
+.wsbar.on{transform:translate(-50%,0);pointer-events:auto}
+.wsbar b{font-size:17px}
+.wsbar button{background:transparent;border:0;color:#fff;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 14px;font-size:14px;font-weight:600;min-width:84px;border-radius:8px}
+.wsbar button:hover{background:#ffffff18}.wsbar button:disabled{opacity:.35}.wsbar button:disabled:hover{background:transparent}
+.wsbar button svg{width:22px;height:22px}
+.wsbar button.x{min-width:0;font-size:18px;color:#aaa;padding:8px 10px;margin-left:8px}
+#v_ws .card{margin-bottom:90px}
 /* 부드럽게 */
 .pane.on{animation:paneIn .2s ease}
 .view.on{animation:paneIn .18s ease}
@@ -452,7 +464,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none!importa
       <button class="pri" onclick="openWiz()">⊕ 학습지 만들기</button>
     </div>
     <table class="ws">
-      <tr><th style="width:120px">학년</th><th style="width:150px">태그</th><th>학습지명</th><th style="width:150px">생성일</th><th style="width:120px">출제자</th><th style="width:220px">미리보기 · 출제</th><th style="width:60px"></th></tr>
+      <tr><th style="width:56px;text-align:center"><input type="checkbox" id="wsAll" onchange="wsAllPick(this.checked)"></th><th style="width:110px">학년</th><th style="width:150px">태그</th><th>학습지명</th><th style="width:150px">생성일</th><th style="width:120px">출제자</th><th style="width:80px;text-align:center">미리보기</th><th style="width:150px;text-align:center">출제</th><th style="width:70px;text-align:center">더보기</th></tr>
       <tbody id="wsrows"></tbody>
     </table>
     <div class="note" id="wsnote" style="padding:12px 20px"></div>
@@ -650,6 +662,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none!importa
 </div></div>
 
 <div id="wsmenu" class="popmenu" onclick="event.stopPropagation()"></div>
+<div class="wsbar" id="wsbar"><b id="wsbarN"></b><span style="flex:1"></span><button data-one onclick="wsBarAct('edit')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg><span>수정</span></button><button data-one onclick="wsBarAct('copy')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg><span>복제 후 수정</span></button><button onclick="wsBarAct('down')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg><span>다운로드</span></button><button onclick="wsBarAct('del')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></svg><span>선택 삭제</span></button><button class="x" title="선택 해제" onclick="wsClearSel()">✕</button></div>
 <!-- ===== 학습지 만들기 확인 ===== -->
 <div class="modal" id="m_make"><div class="box" style="width:560px">
   <div class="mh">학습지 만들기<button class="sm ghost" onclick="$('m_make').classList.remove('on')">✕</button></div>
@@ -745,7 +758,11 @@ function applyData(){
   buildCnt(); BYID=new Map(DB.map(p=>[p.id,p]));
 }
 const runJS=txt=>{ (new Function(txt))(); };
-async function loadCore(){ if(!REMOTE||DB.length) return; const t0=Date.now(); toast('문제 데이터 불러오는 중…'); const [a,b]=await Promise.all([FB.getText('색인.js'),FB.getText('유형.js')]); runJS(a); runJS(b); applyData(); renderWS(); renderDB(); toast(`문제 ${DB.length.toLocaleString()}개 준비 (${((Date.now()-t0)/1000).toFixed(1)}초)`); }
+let CORE=null;
+function loadCore(){ if(!REMOTE||DB.length) return Promise.resolve(); if(CORE) return CORE;
+  return CORE=(async()=>{ const [a,b]=await Promise.all([FB.getText('색인.js'),FB.getText('유형.js')]); runJS(a); runJS(b); applyData(); renderDB(); })().catch(e=>{ CORE=null; throw e; }); }
+// 문제 데이터가 필요한 동작(만들기·수정·미리보기)은 데이터가 올 때까지 잠깐 기다렸다가 실행
+function whenCore(cb){ if(!REMOTE||DB.length) return cb(); if(needLogin()) return; busy(true); loadCore().then(()=>{ busy(false); cb(); },e=>{ busy(false); toast('문제 데이터를 못 받았어요: '+e.message); }); }
 const LOADED = new Set(), LOADING = {};
 window.LOAD_UNIT = function(arr){ arr.forEach(q=>{ const p=BYID.get(q.id); if(p) Object.assign(p,q,{_full:1}); else { const n=Object.assign(q,{_full:1}); DB.push(n); BYID.set(n.id,n); } }); };
 function loadFile(f){ if(LOADED.has(f)) return Promise.resolve(); if(LOADING[f]) return LOADING[f];
@@ -813,29 +830,56 @@ window.onLogin=async function(me){
   $('m_login').classList.remove('on'); $('f_author').value=me.name;
   if(me.data&&me.data.wsDiffRatio) RATIO=me.data.wsDiffRatio; else { const l=localStorage.getItem('wsDiffRatio'); if(l) RATIO=JSON.parse(l); }
   drawRatioBar();
-  toast(`${me.name} 선생님, 안녕하세요`);
-  if(REMOTE){ try{ await loadCore(); }catch(e){ console.warn(e); toast('문제 데이터를 못 받았어요: '+e.message); } }
-  try{ STUDENTS=await FB.students(me); STUDENTS.sort((a,b)=>(a.name||'').localeCompare(b.name||'','ko')); }catch(e){ console.warn(e); toast('학생 목록 오류: '+e.message); }
-  renderStudents();
-  await loadWorksheets(); await loadAssignments();
+  // 학습지 목록을 제일 먼저(저장해 둔 목록은 바로 보여 주고 새로 받아 바꿈), 문제 데이터·학생·출제 목록은 동시에 뒤에서 받음
+  try{ localStorage.setItem('hcs:lastUid',me.uid); }catch(e){}
+  if(!WS.some(w=>w.id)){ const c=wsCacheGet(me.uid); if(c){ WS=c.concat(WS.filter(w=>!w.id)); renderWS(); } }
+  const pW=loadWorksheets();
+  if(REMOTE) loadCore().catch(e=>{ console.warn(e); toast('문제 데이터를 못 받았어요: '+e.message); });
+  const pS=FB.students(me).then(l=>{ STUDENTS=l.sort((a,b)=>(a.name||'').localeCompare(b.name||'','ko')); renderStudents(); }).catch(e=>{ console.warn(e); toast('학생 목록 오류: '+e.message); });
+  await Promise.all([pW,pS,loadAssignments()]); renderAsg();
 };
-window.onLogout=function(){ ME=null; STUDENTS=[]; WS=WS.filter(w=>!w.id); TESTS=[]; RESULTS=[]; $('whoami').textContent='로그인 안 됨'; $('loginBtn').textContent='로그인'; $('loginBtn').onclick=openLogin; renderWS(); renderStudents(); renderAsg(); };
+window.onLogout=function(){ ME=null; STUDENTS=[]; WS=WS.filter(w=>!w.id); WSSEL.clear(); try{ localStorage.removeItem('hcs:lastUid'); }catch(e){} TESTS=[]; RESULTS=[]; $('whoami').textContent='로그인 안 됨'; $('loginBtn').textContent='로그인'; $('loginBtn').onclick=openLogin; renderWS(); renderStudents(); renderAsg(); };
 function openLogin(){ $('m_login').classList.add('on'); $('l_err').textContent=''; setTimeout(()=>$('l_email').focus(),50); }
 async function doLogin(){ $('l_err').textContent=''; const id=$('l_email').value.trim(); const email=id.includes('@')?id:id+'@songmath.kr'; // 홈페이지 login.html과 같은 규칙: 이름 → 이름@songmath.kr
   try{ await FB.login(email,$('l_pw').value); }catch(e){ $('l_err').textContent='로그인 실패: 아이디(이름)·비밀번호를 확인해 주세요.'; } }
 const needLogin=()=>{ if(!ME){ toast('먼저 로그인해 주세요'); openLogin(); return true; } return false; };
 
 // =================== 학습지 목록 ===================
-async function loadWorksheets(){ if(!ME) return; try{ const list=await FB.worksheets(ME); list.sort((a,b)=>(b.createdAtMs||0)-(a.createdAtMs||0)||(b.createdAtStr||'').localeCompare(a.createdAtStr||'')); WS=list; renderWS(); }catch(e){ console.warn(e); $('wsnote').textContent='학습지 목록을 불러오지 못했어요: '+e.message; } }
+function wsCacheGet(uid){ try{ const c=JSON.parse(localStorage.getItem('hcs:ws:'+uid)||'null'); return Array.isArray(c)?c:null; }catch(e){ return null; } }
+function wsCachePut(){ if(!ME) return; try{ localStorage.setItem('hcs:ws:'+ME.uid,JSON.stringify(WS.filter(w=>w.id).map(w=>{ const o={...w}; delete o.createdAt; return o; }))); }catch(e){} }
+async function loadWorksheets(){ if(!ME) return; try{ const list=await FB.worksheets(ME); list.sort((a,b)=>(b.createdAtMs||0)-(a.createdAtMs||0)||(b.createdAtStr||'').localeCompare(a.createdAtStr||'')); const keep=new Set([...WSSEL].map(w=>w.id)); WS=list.concat(WS.filter(w=>!w.id)); WSSEL=new Set(WS.filter(w=>w.id&&keep.has(w.id))); renderWS(); wsCachePut(); }catch(e){ console.warn(e); $('wsnote').textContent='학습지 목록을 불러오지 못했어요: '+e.message; } }
 let wsGrade='';
 document.querySelectorAll('#v_ws .listhead .chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('#v_ws .listhead .chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');wsGrade=c.dataset.g;renderWS();});
 function wsSummary(w){ const lv=w.levelDist?LV.filter(l=>w.levelDist[l]).map(l=>l+w.levelDist[l]).join('·'):w.level||''; return `${w.count}문제 | ${lv} | ${esc(w.range||'')}`; }
 function renderWS(){
   const q=($('wsq').value||'').trim();
   const list=WS.filter(w=>(!wsGrade||String(w.grade||'').startsWith(wsGrade))&&(!q||(w.title+' '+(w.tags||[]).join(' ')+' '+(w.teacherName||'')).includes(q)));
-  $('wsrows').innerHTML=list.map(w=>{ const i=WS.indexOf(w); return `<tr><td class="mini">${esc(w.grade||'')}<br><span style="color:#999">${esc(subjShort(w.subject||''))}</span></td><td class="mini">${esc((w.tags||[]).join(', '))}</td><td class="t"><b>${esc(w.title)}</b>${w.id?'':'<span class="tag">저장 안 됨</span>'}<div>${wsSummary(w)}</div></td><td class="mini">${esc(w.createdAtStr||'')}</td><td class="mini">${esc(w.teacherName||'')}</td><td><button class="pv" title="미리보기" onclick="showPrint(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="11.5" cy="12" r="3"/><path d="M14 14.5l2.5 2.5"/></svg></button> <button class="as" onclick="openAssign(${i})">출제하기</button></td><td><button class="kebab" title="더보기" onclick="wsMenu(event,${i})">⋮</button></td></tr>`; }).join('');
-  $('wsnote').textContent=ME?(list.length?'':'아직 만든 학습지가 없어요. 「＋ 학습지 만들기」를 눌러 보세요.'):'로그인하지 않으면 학습지가 저장되지 않고, 이 화면에서만 잠깐 보여요.';
+  $('wsrows').innerHTML=list.map(w=>{ const i=WS.indexOf(w); return `<tr class="${WSSEL.has(w)?'sel':''}"><td class="ck"><input type="checkbox" ${WSSEL.has(w)?'checked':''} onchange="wsPick(${i},this.checked)"></td><td class="mini">${esc(w.grade||'')}<br><span style="color:#999">${esc(subjShort(w.subject||''))}</span></td><td class="mini">${esc((w.tags||[]).join(', '))}</td><td class="t"><b>${esc(w.title)}</b>${w.id?'':'<span class="tag">저장 안 됨</span>'}<div>${wsSummary(w)}</div></td><td class="mini">${esc(w.createdAtStr||'')}</td><td class="mini">${esc(w.teacherName||'')}</td><td><button class="pv" title="미리보기" onclick="showPrint(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="11.5" cy="12" r="3"/><path d="M14 14.5l2.5 2.5"/></svg></button></td><td style="text-align:center"><button class="as" onclick="openAssign(${i})">출제하기</button></td><td><button class="kebab" title="더보기" onclick="wsMenu(event,${i})">⋮</button></td></tr>`; }).join('');
+  $('wsnote').textContent=ME?(list.length?'':'아직 만든 학습지가 없어요. 「⊕ 학습지 만들기」를 눌러 보세요.'):(WS.some(w=>w.id)?'지난번에 받아 둔 목록이에요. 로그인하면 새로 받아요.':'로그인하지 않으면 학습지가 저장되지 않고, 이 화면에서만 잠깐 보여요.');
+  WS_VIS=list; wsBar();
 }
+// 학습지 선택 → 아래에서 올라오는 작업 막대 (수정 / 복제 후 수정 / 다운로드 / 선택 삭제)
+let WSSEL=new Set(), WS_VIS=[];
+function wsPick(i,on){ const w=WS[i]; if(!w) return; on?WSSEL.add(w):WSSEL.delete(w); renderWS(); }
+function wsAllPick(on){ WS_VIS.forEach(w=>on?WSSEL.add(w):WSSEL.delete(w)); renderWS(); }
+function wsClearSel(){ WSSEL.clear(); renderWS(); }
+function wsBar(){ [...WSSEL].forEach(w=>{ if(!WS.includes(w)) WSSEL.delete(w); }); const n=WSSEL.size, b=$('wsbar'); if(!b) return;
+  b.classList.toggle('on',n>0); $('wsbarN').textContent=`학습지 ${n}개 선택됨`;
+  b.querySelectorAll('[data-one]').forEach(x=>{ x.disabled=n!==1; x.title=n!==1?'학습지를 하나만 골라 주세요':''; });
+  const all=$('wsAll'); if(all) all.checked=WS_VIS.length>0&&WS_VIS.every(w=>WSSEL.has(w)); }
+function wsSelIdx(){ return [...WSSEL].map(w=>WS.indexOf(w)).filter(i=>i>=0).sort((a,b)=>a-b); }
+function wsBarAct(a){ const ix=wsSelIdx(); if(!ix.length) return;
+  if(a==='edit'||a==='copy'){ if(ix.length!==1){ toast('학습지를 하나만 골라 주세요'); return; } editWS(ix[0],a==='copy'); }
+  else if(a==='down') wsDownload(ix);
+  else if(a==='del') wsDelMany(ix); }
+function wsDownload(ix){ if(REMOTE&&!DB.length){ whenCore(()=>wsDownload(ix)); return; } const ws=ix.map(i=>WS[i]);
+  const units=[...new Set(ws.flatMap(w=>w.problemIds.map(id=>(byId(id)||{}).unit)).filter(Boolean))];
+  needUnits(units,()=>{ $('printbody').innerHTML=ws.map(sheetHTMLFrom).join(''); $('pv_title').textContent=ws.length===1?ws[0].title:`학습지 ${ws.length}개`;
+    if(ws.length===1){ $('pv_assign').style.display=''; $('pv_assign').onclick=()=>openAssign(ix[0]); } else $('pv_assign').style.display='none';
+    $('printview').classList.add('on'); km($('printbody')); setTimeout(()=>window.print(),700); }); }
+async function wsDelMany(ix){ const ws=ix.map(i=>WS[i]); if(!confirm(`고른 학습지 ${ws.length}개를 삭제할까요?\n(서버에서도 지워지고 되돌릴 수 없어요)`)) return;
+  busy(true); let ok=0, bad=0; for(const w of ws){ try{ if(w.id) await FB.deleteWorksheet(w.id); WS.splice(WS.indexOf(w),1); WSSEL.delete(w); ok++; }catch(e){ console.warn(e); bad++; } } busy(false);
+  renderWS(); wsCachePut(); toast(bad?`${ok}개 삭제, ${bad}개 실패`:`${ok}개 삭제했어요`); }
 function wsOf(i){ return WS[i]; }
 // ⋮ 메뉴: 수정 / 복제 후 수정 / 삭제
 function wsMenu(e,i){ e.stopPropagation(); const m=$('wsmenu'); const r=e.currentTarget.getBoundingClientRect();
@@ -843,7 +887,7 @@ function wsMenu(e,i){ e.stopPropagation(); const m=$('wsmenu'); const r=e.curren
   m.style.top=(r.bottom+window.scrollY+4)+'px'; m.style.left=Math.max(8,r.right-180)+'px'; m.classList.add('on'); }
 document.addEventListener('click',()=>{ const m=document.getElementById('wsmenu'); if(m) m.classList.remove('on'); });
 let EDIT=null; // {i, copy, w}
-function editWS(i,copy){ $('wsmenu').classList.remove('on'); const w=WS[i]; if(!w) return; if(REMOTE&&!DB.length){ needLogin(); return; }
+function editWS(i,copy){ $('wsmenu').classList.remove('on'); const w=WS[i]; if(!w) return; if(REMOTE&&!DB.length){ whenCore(()=>editWS(i,copy)); return; }
   const ps=w.problemIds.map(byId).filter(Boolean); if(!ps.length){ toast('이 학습지의 문제를 찾을 수 없어요'); return; }
   needUnits([...new Set(ps.map(p=>p.unit))],()=>{
     EDIT={i,copy,w}; pendingContinue=false; open.clear(); curSubject=w.subject||subjectOf(ps[0].unit); curLvl=lvlOf(curSubject); curBook=''; srcTab='unit';
@@ -856,14 +900,14 @@ function editWS(i,copy){ $('wsmenu').classList.remove('on'); const w=WS[i]; if(!
     $('f_type').checked=!!o.showType; $('f_space').checked=!!o.space; $('f_key').checked=o.key!==false; $('f_sol').checked=o.sol!==false; $('f_solq').checked=!!o.solq;
     $('wiz').classList.add('on'); renderLvlChips(); renderTree(); goStep(2); toast(copy?'복제한 학습지를 고쳐요 — 저장할 때 새 이름으로 저장돼요':'학습지를 고쳐요');
   }); }
-function showPrint(i){ const w=wsOf(i); const ids=w.problemIds; needUnits([...new Set(ids.map(id=>(DB.find(p=>p.id===id)||{}).unit).filter(Boolean))],()=>{ $('printbody').innerHTML=sheetHTMLFrom(w); $('pv_title').textContent=w.title; $('pv_assign').onclick=()=>openAssign(i); $('printview').classList.add('on'); km($('printbody')); }); }
-async function delWS(i){ $('wsmenu').classList.remove('on'); const w=WS[i]; if(!w||!confirm(`「${w.title}」 학습지를 삭제할까요?\n(서버에서도 지워지고 되돌릴 수 없어요)`)) return; if(w.id){ try{ await FB.deleteWorksheet(w.id); }catch(e){ toast('삭제 실패: '+e.message); return; } } WS.splice(i,1); renderWS(); toast('삭제했어요'); }
+function showPrint(i){ if(REMOTE&&!DB.length){ whenCore(()=>showPrint(i)); return; } const w=wsOf(i); const ids=w.problemIds; $('pv_assign').style.display=''; needUnits([...new Set(ids.map(id=>(byId(id)||{}).unit).filter(Boolean))],()=>{ $('printbody').innerHTML=sheetHTMLFrom(w); $('pv_title').textContent=w.title; $('pv_assign').onclick=()=>openAssign(i); $('printview').classList.add('on'); km($('printbody')); }); }
+async function delWS(i){ $('wsmenu').classList.remove('on'); const w=WS[i]; if(!w||!confirm(`「${w.title}」 학습지를 삭제할까요?\n(서버에서도 지워지고 되돌릴 수 없어요)`)) return; if(w.id){ try{ await FB.deleteWorksheet(w.id); }catch(e){ toast('삭제 실패: '+e.message); return; } } WS.splice(i,1); renderWS(); wsCachePut(); toast('삭제했어요'); }
 
 // =================== 마법사 ===================
 let step=1, checked=new Set(), SEL=[], curQ=null, color='#5b3fd1', curLvl='', curSubject='', curBook='', srcTab='unit';
 let RATIO={ '하':[70,30,0,0], '중':[20,70,10,0], '상':[0,30,60,10], '최상':[0,10,50,40] };
 const RATIO_DEFAULT=JSON.parse(JSON.stringify(RATIO));
-function openWiz(){ if(REMOTE&&!DB.length){ needLogin(); return; } pendingContinue=false; EDIT=null; $('f_title').value=''; $('wiz').classList.add('on'); curLvl=''; curSubject=''; curBook=''; open.clear(); checked.clear(); SEL=[]; curQ=null; goStep(1); renderLvlChips(); renderTree(); updateSum(); if(ME) $('f_author').value=ME.name; }
+function openWiz(){ if(REMOTE&&!DB.length){ whenCore(openWiz); return; } pendingContinue=false; EDIT=null; $('f_title').value=''; $('wiz').classList.add('on'); curLvl=''; curSubject=''; curBook=''; open.clear(); checked.clear(); SEL=[]; curQ=null; goStep(1); renderLvlChips(); renderTree(); updateSum(); if(ME) $('f_author').value=ME.name; }
 function closeWiz(force){ if(!force&&(SEL.length||checked.size)&&!confirm('편집한 내용이 사라집니다. 닫을까요?')) return; $('wiz').classList.remove('on'); if(!force) EDIT=null; }
 function backToStep1(){ if(!confirm('지금 구성된 시험지는 삭제됩니다. 범위 선택으로 돌아갈까요?')) return; SEL=[]; curQ=null; goStep(1); }
 function goStep(n){
@@ -1331,7 +1375,7 @@ $('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new 
 
 // =================== 메뉴 ===================
 document.querySelectorAll('.nav .menu span[data-v]').forEach(s=>s.onclick=()=>{document.querySelectorAll('.nav .menu span').forEach(x=>x.classList.remove('on'));s.classList.add('on');document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v_'+s.dataset.v)); if(s.dataset.v==='db'){renderDB(); if(!cur&&DB.length)openProblem(DB[0].id);} if(s.dataset.v==='lesson'){ renderStudents(); renderAsg(); } });
-window.addEventListener('DOMContentLoaded',()=>{ const l=localStorage.getItem('wsDiffRatio'); if(l){ try{ RATIO=JSON.parse(l); }catch(e){} } renderWS(); renderDB(); drawRatioBar(); if(REMOTE){ $('wsnote').textContent='로그인하면 문제 데이터를 불러와요.'; setTimeout(()=>{ if(!ME) openLogin(); },1200); } });
+window.addEventListener('DOMContentLoaded',()=>{ const l=localStorage.getItem('wsDiffRatio'); if(l){ try{ RATIO=JSON.parse(l); }catch(e){} } try{ const u=localStorage.getItem('hcs:lastUid'); const c=u&&wsCacheGet(u); if(c&&!ME&&!WS.length){ WS=c; } }catch(e){} renderWS(); renderDB(); drawRatioBar(); if(REMOTE){ $('wsnote').textContent='로그인하면 문제 데이터를 불러와요.'; setTimeout(()=>{ if(!ME) openLogin(); },localStorage.getItem('hcs:lastUid')?3500:1200); } });
 </script>
 </body>
 </html>
