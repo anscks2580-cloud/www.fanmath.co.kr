@@ -587,7 +587,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none!importa
         <div class="s2body" id="s2body"></div>
       </div>
       <div class="dark">
-        <div class="dh">선택한 문제 목록 <small>카드를 누르면 왼쪽에 변형(쉬움·비슷·어려움)·유사 문제가 떠요</small></div>
+        <div class="dh">선택한 문제 목록 <small>카드를 누르면 왼쪽에 변형·유사 문제가 떠요</small></div>
         <div class="dl" id="qlist"></div>
         <div class="df"><button onclick="backToStep1()">이전</button><button onclick="pickProblems(true);renderStep2();toast('다시 뽑았어요')">🔄 다시 뽑기</button><span class="cnt" id="cnt2"></span><button class="pri" onclick="goStep(3)">다음 단계 →</button></div>
       </div>
@@ -809,13 +809,15 @@ function qText(p){
   if(p.choicesFigure) h+=`<img src="${p.choicesFigure}" style="max-width:100%;margin-top:6px;display:block">`;
   return h+'</div>';
 }
-const VN={easy:'쉬운 버전',similar:'비슷한 버전',hard:'어려운 버전'};
+const VN={easy:'쉬운 버전',similar:'비슷한 버전',hard:'어려운 버전','1':'변형'};
 function twTag(p){ return p.parent?`<span class="tag tw">${VN[p.variant]||'변형'}</span>`:''; }
 // 유형 정보: 매쓰플랫 유형명(type) + 세부 유형(교재 유형명)
 function mfOf(p){ const t=TMAP[p.unit+'/'+p.type]; return t?t.mf:p.type; }
 function unitNameOf(p){ const s=SEC_BY_CODE[p.unit]; return s?s.name.replace(/^\d+\s*/,''):(p.unitName||''); }
 function subjectOf(code){ const s=SEC_BY_CODE[code]; return s?s.subject:''; }
 const subjShort=n=>(n||'').replace('(22개정)','');
+// 유사 문제 기준: 둘 다 주제유형(dTopic)이 있으면 같은 유형·주제유형, 아니면 예전처럼 같은 단원·같은 매쓰플랫 유형
+function sameKind(x,b){ return (x.dTopic&&b.dTopic)?(x.dTopic===b.dTopic&&x.dType===b.dType&&x.unit.split('-')[0]===b.unit.split('-')[0]):(x.unit===b.unit&&mfOf(x)===mfOf(b)); }
 function levelOf(p){ return p.level==='중하'?'하':p.level; }
 const diffOf=l=>({'하':1,'중하':2,'중':3,'상':4,'최상':5}[l]||3);
 // 유형별 문항 수(원본/변형)
@@ -993,7 +995,7 @@ function chkToggle(id){ chk(id,!checked.has(id)); }
 // --- 옵션
 function levelSel(){return document.querySelector('#lvBtns button.on').dataset.l;}
 function mode(){return 'both';}
-function variants(){return ['easy','similar','hard'];}
+function variants(){return ['easy','similar','hard','1'];}
 function kindSel(){return document.querySelector('#kindBtns button.on').dataset.k;}
 let USED=new Set(); // 내가 출제했던 문항 id(기존 출제 문제 제외용)
 function pool(){
@@ -1033,10 +1035,10 @@ function pickProblems(force){
     SEL=sortSel([...a,...b]).map(p=>p.id); return; }
   SEL=sortSel(pickFrom(all,n)).map(p=>p.id);
 }
-function sortSel(out){ const lvIdx=p=>LV.indexOf(p.parent?({easy:'하',similar:'중',hard:'상'}[p.variant]||'중'):levelOf(p)); return out.sort((a,b)=>lvIdx(a)-lvIdx(b)||mfOf(a).localeCompare(mfOf(b),'ko')); }
+function sortSel(out){ const lvIdx=p=>LV.indexOf(p.parent?(p.variant==='1'?levelOf(p):({easy:'하',similar:'중',hard:'상'}[p.variant]||'중')):levelOf(p)); return out.sort((a,b)=>lvIdx(a)-lvIdx(b)||mfOf(a).localeCompare(mfOf(b),'ko')); }
 function pickFrom(po,n){ if(!n||!po.length) return [];
   const ratio=RATIO[levelSel()]||[0,100,0,0], even=$('o_even').checked, rnd=$('o_shuffle').checked;
-  const byLv={}; LV.forEach(l=>byLv[l]=[]); po.forEach(p=>{ const l=p.parent?({easy:'하',similar:'중',hard:'상'}[p.variant]||'중'):levelOf(p); (byLv[l]||byLv['중']).push(p); });
+  const byLv={}; LV.forEach(l=>byLv[l]=[]); po.forEach(p=>{ const l=p.parent?(p.variant==='1'?levelOf(p):({easy:'하',similar:'중',hard:'상'}[p.variant]||'중')):levelOf(p); (byLv[l]||byLv['중']).push(p); });
   LV.forEach(l=>{ if(rnd) shuffle(byLv[l]); else byLv[l].sort((a,b)=>a.book.localeCompare(b.book,'ko')||String(a.num).localeCompare(String(b.num),'ko',{numeric:true})); });
   // 목표 수(비율) → 부족하면 이웃 난이도에서 채움
   let want=ratio.map(r=>Math.round(n*r/100)); let diff=n-want.reduce((a,b)=>a+b,0); for(let i=0;diff!==0&&i<4;i++){ const k=ratio.indexOf(Math.max(...ratio)); want[k]+=diff; diff=0; }
@@ -1049,7 +1051,7 @@ function pickFrom(po,n){ if(!n||!po.length) return [];
   return out;
 }
 // --- STEP 2
-function lvOfSel(p){ return p.parent?({easy:'하',similar:'중',hard:'상'}[p.variant]||'중'):levelOf(p); }
+function lvOfSel(p){ return p.parent?(p.variant==='1'?levelOf(p):({easy:'하',similar:'중',hard:'상'}[p.variant]||'중')):levelOf(p); }
 function cardHTML(p,i){ return `<div class="qcard ${curQ===p.id?'on':''}" data-id="${p.id}">
     <div class="qh"><b class="qn">${i+1}</b><span class="ty">${esc(mfOf(p))}</span><span class="sub">${esc(p.type)}</span><span class="mvb"><button data-a="up" title="위로">▲</button><button data-a="dn" title="아래로">▼</button></span></div>
     <div class="qb"><div class="meta"><span class="badge-lv l${LV.indexOf(lvOfSel(p))}">${lvOfSel(p)}</span><span class="badge-lv">${p.kind}</span></div>
@@ -1110,14 +1112,14 @@ function renderS2Left(){
       <table class="qt"><tr><th>번호</th><th>타입</th><th>난이도</th><th>유형명</th><th>세부 유형</th><th>순서</th></tr>${sel.map((p,i)=>`<tr class="${curQ===p.id?'on':''}" onclick="selQ('${p.id}')"><td>${i+1}</td><td>${p.kind}</td><td>${lvOfSel(p)}</td><td>${esc(mfOf(p))}</td><td class="note">${esc(p.type)}</td><td><span class="mv" onclick="event.stopPropagation();mvQ(${i},-1)">▲</span><span class="mv" onclick="event.stopPropagation();mvQ(${i},1)">▼</span></td></tr>`).join('')}</table>`;
   } else if(tab==='twin'){
     const p=DB.find(x=>x.id===curQ);
-    if(!p){ $('s2body').innerHTML='<div class="empty-note">오른쪽 문제 카드를 누르면<br>그 문제의 변형(쉬운·비슷한·어려운 버전)과 유사 문제가 여기에 떠요.</div>'; return; }
+    if(!p){ $('s2body').innerHTML='<div class="empty-note">오른쪽 문제 카드를 누르면<br>그 문제의 변형 문제와 유사 문제가 여기에 떠요.</div>'; return; }
     const base=p.parent?DB.find(x=>x.id===p.parent):p;
-    const fam=DB.filter(x=>x.parent===base.id); const sim=DB.filter(x=>x._full&&x.unit===base.unit&&mfOf(x)===mfOf(base)&&!x.parent&&x.id!==base.id);
+    const fam=DB.filter(x=>x.parent===base.id); const sim=DB.filter(x=>x._full&&sameKind(x,base)&&!x.parent&&x.id!==base.id);
     const idx=SEL.indexOf(p.id)+1;
     $('s2body').innerHTML=`<div class="twinlist"><div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><b style="font-size:17px">${idx}번 변형 · 유사문제</b><span style="color:var(--sub);font-size:14px">문제를 교체하거나, 추가할 수 있어요.</span></div>
       ${p.parent?`<div class="tcard" style="border-color:var(--p3)"><div class="qh"><b>원본</b>${esc(base.type)}<div class="acts"><span onclick="replaceQ('${p.id}','${base.id}')">⇄ 원본으로 교체</span><span class="${SEL.includes(base.id)?'added':''}" onclick="addQ('${base.id}')">${SEL.includes(base.id)?'✓ 추가됨':'＋ 추가'}</span></div></div><div class="qb"><div class="meta"><span class="badge-lv">${lvOfSel(base)}</span></div><div style="flex:1">${qK(base)}</div></div></div>`:''}
-      ${twinGroup(p,fam,'easy','쉬운 버전','(수치 단순화·조건 완화)')}${twinGroup(p,fam,'similar','비슷한 버전','(숫자·조건만 바꾼 쌍둥이)')}${twinGroup(p,fam,'hard','어려운 버전','(조건 추가·결합)')}
-      <h5>● 유사 문제 <span style="color:var(--sub);font-weight:400">(같은 유형의 다른 교재 문항 ${sim.length})</span></h5>${sim.length?sim.slice(0,30).map((t,j)=>tcard(p,t,j)).join(''):'<div class="empty-note" style="padding:14px">같은 유형의 다른 문항이 없어요.</div>'}</div>`;
+      ${twinGroup(p,fam,'1','변형 문제','(같은 난이도 · 수치만 바꾼 문제)')}
+      <h5>● 유사 문제</h5>${sim.length?sim.slice(0,30).map((t,j)=>tcard(p,t,j)).join(''):'<div class="empty-note" style="padding:14px">같은 유형의 다른 문항이 없어요.</div>'}</div>`;
   } else renderAddTab();
 }
 // 새 문제 추가 — 범위 선택과 같은 「초·중·고 → 과목 → 대·중·소단원 → 유형」 트리에서 고름
@@ -1151,7 +1153,7 @@ function adTog(id){ AD.open.has(id)?AD.open.delete(id):AD.open.add(id); renderAd
 function adPick(id){ AD.node=AD.node===id?'':id; AD.open.add(id); renderAddTab(); }
 function tcard(p,t,j){ return `<div class="tcard"><div class="qh"><b>${j+1}</b><span style="color:var(--acc);font-weight:600">${esc(mfOf(t))}</span><span class="note">${esc(t.type)}</span><span class="badge-lv l${LV.indexOf(lvOfSel(t))}" style="margin-left:4px">${lvOfSel(t)}</span><div class="acts">${p?`<span onclick="replaceQ('${p.id}','${t.id}')">⇄ 교체</span>`:''}<span class="${SEL.includes(t.id)?'added':''}" onclick="addQ('${t.id}')">${SEL.includes(t.id)?'✓ 추가됨':'＋ 추가'}</span></div></div>
   <div class="qb"><div class="meta"><span class="badge-lv">${t.kind}</span></div><div style="flex:1">${qK(t)}</div>${t.figure?`<img src="${t.figure}" style="max-width:90px">`:''}</div></div>`; }
-function twinGroup(p,fam,v,title,desc){ const l=fam.filter(x=>x.variant===v&&x.id!==p.id); return `<h5>● ${title} <span style="color:var(--sub);font-weight:400">${desc}</span></h5>${l.length?l.map((t,j)=>tcard(p,t,j)).join(''):'<div class="empty-note" style="padding:14px">아직 없어요.</div>'}`; }
+function twinGroup(p,fam,v,title,desc){ const l=fam.filter(x=>x.variant===v&&x.id!==p.id); if(!l.length) return ''; return `<h5>● ${title} <span style="color:var(--sub);font-weight:400">${desc}</span></h5>${l.length?l.map((t,j)=>tcard(p,t,j)).join(''):'<div class="empty-note" style="padding:14px">아직 없어요.</div>'}`; }
 function addQ(id){ if(SEL.includes(id)) return; SEL.push(id); const p=byId(id); if(p){ const d=document.createElement('div'); d.innerHTML=cardHTML(p,SEL.length-1); const c=d.firstElementChild; c.classList.add('newin'); $('qlist').appendChild(c); } s2Footer(); renderS2Left(); toast('추가했어요'); }
 function replaceQ(oldId,newId){ const i=SEL.indexOf(oldId); if(i>=0){ SEL[i]=newId; curQ=newId; } renderStep2(); }
 // --- STEP 3
@@ -1330,7 +1332,7 @@ function makeWrongSheet(){
   needUnits([...new Set(ids.map(id=>(DB.find(p=>p.id===id)||{}).unit).filter(Boolean))],()=>{
     const out=[];
     ids.forEach(id=>{ const p=DB.find(x=>x.id===id); if(!p) return; const base=p.parent?DB.find(x=>x.id===p.parent)||p:p;
-      const fam=DB.filter(x=>x.parent===base.id&&x.variant==='similar'); const sim=DB.filter(x=>x.unit===base.unit&&mfOf(x)===mfOf(base)&&!x.parent&&x.id!==base.id&&!ids.includes(x.id));
+      const fam=DB.filter(x=>x.parent===base.id&&(x.variant==='similar'||x.variant==='1')); const sim=DB.filter(x=>sameKind(x,base)&&!x.parent&&x.id!==base.id&&!ids.includes(x.id));
       const pick=fam[0]||shuffle(sim)[0]||base; out.push(pick.id); const more=shuffle(sim.filter(x=>x.id!==pick.id))[0]; if(more) out.push(more.id); });
     SEL=[...new Set(out)]; curSubject=subjectOf((DB.find(x=>x.id===SEL[0])||{}).unit)||curSubject; curLvl=lvlOf(curSubject);
     closeGrade(); $('wiz').classList.add('on'); renderLvlChips(); renderTree(); goStep(2);
