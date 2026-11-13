@@ -909,10 +909,11 @@ async function delWS(i){ $('wsmenu').classList.remove('on'); const w=WS[i]; if(!
 let step=1, checked=new Set(), SEL=[], curQ=null, color='#5b3fd1', curLvl='', curSubject='', curBook='', srcTab='unit';
 let RATIO={ '하':[70,30,0,0], '중':[20,70,10,0], '상':[0,30,60,10], '최상':[0,10,50,40] };
 const RATIO_DEFAULT=JSON.parse(JSON.stringify(RATIO));
-function openWiz(){ if(REMOTE&&!DB.length){ whenCore(openWiz); return; } pendingContinue=false; EDIT=null; $('f_title').value=''; $('wiz').classList.add('on'); curLvl=''; curSubject=''; curBook=''; open.clear(); checked.clear(); SEL=[]; curQ=null; goStep(1); renderLvlChips(); renderTree(); updateSum(); if(ME) $('f_author').value=ME.name; }
+function openWiz(){ if(REMOTE&&!DB.length){ if(needLogin()) return; loadCore().then(()=>{ if($('wiz').classList.contains('on')&&step===1){ renderLvlChips(); renderTree(); updateSum(); } }).catch(e=>toast('문제 데이터를 못 받았어요: '+e.message)); } pendingContinue=false; EDIT=null; $('f_title').value=''; $('wiz').classList.add('on'); curLvl=''; curSubject=''; curBook=''; open.clear(); checked.clear(); SEL=[]; curQ=null; goStep(1); renderLvlChips(); renderTree(); updateSum(); if(ME) $('f_author').value=ME.name; }
 function closeWiz(force){ if(!force&&(SEL.length||checked.size)&&!confirm('편집한 내용이 사라집니다. 닫을까요?')) return; $('wiz').classList.remove('on'); if(!force) EDIT=null; }
 function backToStep1(){ if(!confirm('지금 구성된 시험지는 삭제됩니다. 범위 선택으로 돌아갈까요?')) return; SEL=[]; curQ=null; goStep(1); }
 function goStep(n){
+  if(n>=2&&REMOTE&&!DB.length) return whenCore(()=>goStep(n));
   if(n>=2){ const us=[...new Set([...checked].map(unitOfType))].concat(SEL.map(id=>(DB.find(p=>p.id===id)||{}).unit).filter(Boolean)); if(us.some(u=>(FILES[u]||[]).some(f=>!LOADED.has(f)))) return needUnits(us,()=>goStep(n)); }
   step=n; [1,2,3].forEach(i=>{$('p'+i).classList.toggle('on',i===n);$('i'+i).classList.toggle('on',i===n);});
   $('w_step').textContent='STEP '+n; $('w_title').textContent=['','학습지 종류 및 범위 선택','학습지 상세 편집','학습지 설정'][n];
@@ -1005,6 +1006,7 @@ function pool(){
     &&(p.parent ? (m!=='orig'&&vs.includes(p.variant)) : (m!=='var')));
 }
 function updateSum(){
+  try{ if(checked.size) needUnits([...new Set([...checked].map(unitOfType))].filter(Boolean),null,true); }catch(e){}
   const po=pool(), n=Math.min(po.length,+$('cnt').value||0);
   $('sumN').textContent=n; $('sumT').textContent=new Set(po.map(p=>p.type)).size; $('to2').disabled=!n; SEL=[];
   const want=+$('cnt').value||0, fresh=$('o_exclude').checked?po.filter(p=>!USED.has(p.id)).length:po.length;
