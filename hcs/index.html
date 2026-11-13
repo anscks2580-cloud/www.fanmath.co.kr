@@ -755,16 +755,17 @@ function applyData(){
   DB=(window.IDX||[]); UNITS=(window.UNITS_||[]); FILES=(window.FILES_||{}); MFT=(window.MF_&&MF_.tree)||[]; TMAP=(window.MF_&&MF_.map)||{};
   SECS=UNITS.flatMap(b=>b.ch.map(c=>({...c,subject:b.name}))).flatMap(c=>c.sec.map(s=>({...s,chName:c.name,subject:c.subject})));
   SEC_BY_CODE=Object.fromEntries(SECS.map(s=>[s.code,s]));
-  buildCnt(); BYID=new Map(DB.map(p=>[p.id,p]));
+  buildCnt();
 }
 const runJS=txt=>{ (new Function(txt))(); };
+const idle=()=>new Promise(r=>(window.requestIdleCallback?requestIdleCallback(()=>r(),{timeout:300}):setTimeout(r,16)));
 let CORE=null;
 function loadCore(){ if(!REMOTE||DB.length) return Promise.resolve(); if(CORE) return CORE;
-  return CORE=(async()=>{ const [a,b]=await Promise.all([FB.getText('색인.js'),FB.getText('유형.js')]); runJS(a); runJS(b); applyData(); renderDB(); })().catch(e=>{ CORE=null; throw e; }); }
+  return CORE=(async()=>{ const [a,b]=await Promise.all([FB.getText('색인.js'),FB.getText('유형.js')]); await idle(); runJS(a); await idle(); runJS(b); await idle(); applyData(); await idle(); renderDB(); if($('wiz').classList.contains('on')&&step===1){ renderLvlChips(); renderTree(); updateSum(); } })().catch(e=>{ CORE=null; throw e; }); }
 // 문제 데이터가 필요한 동작(만들기·수정·미리보기)은 데이터가 올 때까지 잠깐 기다렸다가 실행
 function whenCore(cb){ if(!REMOTE||DB.length) return cb(); if(needLogin()) return; busy(true); loadCore().then(()=>{ busy(false); cb(); },e=>{ busy(false); toast('문제 데이터를 못 받았어요: '+e.message); }); }
 const LOADED = new Set(), LOADING = {};
-window.LOAD_UNIT = function(arr){ arr.forEach(q=>{ const p=BYID.get(q.id); if(p) Object.assign(p,q,{_full:1}); else { const n=Object.assign(q,{_full:1}); DB.push(n); BYID.set(n.id,n); } }); };
+window.LOAD_UNIT = function(arr){ arr.forEach(q=>{ const p=BYID.get(q.id); if(p) Object.assign(p,q,{_full:1}); else { const n=Object.assign(q,{_full:1}); DB.push(n); BYID.set(n.id,n); if(n.parent){ const a=KIDS.get(n.parent); a?a.push(n):KIDS.set(n.parent,[n]); } } }); };
 function loadFile(f){ if(LOADED.has(f)) return Promise.resolve(); if(LOADING[f]) return LOADING[f];
   if(REMOTE) return LOADING[f]=FB.getText(f).then(t=>{ runJS(t); LOADED.add(f); }).catch(e=>{ console.warn(e); toast('불러오기 실패: '+f); });
   return LOADING[f]=new Promise(res=>{ const sc=document.createElement('script'); sc.src='데이터/'+f; sc.onload=()=>{LOADED.add(f);res();}; sc.onerror=()=>{toast('불러오기 실패: '+f);res();}; document.head.appendChild(sc); }); }
@@ -785,7 +786,7 @@ function kHTML(key,html){ let v=KC.get(key); if(v!==undefined) return v; const d
 const qK=p=>kHTML('q:'+p.id+':'+(p._full?1:0),qText(p));
 const aK=s=>kHTML('a:'+s,esc(s));
 const solK=p=>kHTML('s:'+p.id,solHTML(esc(p.solution)));
-let BYID=new Map(); const byId=id=>BYID.get(id);
+let BYID=new Map(), KIDS=new Map(); const byId=id=>BYID.get(id); const kidsOf=id=>KIDS.get(id)||[];
 function km(el){ if(window.renderMathInElement) renderMathInElement(el,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false}); }
 function toast(m){const d=document.createElement('div');d.className='toast';d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),1900);}
 window.toast=toast;
@@ -822,7 +823,7 @@ function levelOf(p){ return p.level==='중하'?'하':p.level; }
 const diffOf=l=>({'하':1,'중하':2,'중':3,'상':4,'최상':5}[l]||3);
 // 유형별 문항 수(원본/변형)
 const CNT={};
-function buildCnt(){ for(const k in CNT) delete CNT[k]; DB.forEach(p=>{ const k=p.unit+'/'+p.type; const c=CNT[k]||(CNT[k]={o:0,v:0,books:{}}); if(p.parent)c.v++; else{c.o++; const b=p.book.split(' (')[0]; c.books[b]=(c.books[b]||0)+1;} }); }
+function buildCnt(){ for(const k in CNT) delete CNT[k]; BYID=new Map(); KIDS=new Map(); DB.forEach(p=>{ BYID.set(p.id,p); if(p.parent){ const a=KIDS.get(p.parent); a?a.push(p):KIDS.set(p.parent,[p]); } const k=p.unit+'/'+p.type; const c=CNT[k]||(CNT[k]={o:0,v:0,books:{}}); if(p.parent)c.v++; else{c.o++; const b=p.book.split(' (')[0]; c.books[b]=(c.books[b]||0)+1;} }); }
 applyData();
 
 // =================== 로그인 ===================
@@ -836,7 +837,7 @@ window.onLogin=async function(me){
   try{ localStorage.setItem('hcs:lastUid',me.uid); }catch(e){}
   if(!WS.some(w=>w.id)){ const c=wsCacheGet(me.uid); if(c){ WS=c.concat(WS.filter(w=>!w.id)); renderWS(); } }
   const pW=loadWorksheets();
-  if(REMOTE) loadCore().catch(e=>{ console.warn(e); toast('문제 데이터를 못 받았어요: '+e.message); });
+  if(REMOTE) setTimeout(()=>loadCore().catch(e=>{ console.warn(e); toast('문제 데이터를 못 받았어요: '+e.message); }),400);
   const pS=FB.students(me).then(l=>{ STUDENTS=l.sort((a,b)=>(a.name||'').localeCompare(b.name||'','ko')); renderStudents(); }).catch(e=>{ console.warn(e); toast('학생 목록 오류: '+e.message); });
   await Promise.all([pW,pS,loadAssignments()]); renderAsg();
 };
@@ -909,12 +910,12 @@ async function delWS(i){ $('wsmenu').classList.remove('on'); const w=WS[i]; if(!
 let step=1, checked=new Set(), SEL=[], curQ=null, color='#5b3fd1', curLvl='', curSubject='', curBook='', srcTab='unit';
 let RATIO={ '하':[70,30,0,0], '중':[20,70,10,0], '상':[0,30,60,10], '최상':[0,10,50,40] };
 const RATIO_DEFAULT=JSON.parse(JSON.stringify(RATIO));
-function openWiz(){ if(REMOTE&&!DB.length){ if(needLogin()) return; loadCore().then(()=>{ if($('wiz').classList.contains('on')&&step===1){ renderLvlChips(); renderTree(); updateSum(); } }).catch(e=>toast('문제 데이터를 못 받았어요: '+e.message)); } pendingContinue=false; EDIT=null; $('f_title').value=''; $('wiz').classList.add('on'); curLvl=''; curSubject=''; curBook=''; open.clear(); checked.clear(); SEL=[]; curQ=null; goStep(1); renderLvlChips(); renderTree(); updateSum(); if(ME) $('f_author').value=ME.name; }
+function openWiz(){ if(REMOTE&&!DB.length){ if(needLogin()) return; loadCore().catch(e=>toast('문제 데이터를 못 받았어요: '+e.message)); } pendingContinue=false; EDIT=null; $('f_title').value=''; $('wiz').classList.add('on'); curLvl=''; curSubject=''; curBook=''; open.clear(); checked.clear(); SEL=[]; curQ=null; goStep(1); renderLvlChips(); renderTree(); updateSum(); if(ME) $('f_author').value=ME.name; }
 function closeWiz(force){ if(!force&&(SEL.length||checked.size)&&!confirm('편집한 내용이 사라집니다. 닫을까요?')) return; $('wiz').classList.remove('on'); if(!force) EDIT=null; }
 function backToStep1(){ if(!confirm('지금 구성된 시험지는 삭제됩니다. 범위 선택으로 돌아갈까요?')) return; SEL=[]; curQ=null; goStep(1); }
 function goStep(n){
   if(n>=2&&REMOTE&&!DB.length) return whenCore(()=>goStep(n));
-  if(n>=2){ const us=[...new Set([...checked].map(unitOfType))].concat(SEL.map(id=>(DB.find(p=>p.id===id)||{}).unit).filter(Boolean)); if(us.some(u=>(FILES[u]||[]).some(f=>!LOADED.has(f)))) return needUnits(us,()=>goStep(n)); }
+  if(n>=2){ const us=[...new Set([...checked].map(unitOfType))].concat(SEL.map(id=>(byId(id)||{}).unit).filter(Boolean)); if(us.some(u=>(FILES[u]||[]).some(f=>!LOADED.has(f)))) return needUnits(us,()=>goStep(n)); }
   step=n; [1,2,3].forEach(i=>{$('p'+i).classList.toggle('on',i===n);$('i'+i).classList.toggle('on',i===n);});
   $('w_step').textContent='STEP '+n; $('w_title').textContent=['','학습지 종류 및 범위 선택','학습지 상세 편집','학습지 설정'][n];
   if(n===2){ if(!SEL.length) pickProblems(); renderStep2(); }
@@ -1113,10 +1114,10 @@ function renderS2Left(){
       <div class="bars">${lv.map(([l,n])=>`<div>${n}문제<i style="height:${Math.round(n/mx*80)+4}px"></i>${l}</div>`).join('')}</div></div>
       <table class="qt"><tr><th>번호</th><th>타입</th><th>난이도</th><th>유형명</th><th>세부 유형</th><th>순서</th></tr>${sel.map((p,i)=>`<tr class="${curQ===p.id?'on':''}" onclick="selQ('${p.id}')"><td>${i+1}</td><td>${p.kind}</td><td>${lvOfSel(p)}</td><td>${esc(mfOf(p))}</td><td class="note">${esc(p.type)}</td><td><span class="mv" onclick="event.stopPropagation();mvQ(${i},-1)">▲</span><span class="mv" onclick="event.stopPropagation();mvQ(${i},1)">▼</span></td></tr>`).join('')}</table>`;
   } else if(tab==='twin'){
-    const p=DB.find(x=>x.id===curQ);
+    const p=byId(curQ);
     if(!p){ $('s2body').innerHTML='<div class="empty-note">오른쪽 문제 카드를 누르면<br>그 문제의 변형 문제와 유사 문제가 여기에 떠요.</div>'; return; }
-    const base=p.parent?DB.find(x=>x.id===p.parent):p;
-    const fam=DB.filter(x=>x.parent===base.id); const sim=DB.filter(x=>x._full&&sameKind(x,base)&&!x.parent&&x.id!==base.id);
+    const base=p.parent?byId(p.parent):p;
+    const fam=kidsOf(base.id); const sim=DB.filter(x=>x._full&&sameKind(x,base)&&!x.parent&&x.id!==base.id);
     const idx=SEL.indexOf(p.id)+1;
     $('s2body').innerHTML=`<div class="twinlist"><div style="display:flex;align-items:center;gap:10px;margin-bottom:14px"><b style="font-size:17px">${idx}번 변형 · 유사문제</b><span style="color:var(--sub);font-size:14px">문제를 교체하거나, 추가할 수 있어요.</span></div>
       ${p.parent?`<div class="tcard" style="border-color:var(--p3)"><div class="qh"><b>원본</b>${esc(base.type)}<div class="acts"><span onclick="replaceQ('${p.id}','${base.id}')">⇄ 원본으로 교체</span><span class="${SEL.includes(base.id)?'added':''}" onclick="addQ('${base.id}')">${SEL.includes(base.id)?'✓ 추가됨':'＋ 추가'}</span></div></div><div class="qb"><div class="meta"><span class="badge-lv">${lvOfSel(base)}</span></div><div style="flex:1">${qK(base)}</div></div></div>`:''}
@@ -1315,7 +1316,7 @@ function rowAll(ri,v){ const r=G.rows[ri]; const N=G.test.questionCount; r.wrong
 function rowAbsent(ri){ const r=G.rows[ri]; r.absent=!r.absent; if(r.absent){ r.wrong.clear(); r.graded=true; } renderGrade(); }
 function gradeAll(v){ G.rows.forEach((r,i)=>{ if(!r.absent) rowAll(i,v); }); renderGrade(); }
 let gSel=0;
-function showGProb(n){ gSel=n; const id=(G.test.problemIds||[])[n-1]; const p=DB.find(x=>x.id===id); const el=$('gprev'); el.style.display='block'; el.className='card gprev';
+function showGProb(n){ gSel=n; const id=(G.test.problemIds||[])[n-1]; const p=byId(id); const el=$('gprev'); el.style.display='block'; el.className='card gprev';
   if(!p){ el.innerHTML='<div class="note">문제를 찾을 수 없어요.</div>'; renderGrade(); return; }
   if(!p._full) return needUnits([p.unit],()=>showGProb(n));
   el.innerHTML=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span class="tag mf" style="font-size:14px;padding:4px 10px">${n}번 문제</span><span class="note">${esc(mfOf(p))} · ${lvOfSel(p)}</span><button class="sm ghost" style="margin-left:auto" onclick="$('gprev').style.display='none';gSel=0;renderGrade()">✕</button></div><div class="qtext">${qText(p)}</div>${p.figure?`<img src="${p.figure}" style="max-width:100%;margin-top:8px">`:''}<div class="ans">정답 ${esc(p.answer)}</div>`;
@@ -1331,12 +1332,12 @@ function makeWrongSheet(){
   const who=cand.length===1?cand[0]:cand[+prompt(`누구의 오답학습지를 만들까요?\n${cand.map((r,i)=>`${i+1}. ${r.res.studentName} (오답 ${r.wrong.size})`).join('\n')}\n번호를 넣어 주세요`,'1')-1];
   if(!who) return;
   const ids=[...who.wrong].sort((a,b)=>a-b).map(n=>(t.problemIds||[])[n-1]).filter(Boolean);
-  needUnits([...new Set(ids.map(id=>(DB.find(p=>p.id===id)||{}).unit).filter(Boolean))],()=>{
+  needUnits([...new Set(ids.map(id=>(byId(id)||{}).unit).filter(Boolean))],()=>{
     const out=[];
-    ids.forEach(id=>{ const p=DB.find(x=>x.id===id); if(!p) return; const base=p.parent?DB.find(x=>x.id===p.parent)||p:p;
-      const fam=DB.filter(x=>x.parent===base.id&&(x.variant==='similar'||x.variant==='1')); const sim=DB.filter(x=>sameKind(x,base)&&!x.parent&&x.id!==base.id&&!ids.includes(x.id));
+    ids.forEach(id=>{ const p=byId(id); if(!p) return; const base=p.parent?byId(p.parent)||p:p;
+      const fam=kidsOf(base.id).filter(x=>x.variant==='similar'||x.variant==='1'); const sim=DB.filter(x=>sameKind(x,base)&&!x.parent&&x.id!==base.id&&!ids.includes(x.id));
       const pick=fam[0]||shuffle(sim)[0]||base; out.push(pick.id); const more=shuffle(sim.filter(x=>x.id!==pick.id))[0]; if(more) out.push(more.id); });
-    SEL=[...new Set(out)]; curSubject=subjectOf((DB.find(x=>x.id===SEL[0])||{}).unit)||curSubject; curLvl=lvlOf(curSubject);
+    SEL=[...new Set(out)]; curSubject=subjectOf((byId(SEL[0])||{}).unit)||curSubject; curLvl=lvlOf(curSubject);
     closeGrade(); $('wiz').classList.add('on'); renderLvlChips(); renderTree(); goStep(2);
     $('f_title').value=`[오답] ${who.res.studentName} · ${t.title}`; $('f_sub').value=`${who.res.studentGrade||''} ${who.res.classGroup||''}`.trim(); document.querySelectorAll('#tagRow .chip').forEach(c=>c.classList.toggle('on',c.textContent==='오답'));
     toast(`오답 ${who.wrong.size}문제의 변형·유사 ${SEL.length}문제로 구성했어요`);
@@ -1349,33 +1350,33 @@ const F=['num','source','book','page','unit','type','level','kind','answer','par
 function bookShort(b){ return (b||'').replace(' (22개정)','').replace('세쌍둥이 ','세쌍둥이·'); }
 function whereLabel(p){
   const un=unitNameOf(p); let n=p.num||'';
-  if(p.parent){ const b=DB.find(x=>x.id===p.parent); return b?`${bookShort(b.book)} ${b.num} 의 ${VN[p.variant]||'변형'}`:'변형'; }
+  if(p.parent){ const b=byId(p.parent); return b?`${bookShort(b.book)} ${b.num} 의 ${VN[p.variant]||'변형'}`:'변형'; }
   return `${bookShort(p.book)}${p.page?' p.'+p.page:''} · ${n}${un?' · '+un:''}`;
 }
 function renderDB(){
   const fb=$('f_book').value, fu=$('f_unit').value, fv=$('f_var').value, q=($('f_q').value||'').trim().toLowerCase();
-  const books=[...new Set(DB.filter(p=>!p.parent).map(p=>p.book))];
-  if($('f_book').options.length!==books.length+1){ $('f_book').innerHTML='<option value="">모든 교재</option>'+books.map(b=>`<option value="${esc(b)}" ${b===fb?'selected':''}>${esc(bookShort(b))} (${DB.filter(p=>p.book===b).length})</option>`).join(''); }
+  const BC=new Map(); DB.forEach(p=>{ if(!p.parent) BC.set(p.book,(BC.get(p.book)||0)+1); }); const books=[...BC.keys()];
+  if($('f_book').options.length!==books.length+1){ $('f_book').innerHTML='<option value="">모든 교재</option>'+books.map(b=>`<option value="${esc(b)}" ${b===fb?'selected':''}>${esc(bookShort(b))} (${BC.get(b)})</option>`).join(''); }
   if($('f_unit').options.length!==SECS.length+1){ $('f_unit').innerHTML='<option value="">모든 단원</option>'+SECS.map(s=>`<option value="${s.code}" ${s.code===fu?'selected':''}>${s.code} ${s.name}</option>`).join(''); }
-  const hit=p=>{ const b=p.parent?DB.find(x=>x.id===p.parent):p; if(!b) return false; if(fb&&b.book!==fb)return false; if(fu&&p.unit!==fu)return false; if(fv==='orig'&&p.parent)return false; if(fv==='twin'&&!p.parent)return false; if(q&&!((p.num+' '+p.type+' '+mfOf(p)+' '+(p.body||'')).toLowerCase().includes(q)))return false; return true; };
-  const sorted=[...DB.filter(p=>!p.parent)].flatMap(p=>[p,...DB.filter(t=>t.parent===p.id)]).filter(hit);
+  const hit=p=>{ const b=p.parent?byId(p.parent):p; if(!b) return false; if(fb&&b.book!==fb)return false; if(fu&&p.unit!==fu)return false; if(fv==='orig'&&p.parent)return false; if(fv==='twin'&&!p.parent)return false; if(q&&!((p.num+' '+p.type+' '+mfOf(p)+' '+(p.body||'')).toLowerCase().includes(q)))return false; return true; };
+  const sorted=DB.filter(p=>!p.parent).flatMap(p=>[p,...kidsOf(p.id)]).filter(hit);
   $('f_cnt').textContent=sorted.length+'문항';
   $('dblist').innerHTML=sorted.slice(0,400).map(p=>`<div class="item ${p.parent?'twin':''} ${cur&&cur.id===p.id?'on':''}" onclick="openProblem('${p.id}')"><b>${esc(p.num)}</b> <span class="tag mf">${esc(mfOf(p))}</span><span class="tag">${p.level}</span>${twTag(p)}<div style="font-size:12px;color:var(--sub);margin-top:2px">${esc(whereLabel(p))} · 세부: ${esc(p.type)}</div><div class="t">${p._full?esc(plain(p.body)):'<span style="color:#bbb">(단원을 고르거나 눌러서 불러오기)</span>'}</div></div>`).join('')+(sorted.length>400?`<div class="empty-note">${sorted.length-400}문항 더 있음 — 교재·단원·검색으로 좁혀 주세요.</div>`:'');
   $('e_unit').innerHTML=SECS.map(s=>`<option value="${s.code}" ${cur&&cur.unit===s.code?'selected':''}>${s.code} ${s.name}</option>`).join('');
-  $('typeList').innerHTML=[...new Set(DB.map(p=>p.type))].map(t=>`<option value="${esc(t)}">`).join('');
+  if(!renderDB._t||renderDB._n!==DB.length){ renderDB._n=DB.length; renderDB._t=1; $('typeList').innerHTML=[...new Set(DB.map(p=>p.type))].map(t=>`<option value="${esc(t)}">`).join(''); }
 }
-function openProblem(id){ const c0=DB.find(p=>p.id===id); if(!c0)return; if(!c0._full&&(FILES[c0.unit]||[]).length) return needUnits([c0.unit],()=>openProblem(id)); cur=c0; renderDB(); F.forEach(k=>$('e_'+k).value=cur[k]||''); $('e_choices').value=(cur.choices||[]).join('\n'); $('figstat').textContent=cur.figure?'그림 있음':'그림 없음'; preview(); }
+function openProblem(id){ const c0=byId(id); if(!c0)return; if(!c0._full&&(FILES[c0.unit]||[]).length) return needUnits([c0.unit],()=>openProblem(id)); cur=c0; renderDB(); F.forEach(k=>$('e_'+k).value=cur[k]||''); $('e_choices').value=(cur.choices||[]).join('\n'); $('figstat').textContent=cur.figure?'그림 있음':'그림 없음'; preview(); }
 function readForm(){ const o={}; F.forEach(k=>o[k]=$('e_'+k).value.trim()); o.choices=$('e_choices').value.split('\n').map(s=>s.trim()).filter(Boolean); return o; }
 function preview(){ if(!cur)return; const p={...cur,...readForm()}; $('pv').innerHTML=`<div><b style="color:var(--acc)">${esc(p.num)}</b> <span class="tag mf">${esc(mfOf(p))}</span><span class="tag">${esc(p.type)}</span><span class="tag">${p.level}</span></div><div style="display:flex;gap:10px;margin-top:6px"><div style="flex:1">${qText(p)}</div>${p.figure?`<img src="${p.figure}" style="max-width:130px">`:''}</div><div class="ans">정답 ${esc(p.answer)}</div><div class="solbox">${solHTML(esc(p.solution))}</div>`; km($('pv')); }
 document.querySelectorAll('#v_db input,#v_db textarea,#v_db select').forEach(el=>el.addEventListener('input',preview));
 function saveProblem(){ if(!cur)return; Object.assign(cur,readForm()); buildCnt(); renderDB(); toast('저장됨(이 화면 안에서만)'); }
 function newProblem(){ const id='NEW-'+Date.now(); DB.push({id,source:'자체제작',book:'자체제작',page:'',num:'N'+String(DB.length+1).padStart(3,'0'),unit:SECS[0].code,type:'',level:'중',kind:'객관식',body:'',choices:[],answer:'',figure:'',solution:'',parent:'',_full:1}); openProblem(id); }
-function addTwin(v){ if(!cur)return; saveProblem(); const base=cur.parent?DB.find(p=>p.id===cur.parent):cur; const n=DB.filter(p=>p.parent===base.id).length+1; const t=JSON.parse(JSON.stringify(base)); t.id=base.id+'-'+v.toUpperCase()[0]+n; t.num=base.num+'-'+{easy:'E',similar:'S',hard:'H'}[v]+n; t.parent=base.id; t.variant=v; t.source='자체제작'; t.book='자체제작'; DB.push(t); buildCnt(); openProblem(t.id); toast('원본이 복사됐어요. 내용을 고쳐서 저장하세요.'); }
+function addTwin(v){ if(!cur)return; saveProblem(); const base=cur.parent?byId(cur.parent):cur; const n=kidsOf(base.id).length+1; const t=JSON.parse(JSON.stringify(base)); t.id=base.id+'-'+v.toUpperCase()[0]+n; t.num=base.num+'-'+{easy:'E',similar:'S',hard:'H'}[v]+n; t.parent=base.id; t.variant=v; t.source='자체제작'; t.book='자체제작'; DB.push(t); buildCnt(); openProblem(t.id); toast('원본이 복사됐어요. 내용을 고쳐서 저장하세요.'); }
 function delProblem(){ if(!cur||!confirm('삭제할까요?'))return; DB=DB.filter(p=>p.id!==cur.id&&p.parent!==cur.id); cur=null; $('pv').innerHTML=''; buildCnt(); renderDB(); }
 $('e_figfile').onchange=e=>{const f=e.target.files[0];if(!f||!cur)return;const r=new FileReader();r.onload=()=>{cur.figure=r.result;$('figstat').textContent='그림 있음';preview();};r.readAsDataURL(f);};
 function clearFig(){ if(cur){cur.figure='';$('figstat').textContent='그림 없음';preview();} }
 function exportJSON(){ if(DB.some(p=>!p._full)) toast('불러온 단원만 내보내요'); const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([JSON.stringify(DB.filter(p=>p._full).map(({_full,...p})=>p),null,1)],{type:'application/json'})); a.download='문항DB.json'; a.click(); }
-$('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const arr=JSON.parse(r.result);let n=0;arr.forEach(p=>{if(!DB.find(x=>x.id===p.id)){DB.push(Object.assign(p,{_full:1}));n++;}});buildCnt();renderDB();toast(n+'문항 추가됨');}catch(err){alert('JSON 형식 오류');}};r.readAsText(f);};
+$('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const arr=JSON.parse(r.result);let n=0;arr.forEach(p=>{if(!byId(p.id)){DB.push(Object.assign(p,{_full:1}));n++;}});buildCnt();renderDB();toast(n+'문항 추가됨');}catch(err){alert('JSON 형식 오류');}};r.readAsText(f);};
 
 // =================== 메뉴 ===================
 document.querySelectorAll('.nav .menu span[data-v]').forEach(s=>s.onclick=()=>{document.querySelectorAll('.nav .menu span').forEach(x=>x.classList.remove('on'));s.classList.add('on');document.querySelectorAll('.view').forEach(v=>v.classList.toggle('on',v.id==='v_'+s.dataset.v)); if(s.dataset.v==='db'){renderDB(); if(!cur&&DB.length)openProblem(DB[0].id);} if(s.dataset.v==='lesson'){ renderStudents(); renderAsg(); } });
