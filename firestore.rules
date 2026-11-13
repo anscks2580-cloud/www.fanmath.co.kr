@@ -507,6 +507,30 @@ service cloud.firestore {
       allow delete: if true;
     }
 
+    // ── examScores: 학교 시험 점수 (teacher.html "시험 점수 입력") — 문서 id: 시험키_학생id
+    // 선생님은 지금 본인 담당 학생(students.teacherUid == 나)의 점수만 입력·수정, 본인이 입력한 것만 조회. 관리자는 전체 ──
+    match /examScores/{docId} {
+      allow read: if isAdmin() || (isTeacher() && resource.data.teacherUid == request.auth.uid);
+      allow create, update: if isAdmin() || (isTeacher()
+        && request.resource.data.teacherUid == request.auth.uid
+        && request.resource.data.studentId is string
+        && get(/databases/$(database)/documents/students/$(request.resource.data.studentId)).data.teacherUid == request.auth.uid
+        && request.resource.data.status in ['응시', '미응시', '해당없음']
+        && (request.resource.data.score == null
+            || ((request.resource.data.score is int || request.resource.data.score is float)
+                && request.resource.data.score >= 0 && request.resource.data.score <= 100)));
+      allow delete: if isAdmin() || (isTeacher() && resource.data.teacherUid == request.auth.uid);
+    }
+
+    // ── subMaterials: 학교별 부교재 프린트 목록 (teacher.html "부교재 프린트") — 파일은 Storage subMaterials/{id}/
+    // 선생님·관리자 열람, 선생님은 본인 이름으로 올림, 수정·삭제는 올린 선생님 또는 관리자 ──
+    match /subMaterials/{docId} {
+      allow read: if isTeacher() || isAdmin();
+      allow create: if isAdmin() || (isTeacher() && request.resource.data.uploaderUid == request.auth.uid
+        && request.resource.data.branch in ['평촌관', '산본관']);
+      allow update, delete: if isAdmin() || (isTeacher() && resource.data.uploaderUid == request.auth.uid);
+    }
+
     // ── 그 외 정의되지 않은 컬렉션: 기본적으로 관리자만 접근 가능 ──
     match /{document=**} {
       allow read, write: if isAdmin();

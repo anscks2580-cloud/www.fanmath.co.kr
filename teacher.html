@@ -29,6 +29,73 @@
   transform:scaleX(0); transition:transform 0.2s;
 }
 .teacher-tab.active { color:var(--purple, #5B3FA6); }
+/* ── ✏️ 시험 점수 입력 ── */
+.es-head { display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; margin-bottom:14px; }
+.es-exam { font-size:17px; font-weight:800; color:var(--purple, #5B3FA6); }
+.es-prog { flex:1 1 220px; min-width:200px; }
+.es-prog-t { font-size:12.5px; color:var(--muted); margin-bottom:5px; display:flex; justify-content:space-between; }
+.es-prog-t b { color:var(--off-white); }
+.es-bar { height:8px; border-radius:99px; background:rgba(30,24,56,0.08); overflow:hidden; }
+.es-bar > i { display:block; height:100%; background:linear-gradient(90deg,#7C5CD6,#F5C518); border-radius:99px; transition:width 0.3s; }
+.es-branch { margin-top:18px; }
+.es-branch-h { font-size:14px; font-weight:800; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.es-branch-h.pc { color:var(--purple, #5B3FA6); } .es-branch-h.sb { color:#B98A00; }
+.es-branch-h small { font-weight:500; color:var(--muted); font-size:12px; }
+.es-row { display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--border-soft); border-radius:10px; margin-bottom:6px; background:#fff; transition:border-color 0.15s, background 0.15s; }
+.es-row.done { background:rgba(46,160,90,0.05); border-color:rgba(46,160,90,0.3); }
+.es-row.todo { border-left:4px solid #E05252; }
+.es-row.dirty { border-color:rgba(245,197,24,0.8); background:rgba(245,197,24,0.06); }
+.es-st { flex-shrink:0; font-size:11.5px; font-weight:700; padding:3px 9px; border-radius:99px; white-space:nowrap; }
+.es-st.ok { background:rgba(46,160,90,0.14); color:#23864A; }
+.es-st.no { background:rgba(224,82,82,0.12); color:#C93C3C; }
+.es-who { flex:1; min-width:0; }
+.es-name { font-size:14.5px; font-weight:700; color:var(--off-white); }
+.es-sub { font-size:12px; color:var(--muted); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.es-in { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+.es-in select, .es-in input { padding:8px 9px; border:1px solid var(--border-soft); border-radius:8px; font-size:14px; font-family:inherit; background:rgba(30,24,56,0.03); color:var(--off-white); outline:none; }
+.es-in input { width:84px; text-align:right; font-weight:700; font-variant-numeric:tabular-nums; }
+.es-in input:focus, .es-in select:focus { border-color:rgba(245,197,24,0.7); }
+.es-in input:disabled { opacity:0.4; }
+.es-in .u { font-size:12.5px; color:var(--muted); }
+.es-save { padding:8px 13px; border-radius:8px; border:1px solid rgba(91,63,166,0.4); background:rgba(91,63,166,0.08); color:var(--purple, #5B3FA6); font-size:12.5px; font-weight:700; font-family:inherit; cursor:pointer; white-space:nowrap; }
+.es-save:disabled { opacity:0.4; cursor:default; }
+.es-time { font-size:11px; color:var(--muted); margin-top:2px; }
+@media (max-width:640px) {
+  .es-row { flex-wrap:wrap; }
+  .es-who { flex-basis:calc(100% - 90px); }
+  .es-in { width:100%; justify-content:flex-end; }
+}
+/* ── 🗂 학교별 부교재 프린트 ── */
+.sm-up { border:1px solid var(--border-soft); border-radius:12px; padding:16px; background:rgba(30,24,56,0.02); }
+.sm-form { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:12px; }
+.sm-form label { display:block; font-size:12px; color:var(--muted); font-weight:600; margin-bottom:5px; }
+.sm-form select, .sm-form input { width:100%; box-sizing:border-box; padding:10px 12px; border:1px solid var(--border-soft); border-radius:8px; font-size:14px; font-family:inherit; background:#fff; color:var(--off-white); outline:none; }
+.sm-form select:focus, .sm-form input:focus { border-color:rgba(245,197,24,0.6); }
+.sm-drop { border:2px dashed var(--border-soft); border-radius:12px; padding:22px 14px; text-align:center; cursor:pointer; color:var(--muted); font-size:13.5px; transition:border-color 0.15s, background 0.15s; }
+.sm-drop:hover, .sm-drop.over { border-color:var(--gold); background:rgba(245,197,24,0.05); }
+.sm-drop b { color:var(--purple, #5B3FA6); }
+.sm-pick { margin-top:10px; display:flex; flex-direction:column; gap:5px; }
+.sm-pick-i { display:flex; align-items:center; gap:8px; font-size:13px; padding:6px 10px; border-radius:8px; background:#fff; border:1px solid var(--border-soft); }
+.sm-pick-i span { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sm-pick-i small { color:var(--muted); white-space:nowrap; }
+.sm-pick-i .x { border:none; background:none; color:var(--muted); cursor:pointer; font-size:14px; }
+.sm-pick-i .pg { width:60px; height:5px; background:rgba(30,24,56,0.08); border-radius:9px; overflow:hidden; }
+.sm-pick-i .pg i { display:block; height:100%; width:0; background:var(--gold); }
+.sm-group { margin-top:18px; }
+.sm-group-h { font-size:14px; font-weight:800; color:var(--off-white); margin-bottom:6px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.sm-group-h .g { font-size:11.5px; font-weight:700; padding:2px 8px; border-radius:99px; background:rgba(91,63,166,0.1); color:var(--purple, #5B3FA6); }
+.sm-group-h .br { font-size:11.5px; font-weight:700; }
+.sm-group-h .br.pc { color:var(--purple, #5B3FA6); } .sm-group-h .br.sb { color:#B98A00; }
+.sm-group-h small { color:var(--muted); font-weight:500; font-size:12px; }
+.sm-row { display:flex; align-items:center; gap:10px; padding:9px 8px; border-radius:8px; }
+.sm-row + .sm-row { border-top:1px solid rgba(30,24,56,0.05); }
+.sm-row:hover { background:rgba(30,24,56,0.03); }
+.sm-ic { font-size:20px; flex-shrink:0; }
+.sm-info { flex:1; min-width:0; }
+.sm-t { font-size:14px; font-weight:600; color:var(--off-white); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.sm-m { font-size:11.5px; color:var(--muted); margin-top:2px; }
+.sm-acts { display:flex; gap:5px; flex-shrink:0; }
+@media (max-width:600px) { .sm-row { flex-wrap:wrap; } .sm-acts { width:100%; justify-content:flex-end; } }
 /* ── 📚 기출문제 ── */
 .px-toolbar { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
 .px-toolbar select, .px-toolbar input { padding:10px 13px; background:rgba(30,24,56,0.05); border:1px solid var(--border-soft); border-radius:8px; color:var(--off-white); font-size:14px; font-family:inherit; outline:none; min-width:0; }
@@ -471,6 +538,7 @@ select option:disabled { color:#6B6489; }
     <button class="teacher-tab" onclick="switchTab('weekly',this)">주간성취도</button>
     <button class="teacher-tab" onclick="switchTab('monthly',this)">월말보고서</button>
     <button class="teacher-tab" onclick="switchTab('tests',this)">누적테스트</button>
+    <button class="teacher-tab" onclick="switchTab('examscore',this);esInit()">시험 점수 입력</button>
     <button class="teacher-tab" onclick="switchTab('dailytest',this);dtInit()">일일테스트</button>
     <button class="teacher-tab" onclick="switchTab('reportreview',this);rvInit()">보고서 검수</button>
     <button class="teacher-tab" onclick="switchTab('parentcomments',this);pcInit()">학부모 댓글</button>
@@ -482,6 +550,7 @@ select option:disabled { color:#6B6489; }
     <button class="teacher-tab" onclick="switchTab('meetingdocs',this);initMeetingDocsTab()">회의 자료</button>
     <button class="teacher-tab" onclick="switchTab('pastexams',this);initPastExamsTab()">기출문제</button>
     <button class="teacher-tab" onclick="switchTab('textbooks',this);initTextbooksTab()">시중교재</button>
+    <button class="teacher-tab" onclick="switchTab('submaterials',this);smInit()">부교재 프린트</button>
     <button class="teacher-tab" onclick="switchTab('watchstatus',this);initTeacherWatchStatus()">학생 시청현황</button>
     <button class="teacher-tab" onclick="switchTab('manual',this)">전임강사 매뉴얼</button>
   </div>
@@ -1331,6 +1400,72 @@ select option:disabled { color:#6B6489; }
   </div>
 
   <!-- ══ 탭: 전임강사 매뉴얼 ══ -->
+  <!-- ══ ✏️ 시험 점수 입력 (담당 학생 · 2026년 2학기 기말고사) ══ -->
+  <div class="tab-panel" id="tab-examscore">
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;">
+        <span>✏️ 시험 점수 입력</span>
+        <button class="btn btn-outline btn-sm" onclick="esInit(true)">새로고침</button>
+      </div>
+      <div class="es-head">
+        <div class="es-exam" id="esExamName">2026년 2학기 기말고사</div>
+        <div class="es-prog">
+          <div class="es-prog-t"><span>입력 현황</span><span id="esProgTxt">-</span></div>
+          <div class="es-bar"><i id="esProgBar" style="width:0%"></i></div>
+        </div>
+      </div>
+      <div class="alert ok" id="es-ok"></div>
+      <div class="alert err" id="es-err"></div>
+      <div class="px-toolbar">
+        <input type="search" id="esSearch" placeholder="학생 이름·학교로 찾기" oninput="esSetQuery(this.value)">
+      </div>
+      <div class="px-chips" id="esStChips"></div>
+      <div class="px-chips" id="esBrChips"></div>
+      <div style="font-size:12px;color:var(--muted);margin:2px 0 6px;">점수를 쓰고 <b>Enter</b> 또는 <b>저장</b>을 누르면 바로 저장됩니다. 시험을 안 봤으면 「미응시」, 대상이 아니면 「해당없음」을 고르세요. (초등 학생은 목록에서 제외)</div>
+      <div id="esList"><div class="px-empty">불러오는 중...</div></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+        <button class="btn btn-gold" id="esSaveAll" onclick="esSaveAll()" disabled>변경한 학생 모두 저장</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 🗂 학교별 부교재 프린트 (선생님 업로드 · 다운로드) ══ -->
+  <div class="tab-panel" id="tab-submaterials">
+    <div class="card">
+      <div class="card-title">⬆️ 부교재 프린트 올리기</div>
+      <div class="sm-up">
+        <div class="sm-form">
+          <div><label>관</label><select id="smBranch"><option value="평촌관">평촌관</option><option value="산본관">산본관</option></select></div>
+          <div><label>학년</label><select id="smGrade"><option value="">학년 선택</option><option>중1</option><option>중2</option><option>중3</option><option>고1</option><option>고2</option><option>고3</option></select></div>
+          <div><label>학교</label><input type="text" id="smSchool" list="smSchoolList" placeholder="예: 백영고" autocomplete="off"><datalist id="smSchoolList"></datalist></div>
+          <div><label>자료 이름 (선택)</label><input type="text" id="smTitle" placeholder="비우면 파일 이름으로 저장" autocomplete="off"></div>
+        </div>
+        <div class="sm-drop" id="smDrop" onclick="document.getElementById('smFile').click()">
+          📎 <b>PDF 또는 사진</b>을 여기로 끌어오거나 눌러서 선택 (여러 개 가능 · 파일당 50MB까지)
+        </div>
+        <input type="file" id="smFile" accept="application/pdf,.pdf,image/*" multiple hidden onchange="smAddFiles(this.files);this.value=''">
+        <div class="sm-pick" id="smPick"></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+          <button class="btn btn-gold" id="smUpBtn" onclick="smUpload()">올리기</button>
+        </div>
+        <div class="alert ok" id="sm-ok" style="margin-top:10px;"></div>
+        <div class="alert err" id="sm-err" style="margin-top:10px;"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;">
+        <span>🗂 학교별 부교재 프린트</span>
+        <button class="btn btn-outline btn-sm" onclick="smLoad(true)">새로고침</button>
+      </div>
+      <div class="px-toolbar">
+        <input type="search" id="smSearch" placeholder="학교·자료 이름으로 찾기 (예: 백영고)" oninput="smSetQuery(this.value)">
+      </div>
+      <div class="px-chips" id="smBrChips"></div>
+      <div class="px-chips" id="smGrChips"></div>
+      <div id="smList"><div class="px-empty">불러오는 중...</div></div>
+    </div>
+  </div>
+
   <!-- ══ 🗒 회의 자료 (관리자가 올린 PDF · 미리보기 전용) ══ -->
   <div class="tab-panel" id="tab-meetingdocs">
     <div class="card">
@@ -6017,6 +6152,7 @@ window.addEventListener('message', (e) => { if (e.data && e.data.type === 'pcRea
       { id: 'parentcomments', label: '학부모 댓글', desc: '주간성취도·보고서에 달린 학부모 댓글 · 답글' },
       { id: 'monthly',  label: '월말보고서', desc: '다음 달 3일까지' },
       { id: 'tests',    label: '누적테스트', desc: '테스트 결과 입력 · 조회' },
+      { id: 'examscore', label: '시험 점수 입력', desc: '2026년 2학기 기말고사 · 담당 학생 점수 · 입력/미입력 구분' },
       { id: 'progress', label: '반별 진도',  desc: '지난주 진도 · 금요일까지' },
       { id: 'clinic',   label: '토요클리닉', desc: '토요 클리닉 보고' },
     ] },
@@ -6030,6 +6166,7 @@ window.addEventListener('message', (e) => { if (e.data && e.data.type === 'pcRea
       { id: 'meetingdocs', label: '회의 자료', desc: '관리자가 올린 회의 PDF (미리보기)' },
       { id: 'pastexams', label: '기출문제', desc: '시험명 › 학년 › 지역 PDF' },
       { id: 'textbooks', label: '시중교재', desc: '학교급 › 학년 › 교재 PDF' },
+      { id: 'submaterials', label: '부교재 프린트', desc: '학교별 부교재 프린트 · 관 › 학년 › 학교 · 올리기 · 다운로드' },
     ] },
     { id: 'manual',  label: '매뉴얼', icon: '📖', items: [{ id: 'manual', label: '전임강사 매뉴얼', desc: '검색 · 목차' }] },
   ];
@@ -6206,5 +6343,463 @@ onAuthStateChanged(auth, async (user) => {
   }, (e) => console.warn('[기출 알림]', e));
 });
 </script>
+<!-- ══════════ ✏️ 시험 점수 입력 + 🗂 학교별 부교재 프린트 ══════════
+     · 시험 점수: Firestore examScores/{시험키}_{학생id} — 선생님은 본인 담당 학생 것만 입력·조회
+     · 부교재 프린트: Firestore subMaterials/{id} + Storage subMaterials/{id}/파일 — 선생님 누구나 올리고 내려받음, 삭제는 올린 사람만 ══════════ -->
+<script type="module">
+import { getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, getDocs, setDoc, deleteDoc, collection, query, where, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+const app = getApp();
+const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
+const $ = (id) => document.getElementById(id);
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function note(id, msg, type) { const el = $(id); if (!el) return; el.textContent = msg; el.className = `alert ${type}`; el.style.display = 'block'; clearTimeout(el._t); el._t = setTimeout(() => { el.style.display = 'none'; }, 6000); }
+const BRANCHES = ['평촌관', '산본관'];
+const brCls = (b) => b === '산본관' ? 'sb' : 'pc';
+const ko = (a, b) => String(a || '').localeCompare(String(b || ''), 'ko');
+const GRADE_ORDER = ['중1', '중2', '중3', '고1', '고2', '고3'];
+const gradeIdx = (g) => { const i = GRADE_ORDER.indexOf(String(g || '').trim()); return i < 0 ? 99 : i; };
+
+let me = null;   // { uid, name, branch }
+const meReady = new Promise((resolve) => {
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) return;
+    try {
+      const t = await getDoc(doc(db, 'teachers', user.uid));
+      if (!t.exists()) return;
+      me = { uid: user.uid, name: t.data().name || '', branch: t.data().branch || '' };
+      resolve(me);
+    } catch (e) { console.warn('[시험점수/부교재] 선생님 정보', e); }
+  });
+});
+
+// ══════════════════════════════════════
+// ✏️ 시험 점수 입력 — 이번 시험: 2026년 2학기 기말고사
+//   다음 시험 때는 아래 EXAM만 바꾸면 됨 (예: { key: '2027-1-mid', name: '2027년 1학기 중간고사' })
+// ══════════════════════════════════════
+const EXAM = { key: '2026-2-final', name: '2026년 2학기 기말고사' };
+let esStudents = [];        // 내 담당 학생 (초등 제외)
+let esSaved = {};           // studentId -> 저장된 문서
+let esDraft = {};           // studentId -> { status, score } 입력 중(아직 저장 안 함)
+const esState = { st: 'all', br: '', q: '' };
+let esLoaded = false;
+const isTarget = (s) => !String(s?.grade || '').trim().startsWith('초') && s.status !== '퇴원';
+const esIsDone = (sid) => !!esSaved[sid];
+const esDocId = (sid) => `${EXAM.key}_${sid}`;
+
+window.esInit = async function (force = false) {
+  $('esExamName').textContent = EXAM.name;
+  if (esLoaded && !force) { esRender(); return; }
+  $('esList').innerHTML = '<div class="px-empty">불러오는 중...</div>';
+  await meReady;
+  try {
+    const [sSnap, rSnap] = await Promise.all([
+      getDocs(query(collection(db, 'students'), where('teacherUid', '==', me.uid))),
+      getDocs(query(collection(db, 'examScores'), where('teacherUid', '==', me.uid), where('examKey', '==', EXAM.key))),
+    ]);
+    esStudents = [];
+    sSnap.forEach((d) => { const s = { id: d.id, ...d.data() }; if (isTarget(s)) esStudents.push(s); });
+    esStudents.sort((a, b) => gradeIdx(a.grade) - gradeIdx(b.grade) || ko(a.name, b.name));
+    esSaved = {};
+    rSnap.forEach((d) => { const r = d.data(); if (r.studentId) esSaved[r.studentId] = r; });
+    esDraft = {};
+    esLoaded = true;
+  } catch (e) {
+    $('esList').innerHTML = `<div class="px-empty">불러오지 못했습니다 (${esc(e.code || e.message)})</div>`;
+    return;
+  }
+  esRender();
+};
+window.esSetQuery = (q) => { esState.q = q.trim(); esRenderList(); };
+window.esSetSt = (v) => { esState.st = v; esRender(); };
+window.esSetBr = (v) => { esState.br = v; esRender(); };
+
+function esProgress() {
+  const total = esStudents.length, done = esStudents.filter((s) => esIsDone(s.id)).length;
+  $('esProgTxt').innerHTML = `<b>${done}</b> / ${total}명 입력 · 미입력 <b style="color:#C93C3C">${total - done}</b>명`;
+  $('esProgBar').style.width = total ? (done / total * 100) + '%' : '0%';
+  return { total, done };
+}
+
+function esRender() {
+  const { total, done } = esProgress();
+  const chip = (fn, v, cur, label, n) => `<button class="px-chip${v === cur ? ' on' : ''}" onclick="${fn}('${v}')">${label}<span class="n">${n}</span></button>`;
+  $('esStChips').innerHTML = chip('esSetSt', 'all', esState.st, '전체', total) + chip('esSetSt', 'todo', esState.st, '미입력', total - done) + chip('esSetSt', 'done', esState.st, '입력완료', done);
+  const brs = BRANCHES.filter((b) => esStudents.some((s) => (s.branch || '평촌관') === b));
+  $('esBrChips').innerHTML = brs.length > 1
+    ? chip('esSetBr', '', esState.br, '전체 관', total) + brs.map((b) => chip('esSetBr', b, esState.br, b, esStudents.filter((s) => (s.branch || '평촌관') === b).length)).join('')
+    : '';
+  esRenderList();
+}
+
+function esCur(sid) {
+  if (esDraft[sid]) return esDraft[sid];
+  const r = esSaved[sid];
+  return r ? { status: r.status || '응시', score: r.score ?? '' } : { status: '응시', score: '' };
+}
+
+function esRowHtml(s) {
+  const cur = esCur(s.id), done = esIsDone(s.id), dirty = !!esDraft[s.id];
+  const r = esSaved[s.id];
+  let when = '';
+  if (r && r.updatedAt) { const d = new Date(r.updatedAt); if (!isNaN(d)) when = `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} 저장`; }
+  const savedTxt = r ? (r.status === '응시' ? `${r.score}점` : r.status) : '';
+  const sub = [s.grade, s.school, s.classGroup].filter(Boolean).map(esc).join(' · ') || '학년·학교 정보 없음';
+  return `<div class="es-row ${dirty ? 'dirty' : done ? 'done' : 'todo'}" data-sid="${esc(s.id)}">
+    <span class="es-st ${done ? 'ok' : 'no'}">${done ? '✅ 입력완료' : '⏳ 미입력'}</span>
+    <div class="es-who">
+      <div class="es-name">${esc(s.name)}${done ? ` <span style="font-size:12.5px;color:#23864A;font-weight:700;">${esc(savedTxt)}</span>` : ''}</div>
+      <div class="es-sub">${sub}</div>
+      ${when ? `<div class="es-time">${when}</div>` : ''}
+    </div>
+    <div class="es-in">
+      <select onchange="esEdit('${esc(s.id)}','status',this.value)">
+        ${['응시', '미응시', '해당없음'].map((o) => `<option${cur.status === o ? ' selected' : ''}>${o}</option>`).join('')}
+      </select>
+      <input type="number" inputmode="decimal" min="0" max="100" step="0.1" placeholder="점수" value="${esc(cur.status === '응시' ? cur.score : '')}" ${cur.status === '응시' ? '' : 'disabled'}
+        oninput="esEdit('${esc(s.id)}','score',this.value)" onkeydown="if(event.key==='Enter'){event.preventDefault();esSave('${esc(s.id)}',true);}">
+      <span class="u">점</span>
+      <button class="es-save" onclick="esSave('${esc(s.id)}')" ${dirty ? '' : 'disabled'}>저장</button>
+    </div>
+  </div>`;
+}
+
+function esRenderList() {
+  const box = $('esList');
+  if (!esStudents.length) { box.innerHTML = '<div class="px-empty">담당 학생이 없습니다.</div>'; esSyncAllBtn(); return; }
+  const q = esState.q;
+  const list = esStudents.filter((s) => {
+    if (esState.st === 'todo' && esIsDone(s.id)) return false;
+    if (esState.st === 'done' && !esIsDone(s.id)) return false;
+    if (esState.br && (s.branch || '평촌관') !== esState.br) return false;
+    if (q && !(`${s.name || ''} ${s.school || ''} ${s.grade || ''}`.includes(q))) return false;
+    return true;
+  });
+  if (!list.length) { box.innerHTML = '<div class="px-empty">조건에 맞는 학생이 없습니다.</div>'; esSyncAllBtn(); return; }
+  // 평촌관·산본관 따로 묶어서 표시
+  box.innerHTML = BRANCHES.map((b) => {
+    const rows = list.filter((s) => (s.branch || '평촌관') === b);
+    if (!rows.length) return '';
+    const all = esStudents.filter((s) => (s.branch || '평촌관') === b);
+    const d = all.filter((s) => esIsDone(s.id)).length;
+    return `<div class="es-branch"><div class="es-branch-h ${brCls(b)}">${b}<small>${d} / ${all.length}명 입력</small></div>${rows.map(esRowHtml).join('')}</div>`;
+  }).join('');
+  esSyncAllBtn();
+}
+
+function esSyncAllBtn() { const n = Object.keys(esDraft).length; const b = $('esSaveAll'); b.disabled = !n; b.textContent = n ? `변경한 학생 모두 저장 (${n}명)` : '변경한 학생 모두 저장'; }
+
+window.esEdit = function (sid, key, val) {
+  const cur = { ...esCur(sid) };
+  cur[key] = val;
+  if (key === 'status' && val !== '응시') cur.score = '';
+  esDraft[sid] = cur;
+  const row = document.querySelector(`.es-row[data-sid="${CSS.escape(sid)}"]`);
+  if (row) {
+    row.className = 'es-row dirty';
+    row.querySelector('.es-save').disabled = false;
+    if (key === 'status') { const inp = row.querySelector('input'); inp.disabled = val !== '응시'; if (val !== '응시') inp.value = ''; else inp.focus(); }
+  }
+  esSyncAllBtn();
+};
+
+function esValidate(sid) {
+  const cur = esCur(sid);
+  if (cur.status !== '응시') return { status: cur.status, score: null };
+  const raw = String(cur.score ?? '').trim();
+  if (raw === '') throw new Error('점수를 입력하세요');
+  const n = Number(raw);
+  if (!isFinite(n) || n < 0 || n > 100) throw new Error('점수는 0~100 사이로 입력하세요');
+  return { status: '응시', score: Math.round(n * 10) / 10 };
+}
+
+async function esWrite(sid) {
+  const s = esStudents.find((x) => x.id === sid);
+  if (!s) return;
+  const v = esValidate(sid);
+  const data = {
+    examKey: EXAM.key, examName: EXAM.name,
+    studentId: sid, studentName: s.name || '', grade: s.grade || '', school: s.school || '',
+    classGroup: s.classGroup || '', branch: s.branch || '평촌관',
+    teacherUid: me.uid, teacherName: me.name,
+    status: v.status, score: v.score,
+    updatedAt: new Date().toISOString(),
+  };
+  await setDoc(doc(db, 'examScores', esDocId(sid)), data);
+  esSaved[sid] = data;
+  delete esDraft[sid];
+}
+
+window.esSave = async function (sid, moveNext = false) {
+  const s = esStudents.find((x) => x.id === sid);
+  try {
+    await esWrite(sid);
+    note('es-ok', `${s?.name || ''} 학생 저장했습니다.`, 'ok');
+  } catch (e) {
+    note('es-err', `${s?.name || ''}: ${e.message || e.code}`, 'err');
+    return;
+  }
+  // 저장 후 다음 학생 입력칸으로 이동
+  const idx = Array.from(document.querySelectorAll('#esList .es-row')).findIndex((r) => r.dataset.sid === sid);
+  esRender();
+  if (moveNext && idx >= 0) {
+    const next = document.querySelectorAll('#esList .es-row')[esState.st === 'todo' ? idx : idx + 1];
+    const inp = next && next.querySelector('input:not(:disabled)');
+    if (inp) inp.focus();
+  }
+};
+
+window.esSaveAll = async function () {
+  const ids = Object.keys(esDraft);
+  if (!ids.length) return;
+  const btn = $('esSaveAll'); btn.disabled = true; btn.textContent = '저장 중...';
+  const fails = [];
+  for (const sid of ids) {
+    try { await esWrite(sid); } catch (e) { fails.push(`${esStudents.find((x) => x.id === sid)?.name || sid}(${e.message || e.code})`); }
+  }
+  esRender();
+  if (fails.length) note('es-err', '저장 못 함: ' + fails.join(', '), 'err');
+  else note('es-ok', `${ids.length}명 저장했습니다.`, 'ok');
+};
+
+// 저장 안 한 점수가 있으면 페이지를 떠날 때 확인
+window.addEventListener('beforeunload', (e) => { if (Object.keys(esDraft).length) { e.preventDefault(); e.returnValue = ''; } });
+
+// ══════════════════════════════════════
+// 🗂 학교별 부교재 프린트 — 관 › 학년 › 학교로 분류, PDF·사진
+// ══════════════════════════════════════
+const SM_MAX = 50 * 1024 * 1024;
+let smItems = null;       // 올라온 자료 목록
+let smPicked = [];        // 올릴 파일 [{ file, key }]
+let smKeySeq = 0;
+let smBusy = false;
+const smState = { br: '', gr: '', q: '' };
+const smSize = (n) => n >= 1048576 ? (n / 1048576).toFixed(1) + 'MB' : Math.max(1, Math.round(n / 1024)) + 'KB';
+const smIsImg = (it) => /^image\//.test(it.contentType || '');
+const smOkType = (f) => f.type === 'application/pdf' || /\.pdf$/i.test(f.name) || /^image\//.test(f.type) || /\.(jpe?g|png|heic|heif|webp|gif)$/i.test(f.name);
+const smNormSchool = (t) => String(t || '').replace(/\s+/g, '').trim();
+let smInited = false;
+
+window.smInit = async function () {
+  if (!smInited) {
+    smInited = true;
+    const drop = $('smDrop');
+    drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('over'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+    drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('over'); if (e.dataTransfer.files?.length) smAddFiles(e.dataTransfer.files); });
+    await meReady;
+    if (BRANCHES.includes(me.branch)) $('smBranch').value = me.branch;
+    smFillSchools();
+  }
+  smLoad();
+};
+
+// 학교 이름 자동완성: 학생 명단의 학교 + 이미 올라온 자료의 학교
+async function smFillSchools() {
+  const set = new Set();
+  try { const snap = await getDocs(collection(db, 'students')); snap.forEach((d) => { const s = smNormSchool(d.data().school); if (s) set.add(s); }); } catch (e) {}
+  (smItems || []).forEach((it) => it.school && set.add(it.school));
+  $('smSchoolList').innerHTML = Array.from(set).sort(ko).map((s) => `<option value="${esc(s)}">`).join('');
+}
+
+window.smAddFiles = function (files) {
+  for (const f of Array.from(files)) {
+    if (!smOkType(f)) { note('sm-err', `${f.name}: PDF나 사진 파일만 올릴 수 있습니다.`, 'err'); continue; }
+    if (f.size > SM_MAX) { note('sm-err', `${f.name}: 50MB가 넘어서 올릴 수 없습니다.`, 'err'); continue; }
+    smPicked.push({ file: f, key: 'k' + (++smKeySeq) });
+  }
+  smRenderPicked();
+};
+window.smRemovePicked = (k) => { if (smBusy) return; smPicked = smPicked.filter((p) => p.key !== k); smRenderPicked(); };
+function smRenderPicked() {
+  $('smPick').innerHTML = smPicked.map((p) => `<div class="sm-pick-i" id="smp-${p.key}">
+    <span>${/^image\//.test(p.file.type) ? '🖼' : '📄'} ${esc(p.file.name)}</span><small>${smSize(p.file.size)}</small>
+    <div class="pg"><i></i></div>
+    <button class="x" onclick="smRemovePicked('${p.key}')" title="빼기">✕</button></div>`).join('');
+}
+
+function smContentType(f) {
+  if (f.type) return f.type;
+  if (/\.pdf$/i.test(f.name)) return 'application/pdf';
+  if (/\.png$/i.test(f.name)) return 'image/png';
+  if (/\.hei[cf]$/i.test(f.name)) return 'image/heic';
+  if (/\.webp$/i.test(f.name)) return 'image/webp';
+  return 'image/jpeg';
+}
+
+window.smUpload = async function () {
+  if (smBusy) return;
+  await meReady;
+  const branch = $('smBranch').value, grade = $('smGrade').value, school = smNormSchool($('smSchool').value), title = $('smTitle').value.trim();
+  if (!grade) { note('sm-err', '학년을 선택하세요.', 'err'); return; }
+  if (!school) { note('sm-err', '학교를 입력하세요.', 'err'); $('smSchool').focus(); return; }
+  if (!smPicked.length) { note('sm-err', '올릴 파일을 선택하세요.', 'err'); return; }
+  smBusy = true;
+  const btn = $('smUpBtn'); btn.disabled = true; btn.textContent = '올리는 중...';
+  let ok = 0; const fails = [];
+  const many = smPicked.length > 1;
+  for (const p of [...smPicked]) {
+    const f = p.file;
+    const id = doc(collection(db, 'subMaterials')).id;
+    const safe = f.name.replace(/[\\/#?\[\]*]/g, '_');
+    const path = `subMaterials/${id}/${safe}`;
+    const contentType = smContentType(f);
+    try {
+      await new Promise((resolve, reject) => {
+        const task = uploadBytesResumable(ref(storage, path), f, { contentType });
+        task.on('state_changed', (s) => {
+          const bar = document.querySelector(`#smp-${p.key} .pg i`);
+          if (bar) bar.style.width = (s.bytesTransferred / s.totalBytes * 100) + '%';
+        }, reject, resolve);
+      });
+      const baseName = f.name.replace(/\.[^.]+$/, '');
+      await setDoc(doc(db, 'subMaterials', id), {
+        branch, grade, school,
+        title: title ? (many ? `${title} - ${baseName}` : title) : baseName,
+        fileName: f.name, path, size: f.size, contentType,
+        uploaderUid: me.uid, uploaderName: me.name,
+        createdAt: serverTimestamp(), createdAtStr: new Date().toISOString(),
+      });
+      smPicked = smPicked.filter((x) => x.key !== p.key);
+      ok++;
+    } catch (e) {
+      fails.push(`${f.name}(${e.code || e.message})`);
+      try { await deleteObject(ref(storage, path)); } catch (_) {}
+    }
+  }
+  smBusy = false; btn.disabled = false; btn.textContent = '올리기';
+  smRenderPicked();
+  if (ok) { note('sm-ok', `${school} ${grade} 자료 ${ok}개를 올렸습니다.`, 'ok'); $('smTitle').value = ''; }
+  if (fails.length) note('sm-err', '못 올린 파일: ' + fails.join(', '), 'err');
+  await smLoad(true);
+  smFillSchools();
+};
+
+window.smLoad = async function (force = false) {
+  const box = $('smList');
+  if (smItems && !force) { smRender(); return; }
+  box.innerHTML = '<div class="px-empty">불러오는 중...</div>';
+  try {
+    await meReady;
+    const snap = await getDocs(collection(db, 'subMaterials'));
+    smItems = [];
+    snap.forEach((d) => smItems.push({ id: d.id, ...d.data() }));
+  } catch (e) {
+    smItems = null;
+    box.innerHTML = `<div class="px-empty">불러오지 못했습니다 (${esc(e.code || e.message)})</div>`;
+    return;
+  }
+  smRender();
+};
+window.smSetQuery = (q) => { smState.q = q.trim(); smRenderList(); };
+window.smSetBr = (v) => { smState.br = v; smRender(); };
+window.smSetGr = (v) => { smState.gr = v; smRender(); };
+
+function smRender() {
+  const chip = (fn, v, cur, label, n) => `<button class="px-chip${v === cur ? ' on' : ''}" onclick="${fn}('${v}')">${label}<span class="n">${n}</span></button>`;
+  const inBr = smItems.filter((it) => !smState.br || it.branch === smState.br);
+  $('smBrChips').innerHTML = chip('smSetBr', '', smState.br, '전체 관', smItems.length) +
+    BRANCHES.map((b) => chip('smSetBr', b, smState.br, b, smItems.filter((it) => it.branch === b).length)).join('');
+  $('smGrChips').innerHTML = chip('smSetGr', '', smState.gr, '전체 학년', inBr.length) +
+    GRADE_ORDER.filter((g) => inBr.some((it) => it.grade === g)).map((g) => chip('smSetGr', g, smState.gr, g, inBr.filter((it) => it.grade === g).length)).join('');
+  smRenderList();
+}
+
+const smTime = (it) => it.createdAt?.seconds ? it.createdAt.seconds * 1000 : (Date.parse(it.createdAtStr || '') || 0);
+function smRenderList() {
+  const box = $('smList');
+  const q = smNormSchool(smState.q);
+  const list = smItems.filter((it) => (!smState.br || it.branch === smState.br) && (!smState.gr || it.grade === smState.gr) &&
+    (!q || smNormSchool(`${it.school}${it.title}${it.fileName}`).includes(q)));
+  if (!list.length) { box.innerHTML = `<div class="px-empty">${smItems.length ? '조건에 맞는 자료가 없습니다.' : '아직 올라온 부교재 프린트가 없습니다.'}</div>`; return; }
+  // 관 › 학년 › 학교 순으로 묶음
+  const groups = {};
+  list.forEach((it) => { const k = `${it.branch}|${it.grade}|${it.school}`; (groups[k] = groups[k] || []).push(it); });
+  const keys = Object.keys(groups).sort((a, b) => {
+    const [ab, ag, as] = a.split('|'), [bb, bg, bs] = b.split('|');
+    return BRANCHES.indexOf(ab) - BRANCHES.indexOf(bb) || gradeIdx(ag) - gradeIdx(bg) || ko(as, bs);
+  });
+  const weekAgo = Date.now() - 7 * 86400000;
+  box.innerHTML = `<div class="px-meta">총 ${list.length}개</div>` + keys.map((k) => {
+    const [b, g, s] = k.split('|');
+    const rows = groups[k].sort((x, y) => smTime(y) - smTime(x));
+    return `<div class="sm-group">
+      <div class="sm-group-h"><span class="br ${brCls(b)}">${esc(b)}</span><span class="g">${esc(g)}</span>${esc(s)}<small>${rows.length}개</small></div>
+      <div class="px-rows">${rows.map((it) => {
+        const t = smTime(it), d = t ? new Date(t) : null;
+        const mine = me && it.uploaderUid === me.uid;
+        const fileShown = it.fileName && it.title !== it.fileName.replace(/\.[^.]+$/, '');
+        return `<div class="sm-row">
+          <span class="sm-ic">${smIsImg(it) ? '🖼' : '📄'}</span>
+          <div class="sm-info">
+            <div class="sm-t">${esc(it.title || it.fileName)}${t > weekAgo ? '<span class="mt-new">NEW</span>' : ''}</div>
+            <div class="sm-m">${esc(it.uploaderName || '')} 선생님${d ? ` · ${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}.` : ''}${it.size ? ' · ' + smSize(it.size) : ''}${fileShown ? ' · ' + esc(it.fileName) : ''}</div>
+          </div>
+          <div class="sm-acts">
+            <button class="tb-btn" data-id="${esc(it.id)}" onclick="smView(this)">보기</button>
+            <button class="tb-btn dl" data-id="${esc(it.id)}" onclick="smDownload(this)">다운로드</button>
+            ${mine ? `<button class="tb-btn" data-id="${esc(it.id)}" onclick="smDelete(this)" style="color:#D64545;">삭제</button>` : ''}
+          </div>
+        </div>`;
+      }).join('')}</div></div>`;
+  }).join('');
+}
+
+const smFind = (btn) => (smItems || []).find((x) => x.id === btn.dataset.id);
+
+window.smView = async function (btn) {
+  const it = smFind(btn); if (!it) return;
+  const w = window.open('', '_blank');   // 팝업 차단 방지: 클릭 순간 창부터 엶
+  try {
+    const url = await getDownloadURL(ref(storage, it.path));
+    if (w) w.location.href = url; else window.open(url, '_blank');
+  } catch (e) { if (w) w.close(); alert('파일을 열지 못했습니다 (' + (e.code || e.message) + ')'); }
+};
+
+// 다운로드: "학교_학년_파일이름"으로 저장. 브라우저가 막으면 "눌러서 열기"로 바뀜
+window.smDownload = async function (btn) {
+  if (btn.dataset.url) { window.open(btn.dataset.url, '_blank'); return; }
+  const it = smFind(btn); if (!it) return;
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = '받는 중...';
+  let url = '';
+  try {
+    url = await getDownloadURL(ref(storage, it.path));
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${it.school}_${it.grade}_${it.fileName || it.title}`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+    btn.textContent = label;
+  } catch (e) {
+    if (url) { btn.dataset.url = url; btn.textContent = '눌러서 열기'; }
+    else { btn.textContent = label; alert('파일을 받지 못했습니다 (' + (e.code || e.message) + ')'); }
+  } finally { btn.disabled = false; }
+};
+
+window.smDelete = async function (btn) {
+  const it = smFind(btn); if (!it) return;
+  if (!confirm(`「${it.title || it.fileName}」을(를) 삭제할까요?\n다른 선생님도 더 이상 볼 수 없습니다.`)) return;
+  btn.disabled = true;
+  try {
+    try { await deleteObject(ref(storage, it.path)); } catch (e) { if (e.code !== 'storage/object-not-found') throw e; }
+    await deleteDoc(doc(db, 'subMaterials', it.id));
+    smItems = smItems.filter((x) => x.id !== it.id);
+    smRender();
+    note('sm-ok', '삭제했습니다.', 'ok');
+  } catch (e) { btn.disabled = false; note('sm-err', '삭제하지 못했습니다 (' + (e.code || e.message) + ')', 'err'); }
+};
+</script>
+
 </body>
 </html>
