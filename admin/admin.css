@@ -868,3 +868,10 @@ body.ck-lock { overflow:hidden; }
 .oc-dgrid b { font-weight:600; color:var(--off-white); word-break:keep-all; overflow-wrap:anywhere; }
 .oc-dmemo { margin-top:10px; padding:10px 12px; border-radius:8px; background:#fff; border:1px dashed var(--border-soft); font-size:13.5px; line-height:1.6; white-space:pre-wrap; }
 @media (max-width:560px) { .oc-dgrid { grid-template-columns:1fr; } }
+
+/* 관리부 달력 — 보이는 범위 표시 (👥 선생님까지 · 🔒 나만 / 관리자만은 표시 없음) */
+.oc-ev .vis { font-size:10.5px; line-height:1; }
+.oc-dtop .vis { font-size:11px; font-weight:700; padding:2px 8px; border-radius:99px; background:rgba(30,24,56,0.06); color:#4A4366; white-space:nowrap; }
+.oc-dtop .vis.teachers { background:rgba(46,127,214,0.12); color:#2F6FB8; }
+.oc-dtop .vis.private { background:rgba(214,69,69,0.1); color:#B83A3A; }
+#ocModal .oc-vis-help { font-size:12px; color:var(--muted); margin-top:6px; }

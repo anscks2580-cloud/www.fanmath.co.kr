@@ -359,9 +359,15 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
-    // ── officeCalendar: 관리부 홈 화면 이번 주 달력(평촌관·산본관 상담·회의 일정). 관리자만 읽기·쓰기 ──
+    // ── officeCalendar: 관리부 홈 화면 이번 주 달력(평촌관·산본관 상담·회의 일정). 관리자 읽기·쓰기,
+    // 보이는 범위가 「선생님까지」(visibility == 'teachers')인 일정은 선생님도 읽기만 가능 ──
     match /officeCalendar/{docId} {
       allow read, write: if isAdmin();
+      allow read: if isTeacher() && resource.data.visibility == 'teachers';
+    }
+    // ── officeCalendarPrivate/{uid}/events: 관리부 달력 「나만」 일정 — 입력한 본인 계정만 읽기·쓰기 ──
+    match /officeCalendarPrivate/{uid}/events/{docId} {
+      allow read, write: if isAdmin() && request.auth.uid == uid;
     }
 
     // ── teacherTodos: 선생님 '내 할 일' + '해야 할 업무' 완료 체크(kind: 'autoCheck').
@@ -532,8 +538,9 @@ service cloud.firestore {
     }
 
     // ── 그 외 정의되지 않은 컬렉션: 기본적으로 관리자만 접근 가능 ──
-    match /{document=**} {
-      allow read, write: if isAdmin();
+    // (단, officeCalendarPrivate는 「나만」 일정이라 다른 관리자에게도 열지 않음 — 위 규칙으로 본인만)
+    match /{col}/{document=**} {
+      allow read, write: if isAdmin() && col != 'officeCalendarPrivate';
     }
   }
 }

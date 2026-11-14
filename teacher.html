@@ -3712,6 +3712,24 @@ async function calLoadEvents() {
       if (mine && e.start) calEvents.push(e);
     });
   } catch (e) { console.warn('[일정] 학원 일정 불러오기 실패:', e.message); calEvents = []; }
+  // 관리자 페이지 달력에서 「선생님까지」로 등록한 일정 (내 소속 관 것만, 관 이름을 앞에 붙여 구분)
+  try {
+    const t = currentTeacher;
+    const myBr = String(t.branch || '').includes('산본') ? '산본관' : String(t.branch || '').includes('평촌') ? '평촌관' : '';
+    const oc = await getDocs(query(collection(db, 'officeCalendar'), where('visibility', '==', 'teachers')));
+    oc.forEach(d => {
+      const x = d.data();
+      const br = String(x.branch || '').includes('산본') ? '산본관' : '평촌관';
+      if (!x.date || (myBr && br !== myBr)) return;
+      const main = x.type === '상담' ? ([x.grade, x.studentName].filter(Boolean).join(' ') || x.title || '상담') : (x.title || x.type || '일정');
+      const memo = [x.type === '상담' && x.title && (x.grade || x.studentName) ? x.title : '', x.type === '회의' && x.attendees ? '참석 ' + x.attendees : '', x.memo || ''].filter(Boolean).join(' · ');
+      calEvents.push({
+        id: 'oc_' + d.id, type: x.type || '기타', title: `[${br.replace('관', '')}] ${main}`,
+        start: x.date, end: x.date,
+        time: x.startTime ? x.startTime + (x.endTime ? '~' + x.endTime : '') : '', memo,
+      });
+    });
+  } catch (e) { console.warn('[일정] 관리부 공유 일정 불러오기 실패:', e.message); }
 }
 
 async function calLoadTodos() {

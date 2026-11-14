@@ -1,7 +1,9 @@
 'use strict';
 /* ═══════════════════════════════════════════════════════════
    관리부 이번 주 달력 (홈 화면 맨 위)
-   - 컬렉션: officeCalendar (관리자만 읽기·쓰기)
+   - 컬렉션: officeCalendar (관리자 읽기·쓰기, visibility:'teachers'인 일정은 선생님 페이지 달력에도 표시)
+   - 공개 범위(visibility): 'teachers' 선생님까지 / 'admins' 관리자만(기본, 예전 일정 포함) / 'private' 나만
+     · '나만' 일정은 officeCalendarPrivate/{내 uid}/events 에 따로 저장 → 다른 관리자 계정에서도 안 보임
      { branch:'평촌관'|'산본관', type:'상담'|'회의'|'설명회'|'행사'|'기타',
        date:'YYYY-MM-DD', startTime:'HH:MM', endTime:'HH:MM', title, memo, done,
        studentName, grade, school, method, parentPhone, counselor,   ← 상담일 때
@@ -19,6 +21,16 @@
   const TYPES = ['상담', '회의', '설명회', '행사', '기타'];
   const GRADES = ['초4', '초5', '초6', '중1', '중2', '중3', '고1', '고2', '고3', 'N수', '기타'];
   const BR_KEY = 'ocBranchFilter';
+  const VIS = [
+    { v: 'teachers', l: '선생님까지', d: '관리자 + 선생님 페이지 달력에도 표시', ic: '👥' },
+    { v: 'admins', l: '관리자만', d: '관리자 페이지에서만 표시', ic: '🏢' },
+    { v: 'private', l: '나만', d: '입력한 본인 계정에서만 표시', ic: '🔒' },
+  ];
+  const visOf = (x) => (x && x._private) ? 'private' : (x && x.visibility === 'teachers' ? 'teachers' : 'admins');
+  const visInfo = (v) => VIS.find((o) => o.v === v) || VIS[1];
+  const myUid = () => auth.currentUser?.uid || '';
+  const privCol = () => collection(db, 'officeCalendarPrivate', myUid(), 'events');
+  const evDoc = (x) => x._private ? doc(db, 'officeCalendarPrivate', myUid(), 'events', x.id) : doc(db, 'officeCalendar', x.id);
 
   let weekOffset = 0;          // 0 = 이번 주
   let branchFilter = '전체';
@@ -63,12 +75,14 @@
     const s = weekStart(weekOffset), e = new Date(s); e.setDate(s.getDate() + 6);
     const from = ymd(s), to = ymd(e);
     try {
-      const [snap, sch] = await Promise.all([
+      const [snap, sch, , psnap] = await Promise.all([
         getDocs(query(collection(db, 'officeCalendar'), where('date', '>=', from), where('date', '<=', to))),
         getDocs(collection(db, 'scheduleEvents')).catch(() => null),
         Object.keys(teacherBranch).length ? null : getDocs(collection(db, 'teachers')).catch(() => null),
+        myUid() ? getDocs(query(privCol(), where('date', '>=', from), where('date', '<=', to))).catch((e) => { console.warn('[달력] 나만 보기 일정', e.message); return null; }) : null,
       ]).then((r) => { if (r[2]) r[2].forEach((d) => { const b = norm(d.data().branch); if (b) teacherBranch[d.id] = b; }); return r; });
       events = []; snap.forEach((d) => events.push({ id: d.id, ...d.data() }));
+      if (psnap) psnap.forEach((d) => events.push({ id: d.id, ...d.data(), visibility: 'private', _private: true }));
       schedules = [];
       if (sch) sch.forEach((d) => {
         const x = d.data(); const st = x.start || ''; const en = x.end || st;
@@ -135,7 +149,7 @@
       main = x.title || x.type || '일정';
     }
     return `<div class="oc-ev ${brClass(x.branch)}${x.done ? ' done' : ''}" data-id="${esc(x.id)}" title="${esc((x.branch || '') + ' · ' + (x.type || '') + (x.memo ? '\n' + x.memo : ''))}">
-      <div class="l1"><span class="ty">${esc(x.type || '기타')}</span>${time ? `<span class="tm">${esc(time)}</span>` : ''}${branchFilter === '전체' ? `<span class="br">${esc((x.branch || '').replace('관', ''))}</span>` : ''}</div>
+      <div class="l1"><span class="ty">${esc(x.type || '기타')}</span>${visOf(x) !== 'admins' ? `<span class="vis ${visOf(x)}" title="${esc(visInfo(visOf(x)).l)}">${visInfo(visOf(x)).ic}</span>` : ''}${time ? `<span class="tm">${esc(time)}</span>` : ''}${branchFilter === '전체' ? `<span class="br">${esc((x.branch || '').replace('관', ''))}</span>` : ''}</div>
       <div class="l2">${esc(main)}</div>
       ${sub ? `<div class="l3">${esc(sub)}</div>` : ''}
     </div>`;
@@ -191,6 +205,7 @@
             <span class="tm">${esc(x.startTime ? x.startTime + (x.endTime ? ' ~ ' + x.endTime : '') : '시간 미정')}</span>
             <span class="ty">${esc(x.type || '기타')}</span>
             <span class="br">${esc(norm(x.branch) || x.branch || '')}</span>
+            <span class="vis ${visOf(x)}">${visInfo(visOf(x)).ic} ${esc(visInfo(visOf(x)).l)}</span>
             ${x.done ? '<span class="dn">완료</span>' : ''}
             <span style="flex:1"></span>
             <button type="button" class="btn btn-secondary btn-sm" onclick="ocToggleDone('${esc(x.id)}')">${x.done ? '완료 취소' : '완료'}</button>
@@ -222,7 +237,7 @@
   window.ocDayClose = function () { $('ocDayModal')?.classList.remove('show'); dayOpen = null; };
   window.ocToggleDone = async function (id) {
     const x = events.find((e) => e.id === id); if (!x) return;
-    try { await updateDoc(doc(db, 'officeCalendar', id), { done: !x.done, updatedAt: Timestamp.now(), updatedBy: auth.currentUser?.email || '' }); x.done = !x.done; render(); }
+    try { await updateDoc(evDoc(x), { done: !x.done, updatedAt: Timestamp.now(), updatedBy: auth.currentUser?.email || '' }); x.done = !x.done; render(); }
     catch (e) { alert('저장 실패: ' + e.message); }
   };
 
@@ -240,6 +255,10 @@
               <button type="button" data-v="평촌관" class="pc">평촌관</button>
               <button type="button" data-v="산본관" class="sb">산본관</button>
             </div>
+          </div>
+          <div class="oc-f"><label>보이는 범위</label>
+            <div class="oc-seg" id="ocFVis">${VIS.map((o) => `<button type="button" data-v="${o.v}" title="${o.d}">${o.ic} ${o.l}</button>`).join('')}</div>
+            <div class="oc-vis-help" id="ocFVisHelp"></div>
           </div>
           <div class="oc-f"><label>종류</label>
             <div class="oc-seg" id="ocFType">${TYPES.map((t) => `<button type="button" data-v="${t}">${t}</button>`).join('')}</div>
@@ -288,6 +307,7 @@
     const seg = $(id); if (!seg) return;
     seg.dataset.value = v;
     seg.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.v === v));
+    if (id === 'ocFVis') { const h = $('ocFVisHelp'); if (h) h.textContent = visInfo(v).d; }
     if (id === 'ocFType') {
       $('ocConsultBox').style.display = v === '상담' ? '' : 'none';
       $('ocMeetBox').style.display = v === '회의' ? '' : 'none';
@@ -304,6 +324,7 @@
     const defBranch = branchFilter !== '전체' ? branchFilter : '평촌관';
     setSeg('ocFBranch', x ? (x.branch || '평촌관') : defBranch);
     setSeg('ocFType', x ? (x.type || '기타') : '상담');
+    setSeg('ocFVis', x ? visOf(x) : 'admins');
     $('ocFDate').value = x ? x.date : (date || ymd(new Date()));
     $('ocFStart').value = x?.startTime || '';
     $('ocFEnd').value = x?.endTime || '';
@@ -329,6 +350,7 @@
   window.ocSave = async function () {
     const msg = $('ocMsg');
     const branch = $('ocFBranch').dataset.value, type = $('ocFType').dataset.value;
+    const vis = $('ocFVis').dataset.value || 'admins';
     const data = {
       branch, type,
       date: val('ocFDate'), startTime: val('ocFStart'), endTime: val('ocFEnd'),
@@ -347,8 +369,20 @@
     const who = auth.currentUser?.email || '';
     const btn = $('ocSaveBtn'); btn.disabled = true;
     try {
-      if (editingId) await updateDoc(doc(db, 'officeCalendar', editingId), { ...data, updatedAt: Timestamp.now(), updatedBy: who });
-      else await addDoc(collection(db, 'officeCalendar'), { ...data, createdAt: Timestamp.now(), createdBy: who });
+      const toPrivate = vis === 'private';
+      if (toPrivate && !myUid()) throw new Error('로그인 정보를 확인할 수 없습니다');
+      const payload = { ...data, visibility: vis, createdByUid: myUid() };
+      const old = editingId ? events.find((e) => e.id === editingId) : null;
+      if (old && !!old._private === toPrivate) {
+        // 같은 곳(공용 ↔ 공용, 나만 ↔ 나만)이면 그대로 수정
+        const keep = old.createdByUid ? { createdByUid: old.createdByUid } : {};
+        await updateDoc(evDoc(old), { ...payload, ...keep, updatedAt: Timestamp.now(), updatedBy: who });
+      } else {
+        // 새로 등록하거나, '나만' ↔ 공용으로 바뀌면 저장 위치를 옮김
+        const base = old ? { createdAt: old.createdAt || Timestamp.now(), createdBy: old.createdBy || who, updatedAt: Timestamp.now(), updatedBy: who } : { createdAt: Timestamp.now(), createdBy: who };
+        await addDoc(toPrivate ? privCol() : collection(db, 'officeCalendar'), { ...payload, ...base });
+        if (old) await deleteDoc(evDoc(old));
+      }
       const wasEdit = !!editingId;
       ocClose();
       if (dayOpen) { dayOpen = data.date; $('ocDayModal').dataset.date = data.date; }
@@ -367,7 +401,7 @@
     const x = events.find((e) => e.id === editingId);
     if (!confirm(`이 일정을 삭제할까요?\n${x ? `${x.branch} · ${x.type} · ${x.date}` : ''}`)) return;
     try {
-      await deleteDoc(doc(db, 'officeCalendar', editingId));
+      await deleteDoc(evDoc(x));
       ocClose(); await load();
       if (typeof showToast === 'function') showToast('일정을 삭제했습니다');
     } catch (e) { $('ocMsg').textContent = '삭제 실패: ' + e.message; }
