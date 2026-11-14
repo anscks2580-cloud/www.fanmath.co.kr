@@ -784,7 +784,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, getDocs, collection, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, getDocs, collection, setDoc, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
 const firebaseConfig = {
@@ -923,7 +923,18 @@ async function loadMyProgress() {
   }
 }
 
+// ── 하루 학습 시간(studyLogs/{uid}_{날짜}.seconds) — 실제로 재생된 시간만 누적 (학생 앱 app.html과 같은 기록) ──
+let pendingStudy = 0, studyTick = null;
+async function flushStudy() {
+  if (pendingStudy < 1 || !myProfile) return;
+  const n = Math.floor(pendingStudy); pendingStudy -= n;
+  const d = new Date(), day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  try {
+    await setDoc(doc(db, 'studyLogs', `${myProfile.uid}_${day}`), { studentUid: myProfile.uid, studentName: myProfile.name || '', branch: myProfile.branch || '', date: day, seconds: increment(n), updatedAt: serverTimestamp() }, { merge: true });
+  } catch (e) { console.warn('[학습 시간] 저장 실패', e.message); pendingStudy += n; }
+}
 async function flushProgress() {
+  flushStudy();
   if (!currentProgress || !myProfile) return;
   const p = currentProgress;
   // 이미 저장된 최대 시청 지점보다 줄어들지 않게
@@ -1864,9 +1875,11 @@ window.openModal = function(id, title, videoDocId, tag) {
       }
 
       // 이어보기 선택 전에는 마지막 위치가 덮어써지지 않게
-      if (!currentProgress.resumeApplied) return;
+      if (!currentProgress.resumeApplied) { studyTick = null; return; }
       // 화면을 벗어난 상태(최소화·탭 전환)에서는 시청으로 인정하지 않음
-      if (document.hidden) return;
+      if (document.hidden) { studyTick = null; return; }
+      if (studyTick != null && sec > studyTick && sec - studyTick <= 1.5) pendingStudy += sec - studyTick;
+      studyTick = sec;
       currentProgress.lastSeconds = sec;
       if (currentProgress.freeSeek) {
         // 기출해설: 이어서 본 구간만 시청으로 인정 (건너뛴 구간은 시청률에 반영 안 함)
@@ -1914,7 +1927,8 @@ window.openModal = function(id, title, videoDocId, tag) {
       flushProgress();
     });
     // 10초마다 진행률 저장 (너무 잦은 쓰기 방지)
-    vimeoPlayer.on('pause', () => { flushProgress(); });
+    vimeoPlayer.on('pause', () => { studyTick = null; flushProgress(); });
+    vimeoPlayer.on('seeked', () => { studyTick = null; });
     // 화면을 벗어난 상태에서 재생되면 바로 멈춤
     vimeoPlayer.on('play', () => {
       if (document.hidden) vimeoPlayer.pause().catch(()=>{});

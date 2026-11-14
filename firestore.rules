@@ -139,8 +139,12 @@ service cloud.firestore {
       allow read: if isSignedIn() && (request.auth.uid == uid || isParentOf(uid) || isTeacher() || isAdmin());
       allow write: if isAdmin() || isTeacher();
       // 앱 푸시 토큰: 본인 계정이 parentFcmToken(예전 학부모 방식)·fcmToken(학생 마이페이지 숙제 알림) 필드만 수정하는 건 허용
+      // + 학생 앱(app.html)에서 학생이 직접 쓰는 목표 대학(goalUniv·goalDept·goalMsg, 각 40자 이내)
       allow update: if isSignedIn() && request.auth.uid == uid &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['parentFcmToken', 'fcmToken']);
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['parentFcmToken', 'fcmToken', 'goalUniv', 'goalDept', 'goalMsg']) &&
+        request.resource.data.get('goalUniv', '').size() <= 40 &&
+        request.resource.data.get('goalDept', '').size() <= 40 &&
+        request.resource.data.get('goalMsg', '').size() <= 40;
     }
 
     // ── consultForms: 상담 기록 ──
@@ -546,6 +550,35 @@ service cloud.firestore {
       allow create: if isAdmin() || (isTeacher() && request.resource.data.uploaderUid == request.auth.uid
         && request.resource.data.branch in ['평촌관', '산본관']);
       allow update, delete: if isAdmin() || (isTeacher() && resource.data.uploaderUid == request.auth.uid);
+    }
+
+    // ── homeworkChecks/{숙제id}_{학생uid}: 학생 앱에서 누르는 숙제 완료 체크 → 선생님(숙제 입력 목록)·학부모(숙제 탭)에 표시
+    // 학생 본인만 쓰기, 읽기는 본인·자기 아이 학부모·선생님·관리자 ──
+    match /homeworkChecks/{docId} {
+      allow read: if isTeacher() || isAdmin()
+        || (isSignedIn() && resource.data.studentId == request.auth.uid)
+        || (isParent() && resource.data.studentId == parentChildId());
+      allow create, update: if isStudent()
+        && request.resource.data.studentId == request.auth.uid
+        && docId == request.resource.data.logId + '_' + request.auth.uid
+        && request.resource.data.done is bool
+        && request.resource.data.keys().hasOnly(['logId', 'studentId', 'studentName', 'teacherUid', 'branch', 'date', 'done', 'checkedAt']);
+      allow delete: if isAdmin() || (isSignedIn() && resource.data.studentId == request.auth.uid);
+    }
+
+    // ── studyLogs/{학생uid}_{날짜}: 하루 강의 들은 시간(초) — 학생 앱·동영상강의 화면에서 실제 재생된 시간만 누적
+    // 학생 본인만 쓰기(하루 24시간 이내), 읽기는 본인·자기 아이 학부모·선생님·관리자 ──
+    match /studyLogs/{docId} {
+      allow read: if isTeacher() || isAdmin()
+        || (isSignedIn() && resource.data.studentUid == request.auth.uid)
+        || (isParent() && resource.data.studentUid == parentChildId());
+      allow create, update: if isSignedIn()
+        && request.resource.data.studentUid == request.auth.uid
+        && docId == request.auth.uid + '_' + request.resource.data.date
+        && request.resource.data.seconds is int
+        && request.resource.data.seconds >= 0 && request.resource.data.seconds <= 86400
+        && request.resource.data.keys().hasOnly(['studentUid', 'studentName', 'branch', 'date', 'seconds', 'updatedAt']);
+      allow delete: if isAdmin();
     }
 
     // ── 그 외 정의되지 않은 컬렉션: 기본적으로 관리자만 접근 가능 ──

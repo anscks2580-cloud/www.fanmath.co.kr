@@ -3040,6 +3040,7 @@ const hwYmd = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0'
 const hwLabel = (ymd) => { const d = new Date(ymd + 'T00:00:00'); return `${d.getMonth()+1}월 ${d.getDate()}일 (${HW_DOW[d.getDay()]})`; };
 let hwCls = '';
 let hwRows = [];
+let hwChecked = new Set();   // '숙제id_학생id' — 학생이 앱에서 완료 체크한 것
 // 관: 숙제 받는 학생들이 속한 관(다수) — 관리부 숙제표가 평촌관·산본관 따로 나뉨
 function hwBranchOf(ids) {
   const cnt = {};
@@ -3062,6 +3063,9 @@ async function hwLoad() {
   try {
     const snap = await getDocs(query(collection(db, 'homeworkLogs'), where('teacherUid', '==', currentTeacher.uid)));
     hwRows = []; snap.forEach(d => hwRows.push({ id: d.id, ...d.data() }));
+    // 학생이 학원 앱에서 누른 완료 체크 (homeworkChecks — 숙제id_학생id)
+    hwChecked = new Set();
+    try { const cs = await getDocs(query(collection(db, 'homeworkChecks'), where('teacherUid', '==', currentTeacher.uid))); cs.forEach(d => { const x = d.data(); if (x.done) hwChecked.add(x.logId + '_' + x.studentId); }); } catch (e) { console.warn('[숙제 체크]', e.message); }
   } catch (e) { showAlert(document.getElementById('hw-err'), '불러오기 오류: ' + e.message, 'err'); }
   hwRenderClasses();
   hwRenderStudents(hwEditing ? (hwRows.find(r => r.id === hwEditing)?.studentIds || null) : null);
@@ -3216,8 +3220,9 @@ function hwRenderList() {
         <div style="min-width:0;">
           ${hwMultiBranch() ? `<span style="font-size:11px;color:var(--muted);margin-right:4px;">[${hwEsc(r.branch || hwBranchOf(r.studentIds || []))}]</span>` : ''}<span style="font-weight:700;color:var(--purple, #5B3FA6);">${hwEsc(r.classGroup)}</span>${by}
           <span style="font-size:12px;color:var(--muted);margin-left:6px;">${(r.studentNames || []).length}명</span>
+          ${(() => { const ids = r.studentIds || []; const n = ids.filter(id => hwChecked.has(r.id + '_' + id)).length; return ids.length ? `<span style="font-size:11.5px;font-weight:700;margin-left:6px;padding:1px 8px;border-radius:99px;${n >= ids.length ? 'background:rgba(46,158,91,0.12);color:#2E9E5B;' : 'background:rgba(30,24,56,0.05);color:var(--muted);'}">학생 완료 ${n}/${ids.length}</span>` : ''; })()}
           <div style="font-size:13px;margin-top:4px;white-space:pre-wrap;">${hwEsc(r.content)}</div>
-          <div style="font-size:11.5px;color:var(--muted);margin-top:3px;">${(r.studentNames || []).map(hwEsc).join(', ')}</div>
+          <div style="font-size:11.5px;color:var(--muted);margin-top:3px;">${(r.studentNames || []).map((nm, i) => hwChecked.has(r.id + '_' + (r.studentIds || [])[i]) ? `<span style="color:#2E9E5B;font-weight:700;">✅${hwEsc(nm)}</span>` : hwEsc(nm)).join(', ')}</div>
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0;">
           <button class="btn btn-outline btn-sm" onclick="hwEdit('${r.id}')">수정</button>

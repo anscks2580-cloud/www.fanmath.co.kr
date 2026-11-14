@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>송우찬수학 · 학생</title>
+<link rel="icon" href="swc-logo.svg">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#4B3391">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="송우찬수학">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+<script src="https://player.vimeo.com/api/player.js"></script>
+<script src="video-chapters.js?v=1794130000"></script>
+<!--
+  ═══════════════════════════════════════════════════════════
+  학생 전용 앱 화면 (학원 앱을 홈 화면 아이콘으로 실행 + 학생 계정 로그인 → login.html이 이 화면으로 보냄)
+  · 인터넷 창으로 접속한 학생, 학부모·선생님·관리자는 지금처럼 기존 화면 그대로
+  · 아래 탭: 홈 / 강의실 / 숙제 / 내 정보
+  · 데이터
+     - students/{uid}            기본정보 + 목표 대학(goalUniv·goalDept·goalMsg, 학생이 직접 입력)
+     - videos · videoGroups      배정된 강의(assignedTags 기준 — videos.html과 같은 규칙)
+     - videoProgress             강의별 시청률·이어보기 (videos.html과 같은 기록 공유)
+     - studyLogs/{uid}_{날짜}     하루 강의 들은 시간(초) — 실제로 재생된 시간만 누적
+     - homeworkLogs              선생님·관리부가 등록한 숙제
+     - homeworkChecks/{숙제id}_{uid}  학생이 누른 숙제 완료 체크 → 선생님·학부모 화면에도 표시
+       (나중에 문제DB 프로그램(HCS) 프린트 숙제 답안 제출도 이 구조에 붙일 예정)
+  ═══════════════════════════════════════════════════════════
+-->
+<style>
+:root {
+  --p:#5B3FA6; --p-d:#4B3391; --p-dd:#2A1E55; --p-soft:#EEE9F8; --p-line:#DCD2F2;
+  --g:#F5C518; --g-d:#C49A28; --g-soft:#FDF6DA;
+  --ink:#1A1230; --ink2:#4A4160; --mute:#8B86A0; --line:#ECE9F3; --bg:#F4F2F9; --card:#fff;
+  --ok:#2E9E5B; --ok-soft:#E3F3EA; --bad:#D64545; --bad-soft:#FBE7E7;
+  --safe-b: env(safe-area-inset-bottom); --safe-t: env(safe-area-inset-top);
+}
+* { box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent; }
+html, body { background:var(--bg); }
+body { font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Apple SD Gothic Neo','Malgun Gothic',sans-serif; color:var(--ink); line-height:1.45; word-break:keep-all; overflow-wrap:break-word; -webkit-font-smoothing:antialiased; }
+button { font-family:inherit; cursor:pointer; }
+.app { max-width:560px; margin:0 auto; min-height:100vh; padding-bottom:calc(84px + var(--safe-b)); position:relative; }
+.page { display:none; animation:fadeIn .18s ease; }
+.page.on { display:block; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
+.loading { padding:120px 20px; text-align:center; color:var(--mute); font-size:14px; }
+.loading .sp { width:34px; height:34px; border-radius:50%; border:3px solid var(--p-soft); border-top-color:var(--p); margin:0 auto 14px; animation:spin .8s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+
+/* 상단 바 */
+.top { position:sticky; top:0; z-index:20; background:rgba(244,242,249,.92); backdrop-filter:saturate(1.4) blur(12px); -webkit-backdrop-filter:saturate(1.4) blur(12px); padding:calc(var(--safe-t) + 10px) 18px 10px; display:flex; align-items:center; gap:10px; }
+.top .logo { width:28px; height:28px; }
+.top h1 { font-size:17px; font-weight:800; letter-spacing:-.3px; }
+.top .r { margin-left:auto; display:flex; gap:6px; }
+.icon-btn { width:38px; height:38px; border-radius:12px; border:0; background:#fff; color:var(--ink); font-size:17px; display:inline-flex; align-items:center; justify-content:center; box-shadow:0 1px 3px rgba(30,24,56,.06); position:relative; }
+.icon-btn .dot { position:absolute; top:6px; right:6px; min-width:16px; height:16px; padding:0 4px; border-radius:99px; background:var(--bad); color:#fff; font-size:10px; font-weight:800; line-height:16px; }
+.wrap { padding:4px 16px 16px; }
+
+/* 홈 — 인사 카드 */
+.hero { background:linear-gradient(140deg, #5B3FA6 0%, #4B3391 55%, #2A1E55 100%); color:#fff; border-radius:22px; padding:20px 20px 18px; position:relative; overflow:hidden; box-shadow:0 10px 30px rgba(75,51,145,.28); }
+.hero::after { content:''; position:absolute; right:-40px; top:-40px; width:170px; height:170px; border-radius:50%; background:radial-gradient(circle, rgba(245,197,24,.35), rgba(245,197,24,0) 70%); }
+.hero .hi { font-size:13px; opacity:.8; }
+.hero .nm { font-size:24px; font-weight:800; letter-spacing:-.5px; margin-top:2px; }
+.hero .nm small { font-size:15px; font-weight:600; opacity:.85; }
+.hero .meta { font-size:12.5px; opacity:.75; margin-top:3px; }
+.goal { margin-top:16px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18); border-radius:16px; padding:13px 14px; display:flex; align-items:center; gap:12px; position:relative; z-index:1; }
+.goal .em { width:42px; height:42px; border-radius:12px; background:var(--g); color:var(--p-dd); display:flex; align-items:center; justify-content:center; font-size:21px; flex-shrink:0; }
+.goal .t1 { font-size:17px; font-weight:800; line-height:1.25; }
+.goal .t2 { font-size:12.5px; opacity:.85; margin-top:2px; }
+.goal .ed { margin-left:auto; border:0; background:rgba(255,255,255,.18); color:#fff; font-size:12px; font-weight:700; border-radius:9px; padding:7px 10px; flex-shrink:0; }
+.goal.empty { cursor:pointer; }
+
+/* 빠른 칸 3개 */
+.quick { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:12px; }
+.qk { background:#fff; border-radius:16px; padding:13px 10px 12px; text-align:center; border:0; color:var(--ink); box-shadow:0 1px 3px rgba(30,24,56,.05); }
+.qk .ic { font-size:20px; }
+.qk .k { font-size:11.5px; color:var(--mute); font-weight:700; margin-top:4px; }
+.qk .v { font-size:15.5px; font-weight:800; margin-top:1px; letter-spacing:-.3px; }
+.qk .v.p { color:var(--p); } .qk .v.r { color:var(--bad); } .qk .v.ok { color:var(--ok); }
+
+/* 섹션 */
+.sec { margin-top:22px; }
+.sec-h { display:flex; align-items:center; gap:6px; margin:0 2px 10px; }
+.sec-h h2 { font-size:16.5px; font-weight:800; letter-spacing:-.3px; }
+.sec-h .more { margin-left:auto; border:0; background:none; color:var(--mute); font-size:12.5px; font-weight:700; }
+.card { background:#fff; border-radius:18px; padding:16px; box-shadow:0 1px 3px rgba(30,24,56,.05); }
+.empty { color:var(--mute); font-size:13.5px; text-align:center; padding:22px 10px; }
+
+/* 최근 수강 강의 (가로로 넘기기) */
+.hscroll { display:flex; gap:10px; overflow-x:auto; scroll-snap-type:x mandatory; margin:0 -16px; padding:0 16px 4px; scrollbar-width:none; }
+.hscroll::-webkit-scrollbar { display:none; }
+.rc { flex:0 0 78%; max-width:320px; scroll-snap-align:start; background:#fff; border-radius:16px; overflow:hidden; border:0; text-align:left; color:var(--ink); box-shadow:0 1px 3px rgba(30,24,56,.06); padding:0; }
+.rc .bar { background:linear-gradient(90deg, #7C5CD6, #5B3FA6); color:#fff; font-size:12.5px; font-weight:700; padding:10px 14px; display:flex; align-items:center; }
+.rc .bar .pl { margin-left:auto; width:26px; height:26px; border-radius:50%; background:#fff; color:var(--p); display:flex; align-items:center; justify-content:center; font-size:11px; }
+.rc .bd { padding:12px 14px 14px; }
+.rc .tt { font-size:15px; font-weight:800; line-height:1.35; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:40px; }
+.rc .cs { font-size:12px; color:var(--mute); margin-top:4px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pbar { height:6px; border-radius:99px; background:var(--p-soft); overflow:hidden; margin-top:10px; }
+.pbar i { display:block; height:100%; border-radius:99px; background:linear-gradient(90deg, #7C5CD6, var(--g)); }
+.pbar.done i { background:var(--ok); }
+
+/* 학습 통계 */
+.stats { display:grid; grid-template-columns:1fr 1px 1fr 1px 1fr; align-items:center; text-align:center; }
+.stats .sep { height:40px; background:var(--line); }
+.stats .k { font-size:12.5px; font-weight:700; color:var(--ink2); }
+.stats .v { font-size:15px; color:var(--ink2); margin-top:3px; }
+.stats .v b { font-size:22px; color:var(--p); font-weight:800; }
+.stats .s { font-size:11.5px; color:var(--mute); margin-top:1px; }
+
+/* 숙제 */
+.hw { display:flex; gap:12px; align-items:flex-start; padding:13px 0; }
+.hw + .hw { border-top:1px solid var(--line); }
+.hw .ck { width:30px; height:30px; border-radius:10px; border:2px solid var(--p-line); background:#fff; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:15px; color:#fff; transition:all .15s; margin-top:1px; }
+.hw .ck.on { background:var(--ok); border-color:var(--ok); }
+.hw .ck:disabled { opacity:.5; }
+.hw .bd { flex:1; min-width:0; }
+.hw .who { font-size:12px; color:var(--mute); font-weight:700; display:flex; gap:6px; flex-wrap:wrap; }
+.hw .ct { font-size:15px; margin-top:3px; white-space:pre-wrap; }
+.hw.done .ct { color:var(--mute); text-decoration:line-through; text-decoration-color:rgba(139,134,160,.6); }
+.hw .st { font-size:11.5px; color:var(--ok); font-weight:700; margin-top:4px; }
+.hw.abs .ct { color:var(--bad); }
+.dgrp { margin-bottom:12px; }
+.dgrp .dh { font-size:13.5px; font-weight:800; color:var(--ink2); margin:0 4px 6px; display:flex; align-items:center; gap:6px; }
+.tag { display:inline-block; font-size:11px; font-weight:800; padding:2px 8px; border-radius:99px; background:var(--p); color:#fff; }
+.tag.g { background:var(--g); color:var(--p-dd); }
+.tag.ok { background:var(--ok-soft); color:var(--ok); }
+.tag.mute { background:var(--bg); color:var(--mute); }
+.hw-sum { display:flex; align-items:center; gap:14px; }
+.ring { width:64px; height:64px; flex-shrink:0; }
+.hw-sum .t1 { font-size:16px; font-weight:800; }
+.hw-sum .t2 { font-size:12.5px; color:var(--mute); margin-top:2px; }
+.seg { display:flex; background:#fff; border-radius:13px; padding:4px; gap:4px; box-shadow:0 1px 3px rgba(30,24,56,.05); margin-bottom:12px; }
+.seg button { flex:1; border:0; background:none; padding:9px 6px; border-radius:10px; font-size:13.5px; font-weight:700; color:var(--mute); }
+.seg button.on { background:var(--p); color:#fff; }
+
+/* 강의실 */
+.chips { display:flex; gap:6px; overflow-x:auto; margin:0 -16px 12px; padding:0 16px; scrollbar-width:none; }
+.chips::-webkit-scrollbar { display:none; }
+.chip { flex-shrink:0; border:1px solid var(--line); background:#fff; color:var(--ink2); font-size:13px; font-weight:700; padding:8px 14px; border-radius:99px; }
+.chip.on { border-color:var(--p); color:var(--p); background:var(--p-soft); box-shadow:inset 0 0 0 1px var(--p); }
+.course { display:flex; gap:12px; align-items:center; background:#fff; border-radius:18px; padding:15px; margin-bottom:10px; border:0; width:100%; text-align:left; color:var(--ink); box-shadow:0 1px 3px rgba(30,24,56,.05); }
+.course .cv { width:52px; height:52px; border-radius:14px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:800; color:#fff; text-align:center; line-height:1.15; padding:4px; background:linear-gradient(140deg, #7C5CD6, #4B3391); }
+.course .cv.wc { background:linear-gradient(140deg, #F5C518, #D9A400); color:var(--p-dd); }
+.course .cv.ex { background:linear-gradient(140deg, #2F7FD6, #1F5FA8); }
+.course .cv.bo { background:linear-gradient(140deg, #2E9E5B, #1E7A43); }
+.course .bd { flex:1; min-width:0; }
+.course .t { font-size:15px; font-weight:800; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.course .s { font-size:12px; color:var(--mute); margin-top:2px; }
+.course .pbar { margin-top:8px; }
+.course .pct { font-size:13px; font-weight:800; color:var(--p); flex-shrink:0; min-width:40px; text-align:right; }
+
+/* 강좌 상세 */
+.cd-head { background:#fff; border-radius:18px; padding:16px; box-shadow:0 1px 3px rgba(30,24,56,.05); }
+.cd-head .sub { font-size:12.5px; color:var(--mute); font-weight:700; }
+.cd-head .t { font-size:18px; font-weight:800; margin-top:2px; letter-spacing:-.3px; }
+.cd-stats { display:grid; grid-template-columns:1fr 1px 1fr 1px 1fr; background:var(--bg); border-radius:14px; margin-top:14px; padding:11px 0; text-align:center; align-items:center; }
+.cd-stats .sep { height:30px; background:var(--line); }
+.cd-stats .k { font-size:11.5px; color:var(--mute); }
+.cd-stats .v { font-size:15px; font-weight:800; color:var(--p); margin-top:1px; }
+.lec { display:flex; align-items:stretch; background:#fff; border-radius:16px; margin-top:8px; overflow:hidden; box-shadow:0 1px 3px rgba(30,24,56,.05); border:0; width:100%; text-align:left; color:var(--ink); padding:0; }
+.lec .no { width:44px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.lec .no span { width:28px; height:28px; border-radius:50%; border:1.5px solid var(--line); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:var(--mute); }
+.lec.done .no span { background:var(--ok); border-color:var(--ok); color:#fff; }
+.lec .bd { flex:1; min-width:0; padding:13px 6px 13px 0; }
+.lec .t { font-size:14.5px; font-weight:700; line-height:1.35; }
+.lec .m { font-size:12px; color:var(--mute); margin-top:4px; display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.lec .m .lw { color:#D64545; }
+.lec .pl { width:52px; flex-shrink:0; background:var(--p-soft); display:flex; align-items:center; justify-content:center; color:var(--p); font-size:16px; }
+.lec.now { box-shadow:0 0 0 2px var(--p); }
+.badge { display:inline-block; font-size:11px; font-weight:800; padding:1px 7px; border-radius:6px; border:1px solid currentColor; }
+.badge.done { color:var(--ok); } .badge.ing { color:var(--p); } .badge.no { color:var(--mute); }
+.back { border:0; background:none; font-size:14px; font-weight:700; color:var(--ink2); display:inline-flex; align-items:center; gap:4px; padding:4px 0 10px; }
+
+/* 내 정보 */
+.info { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.info div { background:var(--bg); border-radius:12px; padding:10px 12px; }
+.info .k { font-size:11.5px; color:var(--mute); font-weight:700; }
+.info .v { font-size:15px; font-weight:800; margin-top:1px; }
+.br-p { color:var(--p); } .br-s { color:#B8860B; }
+.chart { display:flex; align-items:flex-end; gap:4px; height:130px; padding-top:14px; margin-top:6px; }
+.chart .c { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; position:relative; }
+.chart .c i { display:block; width:100%; max-width:22px; border-radius:6px 6px 3px 3px; background:var(--p-soft); min-height:3px; }
+.chart .c.on i { background:linear-gradient(180deg, #7C5CD6, #5B3FA6); }
+.chart .c.today i { background:linear-gradient(180deg, var(--g), var(--g-d)); }
+.chart .c em { font-style:normal; font-size:10px; color:var(--mute); margin-top:5px; }
+.chart .c b { font-size:9.5px; color:var(--p); font-weight:800; white-space:nowrap; margin-bottom:3px; letter-spacing:-.3px; }
+.menu { background:#fff; border-radius:18px; overflow:hidden; box-shadow:0 1px 3px rgba(30,24,56,.05); }
+.menu a, .menu button { display:flex; align-items:center; gap:10px; width:100%; padding:15px 16px; border:0; background:none; font-size:14.5px; font-weight:700; color:var(--ink); text-decoration:none; text-align:left; }
+.menu a + a, .menu a + button, .menu button + a, .menu button + button { border-top:1px solid var(--line); }
+.menu .ar { margin-left:auto; color:var(--mute); }
+.menu .red { color:var(--bad); }
+.push { display:flex; align-items:center; gap:10px; background:var(--p-soft); border:1px solid var(--p-line); border-radius:16px; padding:12px 14px; font-size:13.5px; color:var(--ink2); margin-top:12px; }
+.push b { color:var(--p); }
+.push button { margin-left:auto; background:var(--p); color:#fff; border:0; border-radius:10px; padding:9px 12px; font-size:13px; font-weight:800; white-space:nowrap; }
+.push.on { background:var(--ok-soft); border-color:#C6E6D3; } .push.on b { color:var(--ok); }
+
+/* 아래 탭 */
+.tabbar { position:fixed; left:0; right:0; bottom:0; z-index:30; background:rgba(255,255,255,.96); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border-top:1px solid var(--line); padding:6px 8px calc(6px + var(--safe-b)); }
+.tabbar .in { max-width:560px; margin:0 auto; display:grid; grid-template-columns:repeat(4,1fr); }
+.tabbar button { border:0; background:none; display:flex; flex-direction:column; align-items:center; gap:2px; padding:6px 0 4px; color:#A8A3B8; font-size:11px; font-weight:700; position:relative; }
+.tabbar button svg { width:24px; height:24px; }
+.tabbar button.on { color:var(--p); }
+.tabbar button.on::before { content:''; position:absolute; top:-6px; width:22px; height:3px; border-radius:0 0 3px 3px; background:var(--p); }
+.tabbar .bd { position:absolute; top:2px; left:calc(50% + 6px); min-width:16px; height:16px; padding:0 4px; border-radius:99px; background:var(--bad); color:#fff; font-size:10px; line-height:16px; font-weight:800; }
+
+/* 플레이어 (전체 화면) */
+.player { position:fixed; inset:0; z-index:100; background:var(--bg); display:none; flex-direction:column; }
+.player.on { display:flex; animation:slideUp .22s ease; }
+@keyframes slideUp { from { transform:translateY(30px); opacity:0; } to { transform:none; opacity:1; } }
+.pl-top { background:#000; padding:calc(var(--safe-t) + 6px) 8px 6px; display:flex; align-items:center; gap:6px; color:#fff; }
+.pl-top button { border:0; background:rgba(255,255,255,.12); color:#fff; width:36px; height:36px; border-radius:10px; font-size:16px; flex-shrink:0; }
+.pl-top .t { flex:1; min-width:0; font-size:13.5px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding:0 4px; }
+.pl-video { position:relative; background:#000; width:100%; aspect-ratio:16/9; flex-shrink:0; }
+.pl-video iframe { position:absolute; inset:0; width:100%; height:100%; border:0; }
+.pl-scroll { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 16px calc(24px + var(--safe-b)); }
+.pl-info { background:#fff; margin:0 -16px; padding:14px 16px 12px; border-bottom:1px solid var(--line); }
+.pl-info .cs { font-size:12px; color:var(--mute); font-weight:700; }
+.pl-info .t { font-size:16.5px; font-weight:800; margin-top:2px; line-height:1.35; }
+.pl-note { font-size:12.5px; color:var(--ink2); margin-top:8px; background:var(--bg); border-radius:10px; padding:8px 10px; line-height:1.5; }
+.pl-nav { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+.pl-nav button { border:1px solid var(--line); background:#fff; border-radius:12px; padding:11px 8px; font-size:13.5px; font-weight:800; color:var(--ink2); }
+.pl-nav button.nx { background:var(--p); border-color:var(--p); color:#fff; }
+.pl-nav button:disabled { opacity:.35; }
+#plChapters { margin-top:10px; }
+.pl-list-h { font-size:14px; font-weight:800; margin:16px 2px 2px; display:flex; align-items:center; gap:6px; }
+.pl-list-h small { margin-left:auto; color:var(--mute); font-weight:700; font-size:12px; }
+.resume { position:absolute; inset:0; z-index:2; background:rgba(0,0,0,.72); display:none; align-items:center; justify-content:center; flex-direction:column; gap:12px; color:#fff; text-align:center; padding:16px; }
+.resume.on { display:flex; }
+.resume .q { font-size:15px; font-weight:800; }
+.resume .q small { display:block; font-size:12.5px; font-weight:600; opacity:.8; margin-top:3px; }
+.resume .b { display:flex; gap:8px; }
+.resume button { border:0; border-radius:11px; padding:11px 18px; font-size:14px; font-weight:800; }
+.resume .y { background:var(--g); color:var(--p-dd); }
+.resume .n { background:rgba(255,255,255,.15); color:#fff; }
+
+/* 목표 입력 창 */
+.sheet-bg { position:fixed; inset:0; z-index:200; background:rgba(26,18,48,.5); display:none; align-items:flex-end; justify-content:center; }
+.sheet-bg.on { display:flex; }
+.sheet { width:100%; max-width:560px; background:#fff; border-radius:24px 24px 0 0; padding:10px 20px calc(20px + var(--safe-b)); animation:slideUp .2s ease; }
+.sheet .grab { width:40px; height:5px; border-radius:99px; background:var(--line); margin:0 auto 14px; }
+.sheet h3 { font-size:18px; font-weight:800; }
+.sheet p { font-size:13px; color:var(--mute); margin-top:3px; }
+.sheet label { display:block; font-size:12.5px; font-weight:700; color:var(--ink2); margin:14px 0 6px; }
+.sheet input { width:100%; padding:13px 14px; border:1.5px solid var(--line); border-radius:12px; font-size:16px; font-family:inherit; outline:none; background:var(--bg); }
+.sheet input:focus { border-color:var(--p); background:#fff; }
+.sheet .acts { display:flex; gap:8px; margin-top:18px; }
+.sheet .acts button { flex:1; border:0; border-radius:13px; padding:14px; font-size:15px; font-weight:800; }
+.sheet .acts .c { background:var(--bg); color:var(--ink2); }
+.sheet .acts .s { background:var(--p); color:#fff; }
+.toast { position:fixed; left:50%; bottom:calc(96px + var(--safe-b)); transform:translateX(-50%); z-index:300; background:var(--p-dd); color:#fff; font-size:13.5px; font-weight:700; padding:11px 18px; border-radius:99px; box-shadow:0 8px 24px rgba(26,18,48,.3); opacity:0; pointer-events:none; transition:opacity .2s; white-space:nowrap; }
+.toast.on { opacity:1; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <div class="loading" id="boot"><div class="sp"></div>불러오는 중...</div>
+
+  <!-- ══ 홈 ══ -->
+  <section class="page" id="pg-home">
+    <div class="top">
+      <img class="logo" src="swc-logo.svg" alt="">
+      <h1>송우찬수학</h1>
+      <div class="r"><button class="icon-btn" onclick="go('hw')" aria-label="숙제">📝<span class="dot" id="hwDot" style="display:none"></span></button></div>
+    </div>
+    <div class="wrap">
+      <div class="hero">
+        <div class="hi" id="hHi">안녕하세요</div>
+        <div class="nm" id="hName"></div>
+        <div class="meta" id="hMeta"></div>
+        <div id="hGoal"></div>
+      </div>
+      <div class="quick" id="hQuick"></div>
+      <div class="sec">
+        <div class="sec-h"><h2>최근 수강 강의</h2><button class="more" onclick="go('class')">내 강의실 ›</button></div>
+        <div id="hRecent"></div>
+      </div>
+      <div class="sec">
+        <div class="sec-h"><h2>학습 통계</h2><button class="more" onclick="go('my')">자세히 ›</button></div>
+        <div class="card" id="hStats"></div>
+      </div>
+      <div class="sec">
+        <div class="sec-h"><h2 id="hHwTitle">오늘 숙제</h2><button class="more" onclick="go('hw')">전체 ›</button></div>
+        <div class="card" id="hHw" style="padding-top:4px;padding-bottom:4px;"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══ 강의실 ══ -->
+  <section class="page" id="pg-class">
+    <div class="top"><h1>내 강의실</h1></div>
+    <div class="wrap" id="classBody"></div>
+  </section>
+
+  <!-- ══ 숙제 ══ -->
+  <section class="page" id="pg-hw">
+    <div class="top"><h1>숙제</h1></div>
+    <div class="wrap" id="hwBody"></div>
+  </section>
+
+  <!-- ══ 내 정보 ══ -->
+  <section class="page" id="pg-my">
+    <div class="top"><h1>내 정보</h1></div>
+    <div class="wrap" id="myBody"></div>
+  </section>
+</div>
+
+<!-- ══ 아래 탭 ══ -->
+<nav class="tabbar" id="tabbar" style="display:none">
+  <div class="in">
+    <button data-p="home" onclick="go('home')" class="on">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>홈</button>
+    <button data-p="class" onclick="go('class')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="14" rx="2.5"/><path d="m10 8.5 5 2.5-5 2.5z" fill="currentColor"/><path d="M8 21h8"/></svg>강의실</button>
+    <button data-p="hw" onclick="go('hw')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>숙제<span class="bd" id="tabHwBadge" style="display:none"></span></button>
+    <button data-p="my" onclick="go('my')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>내 정보</button>
+  </div>
+</nav>
+
+<!-- ══ 강의 플레이어 ══ -->
+<div class="player" id="player">
+  <div class="pl-top">
+    <button onclick="closePlayer()" aria-label="닫기">✕</button>
+    <div class="t" id="plTopTitle"></div>
+  </div>
+  <div class="pl-video">
+    <iframe id="plIframe" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>
+    <div class="resume" id="plResume">
+      <div class="q">이어서 들을까요?<small id="plResumeAt"></small></div>
+      <div class="b"><button class="y" onclick="chooseResume(true)">이어 듣기</button><button class="n" onclick="chooseResume(false)">처음부터</button></div>
+    </div>
+  </div>
+  <div class="pl-scroll" id="plScroll">
+    <div class="pl-info">
+      <div class="cs" id="plCourse"></div>
+      <div class="t" id="plTitle"></div>
+      <div id="plChapters"></div>
+      <div class="pl-note" id="plNote"></div>
+      <div class="pl-nav"><button id="plPrev" onclick="playStep(-1)">‹ 이전 강의</button><button class="nx" id="plNext" onclick="playStep(1)">다음 강의 ›</button></div>
+    </div>
+    <div class="pl-list-h">강의 목록<small id="plListSum"></small></div>
+    <div id="plList"></div>
+  </div>
+</div>
+
+<!-- ══ 목표 대학 입력 ══ -->
+<div class="sheet-bg" id="goalSheet" onclick="if(event.target===this)closeGoal()">
+  <div class="sheet">
+    <div class="grab"></div>
+    <h3>🎓 나의 목표</h3>
+    <p>가고 싶은 대학과 학과를 적어 보세요. 홈 화면에 항상 보여요.</p>
+    <label for="gUniv">목표 대학</label>
+    <input id="gUniv" maxlength="30" placeholder="예: 서울대학교" autocomplete="off">
+    <label for="gDept">학과 (선택)</label>
+    <input id="gDept" maxlength="30" placeholder="예: 수리과학부" autocomplete="off">
+    <label for="gMsg">나에게 한마디 (선택)</label>
+    <input id="gMsg" maxlength="40" placeholder="예: 목표로 파이팅!" autocomplete="off">
+    <div class="acts"><button class="c" onclick="closeGoal()">취소</button><button class="s" id="gSave" onclick="saveGoal()">저장</button></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, getDocs, setDoc, updateDoc, collection, query, where, serverTimestamp, increment }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getMessaging, getToken, onMessage, isSupported } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
+
+const app = initializeApp({ apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA", authDomain: "songmath.firebaseapp.com", projectId: "songmath", storageBucket: "songmath.firebasestorage.app", messagingSenderId: "936295436575", appId: "1:936295436575:web:d1e201508719850cfbe02a" });
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const $ = (id) => document.getElementById(id);
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const DOW = ['일', '월', '화', '수', '목', '금', '토'];
+const p2 = (n) => String(n).padStart(2, '0');
+const ymd = (d) => `${d.getFullYear()}-${p2(d.getMonth() + 1)}-${p2(d.getDate())}`;
+const parseYmd = (s) => { const [y, m, d] = String(s).split('-').map(Number); return new Date(y, m - 1, d); };
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x; };
+const mdw = (s) => { const d = parseYmd(s); return `${d.getMonth() + 1}/${d.getDate()}(${DOW[d.getDay()]})`; };
+const TODAY = () => ymd(new Date());
+const ko = (a, b) => String(a || '').localeCompare(String(b || ''), 'ko', { numeric: true });
+function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 2200); }
+function hmText(sec) { sec = Math.round(sec || 0); const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60); return { h, m }; }
+function fmtTime(t) { t = Math.max(0, Math.floor(t || 0)); const h = Math.floor(t / 3600), m = Math.floor((t % 3600) / 60), s = t % 60; return h ? `${h}:${p2(m)}:${p2(s)}` : `${p2(m)}:${p2(s)}`; }
+
+// ── 상태 ──
+let me = null, stu = null;
+let myVideos = [];           // 볼 수 있는 강의
+let courses = [];            // [{ tag, label, subject, kind, videos[] }]
+let groupNames = {};
+const prog = new Map();      // videoDocId -> { percent, completed, maxWatchedSeconds, lastPositionSeconds, duration, updatedAt }
+let homework = [];           // homeworkLogs
+let checks = {};             // logId -> { done, checkedAt }
+let study = {};              // 'YYYY-MM-DD' -> 초
+let cur = 'home';
+let classView = { course: null, filter: '전체' };
+let hwView = 'todo';
+
+// ══════════════════════════════════════
+// 시작
+// ══════════════════════════════════════
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.replace('login.html?app=1'); return; }
+  try {
+    const s = await getDoc(doc(db, 'students', user.uid));
+    if (!s.exists()) { location.replace('login.html?app=1'); return; }   // 학생이 아니면 로그인 화면이 계정에 맞는 곳으로 보냄
+    stu = { id: user.uid, ...s.data() };
+    if (stu.status === '퇴원') { alert('퇴원 처리되어 사용이 중지된 계정입니다. 학원으로 문의해주세요.'); await signOut(auth); location.replace('login.html'); return; }
+    me = { uid: user.uid };
+    await loadAll();
+    $('boot').style.display = 'none';
+    $('tabbar').style.display = '';
+    const want = (location.hash || '').replace('#', '');
+    go(['home', 'class', 'hw', 'my'].includes(want) ? want : 'home', true);
+    pushInit();
+  } catch (e) {
+    $('boot').innerHTML = `불러오지 못했습니다.<br><small>${esc(e.message)}</small><br><br><button onclick="location.reload()" style="border:0;background:var(--p);color:#fff;border-radius:10px;padding:10px 16px;font-weight:800;">다시 시도</button>`;
+  }
+});
+
+async function loadAll() {
+  const uid = me.uid;
+  const [vs, gs, ps, hs, cs, ss] = await Promise.all([
+    getDocs(collection(db, 'videos')),
+    getDocs(collection(db, 'videoGroups')).catch(() => null),
+    getDocs(query(collection(db, 'videoProgress'), where('studentUid', '==', uid))).catch(() => null),
+    getDocs(query(collection(db, 'homeworkLogs'), where('studentIds', 'array-contains', uid))).catch(() => null),
+    getDocs(query(collection(db, 'homeworkChecks'), where('studentId', '==', uid))).catch(() => null),
+    getDocs(query(collection(db, 'studyLogs'), where('studentUid', '==', uid))).catch(() => null),
+  ]);
+  groupNames = {}; if (gs) gs.forEach((d) => { groupNames[d.id] = d.data().displayName || ''; });
+  const all = []; vs.forEach((d) => all.push({ id: d.id, ...d.data() }));
+  myVideos = filterMine(all);
+  buildCourses();
+  prog.clear();
+  if (ps) ps.forEach((d) => { const x = d.data(); prog.set(x.videoId, {
+    percent: x.percent || 0, completed: isFullyWatched(x.maxWatchedSeconds || 0, x.duration || 0),
+    maxWatchedSeconds: x.maxWatchedSeconds || 0, lastPositionSeconds: x.lastPositionSeconds || 0, duration: x.duration || 0,
+    updatedAt: x.lastWatchedAt?.toMillis ? x.lastWatchedAt.toMillis() : 0,
+  }); });
+  homework = []; if (hs) hs.forEach((d) => homework.push({ id: d.id, ...d.data() }));
+  homework.sort((a, b) => (b.date || '').localeCompare(a.date || '') || ko(a.teacherName, b.teacherName));
+  checks = {}; if (cs) cs.forEach((d) => { const x = d.data(); if (x.logId) checks[x.logId] = x; });
+  study = {}; if (ss) ss.forEach((d) => { const x = d.data(); if (x.date) study[x.date] = x.seconds || 0; });
+}
+
+// ── 볼 수 있는 강의 (videos.html과 같은 규칙) ──
+const isWcTag = (t) => String(t || '').startsWith('주간클리어_');
+function filterMine(all) {
+  const grade = String(stu.grade || '').trim(), branch = String(stu.branch || '').trim(), teacherName = String(stu.teacherName || '').trim();
+  let list;
+  if (Array.isArray(stu.assignedTags)) {
+    const assigned = stu.assignedTags.map((t) => String(t || '').trim()).filter(Boolean);
+    list = all.filter((v) => { const tag = String(v.tag || '').trim(); return assigned.some((a) => a.endsWith('_') ? tag.startsWith(a) : (tag === a || tag.startsWith(a + '_'))); });
+  } else {
+    const GRADE_VIDEO_TAGS = { '중1': ['중1'], '중2': ['중2'], '중3': ['중3'], '고1': ['공통수학1', '공통수학2', '송팁_공통수학1', '송팁_공통수학2'], '고2': ['대수', '미적분1', '확통'], '고3': ['미적분2', '기하'], 'N수': ['미적분2', '기하', '미적분1', '확통'] };
+    const GRADE_EXAM_PREFIX = { '고1': '기출_고1_', '고2': '기출_고2_', '고3': '기출_고3_', 'N수': '기출_고3_' };
+    const subj = GRADE_VIDEO_TAGS[grade] || [], ex = GRADE_EXAM_PREFIX[grade] || null, extra = (grade === '고3' || grade === 'N수') ? ['수리논술'] : [];
+    const junior = ['중1', '중2', '중3'].includes(grade);
+    let tTags = [];
+    if (teacherName) tTags = branch === '평촌관' ? [`보충_평촌_${teacherName}T`] : branch === '산본관' ? [`보충_산본_${teacherName}T`] : [`보충_평촌_${teacherName}T`, `보충_산본_${teacherName}T`];
+    list = all.filter((v) => { const tag = String(v.tag || '').trim();
+      if (junior) return subj.includes(tag) || tTags.includes(tag);
+      return subj.some((p) => tag === p || tag.startsWith(p + '_')) || (ex && tag.startsWith(ex)) || extra.includes(tag) || tTags.includes(tag); });
+  }
+  // 주간 클리어: 내 학년 것은 자동
+  const wc = all.filter((v) => v.tag === '주간클리어_' + grade);
+  const ids = new Set(list.map((v) => v.id));
+  wc.forEach((v) => { if (!ids.has(v.id)) list.push(v); });
+  return list.filter((v) => v.vimeoId);
+}
+
+// ── 강좌(태그) 묶기 ──
+const BOOK = { '세쌍둥이개념': '세쌍둥이 개념편', '세쌍둥이심화': '세쌍둥이 심화편', '세쌍둥이라이트': '세쌍둥이 라이트', '세쌍둥이파이널': '세쌍둥이 파이널' };
+function courseKind(tag) {
+  if (isWcTag(tag)) return '주간 클리어';
+  if (tag.startsWith('기출_')) return '기출해설';
+  if (tag.startsWith('보충_')) return '보충강의실';
+  if (tag === '수리논술' || tag.startsWith('수리논술')) return '수리논술';
+  return '정규 강의';
+}
+function courseLabel(tag) {
+  if (groupNames[tag]) return groupNames[tag];
+  if (isWcTag(tag)) return `주간 클리어 ${tag.slice(6)}`;
+  if (tag.startsWith('보충_')) { const m = tag.match(/^보충_(평촌|산본)_(.+)$/); return m ? `${m[2]} 보충강의실` : tag; }
+  if (tag.startsWith('기출_')) return tag.replace(/^기출_/, '').replace(/_/g, ' ') + ' 기출해설';
+  const i = tag.indexOf('_'); if (i < 0) return tag;
+  const rest = tag.slice(i + 1), j = rest.indexOf('_');
+  const bookKey = j >= 0 ? rest.slice(0, j) : rest, teacher = j >= 0 ? rest.slice(j + 1) : '';
+  const book = BOOK[bookKey] || bookKey;
+  return `${tag.slice(0, i)} ${book}${teacher ? ' - ' + teacher : ''}`;
+}
+function courseSubject(tag) {
+  if (isWcTag(tag)) return tag.slice(6);
+  if (tag.startsWith('기출_')) return (tag.split('_')[1] || '기출');
+  if (tag.startsWith('보충_')) return '보충';
+  const i = tag.indexOf('_'); return i < 0 ? tag : tag.slice(0, i);
+}
+function buildCourses() {
+  const m = new Map();
+  myVideos.forEach((v) => { const tag = String(v.tag || '미분류').trim(); if (!m.has(tag)) m.set(tag, []); m.get(tag).push(v); });
+  courses = [...m.entries()].map(([tag, vids]) => ({
+    tag, label: courseLabel(tag), subject: courseSubject(tag), kind: courseKind(tag),
+    videos: vids.slice().sort((a, b) => (a.order ?? 9999) - (b.order ?? 9999) || ko(a.date, b.date) || ko(a.title, b.title)),
+  }));
+  const KORD = { '정규 강의': 0, '주간 클리어': 1, '보충강의실': 2, '기출해설': 3, '수리논술': 4 };
+  courses.sort((a, b) => (KORD[a.kind] ?? 9) - (KORD[b.kind] ?? 9) || ko(a.label, b.label));
+}
+function courseStat(c) {
+  let done = 0, sum = 0, last = 0;
+  c.videos.forEach((v) => { const p = prog.get(v.id); if (p) { if (p.completed) done++; sum += p.completed ? 100 : (p.percent || 0); if (p.updatedAt > last) last = p.updatedAt; } });
+  return { total: c.videos.length, done, pct: c.videos.length ? Math.round(sum / c.videos.length) : 0, last, started: c.videos.filter((v) => prog.has(v.id)).length };
+}
+const courseOfVideo = (vid) => courses.find((c) => c.videos.some((v) => v.id === vid));
+
+// ══════════════════════════════════════
+// 화면 전환
+// ══════════════════════════════════════
+window.go = function (p, first) {
+  cur = p;
+  document.querySelectorAll('.page').forEach((el) => el.classList.toggle('on', el.id === 'pg-' + p));
+  document.querySelectorAll('.tabbar button').forEach((b) => b.classList.toggle('on', b.dataset.p === p));
+  render();
+  window.scrollTo({ top: 0 });
+  try { history.replaceState(null, '', '#' + p); } catch (e) {}
+};
+// 강의실 탭을 누르면 항상 강좌 목록부터
+document.querySelector('.tabbar button[data-p="class"]').addEventListener('click', () => { if (classView.course) { classView.course = null; renderClass(); } });
+
+function render() {
+  renderBadges();
+  if (cur === 'home') renderHome();
+  if (cur === 'class') renderClass();
+  if (cur === 'hw') renderHw();
+  if (cur === 'my') renderMy();
+}
+
+// ── 숙제 계산 ──
+const hwActive = (h) => !h.absent && String(h.content || '').trim();
+const isDone = (h) => !!(checks[h.id] && checks[h.id].done);
+function todayHw() { return homework.filter((h) => h.date === TODAY() && hwActive(h)); }
+function pendingHw() { const from = ymd(addDays(new Date(), -14)); return homework.filter((h) => hwActive(h) && h.date >= from && h.date <= TODAY() && !isDone(h)); }
+function renderBadges() {
+  const n = pendingHw().length;
+  const b = $('tabHwBadge'); b.textContent = n; b.style.display = n ? '' : 'none';
+  const d = $('hwDot'); d.textContent = n; d.style.display = n ? '' : 'none';
+}
+
+// ── 다음 수업 날짜 (등원 요일 기준) ──
+function classDays() {
+  const d = stu.days;
+  const arr = Array.isArray(d) ? d : String(d || '').split(/[\s,·/]+/);
+  return arr.map((x) => String(x).trim().charAt(0)).filter((x) => DOW.includes(x));
+}
+function nextClass() {
+  const days = classDays(); if (!days.length) return null;
+  const now = new Date();
+  for (let i = 0; i < 8; i++) { const d = addDays(now, i); if (days.includes(DOW[d.getDay()])) return { date: ymd(d), inDays: i }; }
+  return null;
+}
+
+// ══════════════════════════════════════
+// 홈
+// ══════════════════════════════════════
+function renderHome() {
+  const h = new Date().getHours();
+  $('hHi').textContent = h < 6 ? '늦은 시간까지 수고 많아요' : h < 12 ? '좋은 아침이에요' : h < 18 ? '오늘도 화이팅' : '오늘 하루도 수고했어요';
+  $('hName').innerHTML = `${esc(stu.name || '')}<small> 님</small>`;
+  $('hMeta').textContent = [stu.branch, stu.grade, stu.school, stu.classGroup].filter(Boolean).join(' · ');
+  $('hGoal').innerHTML = stu.goalUniv
+    ? `<div class="goal"><div class="em">🎓</div><div style="min-width:0;position:relative;z-index:1;"><div class="t1">${esc(stu.goalUniv)}${stu.goalDept ? ' ' + esc(stu.goalDept) : ''}</div><div class="t2">${esc(stu.goalMsg || '목표로 파이팅!')}</div></div><button class="ed" onclick="openGoal()">수정</button></div>`
+    : `<div class="goal empty" onclick="openGoal()"><div class="em">🎯</div><div style="position:relative;z-index:1;"><div class="t1">나의 목표 대학을 적어 보세요</div><div class="t2">눌러서 목표 정하기</div></div></div>`;
+
+  const th = todayHw(), thDone = th.filter(isDone).length;
+  const nc = nextClass();
+  const wk = weekSeconds(), wt = hmText(wk);
+  $('hQuick').innerHTML = `
+    <button class="qk" onclick="go('hw')"><div class="ic">📝</div><div class="k">오늘 숙제</div><div class="v ${th.length && thDone < th.length ? 'r' : th.length ? 'ok' : ''}">${th.length ? `${thDone}/${th.length}` : '없음'}</div></button>
+    <button class="qk" onclick="go('my')"><div class="ic">📅</div><div class="k">다음 수업</div><div class="v p">${nc ? (nc.inDays === 0 ? '오늘' : nc.inDays === 1 ? '내일' : mdw(nc.date)) : '-'}</div></button>
+    <button class="qk" onclick="go('my')"><div class="ic">⏱</div><div class="k">이번 주 학습</div><div class="v">${wt.h ? wt.h + '시간 ' : ''}${wt.m}분</div></button>`;
+
+  // 최근 수강 강의
+  const recent = myVideos.filter((v) => prog.has(v.id)).sort((a, b) => (prog.get(b.id).updatedAt || 0) - (prog.get(a.id).updatedAt || 0)).slice(0, 6);
+  $('hRecent').innerHTML = recent.length ? `<div class="hscroll">${recent.map((v) => {
+    const p = prog.get(v.id), c = courseOfVideo(v.id);
+    const d = p.updatedAt ? new Date(p.updatedAt) : null;
+    return `<button class="rc" onclick="openPlayer('${esc(v.id)}')">
+      <div class="bar">${d ? `최종 학습일 ${ymd(d)}` : '이어 보기'}<span class="pl">▶</span></div>
+      <div class="bd"><div class="tt">${esc(v.title || '')}</div><div class="cs">${esc(c ? c.label : v.tag || '')}</div>
+      <div class="pbar ${p.completed ? 'done' : ''}"><i style="width:${p.completed ? 100 : p.percent}%"></i></div></div></button>`;
+  }).join('')}</div>`
+    : `<div class="card"><div class="empty">아직 들은 강의가 없어요.<br><button onclick="go('class')" style="margin-top:10px;border:0;background:var(--p);color:#fff;border-radius:10px;padding:9px 16px;font-weight:800;">내 강의실 가기</button></div></div>`;
+
+  // 학습 통계
+  const yd = hmText(study[ymd(addDays(new Date(), -1))] || 0), td = hmText(study[TODAY()] || 0);
+  $('hStats').innerHTML = `<div class="stats">
+    <div><div class="k">어제</div><div class="v"><b>${yd.h}</b>시간 <b>${yd.m}</b>분</div><div class="s">수강했어요</div></div><div class="sep"></div>
+    <div><div class="k">오늘</div><div class="v"><b>${td.h}</b>시간 <b>${td.m}</b>분</div><div class="s">수강했어요</div></div><div class="sep"></div>
+    <div><div class="k">이번 주</div><div class="v"><b>${wt.h}</b>시간 <b>${wt.m}</b>분</div><div class="s">수강했어요</div></div></div>`;
+
+  // 오늘 숙제 (없으면 아직 안 한 숙제)
+  let list = th, title = '오늘 숙제';
+  if (!list.length) { list = pendingHw().slice(0, 4); title = list.length ? '아직 안 한 숙제' : '오늘 숙제'; }
+  $('hHwTitle').textContent = title;
+  $('hHw').innerHTML = list.length ? list.map(hwRow).join('') : '<div class="empty">오늘은 등록된 숙제가 없어요 🙌</div>';
+}
+function weekSeconds() {
+  const now = new Date(); const mon = addDays(now, -((now.getDay() + 6) % 7));
+  let s = 0; for (let i = 0; i < 7; i++) { const k = ymd(addDays(mon, i)); if (k <= TODAY()) s += study[k] || 0; } return s;
+}
+
+// ══════════════════════════════════════
+// 숙제
+// ══════════════════════════════════════
+function hwRow(h, showDate) {
+  if (h.absent) return `<div class="hw abs"><div class="ck" style="border-color:var(--bad-soft);color:var(--bad);">–</div><div class="bd"><div class="who">${showDate ? `<span>${mdw(h.date)}</span>` : ''}<span>${esc(h.teacherName || '')}${h.teacherName ? ' 선생님' : ''}</span></div><div class="ct">결석</div></div></div>`;
+  const done = isDone(h), c = checks[h.id];
+  let when = ''; if (done && c.checkedAt) { const d = c.checkedAt.toDate ? c.checkedAt.toDate() : new Date(c.checkedAt); if (!isNaN(d)) when = `${d.getMonth() + 1}/${d.getDate()} ${p2(d.getHours())}:${p2(d.getMinutes())} 완료`; }
+  return `<div class="hw ${done ? 'done' : ''}">
+    <button class="ck ${done ? 'on' : ''}" onclick="toggleHw('${esc(h.id)}', this)" aria-label="${done ? '완료 취소' : '완료 체크'}">${done ? '✓' : ''}</button>
+    <div class="bd"><div class="who">${showDate ? `<span style="color:var(--ink2)">${mdw(h.date)}</span>` : ''}<span>${esc(h.teacherName || '')}${h.teacherName ? ' 선생님' : ''}</span>${h.classGroup ? `<span>${esc(h.classGroup)}</span>` : ''}</div>
+      <div class="ct">${esc(h.content)}</div>${when ? `<div class="st">✅ ${when}</div>` : ''}</div></div>`;
+}
+window.toggleHw = async function (id, btn) {
+  const h = homework.find((x) => x.id === id); if (!h) return;
+  const next = !isDone(h);
+  btn.disabled = true;
+  const data = { logId: id, studentId: me.uid, studentName: stu.name || '', teacherUid: h.teacherUid || '', branch: stu.branch || '', date: h.date || '', done: next, checkedAt: serverTimestamp() };
+  try {
+    await setDoc(doc(db, 'homeworkChecks', `${id}_${me.uid}`), data);
+    checks[id] = { ...data, checkedAt: new Date() };
+    if (next) toast('숙제 완료! 선생님과 부모님께도 표시돼요 👏');
+    render();
+  } catch (e) { btn.disabled = false; toast('저장하지 못했어요 (' + (e.code || e.message) + ')'); }
+};
+function ringSvg(done, total) {
+  const r = 26, c = 2 * Math.PI * r, pct = total ? done / total : 0;
+  return `<svg class="ring" viewBox="0 0 64 64"><circle cx="32" cy="32" r="${r}" fill="none" stroke="#EEE9F8" stroke-width="7"/><circle cx="32" cy="32" r="${r}" fill="none" stroke="${pct >= 1 ? '#2E9E5B' : '#5B3FA6'}" stroke-width="7" stroke-linecap="round" stroke-dasharray="${c}" stroke-dashoffset="${c * (1 - pct)}" transform="rotate(-90 32 32)"/><text x="32" y="37" text-anchor="middle" font-size="15" font-weight="800" fill="#1A1230">${Math.round(pct * 100)}%</text></svg>`;
+}
+window.setHwView = (v) => { hwView = v; renderHw(); };
+function renderHw() {
+  const from = ymd(addDays(new Date(), -6));
+  const wk = homework.filter((h) => hwActive(h) && h.date >= from && h.date <= TODAY());
+  const wkDone = wk.filter(isDone).length;
+  const pend = pendingHw();
+  let body = '';
+  if (hwView === 'todo') {
+    body = pend.length ? `<div class="card" style="padding-top:4px;padding-bottom:4px;">${pend.map((h) => hwRow(h, true)).join('')}</div>`
+      : '<div class="card"><div class="empty">✨ 밀린 숙제가 없어요!</div></div>';
+  } else {
+    const byDate = {}; homework.filter((h) => h.date).forEach((h) => (byDate[h.date] = byDate[h.date] || []).push(h));
+    const dates = Object.keys(byDate).sort((a, b) => b.localeCompare(a)).slice(0, 40);
+    body = dates.length ? dates.map((k) => `<div class="dgrp"><div class="dh">${mdw(k)}${k === TODAY() ? ' <span class="tag">오늘</span>' : ''}</div><div class="card" style="padding-top:4px;padding-bottom:4px;">${byDate[k].map((h) => hwRow(h)).join('')}</div></div>`).join('')
+      : '<div class="card"><div class="empty">아직 등록된 숙제가 없어요.</div></div>';
+  }
+  $('hwBody').innerHTML = `
+    <div class="card hw-sum" style="margin-bottom:12px;">${ringSvg(wkDone, wk.length)}<div><div class="t1">최근 7일 숙제 ${wk.length}개 중 ${wkDone}개 완료</div><div class="t2">숙제를 끝내면 왼쪽 네모를 눌러 체크하세요.<br>선생님·부모님 화면에도 바로 표시돼요.</div></div></div>
+    <div class="seg"><button class="${hwView === 'todo' ? 'on' : ''}" onclick="setHwView('todo')">해야 할 숙제${pend.length ? ` ${pend.length}` : ''}</button><button class="${hwView === 'all' ? 'on' : ''}" onclick="setHwView('all')">날짜별 전체</button></div>
+    ${body}`;
+}
+
+// ══════════════════════════════════════
+// 강의실
+// ══════════════════════════════════════
+window.setClassFilter = (f) => { classView.filter = f; renderClass(); };
+window.openCourse = (tag) => { classView.course = tag; renderClass(); window.scrollTo({ top: 0 }); };
+window.closeCourse = () => { classView.course = null; renderClass(); window.scrollTo({ top: 0 }); };
+function lecBadge(p) {
+  if (!p) return '<span class="badge no">미수강</span>';
+  if (p.completed) return '<span class="badge done">완강 100%</span>';
+  return `<span class="badge ing">수강 중 ${p.percent || 0}%</span>`;
+}
+function lecRow(v, i, nowId) {
+  const p = prog.get(v.id);
+  const dur = (p && p.duration) || v.duration || 0;
+  const last = p && p.updatedAt ? ymd(new Date(p.updatedAt)) : '';
+  return `<button class="lec ${p && p.completed ? 'done' : ''} ${v.id === nowId ? 'now' : ''}" onclick="openPlayer('${esc(v.id)}')">
+    <div class="no"><span>${p && p.completed ? '✓' : i + 1}</span></div>
+    <div class="bd"><div class="t">${esc(v.title || '')}</div>
+      <div class="m">${dur ? `<span>${fmtTime(dur)}</span><span>|</span>` : ''}${Array.isArray(v.chapters) && v.chapters.length ? `<span>🔖 ${v.chapters.length}구간</span><span>|</span>` : ''}${last ? `<span>최종 학습일 <span class="lw">${last}</span></span>` : ''}${lecBadge(p)}</div></div>
+    <div class="pl">▶</div></button>`;
+}
+function renderClass() {
+  const box = $('classBody');
+  if (!courses.length) { box.innerHTML = '<div class="card"><div class="empty">아직 배정된 강의가 없어요.<br>학원에 문의해 주세요.</div></div>'; return; }
+  if (classView.course) {
+    const c = courses.find((x) => x.tag === classView.course);
+    if (!c) { classView.course = null; return renderClass(); }
+    const st = courseStat(c);
+    box.innerHTML = `<button class="back" onclick="closeCourse()">‹ 강의실</button>
+      <div class="cd-head"><div class="sub">${esc(c.kind)} · ${esc(c.subject)}</div><div class="t">${esc(c.label)}</div>
+        <div class="cd-stats"><div><div class="k">총 ${st.total}강</div><div class="v">${st.started}강 수강</div></div><div class="sep"></div><div><div class="k">완강</div><div class="v">${st.done}강</div></div><div class="sep"></div><div><div class="k">강좌 진도율</div><div class="v">${st.pct}%</div></div></div>
+        <div class="pbar ${st.pct >= 100 ? 'done' : ''}"><i style="width:${st.pct}%"></i></div></div>
+      ${c.videos.map((v, i) => lecRow(v, i)).join('')}`;
+    return;
+  }
+  const kinds = ['전체', ...new Set(courses.map((c) => c.kind))];
+  const list = courses.filter((c) => classView.filter === '전체' || c.kind === classView.filter);
+  const totDone = myVideos.filter((v) => prog.get(v.id)?.completed).length;
+  box.innerHTML = `
+    <div class="card" style="margin-bottom:12px;display:flex;align-items:center;gap:14px;">${ringSvg(totDone, myVideos.length)}<div><div style="font-size:16px;font-weight:800;">수강 강좌 ${courses.length}개</div><div style="font-size:12.5px;color:var(--mute);margin-top:2px;">전체 ${myVideos.length}강 중 ${totDone}강 완강</div></div></div>
+    ${kinds.length > 2 ? `<div class="chips">${kinds.map((k) => `<button class="chip ${classView.filter === k ? 'on' : ''}" onclick="setClassFilter('${esc(k)}')">${esc(k)}</button>`).join('')}</div>` : ''}
+    ${list.map((c) => { const st = courseStat(c); const cls = c.kind === '주간 클리어' ? 'wc' : c.kind === '기출해설' ? 'ex' : c.kind === '보충강의실' ? 'bo' : '';
+      return `<button class="course" data-tag="${esc(c.tag)}" onclick="openCourse(this.dataset.tag)"><div class="cv ${cls}" style="${c.subject.length > 4 ? 'font-size:10.5px;' : ''}">${esc(c.subject.slice(0, 6))}</div>
+        <div class="bd"><div class="t">${esc(c.label)}</div><div class="s">총 ${st.total}강 · ${st.done}강 완강${st.last ? ` · 최종 ${ymd(new Date(st.last))}` : ''}</div><div class="pbar ${st.pct >= 100 ? 'done' : ''}"><i style="width:${st.pct}%"></i></div></div>
+        <div class="pct">${st.pct}%</div></button>`; }).join('')}`;
+}
+
+// ══════════════════════════════════════
+// 내 정보
+// ══════════════════════════════════════
+function renderMy() {
+  const days = classDays(), nc = nextClass();
+  const bars = []; let max = 1;
+  for (let i = 13; i >= 0; i--) { const k = ymd(addDays(new Date(), -i)); const s = study[k] || 0; if (s > max) max = s; bars.push({ k, s }); }
+  const tot30 = (() => { let s = 0; for (let i = 0; i < 30; i++) s += study[ymd(addDays(new Date(), -i))] || 0; return s; })();
+  const t30 = hmText(tot30), wk = hmText(weekSeconds());
+  const doneCnt = myVideos.filter((v) => prog.get(v.id)?.completed).length;
+  const br = String(stu.branch || '');
+  $('myBody').innerHTML = `
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;"><div style="width:52px;height:52px;border-radius:16px;background:linear-gradient(140deg,#7C5CD6,#4B3391);color:#fff;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;">${esc(String(stu.name || '').slice(-2))}</div>
+        <div><div style="font-size:19px;font-weight:800;">${esc(stu.name || '')}</div><div style="font-size:12.5px;color:var(--mute);">${esc([stu.grade, stu.school].filter(Boolean).join(' · '))}</div></div></div>
+      <div class="info">
+        <div><div class="k">소속</div><div class="v ${br.includes('산본') ? 'br-s' : 'br-p'}">${esc(br || '-')}</div></div>
+        <div><div class="k">반</div><div class="v">${esc(stu.classGroup || '-')}</div></div>
+        <div><div class="k">담당 선생님</div><div class="v">${stu.teacherName ? esc(stu.teacherName) + ' 선생님' : '-'}</div></div>
+        <div><div class="k">수업 요일</div><div class="v">${days.length ? esc(days.join('·')) : '-'}</div></div>
+        <div style="grid-column:1/-1;"><div class="k">다음 수업</div><div class="v" style="color:var(--p)">${nc ? `${mdw(nc.date)}${nc.inDays === 0 ? ' · 오늘' : nc.inDays === 1 ? ' · 내일' : ` · ${nc.inDays}일 뒤`}` : '-'}</div></div>
+      </div>
+    </div>
+    <div class="sec"><div class="sec-h"><h2>🎓 나의 목표</h2><button class="more" onclick="openGoal()">${stu.goalUniv ? '수정' : '정하기'} ›</button></div>
+      <div class="card">${stu.goalUniv ? `<div style="font-size:18px;font-weight:800;">${esc(stu.goalUniv)}${stu.goalDept ? ' ' + esc(stu.goalDept) : ''}</div><div style="font-size:13px;color:var(--mute);margin-top:3px;">${esc(stu.goalMsg || '목표로 파이팅!')}</div>` : '<div class="empty" style="padding:8px 0">아직 목표를 정하지 않았어요.</div>'}</div></div>
+    <div class="sec"><div class="sec-h"><h2>⏱ 강의 들은 시간</h2></div>
+      <div class="card">
+        <div class="stats"><div><div class="k">이번 주</div><div class="v"><b>${wk.h}</b>시간 <b>${wk.m}</b>분</div></div><div class="sep"></div><div><div class="k">최근 30일</div><div class="v"><b>${t30.h}</b>시간 <b>${t30.m}</b>분</div></div><div class="sep"></div><div><div class="k">완강</div><div class="v"><b>${doneCnt}</b>강</div></div></div>
+        <div class="chart">${bars.map((b) => { const m = Math.round(b.s / 60); const d = parseYmd(b.k); return `<div class="c ${b.s ? 'on' : ''} ${b.k === TODAY() ? 'today' : ''}">${m ? `<b>${m}</b>` : ''}<i style="height:${Math.max(3, Math.round(b.s / max * 82))}%"></i><em>${b.k === TODAY() ? '오늘' : d.getDate()}</em></div>`; }).join('')}</div>
+        <div style="font-size:11.5px;color:var(--mute);margin-top:10px;">최근 14일 (숫자는 분) · 실제로 재생한 시간만 기록돼요 (화면을 끄거나 다른 앱으로 가면 기록되지 않아요)</div>
+      </div></div>
+    <div id="pushBox"></div>
+    <div class="sec"><div class="menu">
+      <a href="videos.html">📺 동영상강의 전체 화면<span class="ar">›</span></a>
+      <a href="index.html">🏫 학원 홈페이지<span class="ar">›</span></a>
+      <button onclick="logout()" class="red">로그아웃</button>
+    </div></div>
+    <div style="text-align:center;font-size:11.5px;color:var(--mute);margin-top:18px;">송우찬수학학원 · 평촌관 · 산본관</div>`;
+  renderPush();
+}
+window.logout = async () => { if (!confirm('로그아웃할까요?')) return; await signOut(auth); location.replace('login.html?app=1'); };
+
+// ══════════════════════════════════════
+// 목표 대학 (학생이 직접 입력)
+// ══════════════════════════════════════
+window.openGoal = () => { $('gUniv').value = stu.goalUniv || ''; $('gDept').value = stu.goalDept || ''; $('gMsg').value = stu.goalMsg || ''; $('goalSheet').classList.add('on'); setTimeout(() => $('gUniv').focus(), 120); };
+window.closeGoal = () => $('goalSheet').classList.remove('on');
+window.saveGoal = async () => {
+  const data = { goalUniv: $('gUniv').value.trim().slice(0, 30), goalDept: $('gDept').value.trim().slice(0, 30), goalMsg: $('gMsg').value.trim().slice(0, 40) };
+  const b = $('gSave'); b.disabled = true;
+  try { await updateDoc(doc(db, 'students', me.uid), data); Object.assign(stu, data); closeGoal(); toast('목표를 저장했어요 🎓'); render(); }
+  catch (e) { toast('저장하지 못했어요 (' + (e.code || e.message) + ')'); }
+  finally { b.disabled = false; }
+};
+
+// ══════════════════════════════════════
+// 강의 플레이어 — videos.html과 같은 규칙
+//   · 처음 볼 때는 안 본 구간으로 넘기기·배속 금지 (기출해설·주간 클리어는 자유)
+//   · 이어보기, 화면을 벗어나면 일시정지, 진행률은 videoProgress에 저장
+//   · 실제로 재생된 시간은 studyLogs(하루 학습 시간)에 누적
+// ══════════════════════════════════════
+const SEEK_BUFFER_SEC = 2, END_TOLERANCE_SEC = 3;
+const isFullyWatched = (maxSec, duration) => !!duration && maxSec >= duration - END_TOLERANCE_SEC;
+const isFreeSeekTag = (tag) => String(tag || '').split(/[,\s]+/).some((t) => t.startsWith('기출_') || t.startsWith('주간클리어_'));
+const localKey = (vid) => `vp_${me.uid}_${vid}`;
+function saveLocal(p) { if (!p) return; try { localStorage.setItem(localKey(p.videoDocId), JSON.stringify({ maxWatchedSeconds: p.maxSeconds || 0, lastPositionSeconds: p.lastSeconds || 0, duration: p.duration || 0, updatedAt: Date.now() })); } catch (e) {} }
+function readLocal(vid) { try { const r = localStorage.getItem(localKey(vid)); return r ? JSON.parse(r) : null; } catch (e) { return null; } }
+function merge(server, local) {
+  if (!local) return server;
+  if (!server) return { percent: local.duration ? Math.min(100, Math.round(local.maxWatchedSeconds / local.duration * 100)) : 0, completed: isFullyWatched(local.maxWatchedSeconds, local.duration), maxWatchedSeconds: local.maxWatchedSeconds || 0, lastPositionSeconds: local.lastPositionSeconds || 0, duration: local.duration || 0, updatedAt: local.updatedAt || 0 };
+  const maxW = Math.max(server.maxWatchedSeconds || 0, local.maxWatchedSeconds || 0), dur = server.duration || local.duration || 0;
+  const localNewer = (local.updatedAt || 0) > (server.updatedAt || 0);
+  return { percent: dur ? Math.min(100, Math.round(maxW / dur * 100)) : server.percent, completed: isFullyWatched(maxW, dur), maxWatchedSeconds: maxW, lastPositionSeconds: localNewer ? (local.lastPositionSeconds || 0) : (server.lastPositionSeconds || 0), duration: dur, updatedAt: Math.max(server.updatedAt || 0, local.updatedAt || 0) };
+}
+
+let player = null, cp = null, saveTimer = null, plCourse = null, pendingStudy = 0, lastTick = null;
+
+async function flushStudy() {
+  if (pendingStudy < 1 || !me) return;
+  const n = Math.floor(pendingStudy); pendingStudy -= n;
+  const day = TODAY();
+  study[day] = (study[day] || 0) + n;
+  try {
+    await setDoc(doc(db, 'studyLogs', `${me.uid}_${day}`), { studentUid: me.uid, studentName: stu.name || '', branch: stu.branch || '', date: day, seconds: increment(n), updatedAt: serverTimestamp() }, { merge: true });
+  } catch (e) { console.warn('[학습 시간] 저장 실패', e.message); pendingStudy += n; study[day] -= n; }
+}
+async function flushProgress() {
+  flushStudy();
+  if (!cp) return;
+  const p = cp;
+  const cached = prog.get(p.videoDocId);
+  if (cached && cached.maxWatchedSeconds > p.maxSeconds) p.maxSeconds = cached.maxWatchedSeconds;
+  const percent = p.duration ? Math.min(100, Math.round(p.maxSeconds / p.duration * 100)) : 0;
+  const completed = isFullyWatched(p.maxSeconds, p.duration);
+  if (completed) p.locked = false;
+  prog.set(p.videoDocId, { percent, completed, maxWatchedSeconds: p.maxSeconds, lastPositionSeconds: p.lastSeconds, duration: p.duration, updatedAt: Date.now() });
+  saveLocal(p);
+  updateNote();
+  const first = p.isFirstSave; p.isFirstSave = false;
+  try {
+    await setDoc(doc(db, 'videoProgress', `${me.uid}_${p.videoDocId}`), {
+      studentUid: me.uid, studentName: stu.name || '', branch: stu.branch || '', grade: stu.grade || '', teacherName: stu.teacherName || '',
+      videoId: p.videoDocId, vimeoId: p.vimeoId, videoTitle: p.title, tag: p.tag || '',
+      duration: p.duration || 0, maxWatchedSeconds: p.maxSeconds || 0, lastPositionSeconds: p.lastSeconds || 0, percent, completed,
+      lastWatchedAt: serverTimestamp(), ...(first ? { firstWatchedAt: serverTimestamp() } : {}),
+    }, { merge: true });
+  } catch (e) { console.error('진행률 저장 실패', e); if (first) p.isFirstSave = true; }
+}
+function updateNote() {
+  if (!cp) return;
+  const info = prog.get(cp.videoDocId), percent = info ? info.percent : 0, done = info ? info.completed : false;
+  $('plNote').innerHTML = done ? `✅ 완강 (${percent}%) · 원하는 구간으로 자유롭게 이동할 수 있어요`
+    : cp.freeSeek ? `⏳ 시청률 ${percent}% · 이 강의는 원하는 구간으로 자유롭게 이동할 수 있어요`
+    : `⏳ 시청률 ${percent}% · 처음 들을 때는 아직 안 본 구간으로 넘길 수 없어요 (끝까지 다 들으면 자유 이동)`;
+  const row = document.querySelector(`#plList .lec.now .m`); if (row && info) { /* 목록 배지는 닫을 때 갱신 */ }
+}
+
+window.openPlayer = function (vid) {
+  const v = myVideos.find((x) => x.id === vid); if (!v) return;
+  stopPlayer();
+  plCourse = courseOfVideo(vid);
+  $('player').classList.add('on');
+  document.body.style.overflow = 'hidden';
+  $('plTopTitle').textContent = v.title || '';
+  $('plTitle').textContent = v.title || '';
+  $('plCourse').textContent = plCourse ? plCourse.label : (v.tag || '');
+  const idx = plCourse ? plCourse.videos.findIndex((x) => x.id === vid) : -1;
+  $('plPrev').disabled = !(plCourse && idx > 0);
+  $('plNext').disabled = !(plCourse && idx >= 0 && idx < plCourse.videos.length - 1);
+  if (plCourse) { const st = courseStat(plCourse); $('plListSum').textContent = `${st.done}/${st.total}강 완강`; $('plList').innerHTML = plCourse.videos.map((x, i) => lecRow(x, i, vid)).join(''); }
+  else { $('plListSum').textContent = ''; $('plList').innerHTML = ''; }
+  $('plScroll').scrollTop = 0;
+
+  const freeSeek = isFreeSeekTag(v.tag);
+  const prev = merge(prog.get(vid), readLocal(vid)) || { maxWatchedSeconds: 0, lastPositionSeconds: 0, duration: 0, completed: false, percent: 0 };
+  let resumeAt = prev.lastPositionSeconds || 0;
+  if (prev.duration && resumeAt >= prev.duration - END_TOLERANCE_SEC) resumeAt = 0;
+  if (!freeSeek) resumeAt = Math.min(resumeAt, prev.maxWatchedSeconds || 0);
+  const ask = resumeAt > 3;
+
+  const iframe = $('plIframe');
+  iframe.src = `https://player.vimeo.com/video/${v.vimeoId}?autoplay=${ask ? 0 : 1}&title=0&byline=0&portrait=0&playsinline=1&speed=${freeSeek ? 1 : 0}`;
+  $('plResume').classList.toggle('on', ask);
+  if (ask) $('plResumeAt').textContent = `${fmtTime(resumeAt)}부터`;
+
+  try { if (window.VideoChapters) VideoChapters.mount($('plChapters'), iframe, v.chapters || null, { autoplay: true }); } catch (e) {}
+  if (!window.Vimeo || !window.Vimeo.Player) { $('plNote').textContent = '플레이어를 불러오지 못했어요. 인터넷 연결을 확인해 주세요.'; return; }
+
+  player = new Vimeo.Player(iframe);
+  cp = { videoDocId: vid, vimeoId: v.vimeoId, title: v.title || '', tag: v.tag || '', duration: prev.duration || 0, maxSeconds: prev.maxWatchedSeconds || 0, lastSeconds: prev.lastPositionSeconds || 0,
+    isFirstSave: !prog.has(vid), freeSeek, locked: !freeSeek && !isFullyWatched(prev.maxWatchedSeconds || 0, prev.duration || 0), resumeAt, resumeApplied: !ask, busy: false };
+  lastTick = null;
+  updateNote();
+  const pl = player, me2 = cp;
+  pl.getDuration().then((d) => { if (cp !== me2) return; cp.duration = d || 0; if (isFullyWatched(cp.maxSeconds, cp.duration)) cp.locked = false; }).catch(() => {});
+  const snapBack = () => { if (cp !== me2 || cp.busy) return; cp.busy = true; pl.setCurrentTime(cp.maxSeconds).catch(() => {}).finally(() => { if (cp === me2) cp.busy = false; }); };
+
+  pl.on('timeupdate', (d) => {
+    if (cp !== me2) return;
+    const sec = d.seconds || 0;
+    if (d.duration && !cp.duration) cp.duration = d.duration;
+    if (cp.locked) { if (sec > cp.maxSeconds + SEEK_BUFFER_SEC) { snapBack(); lastTick = null; return; } if (cp.busy) return; }
+    if (!cp.resumeApplied || document.hidden) { lastTick = null; return; }
+    // 실제로 재생된 시간만 학습 시간으로 (넘기기·되감기는 제외)
+    if (lastTick != null && sec > lastTick && sec - lastTick <= 1.5) pendingStudy += sec - lastTick;
+    lastTick = sec;
+    cp.lastSeconds = sec;
+    if (cp.freeSeek) { if (sec > cp.maxSeconds && sec <= cp.maxSeconds + SEEK_BUFFER_SEC) cp.maxSeconds = sec; }
+    else if (sec > cp.maxSeconds) cp.maxSeconds = sec;
+    saveLocal(cp);
+    if (cp.locked && isFullyWatched(cp.maxSeconds, cp.duration)) { cp.locked = false; flushProgress(); }
+  });
+  pl.on('playbackratechange', (d) => { if (cp !== me2 || cp.freeSeek) return; if (d && d.playbackRate !== 1) pl.setPlaybackRate(1).catch(() => {}); });
+  pl.on('seeked', (d) => { lastTick = null; if (cp !== me2 || !cp.locked || cp.busy) return; if ((d.seconds || 0) > cp.maxSeconds + SEEK_BUFFER_SEC) snapBack(); });
+  pl.on('ended', () => {
+    if (cp !== me2) return;
+    if (cp.freeSeek && !isFullyWatched(cp.maxSeconds, cp.duration)) { flushProgress(); return; }
+    if (cp.locked && !isFullyWatched(cp.maxSeconds, cp.duration)) { snapBack(); pl.play().catch(() => {}); return; }
+    cp.maxSeconds = cp.duration || cp.maxSeconds; cp.locked = false; flushProgress();
+    if (!$('plNext').disabled) $('plNote').innerHTML = '✅ 완강했어요! <b>다음 강의 ›</b>를 눌러 이어서 들어요';
+  });
+  pl.on('pause', () => { lastTick = null; flushProgress(); });
+  pl.on('play', () => { lastTick = null; if (document.hidden) pl.pause().catch(() => {}); });
+  saveTimer = setInterval(flushProgress, 5000);
+};
+window.chooseResume = function (resume) {
+  $('plResume').classList.remove('on');
+  if (!cp || !player) return;
+  const t = resume ? Math.max(0, cp.resumeAt - 1) : 0;
+  cp.lastSeconds = t; cp.resumeApplied = true;
+  player.setCurrentTime(t).catch(() => {}).finally(() => { if (player) player.play().catch(() => { $('plNote').innerHTML = '▶ 영상의 재생 버튼을 눌러 주세요<br>' + $('plNote').innerHTML; }); });
+};
+window.playStep = function (n) {
+  if (!plCourse || !cp) return;
+  const i = plCourse.videos.findIndex((x) => x.id === cp.videoDocId);
+  const nx = plCourse.videos[i + n]; if (nx) openPlayer(nx.id);
+};
+function stopPlayer() {
+  flushProgress();
+  if (saveTimer) { clearInterval(saveTimer); saveTimer = null; }
+  if (player) { try { player.unload(); } catch (e) {} player = null; }
+  cp = null; lastTick = null;
+  try { if (window.VideoChapters) VideoChapters.unmount($('plChapters')); } catch (e) {}
+}
+window.closePlayer = function () {
+  stopPlayer();
+  $('plIframe').src = '';
+  $('plResume').classList.remove('on');
+  $('player').classList.remove('on');
+  document.body.style.overflow = '';
+  render();
+};
+window.addEventListener('pagehide', () => { saveLocal(cp); flushProgress(); });
+let pausedByHidden = false;
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') {
+    saveLocal(cp); flushProgress();
+    if (player) player.getPaused().then((paused) => { if (!paused && player) { pausedByHidden = true; player.pause().catch(() => {}); } }).catch(() => {});
+  } else if (pausedByHidden && cp) {
+    pausedByHidden = false;
+    $('plNote').innerHTML = '⏸ 화면을 벗어나서 일시정지했어요. 재생 버튼을 눌러 계속 들어요<br>' + $('plNote').innerHTML;
+  }
+});
+
+// ══════════════════════════════════════
+// 앱 알림 (숙제 등록 알림) — mypage.html과 같은 방식 (students/{uid}.fcmToken)
+// ══════════════════════════════════════
+let pushState = 'hidden', pushErr = '', pushListening = false;
+async function pushInit() {
+  try { const reg = await navigator.serviceWorker?.getRegistration('/'); if (reg) (await reg.getNotifications()).forEach((n) => n.close()); } catch (e) {}
+  let ok = ('Notification' in window) && ('serviceWorker' in navigator);
+  if (ok) { try { ok = await isSupported(); } catch (e) { ok = false; } }
+  if (!ok) { pushState = 'unsupported'; renderPush(); return; }
+  if (Notification.permission === 'granted') { pushState = 'on'; renderPush(); try { await pushSaveToken(); } catch (e) { pushState = 'error'; pushErr = e.message; renderPush(); } }
+  else if (Notification.permission === 'denied') { pushState = 'denied'; renderPush(); }
+  else { pushState = 'off'; renderPush(); }
+}
+async function pushSaveToken() {
+  const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+  await navigator.serviceWorker.ready;
+  const messaging = getMessaging(app);
+  const token = await getToken(messaging, { serviceWorkerRegistration: reg });
+  if (token && token !== stu.fcmToken) { await updateDoc(doc(db, 'students', me.uid), { fcmToken: token }); stu.fcmToken = token; }
+  try { await setDoc(doc(db, 'appStatus', me.uid), { role: 'student', pushOn: true, lastSeen: serverTimestamp() }, { merge: true }); } catch (e) {}
+  if (!pushListening) {
+    pushListening = true;
+    onMessage(messaging, async (m) => {
+      const n = m.notification || m.data || {};
+      toast((n.title || '알림') + (n.body ? ' · ' + n.body : ''));
+      try { await loadAll(); render(); } catch (e) {}
+    });
+  }
+}
+function renderPush() {
+  const box = $('pushBox'); if (!box) return;
+  const html = pushState === 'on' ? `<div class="push on">🔔 <span><b>알림 켜짐</b> · 숙제가 등록되면 알려드려요.</span></div>`
+    : pushState === 'off' ? `<div class="push">🔔 <span>숙제가 등록되면 <b>앱 알림</b>으로 받아 보세요.</span><button onclick="enablePush()">알림 켜기</button></div>`
+    : pushState === 'denied' ? `<div class="push">🔕 <span>알림이 꺼져 있어요. 휴대폰 <b>설정 › 알림</b>에서 학원 앱 알림을 허용해 주세요.</span></div>`
+    : pushState === 'error' ? `<div class="push">⚠️ <span>알림 설정 오류: ${esc(pushErr)}</span><button onclick="enablePush()">다시 시도</button></div>`
+    : pushState === 'working' ? `<div class="push">⏳ <span>알림 설정 중...</span></div>` : '';
+  box.innerHTML = html;
+}
+window.enablePush = async () => {
+  try {
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') { pushState = 'working'; renderPush(); await pushSaveToken(); pushState = 'on'; }
+    else pushState = perm === 'denied' ? 'denied' : 'off';
+  } catch (e) { pushState = 'error'; pushErr = e.message; }
+  renderPush();
+};
+
+// 앱을 다시 열면(다른 앱 갔다 오면) 숙제·기록 새로 불러오기 (플레이어 보는 중에는 그대로)
+let lastLoad = Date.now();
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState !== 'visible' || !me || cp || Date.now() - lastLoad < 60000) return;
+  lastLoad = Date.now();
+  try { await loadAll(); render(); } catch (e) {}
+});
+</script>
+</body>
+</html>
