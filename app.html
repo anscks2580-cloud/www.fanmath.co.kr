@@ -25,7 +25,8 @@
      - videos · videoGroups      배정된 강의(assignedTags 기준 — videos.html과 같은 규칙)
      - videoProgress             강의별 시청률·이어보기 (videos.html과 같은 기록 공유)
      - studyLogs/{uid}_{날짜}     하루 강의 들은 시간(초) — 실제로 재생된 시간만 누적
-     - homeworkLogs              선생님·관리부가 등록한 숙제
+     - homeworkLogs              선생님·관리부가 등록한 숙제 (dueDate: 선생님이 정한 기한)
+     - sheetTasks/{시험id}_{uid}  HCS에서 출제된 시험지 → sheet.html에서 답안 제출(맞고 틀림은 안 보임)
      - homeworkChecks/{숙제id}_{uid}  학생이 누른 숙제 완료 체크 → 선생님·학부모 화면에도 표시
        (나중에 문제DB 프로그램(HCS) 프린트 숙제 답안 제출도 이 구조에 붙일 예정)
   ═══════════════════════════════════════════════════════════
@@ -121,6 +122,13 @@ button { font-family:inherit; cursor:pointer; }
 .hw .ct { font-size:15px; margin-top:3px; white-space:pre-wrap; }
 .hw.done .ct { color:var(--mute); text-decoration:line-through; text-decoration-color:rgba(139,134,160,.6); }
 .hw .st { font-size:11.5px; color:var(--ok); font-weight:700; margin-top:4px; }
+.due { display:inline-block; font-size:11px; font-weight:800; padding:1px 8px; border-radius:99px; background:#FFF4CC; color:#8A6A00; }
+.due.late { background:#FDECEA; color:var(--bad); } .due.ok { background:#E6F7EE; color:var(--ok); }
+.sht { display:flex; gap:12px; align-items:center; padding:12px 0; } .sht + .sht, .hw + .sht, .sht + .hw { border-top:1px solid var(--line); }
+.sht .ic { width:38px; height:38px; border-radius:11px; background:var(--p-soft, #F3EFFB); display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+.sht .bd { flex:1; min-width:0; } .sht .t { font-size:14.5px; font-weight:800; line-height:1.35; } .sht .m { font-size:12px; color:var(--mute); margin-top:3px; display:flex; gap:5px 8px; flex-wrap:wrap; align-items:center; }
+.sht .go { border:0; background:var(--p); color:#fff; border-radius:10px; padding:9px 13px; font-size:12.5px; font-weight:800; white-space:nowrap; flex-shrink:0; text-decoration:none; }
+.sht .go.done { background:#EEF8F2; color:var(--ok); }
 .hw.abs .ct { color:var(--bad); }
 .dgrp { margin-bottom:12px; }
 .dgrp .dh { font-size:13.5px; font-weight:800; color:var(--ink2); margin:0 4px 6px; display:flex; align-items:center; gap:6px; }
@@ -370,6 +378,7 @@ import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/fi
 import { getFirestore, doc, getDoc, getDocs, setDoc, updateDoc, collection, query, where, serverTimestamp, increment }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getMessaging, getToken, onMessage, isSupported } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
+import { dueInfo } from "./sheet-core.js?v=1794640000";   // HCS 시험지 연동(기한 표시)
 
 const app = initializeApp({ apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA", authDomain: "songmath.firebaseapp.com", projectId: "songmath", storageBucket: "songmath.firebasestorage.app", messagingSenderId: "936295436575", appId: "1:936295436575:web:d1e201508719850cfbe02a" });
 const auth = getAuth(app);
@@ -396,6 +405,7 @@ let courses = [];            // [{ tag, label, subject, kind, videos[] }]
 let groupNames = {};
 const prog = new Map();      // videoDocId -> { percent, completed, maxWatchedSeconds, lastPositionSeconds, duration, updatedAt }
 let homework = [];           // homeworkLogs
+let sheets = [];             // sheetTasks — HCS에서 출제된 시험지(답안 제출)
 let checks = {};             // logId -> { done, checkedAt }
 let study = {};              // 'YYYY-MM-DD' -> 초
 let cur = 'home';
@@ -426,14 +436,17 @@ onAuthStateChanged(auth, async (user) => {
 
 async function loadAll() {
   const uid = me.uid;
-  const [vs, gs, ps, hs, cs, ss] = await Promise.all([
+  const [vs, gs, ps, hs, cs, ss, sh] = await Promise.all([
     getDocs(collection(db, 'videos')),
     getDocs(collection(db, 'videoGroups')).catch(() => null),
     getDocs(query(collection(db, 'videoProgress'), where('studentUid', '==', uid))).catch(() => null),
     getDocs(query(collection(db, 'homeworkLogs'), where('studentIds', 'array-contains', uid))).catch(() => null),
     getDocs(query(collection(db, 'homeworkChecks'), where('studentId', '==', uid))).catch(() => null),
     getDocs(query(collection(db, 'studyLogs'), where('studentUid', '==', uid))).catch(() => null),
+    getDocs(query(collection(db, 'sheetTasks'), where('studentId', '==', uid))).catch(() => null),
   ]);
+  sheets = []; if (sh) sh.forEach((d) => sheets.push({ id: d.id, ...d.data() }));
+  sheets.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   groupNames = {}; if (gs) gs.forEach((d) => { groupNames[d.id] = d.data().displayName || ''; });
   const all = []; vs.forEach((d) => all.push({ id: d.id, ...d.data() }));
   myVideos = filterMine(all);
@@ -546,8 +559,16 @@ const hwActive = (h) => !h.absent && String(h.content || '').trim();
 const isDone = (h) => !!(checks[h.id] && checks[h.id].done);
 function todayHw() { return homework.filter((h) => h.date === TODAY() && hwActive(h)); }
 function pendingHw() { const from = ymd(addDays(new Date(), -14)); return homework.filter((h) => hwActive(h) && h.date >= from && h.date <= TODAY() && !isDone(h)); }
+// ── HCS 시험지 (답안 제출) ──
+function pendingSheets() { const from = ymd(addDays(new Date(), -28)); return sheets.filter((s) => !s.submitted && (s.date || '') >= from).sort((a, b) => (a.dueDate || '9').localeCompare(b.dueDate || '9')); }
+function dueChip(due, done) { const di = dueInfo(due, done); return di ? `<span class="due ${di.late ? 'late' : ''}">${di.text}${done ? '' : ' · ' + di.dday}</span>` : ''; }
+function sheetRow(s) {
+  return `<div class="sht"><div class="ic">📄</div><div class="bd"><div class="t">${esc(s.title || '시험지')}</div>
+    <div class="m"><span>${esc(s.teacherName || '')}${s.teacherName ? ' 선생님' : ''}</span><span>${mdw(s.date)} 출제</span><span>${s.count || 0}문제</span>${s.submitted ? '<span class="due ok">제출 완료</span>' : dueChip(s.dueDate, false)}</div></div>
+    <a class="go ${s.submitted ? 'done' : ''}" href="sheet.html?id=${encodeURIComponent(s.id)}&from=app">${s.submitted ? '내 답 보기' : '답안 입력'}</a></div>`;
+}
 function renderBadges() {
-  const n = pendingHw().length;
+  const n = pendingHw().length + pendingSheets().length;
   const b = $('tabHwBadge'); b.textContent = n; b.style.display = n ? '' : 'none';
   const d = $('hwDot'); d.textContent = n; d.style.display = n ? '' : 'none';
 }
@@ -608,7 +629,8 @@ function renderHome() {
   let list = th, title = '오늘 숙제';
   if (!list.length) { list = pendingHw().slice(0, 4); title = list.length ? '아직 안 한 숙제' : '오늘 숙제'; }
   $('hHwTitle').textContent = title;
-  $('hHw').innerHTML = list.length ? list.map(hwRow).join('') : '<div class="empty">오늘은 등록된 숙제가 없어요 🙌</div>';
+  const ps = pendingSheets().slice(0, 3);
+  $('hHw').innerHTML = (list.length ? list.map(hwRow).join('') : (ps.length ? '' : '<div class="empty">오늘은 등록된 숙제가 없어요 🙌</div>')) + ps.map(sheetRow).join('');
 }
 function weekSeconds() {
   const now = new Date(); const mon = addDays(now, -((now.getDay() + 6) % 7));
@@ -624,7 +646,7 @@ function hwRow(h, showDate) {
   let when = ''; if (done && c.checkedAt) { const d = c.checkedAt.toDate ? c.checkedAt.toDate() : new Date(c.checkedAt); if (!isNaN(d)) when = `${d.getMonth() + 1}/${d.getDate()} ${p2(d.getHours())}:${p2(d.getMinutes())} 완료`; }
   return `<div class="hw ${done ? 'done' : ''}">
     <button class="ck ${done ? 'on' : ''}" onclick="toggleHw('${esc(h.id)}', this)" aria-label="${done ? '완료 취소' : '완료 체크'}">${done ? '✓' : ''}</button>
-    <div class="bd"><div class="who">${showDate ? `<span style="color:var(--ink2)">${mdw(h.date)}</span>` : ''}<span>${esc(h.teacherName || '')}${h.teacherName ? ' 선생님' : ''}</span>${h.classGroup ? `<span>${esc(h.classGroup)}</span>` : ''}</div>
+    <div class="bd"><div class="who">${showDate ? `<span style="color:var(--ink2)">${mdw(h.date)}</span>` : ''}<span>${esc(h.teacherName || '')}${h.teacherName ? ' 선생님' : ''}</span>${h.classGroup ? `<span>${esc(h.classGroup)}</span>` : ''}${dueChip(h.dueDate, done)}</div>
       <div class="ct">${esc(h.content)}</div>${when ? `<div class="st">✅ ${when}</div>` : ''}</div></div>`;
 }
 window.toggleHw = async function (id, btn) {
@@ -650,18 +672,21 @@ function renderHw() {
   const wkDone = wk.filter(isDone).length;
   const pend = pendingHw();
   let body = '';
+  const pSheets = pendingSheets();
   if (hwView === 'todo') {
-    body = pend.length ? `<div class="card" style="padding-top:4px;padding-bottom:4px;">${pend.map((h) => hwRow(h, true)).join('')}</div>`
-      : '<div class="card"><div class="empty">✨ 밀린 숙제가 없어요!</div></div>';
+    body = (pSheets.length ? `<div class="dgrp"><div class="dh">📄 답안을 제출할 시험지 <span class="tag">${pSheets.length}</span></div><div class="card" style="padding-top:2px;padding-bottom:2px;">${pSheets.map(sheetRow).join('')}</div></div>` : '') +
+      (pend.length ? `<div class="card" style="padding-top:4px;padding-bottom:4px;">${pend.map((h) => hwRow(h, true)).join('')}</div>`
+      : (pSheets.length ? '' : '<div class="card"><div class="empty">✨ 밀린 숙제가 없어요!</div></div>'));
   } else {
-    const byDate = {}; homework.filter((h) => h.date).forEach((h) => (byDate[h.date] = byDate[h.date] || []).push(h));
+    const byDate = {}; homework.filter((h) => h.date).forEach((h) => (byDate[h.date] = byDate[h.date] || { hw: [], sh: [] }).hw.push(h));
+    sheets.filter((s) => s.date).forEach((s) => (byDate[s.date] = byDate[s.date] || { hw: [], sh: [] }).sh.push(s));
     const dates = Object.keys(byDate).sort((a, b) => b.localeCompare(a)).slice(0, 40);
-    body = dates.length ? dates.map((k) => `<div class="dgrp"><div class="dh">${mdw(k)}${k === TODAY() ? ' <span class="tag">오늘</span>' : ''}</div><div class="card" style="padding-top:4px;padding-bottom:4px;">${byDate[k].map((h) => hwRow(h)).join('')}</div></div>`).join('')
+    body = dates.length ? dates.map((k) => `<div class="dgrp"><div class="dh">${mdw(k)}${k === TODAY() ? ' <span class="tag">오늘</span>' : ''}</div><div class="card" style="padding-top:4px;padding-bottom:4px;">${byDate[k].hw.map((h) => hwRow(h)).join('')}${byDate[k].sh.map(sheetRow).join('')}</div></div>`).join('')
       : '<div class="card"><div class="empty">아직 등록된 숙제가 없어요.</div></div>';
   }
   $('hwBody').innerHTML = `
     <div class="card hw-sum" style="margin-bottom:12px;">${ringSvg(wkDone, wk.length)}<div><div class="t1">최근 7일 숙제 ${wk.length}개 중 ${wkDone}개 완료</div><div class="t2">숙제를 끝내면 왼쪽 네모를 눌러 체크하세요.<br>선생님·부모님 화면에도 바로 표시돼요.</div></div></div>
-    <div class="seg"><button class="${hwView === 'todo' ? 'on' : ''}" onclick="setHwView('todo')">해야 할 숙제${pend.length ? ` ${pend.length}` : ''}</button><button class="${hwView === 'all' ? 'on' : ''}" onclick="setHwView('all')">날짜별 전체</button></div>
+    <div class="seg"><button class="${hwView === 'todo' ? 'on' : ''}" onclick="setHwView('todo')">해야 할 숙제${pend.length + pSheets.length ? ` ${pend.length + pSheets.length}` : ''}</button><button class="${hwView === 'all' ? 'on' : ''}" onclick="setHwView('all')">날짜별 전체</button></div>
     ${body}`;
 }
 

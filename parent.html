@@ -137,12 +137,14 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, getDocs, setDoc, collection, query, where, orderBy, limit, addDoc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getMessaging, getToken, onMessage, isSupported } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
+import { dueInfo, mdw as shMdw } from "./sheet-core.js?v=1794640000";   // HCS 시험지 연동(기한·제출 여부)
 
 const app = initializeApp({ apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA", authDomain: "songmath.firebaseapp.com", projectId: "songmath", storageBucket: "songmath.firebasestorage.app", messagingSenderId: "936295436575", appId: "1:936295436575:web:d1e201508719850cfbe02a" });
 const auth = getAuth(app), db = getFirestore(app);
 const $app = document.getElementById('app');
 const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 let hwChecks = {};
+let pSheets = [];   // sheetTasks — HCS에서 출제된 시험지(어떤 시험지인지 + 답안 제출 여부만 보임. 채점 결과는 선생님만)
 let cur = 'homework', child = null, weekly = [], monthly = [], comments = [], homework = [], me = null, attDays = [], notices = [], attErr = '', absences = [];
 { const t = new URLSearchParams(location.search).get('tab'); if (['homework', 'att', 'weekly', 'monthly', 'notice'].includes(t)) cur = t; }
 const openReports = new Set();   // 펼쳐진 보고서 id (최신 달은 자동)
@@ -189,6 +191,9 @@ onAuthStateChanged(auth, async (user) => {
     hwChecks = {};
     try { const hc = await getDocs(query(collection(db, 'homeworkChecks'), where('studentId', '==', studentId))); hc.forEach((d) => { const x = d.data(); if (x.logId && x.done) hwChecks[x.logId] = x; }); } catch (e) { console.warn('[숙제 체크]', e.message); }
     homework.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    pSheets = [];
+    try { const sh = await getDocs(query(collection(db, 'sheetTasks'), where('studentId', '==', studentId))); sh.forEach((d) => pSheets.push({ id: d.id, ...d.data() })); } catch (e) { console.warn('[시험지]', e.message); }
+    pSheets.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
     comments = []; cs.forEach((d) => comments.push({ id: d.id, ...d.data() }));
     comments.sort((a, b) => (a.createdAt?.seconds || 0) - (b.createdAt?.seconds || 0));
     weekly = []; ws.forEach((d) => weekly.push({ id: d.id, ...d.data() }));
@@ -569,10 +574,17 @@ function render() {
     </div>
     ${cur === 'att' ? attTabHtml() : ''}
     ${cur === 'notice' ? noticeTabHtml() : ''}
+    ${cur === 'homework' && pSheets.length ? `<div class="card"><h2>출제된 시험지</h2><div style="font-size:12.5px;color:var(--muted);margin:-4px 0 10px;">선생님이 내 준 프린트 시험지입니다. 학생이 학원 앱에서 답안을 제출했는지 볼 수 있어요.</div>${pSheets.slice(0, 30).map((s) => { const di = dueInfo(s.dueDate, s.submitted); const t = s.submittedAt?.toDate ? s.submittedAt.toDate() : null; return `
+        <div class="wk">
+          <div class="t"><span>📄 ${esc(s.title || '시험지')}</span><small>${esc(s.teacherName || '')} 선생님 · ${shMdw(s.date)} 출제</small></div>
+          <div style="font-size:13px;color:var(--muted);margin-top:5px;">${s.count || 0}문제${s.range ? ' · ' + esc(s.range) : ''}${di ? ` · 기한 <b style="color:${di.late ? '#D64545' : 'var(--ink)'};">${di.text}</b>` : ''}</div>
+          ${s.submitted ? `<div style="margin-top:8px;font-size:12.5px;font-weight:700;color:#2E8B57;">✅ 답안 제출 완료${t ? ` · ${t.getMonth() + 1}/${t.getDate()} ${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}` : ''}</div>` : `<div style="margin-top:8px;font-size:12.5px;font-weight:700;color:${di && di.late ? '#D64545' : 'var(--muted)'};">⏳ 아직 답안을 제출하지 않았어요${di && di.late ? ' (기한 지남)' : ''}</div>`}
+        </div>`; }).join('')}</div>` : ''}
     ${cur === 'homework' ? `<div class="card"><h2>숙제</h2>${homework.length ? homework.slice(0, 60).map((h) => { const d = new Date(h.date + 'T00:00:00'); const dow = ['일','월','화','수','목','금','토'][d.getDay()]; const isToday = h.date === new Date().toISOString().slice(0, 10); return `
         <div class="wk" style="${isToday ? 'border-color:var(--accent);' : ''}">
           <div class="t"><span>${d.getMonth() + 1}월 ${d.getDate()}일 (${dow})${isToday ? ' <span class="pill" style="font-size:11px;">오늘</span>' : ''}</span><small>${esc(h.teacherName || '')} 선생님 · ${esc(h.classGroup || '')}</small></div>
           <div style="font-size:14.5px;color:var(--ink);margin-top:6px;white-space:pre-wrap;">${esc(h.content)}</div>
+          ${!h.absent && h.dueDate ? `<div style="margin-top:6px;font-size:12.5px;color:var(--muted);">기한 <b style="color:var(--ink);">${dueInfo(h.dueDate, true).text}</b></div>` : ''}
           ${h.absent ? '' : hwChecks[h.id] ? (() => { const t = hwChecks[h.id].checkedAt?.toDate ? hwChecks[h.id].checkedAt.toDate() : null; return `<div style="margin-top:8px;font-size:12.5px;font-weight:700;color:#2E8B57;">✅ 학생이 완료 체크했어요${t ? ` · ${t.getMonth() + 1}/${t.getDate()} ${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}` : ''}</div>`; })() : '<div style="margin-top:8px;font-size:12.5px;color:var(--muted);">⏳ 아직 완료 체크 안 함</div>'}
         </div>`; }).join('') : '<div class="empty">아직 등록된 숙제가 없습니다.</div>'}</div>` : ''}
     ${cur === 'monthly' ? `<div class="card"><h2>월간 학습보고서</h2>${monthly.length ? monthly.map((r, i) => { const open = i === 0 || openReports.has(r.id); return `

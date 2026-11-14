@@ -294,6 +294,7 @@ a.lk:hover { text-decoration:underline; }
       </div>
     </div>
     <div class="card" id="dayHw" style="margin-top:16px"></div>
+    <div class="card" id="daySheets" style="margin-top:16px"></div>
   </section>
 
   <!-- ══ 주간 ══ -->
@@ -362,6 +363,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getAuth, signOut, onAuthStateChanged, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, collection, collectionGroup, doc, getDoc, getDocs, query, where, onSnapshot, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import { getStorage, ref as sref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import * as SC from "./sheet-core.js?v=1794640000";   // HCS 시험지 ↔ 숙제·답안 제출·채점·오답 시험지 연동
 
 const app = initializeApp({
   apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
@@ -631,6 +633,61 @@ async function renderDay() {
     }).join('') + '<div class="note">기준: 학생 정보의 수업 요일에 이 날이 들어 있는 반. 휴무일·앞으로의 날짜는 빨간불을 띄우지 않습니다. 줄을 누르면 숙제 내용이 펼쳐집니다.</div>'
       : '<div class="empty">이 날 수업이 있는 반이 없습니다.</div>');
 
+  renderDaySheets(dateStr, token);
+}
+
+// HCS 시험지 — ① 이 날 HCS에서 출제된 시험지 ② 이 날 수업이 있는 학생의 최근 4주 시험지(답안 제출·점수·오답 시험지)
+//   sheetTasks(학생별 시험지·제출) + dailyTestResults(채점·오답 시험지). 이 화면을 열 때도 제출된 답안이 자동 채점됨
+async function renderDaySheets(dateStr, token) {
+  const el = $('daySheets'); if (!el) return;
+  el.innerHTML = '<div class="card-hd"><h3>📄 HCS 시험지</h3></div><div class="empty">불러오는 중...</div>';
+  try {
+    try { await SC.syncSubmitted(db, { admin: true }); } catch (e) {}
+    const from = ymd(addDays(parseYmd(dateStr), -28));
+    const [ts, rs] = await Promise.all([
+      getDocs(query(collection(db, 'sheetTasks'), where('date', '>=', from))),
+      getDocs(query(collection(db, 'dailyTestResults'), where('date', '>=', from))),
+    ]);
+    if (token !== dayToken) return;
+    const res = {}; rs.forEach((d) => { const x = d.data(); if (x.source === 'worksheet') res[d.id] = x; });
+    const scope = scopeStudents(), sm = Object.fromEntries(scope.map((s) => [s.id, s]));
+    const dayName = DOW[parseYmd(dateStr).getDay()];
+    const tasks = []; ts.forEach((d) => { const x = { id: d.id, ...d.data() }; if (sm[x.studentId] && (x.date || '') <= dateStr) tasks.push(x); });
+    const tm = teacherMap();
+    const tname = (x) => x.teacherName || tm[x.teacherUid]?.name || '(선생님)';
+    // ① 이 날 출제
+    const issued = {}; tasks.filter((x) => x.date === dateStr).forEach((x) => { const o = issued[x.testId] = issued[x.testId] || { title: x.title, count: x.count, teacher: tname(x), retake: !!x.retakeOf, list: [] }; o.list.push(x); });
+    const issuedList = Object.values(issued).sort((a, b) => koCmp(a.teacher, b.teacher));
+    const issuedHtml = issuedList.length ? issuedList.map((o) => {
+      const sub = o.list.filter((x) => x.submitted).length, linked = o.list.filter((x) => x.logId).length;
+      const sc = o.list.map((x) => res[x.id]).filter((r) => r && r.graded && !r.absent).map((r) => r.percentage);
+      return `<div class="row"><span class="dot ${sub >= o.list.length ? 'ok' : 'warn'}"></span><span class="t"><b>${esc(o.teacher)} 선생님 · ${esc(o.title)}</b>${o.retake ? ' <span class="chip mute">오답 시험지</span>' : ''}<small>${o.count}문제 · ${o.list.map((x) => esc(x.studentName)).join(', ')}</small></span>
+        <span class="r">제출 ${sub}/${o.list.length}${sc.length ? ` · 평균 ${Math.round(sc.reduce((a, b) => a + b, 0) / sc.length)}점` : ''} · ${linked >= o.list.length ? '숙제 연결' : linked ? `숙제 연결 ${linked}/${o.list.length}` : '<span style="color:#D97B1A">숙제 미연결</span>'}</span></div>`;
+    }).join('') : '<div class="empty">이 날 HCS에서 출제된 시험지가 없습니다.</div>';
+    // ② 이 날 수업 학생의 시험지 현황
+    const todays = tasks.filter((x) => SC.daysOf(sm[x.studentId]).includes(dayName));
+    const byT = {}; todays.forEach((x) => { const o = byT[x.teacherUid] = byT[x.teacherUid] || { name: tname(x), list: [] }; o.list.push(x); });
+    const wsKey = (x) => (x.retakeOf ? 'retake' : SC.wrongSheetState(res[x.id]).key);
+    const notSent = (x) => ['todo', 'made', 'review'].includes(wsKey(x));
+    const late = (x) => !x.submitted && x.dueDate && x.dueDate <= dateStr;
+    const totalLate = todays.filter(late).length, totalNS = todays.filter(notSent).length;
+    const st = !todays.length ? '<span class="st mute">대상 없음</span>' : (totalLate || totalNS) ? `<span class="st bad">미제출 ${totalLate} · 오답 시험지 안 나감 ${totalNS}</span>` : '<span class="st ok">모두 처리</span>';
+    const pill = { done: 'ok', late: 'bad', wait: 'mute', sent: 'ok', made: 'warn', todo: 'bad', review: 'warn', perfect: 'mute' };
+    const statusHtml = Object.values(byT).sort((a, b) => koCmp(a.name, b.name)).map((t) => {
+      const l = t.list.filter(late).length, ns = t.list.filter(notSent).length, sub = t.list.filter((x) => x.submitted).length;
+      return `<details class="tg"${l || ns ? ' open' : ''}><summary><span class="nm">${esc(t.name)} 선생님</span><span class="sm">${t.list.length}건 · 제출 ${sub}</span><span class="rt">${l ? `<span class="chip bad">기한 지난 미제출 ${l}</span>` : ''}${ns ? `<span class="chip bad">오답 시험지 안 나감 ${ns}</span>` : ''}${!l && !ns ? '<span class="chip ok">모두 처리</span>' : ''}</span></summary><div>` +
+        t.list.sort((a, b) => clsCmp(a.classGroup, b.classGroup) || koCmp(a.studentName, b.studentName) || (b.date || '').localeCompare(a.date || '')).map((x) => {
+          const r = res[x.id] || {}, ss = SC.submitState(x), ws = SC.wrongSheetState(r), di = SC.dueInfo(x.dueDate, x.submitted);
+          const score = r.absent ? '결석' : r.graded ? `${r.score}/${r.total}${(r.wrong || []).length ? ` · 틀린 문제 ${(r.wrong || []).join(', ')}번` : ''}${(r.needReview || []).length ? ' · 주관식 확인 필요' : ''}` : '채점 전';
+          return `<div class="row"><span class="dot ${late(x) || notSent(x) ? 'bad' : x.submitted ? 'ok' : 'mute'}"></span><span class="t"><b>${esc(x.studentName)}</b> <span style="color:var(--muted)">${esc(x.classGroup || '')}</span> · ${esc(x.title)}${x.retakeOf ? ' <span class="chip mute">오답 시험지</span>' : ''}<small>${SC.mdw(x.date)} 출제${di ? ' · 기한 ' + di.text : ''} · ${score}</small></span>
+            <span class="r"><span class="chip ${pill[ss.key] || 'mute'}">${ss.label}</span>${x.retakeOf || ws.key === 'none' ? '' : ` <span class="chip ${pill[ws.key] || 'mute'}">${ws.label}</span>`}</span></div>`;
+        }).join('') + '</div></details>';
+    }).join('');
+    el.innerHTML = `<div class="card-hd"><h3>📄 HCS 시험지</h3><div class="r">${st}${fix('homeworklog')}</div></div>
+      <div style="font-size:12.5px;font-weight:700;margin:4px 0 2px;">이 날 출제된 시험지</div>${issuedHtml}
+      <div style="font-size:12.5px;font-weight:700;margin:14px 0 2px;">${dayName}요일 수업 학생의 시험지 (최근 4주)</div>${statusHtml || '<div class="empty">이 날 수업이 있는 학생에게 출제된 시험지가 없습니다.</div>'}
+      <div class="note">HCS에서 출제 → 선생님이 숙제에 연결(기한 지정) → 학생이 앱에서 답안 제출 → 자동 채점 → 오답 시험지 자동 생성 → 선생님이 다시 출제. 학생·학부모에게는 맞고 틀림이 보이지 않습니다.</div>`;
+  } catch (e) { if (token === dayToken) el.innerHTML = `<div class="card-hd"><h3>📄 HCS 시험지</h3></div><div class="err">불러오지 못했습니다 (${esc(e.message)})</div>`; }
 }
 
 // 하루 마감 빨간불은 '어제'(일요일이면 토요일) 기준 — 오늘 마감은 저녁에 하므로 낮 동안 빨간불이 계속 뜨지 않게

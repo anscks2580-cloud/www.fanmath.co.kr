@@ -100,7 +100,7 @@
     <button class="admin-tab" onclick="switchTab('progress',this);initProgressTab()">📍 반별진도</button>
     <button class="admin-tab" onclick="switchTab('monthly',this);initMonthlyTab()">📝 월말보고서</button>
     <button class="admin-tab" onclick="switchTab('studyreport',this);initStudyReportTab()">📈 학습보고서 생성</button>
-    <button class="admin-tab" onclick="switchTab('homeworklog',this);initHomeworkLogTab()">📒 숙제 입력</button>
+    <button class="admin-tab" onclick="switchTab('homeworklog',this);initHomeworkLogTab();shsInit()">📒 숙제 입력</button>
     <button class="admin-tab" onclick="switchTab('parentmsg',this);initParentMsgTab()">💬 학부모 발송</button>
     <button class="admin-tab" onclick="switchTab('satclinic',this);initSatClinicTab()">🏥 토요클리닉</button>
     <button class="admin-tab" onclick="switchTab('dailyreport',this);initDailyReportTab()">📋 관리부 마감</button>
@@ -1876,6 +1876,20 @@
         </table>
       </div>
     </div>
+    <!-- HCS 시험지 · 오답 시험지 현황 (선생님별 · 요일별) — admin/js/sheetstatus.js -->
+    <div class="card">
+      <h3 style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">📄 HCS 시험지 · 오답 시험지 현황
+        <span style="font-size:12px;color:var(--muted);font-weight:400;">— 선생님이 HCS에서 출제한 시험지. 답안 제출 여부와 오답 시험지가 학생에게 나갔는지 확인</span></h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;">
+        <select id="shsBranch" onchange="shsPickBranch(this.value)" style="padding:7px 10px;border-radius:8px;border:1px solid rgba(30,24,56,0.15);background:#fff;font-family:inherit;font-size:13px;"><option value="평촌관">평촌관</option><option value="산본관">산본관</option></select>
+        <span id="shsDays" style="display:flex;gap:6px;flex-wrap:wrap;"></span>
+        <label style="display:inline-flex;align-items:center;gap:5px;font-size:12.5px;cursor:pointer;margin-left:auto;"><input type="checkbox" onchange="shsToggleOpen(this.checked)"> 안 된 것만 보기</label>
+        <button class="btn btn-secondary btn-sm" onclick="shsInit()">↻ 새로고침</button>
+      </div>
+      <div id="shsSummary" style="font-size:12.5px;margin-bottom:6px;line-height:1.7;"></div>
+      <div id="shsBody"><div style="color:var(--muted);padding:14px;">불러오는 중...</div></div>
+      <div style="font-size:11.5px;color:var(--muted);margin-top:10px;line-height:1.6;">· 요일 기준은 학생 정보의 등원 요일이며, 최근 4주 동안 출제된 시험지만 보입니다. · 「오답 시험지 안 나감」 = 채점이 끝나고 틀린 문제가 있는데 아직 학생에게 오답 시험지가 출제되지 않은 것(미생성·생성만 됨·주관식 확인 필요). · 오답 시험지를 만들고 출제하는 것은 담당 선생님이 HCS에서 합니다.</div>
+    </div>
   </div>
 
   <!-- 학습보고서 생성 (일일테스트 → 학생별 월간 학습보고서) -->
@@ -2874,7 +2888,8 @@
 <script defer src="admin/js/reports.js"></script>
 <script defer src="admin/js/studyreport.js?v=1793180000"></script>
 <script defer src="admin/js/parents.js?v=1792681350"></script>
-<script defer src="admin/js/homeworklog.js?v=1794410790"></script>
+<script defer src="admin/js/homeworklog.js?v=1794640000"></script>
+<script defer src="admin/js/sheetstatus.js?v=1794640000"></script>
 <script defer src="admin/js/satclinic.js?v=1792811435"></script>
 <script defer src="admin/js/dailyreport.js?v=1794410790"></script>
 <script defer src="admin/js/attendance.js?v=1795000000"></script>

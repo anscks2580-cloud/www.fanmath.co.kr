@@ -581,6 +581,24 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // ── sheetTasks/{시험id}_{학생uid}: HCS에서 출제한 시험지(학생별 1건, 정답 없음) — 2026.11 HCS ↔ 학원 시스템 연동
+    // 읽기: 본인·자기 아이 학부모·선생님·관리자. 만들기·수정·삭제: 출제한 선생님 본인·관리자.
+    // 학생 본인은 아직 제출하지 않은 시험지에 답(answers)을 적어 제출(submitted, submittedAt)하는 것만 가능 — 제출 뒤에는 못 고침
+    // (채점 결과는 여기 없고 dailyTestResults에만 있어 학생·학부모는 맞고 틀림을 볼 수 없음)
+    match /sheetTasks/{docId} {
+      allow read: if isTeacher() || isAdmin()
+        || (isSignedIn() && resource.data.studentId == request.auth.uid)
+        || (isParent() && resource.data.studentId == parentChildId());
+      allow create: if isAdmin() || (isTeacher() && request.resource.data.teacherUid == request.auth.uid);
+      allow update: if isAdmin() || (isTeacher() && resource.data.teacherUid == request.auth.uid)
+        || (isStudent() && resource.data.studentId == request.auth.uid
+            && resource.data.get('submitted', false) != true
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['answers', 'submitted', 'submittedAt'])
+            && request.resource.data.answers is list && request.resource.data.answers.size() <= 200
+            && request.resource.data.submitted is bool);
+      allow delete: if isAdmin() || (isTeacher() && resource.data.teacherUid == request.auth.uid);
+    }
+
     // ── 그 외 정의되지 않은 컬렉션: 기본적으로 관리자만 접근 가능 ──
     // (단, officeCalendarPrivate는 「나만」 일정이라 다른 관리자에게도 열지 않음 — 위 규칙으로 본인만)
     match /{col}/{document=**} {

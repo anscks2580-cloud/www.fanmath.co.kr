@@ -331,6 +331,8 @@ table.gt td.cell:hover{background:#f6f3ff}
 table.gt td.cell.x{background:#fdecea;color:var(--bad);font-weight:800}
 table.gt td.cell.o{background:#e8f0fe;color:#1a56db;font-weight:700}
 table.gt th.no:hover,table.gt th.no.sel{background:var(--p2);color:var(--acc)}
+table.gt td.cell.rv{background:#fff4d6;color:#b45309;font-weight:800}
+.grv{background:#fffaf0;border:1px solid #f3dfa8;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:13px}.grv .rvh{color:#92600a;margin-bottom:8px;line-height:1.6}.grv .rvi{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 0;border-top:1px dashed #f0e2bd}.grv .sa{color:#b45309}.grv .ca{color:var(--acc)}
 .gprev .qtext{font-size:16px;line-height:1.8}.gprev .ans{margin-top:10px;color:#1b7a3e;font-weight:700}
 table.gt tr.absent td.cell{background:#f3f3f3;color:#bbb;cursor:default}
 table.gt td.sc{font-weight:700;min-width:70px}
@@ -643,7 +645,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none!importa
 <div class="grade" id="grade">
   <div class="top"><h2 id="g_title"></h2><span class="note" id="g_sub"></span>
     <div class="r"><button onclick="gradeAll('o')" style="color:#1a56db;border-color:#bcd0f7">모두 전체 정답</button><button onclick="gradeAll('x')" style="color:var(--bad);border-color:#f3c2bd">모두 전체 오답</button><button class="yel" onclick="makeWrongSheet()">오답학습지 만들기</button><button class="pri" onclick="saveGrading()">저장</button><button onclick="closeGrade()">✕ 닫기</button></div></div>
-  <div class="body" style="display:flex;gap:16px;align-items:flex-start"><div style="flex:1;min-width:0;overflow:auto"><div class="note" style="margin-bottom:8px">「전체 정답」을 누르면 <b style="color:#1a56db">○(정답, 파랑)</b>으로 채워져요. 틀린 칸을 누르면 <b style="color:var(--bad)">✕(오답, 빨강)</b>, 다시 누르면 정답. 위쪽 문제 번호를 누르면 오른쪽에 문제가 보여요.</div><div id="gbody"></div></div><div class="card" id="gprev" style="width:420px;flex:none;padding:16px;display:none;position:sticky;top:0"></div></div>
+  <div class="body" style="display:flex;gap:16px;align-items:flex-start"><div style="flex:1;min-width:0;overflow:auto"><div class="note" style="margin-bottom:8px">「전체 정답」을 누르면 <b style="color:#1a56db">○(정답, 파랑)</b>으로 채워져요. 틀린 칸을 누르면 <b style="color:var(--bad)">✕(오답, 빨강)</b>, 다시 누르면 정답. 위쪽 문제 번호를 누르면 오른쪽에 문제가 보여요.</div><div id="grv" class="grv" style="display:none"></div><div id="gbody"></div></div><div class="card" id="gprev" style="width:420px;flex:none;padding:16px;display:none;position:sticky;top:0"></div></div>
 </div>
 
 <!-- ===== 로그인 ===== -->
@@ -677,6 +679,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none!importa
   <div class="mh">HCS 학습지 출제하기 <span class="note" id="a_title"></span><button class="sm ghost" onclick="closeAssign()">✕</button></div>
   <div class="mb">
     <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap"><div><label>시험 날짜</label><input type="date" id="a_date" style="width:170px"></div>
+      <div><label>숙제 기한 <small class="note" style="font-weight:400">비우면 학생별 다음 수업일</small></label><input type="date" id="a_due" style="width:170px"></div>
       <div><label>관</label><div><span class="chip sm on" data-b="">전체</span><span class="chip sm" data-b="평촌관">평촌관</span><span class="chip sm" data-b="산본관">산본관</span></div></div>
       <div style="flex:1"><label>학생 검색</label><input id="a_q" placeholder="이름" oninput="renderAssignList()"></div></div>
     <div id="a_list" style="margin-top:12px;max-height:50vh;overflow:auto"></div>
@@ -695,6 +698,9 @@ import { getStorage, ref, getBytes, getMetadata } from "https://www.gstatic.com/
 const firebaseConfig = { apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA", authDomain: "songmath.firebaseapp.com", projectId: "songmath", storageBucket: "songmath.firebasestorage.app", messagingSenderId: "936295436575", appId: "1:936295436575:web:d1e201508719850cfbe02a" };
 const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const storage = getStorage(app);
 try { await setPersistence(auth, browserLocalPersistence); } catch (e) { console.warn('persistence', e); }
+// HCS ↔ 학원 시스템 연동 공용 모듈(답 비교·자동 채점·기한 계산). 로컬(file://)에서는 홈페이지 것을 불러옴
+let SC = null; try { SC = await import(location.protocol === 'file:' ? 'https://www.fanmath.co.kr/sheet-core.js' : '../sheet-core.js?v=1794640000'); } catch (e) { console.warn('sheet-core', e); }
+window.SC = SC;
 // IndexedDB 캐시 (문제 데이터 파일)
 const idb = () => new Promise((res, rej) => { const q = indexedDB.open('hcs-cache', 1); q.onupgradeneeded = () => q.result.createObjectStore('files'); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); });
 const idbGet = async (k) => { const d = await idb(); return new Promise((res, rej) => { const t = d.transaction('files').objectStore('files').get(k); t.onsuccess = () => res(t.result); t.onerror = () => rej(t.error); }); };
@@ -737,6 +743,13 @@ window.FB = {
   async writeResults(rows) { const b = writeBatch(db); rows.forEach(({ id, data }) => b.set(doc(db, 'dailyTestResults', id), { ...data, updatedAt: serverTimestamp() }, { merge: true })); await b.commit(); },
   async deleteTest(testId) { const snap = await getDocs(query(collection(db, 'dailyTestResults'), where('testId', '==', testId))); const b = writeBatch(db); snap.forEach((d) => b.delete(d.ref)); b.delete(doc(db, 'dailyTests', testId)); await b.commit(); },
   async deleteResult(id) { await deleteDoc(doc(db, 'dailyTestResults', id)); },
+  // 학생별 시험지(sheetTasks): 학생 앱 답안 제출 · 학부모 확인 · 선생님 숙제 연결 — 정답은 넣지 않음
+  async createTasks(rows) { const b = writeBatch(db); rows.forEach(({ id, data }) => b.set(doc(db, 'sheetTasks', id), { ...data, createdAt: serverTimestamp() })); await b.commit(); },
+  async tasks(me) { const snap = await getDocs(query(collection(db, 'sheetTasks'), where('teacherUid', '==', me.uid))); const out = []; snap.forEach((d) => out.push({ id: d.id, ...d.data() })); return out; },
+  async deleteTasks(testId) { const snap = await getDocs(query(collection(db, 'sheetTasks'), where('testId', '==', testId))); if (snap.empty) return; const b = writeBatch(db); snap.forEach((d) => b.delete(d.ref)); await b.commit(); },
+  async patchTask(id, patch) { await updateDoc(doc(db, 'sheetTasks', id), patch); },
+  async patchResult(id, patch) { await setDoc(doc(db, 'dailyTestResults', id), { ...patch, updatedAt: serverTimestamp() }, { merge: true }); },
+  async syncSheets(me) { return SC ? SC.syncSubmitted(db, { teacherUid: me.uid }) : 0; },
   async updateTest(testId, patch) { await updateDoc(doc(db, 'dailyTests', testId), patch); },
 };
 onAuthStateChanged(auth, async (user) => {
@@ -1218,13 +1231,15 @@ async function confirmMake(){
   const w={ teacherUid:ME?ME.uid:'', teacherName:o.author, title:o.title.trim(), grade:$('f_grade').value, subject:curSubject, tags, level:levelSel(), count:sel.length, levelDist:dist, range:rangeText(sel),
     problemIds:sel.map(p=>p.id), items:sel.map((p,i)=>({n:i+1,id:p.id,type:mfOf(p),subType:p.type,unit:p.unit,unitName:unitNameOf(p),level:lvOfSel(p),diff:diffOf(lvOfSel(p)),kind:p.kind,answer:String(p.answer||'')})),
     opts:o, createdAtStr:todayStr(), createdAtMs:Date.now() };
+  const wsrc=window.WRONG_SRC; window.WRONG_SRC=null;
+  if(wsrc&&/^\[오답\]/.test(w.title)){ w.sourceResultId=wsrc.id; w.forStudentId=wsrc.studentId; w.forStudentName=wsrc.studentName; }
   const ed=EDIT; EDIT=null;
   if(ed&&!ed.copy){ // 수정: 같은 학습지에 덮어쓰기(만든 날짜는 그대로)
     const old=ed.w; w.createdAtStr=old.createdAtStr||w.createdAtStr; w.createdAtMs=old.createdAtMs||w.createdAtMs; w.updatedAtStr=todayStr(); w.id=old.id;
     if(ME&&old.id){ try{ const {id,...data}=w; await FB.updateWorksheet(old.id,data); toast('학습지를 수정했어요'); }catch(e){ console.warn(e); toast('수정 저장 실패: '+e.message); return; } }
     const k=WS.indexOf(old); if(k>=0) WS.splice(k,1); WS.unshift(w);
   } else {
-    if(ME){ try{ w.id=await FB.saveWorksheet(w); toast('학습지를 저장했어요'); }catch(e){ console.warn(e); toast('저장 실패(화면에만 남아요): '+e.message); } }
+    if(ME){ try{ w.id=await FB.saveWorksheet(w); toast('학습지를 저장했어요'); if(w.sourceResultId){ try{ await FB.patchResult(w.sourceResultId,{ wrongSheetId:w.id, wrongSheetAt:new Date().toISOString() }); const rr=RESULTS.find(x=>x.id===w.sourceResultId); if(rr) rr.wrongSheetId=w.id; }catch(e){ console.warn(e); } } }catch(e){ console.warn(e); toast('저장 실패(화면에만 남아요): '+e.message); } }
     WS.unshift(w);
   }
   renderWS(); step=1; closeWiz(true); document.querySelector('.nav .menu span[data-v="ws"]').click(); toast('학습지가 목록에 추가됐어요');
@@ -1255,7 +1270,7 @@ function toggleAllGrp(){ const all=groups(STUDENTS).map(x=>x[0]); if(openGrp.siz
 // --- 출제하기
 let assignW=null, assignSel=new Set(), assignBranch='';
 document.querySelectorAll('#m_assign .chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('#m_assign .chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');assignBranch=c.dataset.b;renderAssignList();});
-function openAssign(i){ if(needLogin()) return; assignW=WS[i]; if(!assignW.id){ toast('저장되지 않은 학습지는 출제할 수 없어요'); return; } assignSel=new Set(); $('a_title').textContent=assignW.title; $('a_date').value=todayStr(); $('a_q').value=''; $('printview').classList.remove('on'); renderAssignList(); $('m_assign').classList.add('on'); }
+function openAssign(i){ if(needLogin()) return; assignW=WS[i]; if(!assignW.id){ toast('저장되지 않은 학습지는 출제할 수 없어요'); return; } assignSel=new Set(); if(assignW.forStudentId&&STUDENTS.some(s=>s.id===assignW.forStudentId)) assignSel.add(assignW.forStudentId); $('a_title').textContent=assignW.title; $('a_date').value=todayStr(); $('a_due').value=''; $('a_q').value=''; $('printview').classList.remove('on'); renderAssignList(); $('m_assign').classList.add('on'); }
 // 학년 맞추기: '중1', '중학교 1학년', '1학년(중)' 등 → 「중1」
 function gradeKey(g){ g=String(g||''); const lv=/초/.test(g)?'초':/중/.test(g)?'중':/고|N수/.test(g)?'고':''; const n=(g.match(/\d/)||[''])[0]; return lv&&n?lv+n:''; }
 function renderAssignList(){
@@ -1271,19 +1286,57 @@ async function saveAssign(){
   if(!assignSel.size){ toast('학생을 골라 주세요'); return; } const date=$('a_date').value||todayStr(); const w=assignW; const stus=[...assignSel].map(id=>STUDENTS.find(s=>s.id===id)).filter(Boolean);
   const cls=[...new Set(stus.map(clsOf))].join(', '); const branches=[...new Set(stus.map(s=>s.branch).filter(Boolean))].join(', ');
   const sessionId=`${ME.uid}_${Date.now()}`;
-  const test={ teacherUid:ME.uid, teacherName:ME.name, source:'worksheet', worksheetId:w.id, date, grade:w.grade||'', classGroup:cls, branch:branches, title:w.title, range:w.range||'', questionCount:w.count,
-    items:w.items.map(it=>({n:it.n,type:it.type,unit:it.unitName,diff:it.diff})), itemsParsed:true, itemsSource:'worksheet', problemIds:w.problemIds, answers:w.items.map(it=>it.answer),
+  // 학원 시스템 연동: 문항 종류(객관식 o / 주관식 s), 숙제 기한(비우면 학생별 다음 수업일 — 선생님 페이지 숙제 입력에서 다시 정할 수 있음)
+  const kinds=w.items.map(it=>/^\s*[①②③④⑤](\s*,\s*[①②③④⑤])*\s*$/.test(it.answer||'')?'o':'s');
+  const dueIn=$('a_due').value; const dueOf=s=>dueIn||(window.SC?SC.nextClassDate(SC.daysOf(s),date):'');
+  const test={ kinds, retakeOf:w.sourceResultId||'', teacherUid:ME.uid, teacherName:ME.name, source:'worksheet', worksheetId:w.id, date, grade:w.grade||'', classGroup:cls, branch:branches, title:w.title, range:w.range||'', questionCount:w.count,
+    items:w.items.map(it=>({n:it.n,type:it.type,unit:it.unitName,diff:it.diff,kind:it.kind||''})), itemsParsed:true, itemsSource:'worksheet', problemIds:w.problemIds, answers:w.items.map(it=>it.answer),
     fileName:'', filePath:'', downloadURL:'', fileSize:0, sessionId, sheetLabel:'A' };
   try{
     const testId=await FB.createTest(test);
-    await FB.writeResults(stus.map(s=>({ id:`${testId}_${s.id}`, data:{ testId, source:'worksheet', worksheetId:w.id, teacherUid:ME.uid, teacherName:ME.name, studentId:s.id, studentName:s.name||'', studentGrade:s.grade||'', branch:s.branch||'', date, grade:w.grade||'', classGroup:clsOf(s), testTitle:w.title, sessionId, sheetLabel:'A', total:w.count, wrong:[], absent:false, graded:false, score:null, percentage:null } })));
+    await FB.writeResults(stus.map(s=>({ id:`${testId}_${s.id}`, data:{ testId, source:'worksheet', worksheetId:w.id, teacherUid:ME.uid, teacherName:ME.name, studentId:s.id, studentName:s.name||'', studentGrade:s.grade||'', branch:s.branch||'', date, grade:w.grade||'', classGroup:clsOf(s), testTitle:w.title, sessionId, sheetLabel:'A', total:w.count, wrong:[], absent:false, graded:false, score:null, percentage:null, submitted:false, dueDate:dueOf(s), logId:'', retakeOf:w.sourceResultId||'' } })));
+    // 학생 앱·학부모·선생님 페이지·관리부·원장 페이지가 함께 보는 학생별 시험지 문서(정답 없음)
+    try{ await FB.createTasks(stus.map(s=>({ id:`${testId}_${s.id}`, data:{ testId, worksheetId:w.id, studentId:s.id, studentName:s.name||'', studentGrade:s.grade||'', teacherUid:ME.uid, teacherName:ME.name, branch:s.branch||'', classGroup:clsOf(s), date, title:w.title, range:w.range||'', count:w.count, kinds, dueDate:dueOf(s), logId:'', answers:[], submitted:false, submittedAt:null, synced:false, retakeOf:w.sourceResultId||'' } }))); }
+    catch(e){ console.warn(e); toast('학생 앱 연동 저장 실패(출제는 됨): '+e.message); }
+    // 오답 시험지를 출제한 것이면 원래 결과에 「오답 시험지 출제함」 표시 → 선생님 페이지·관리부·원장 페이지에 반영
+    if(w.sourceResultId){ try{ await FB.patchResult(w.sourceResultId,{ wrongSheetTestId:testId, wrongSheetSentAt:new Date().toISOString() }); }catch(e){ console.warn(e); } }
     $('m_assign').classList.remove('on'); toast(`${stus.length}명에게 출제했어요`); await loadAssignments();
     if(pendingContinue){ continueWiz(); return; }
     document.querySelector('.nav .menu span[data-v="lesson"]').click();
   }catch(e){ console.warn(e); toast('출제 실패: '+e.message); }
 }
 // --- 출제 목록
-async function loadAssignments(){ if(!ME) return; try{ [TESTS,RESULTS]=await Promise.all([FB.tests(ME),FB.results(ME)]); USED=new Set(TESTS.flatMap(t=>t.problemIds||[])); }catch(e){ console.warn(e); $('asgnote').textContent='출제 목록 오류: '+e.message; } renderAsg(); }
+var TASKS=[];
+async function loadAssignments(){ if(!ME) return;
+  // 학생이 앱에서 제출한 답안을 먼저 자동 채점(정답과 비교)한 뒤 목록을 불러옴
+  try{ const n=await FB.syncSheets(ME); if(n) toast(`학생이 제출한 답안 ${n}건을 자동 채점했어요`); }catch(e){ console.warn(e); }
+  try{ [TESTS,RESULTS]=await Promise.all([FB.tests(ME),FB.results(ME)]); USED=new Set(TESTS.flatMap(t=>t.problemIds||[])); }catch(e){ console.warn(e); $('asgnote').textContent='출제 목록 오류: '+e.message; }
+  try{ TASKS=await FB.tasks(ME); }catch(e){ TASKS=[]; }
+  renderAsg(); autoWrongSheets(); }
+// 오답 시험지에 넣을 문제: 틀린 문제마다 변형(없으면 같은 주제유형의 다른 문제) 1개 + 유사 1개
+function wrongPick(ids){ const out=[]; ids.forEach(id=>{ const p=byId(id); if(!p) return; const base=p.parent?byId(p.parent)||p:p;
+  const fam=kidsOf(base.id).filter(x=>x.variant==='similar'||x.variant==='1'); const sim=DB.filter(x=>sameKind(x,base)&&!x.parent&&x.id!==base.id&&!ids.includes(x.id));
+  const pick=fam[0]||shuffle(sim)[0]||base; out.push(pick.id); const more=shuffle(sim.filter(x=>x.id!==pick.id))[0]; if(more) out.push(more.id); }); return [...new Set(out)]; }
+// 제출·채점이 끝난 학생(오답 있음, 주관식 확인 끝)의 오답 시험지를 자동으로 만들어 학습지 목록에 넣음 — 출제 여부는 선생님이 결정
+let autoWsBusy=false;
+async function autoWrongSheets(){
+  if(!ME||autoWsBusy) return;
+  const cand=RESULTS.filter(r=>r.submitted&&r.graded&&!r.absent&&(r.wrong||[]).length&&!(r.needReview||[]).length&&!r.wrongSheetId&&!r.retakeOf);
+  if(!cand.length) return;
+  if(!DB.length){ if((autoWrongSheets.tries=(autoWrongSheets.tries||0)+1)<=15) setTimeout(autoWrongSheets,4000); return; }   // 문제 데이터를 아직 받는 중(1분까지만 기다림)
+  autoWsBusy=true; let made=0;
+  try{ for(const r of cand){ const t=TESTS.find(x=>x.id===r.testId); if(!t) continue;
+    const ids=(r.wrong||[]).map(n=>(t.problemIds||[])[n-1]).filter(Boolean); if(!ids.length) continue;
+    await new Promise(res=>needUnits([...new Set(ids.map(id=>(byId(id)||{}).unit).filter(Boolean))],res,true));
+    const sel=wrongPick(ids).map(byId).filter(Boolean); if(!sel.length) continue;
+    const src=WS.find(x=>x.id===t.worksheetId); const title=`[오답] ${r.studentName} · ${t.title}`; const dist={}; sel.forEach(p=>{ const l=lvOfSel(p); dist[l]=(dist[l]||0)+1; });
+    const w={ teacherUid:ME.uid, teacherName:ME.name, title, grade:t.grade||'', subject:subjectOf(sel[0].unit)||'', tags:['오답'], level:(src&&src.level)||'중', count:sel.length, levelDist:dist, range:rangeText(sel),
+      problemIds:sel.map(p=>p.id), items:sel.map((p,i)=>({n:i+1,id:p.id,type:mfOf(p),subType:p.type,unit:p.unit,unitName:unitNameOf(p),level:lvOfSel(p),diff:diffOf(lvOfSel(p)),kind:p.kind,answer:String(p.answer||'')})),
+      opts:{...((src&&src.opts)||sheetOpts()), title, author:ME.name}, createdAtStr:todayStr(), createdAtMs:Date.now(), autoWrong:true, sourceResultId:r.id, forStudentId:r.studentId, forStudentName:r.studentName };
+    try{ w.id=await FB.saveWorksheet(w); await FB.patchResult(r.id,{ wrongSheetId:w.id, wrongSheetAt:new Date().toISOString() }); r.wrongSheetId=w.id; WS.unshift(w); made++; }catch(e){ console.warn(e); }
+  } }finally{ autoWsBusy=false; }
+  if(made){ renderWS(); renderAsg(); toast(`오답 시험지 ${made}개를 자동으로 만들었어요 (학습지 목록 맨 위)`); }
+}
 function renderAsg(){
   if(!ME){ $('asgrows').innerHTML=''; $('asgnote').textContent='로그인하면 출제한 학습지가 보여요.'; return; }
   const days=+$('asgPeriod').value; const from=days?new Date(Date.now()-days*86400000).toISOString().slice(0,10):'';
@@ -1291,28 +1344,36 @@ function renderAsg(){
   $('asgrows').innerHTML=list.map(t=>{ const rs=RESULTS.filter(r=>r.testId===t.id); const g=rs.filter(r=>r.graded||r.absent).length; const names=rs.map(r=>r.studentName).slice(0,3).join(', ')+(rs.length>3?` 외 ${rs.length-3}명`:'');
     const st=!rs.length?'<span class="pill r">학생 없음</span>':g===rs.length?`<span class="pill g">채점 완료</span>`:g?`<span class="pill y">${g}/${rs.length} 채점</span>`:'<span class="pill y">미채점</span>';
     const avg=rs.filter(r=>r.graded&&!r.absent).map(r=>r.percentage); const avgT=avg.length?` 평균 ${Math.round(avg.reduce((a,b)=>a+b,0)/avg.length)}점`:'';
-    return `<tr><td class="mini">${shortDate(t.date)}</td><td class="t"><b>${esc(t.title)}</b><div>${t.questionCount}문제 | ${esc(t.range||'')}</div></td><td class="mini">${esc(t.classGroup||'')}<br>${(t.branch||'').split(', ').map(brTag).join('')}</td><td class="mini">${esc(names)}</td><td>${st}<span class="note">${avgT}</span></td><td><button class="sm pri" onclick="openGrade('${t.id}')">채점 / 오답 입력</button> <button class="sm ghost" onclick="delTest('${t.id}')">🗑</button></td></tr>`; }).join('');
+    const sub=rs.filter(r=>r.submitted).length, rv=rs.filter(r=>(r.needReview||[]).length).length, wsM=rs.filter(r=>r.wrongSheetId).length, wsS=rs.filter(r=>r.wrongSheetTestId).length;
+    const link=`<div class="note" style="margin-top:3px">앱 제출 ${sub}/${rs.length}${rv?` · <b style="color:#b45309">주관식 확인 ${rv}</b>`:''}${wsM||wsS?` · 오답지 생성 ${wsM} · 출제 ${wsS}`:''}</div>`;
+    return `<tr><td class="mini">${shortDate(t.date)}</td><td class="t"><b>${esc(t.title)}</b><div>${t.questionCount}문제 | ${esc(t.range||'')}</div></td><td class="mini">${esc(t.classGroup||'')}<br>${(t.branch||'').split(', ').map(brTag).join('')}</td><td class="mini">${esc(names)}</td><td>${st}<span class="note">${avgT}</span>${link}</td><td><button class="sm pri" onclick="openGrade('${t.id}')">채점 / 오답 입력</button> <button class="sm ghost" onclick="delTest('${t.id}')">🗑</button></td></tr>`; }).join('');
   $('asgnote').textContent=list.length?'':'이 기간에 출제한 학습지가 없어요. 「수업 준비」에서 학습지를 만들고 「출제하기」를 눌러 주세요.';
 }
-async function delTest(id){ const t=TESTS.find(x=>x.id===id); if(!confirm(`「${t.title}」(${t.date}) 출제와 학생 오답 기록을 모두 지울까요?`)) return; try{ await FB.deleteTest(id); toast('지웠어요'); await loadAssignments(); }catch(e){ toast('삭제 실패: '+e.message); } }
+async function delTest(id){ const t=TESTS.find(x=>x.id===id); if(!confirm(`「${t.title}」(${t.date}) 출제와 학생 오답 기록을 모두 지울까요?`)) return; try{ await FB.deleteTest(id); try{ await FB.deleteTasks(id); }catch(e){ console.warn(e); } toast('지웠어요'); await loadAssignments(); }catch(e){ toast('삭제 실패: '+e.message); } }
 // --- 채점
 let G=null; // {test, rows:[{res, wrong:Set, absent}]}
 function openGrade(testId){
   const t=TESTS.find(x=>x.id===testId); const rs=RESULTS.filter(r=>r.testId===testId).sort((a,b)=>(a.classGroup+a.studentName).localeCompare(b.classGroup+b.studentName,'ko'));
-  G={test:t,rows:rs.map(r=>({res:r,wrong:new Set(r.wrong||[]),absent:!!r.absent,graded:!!r.graded}))};
+  G={test:t,rows:rs.map(r=>({res:r,wrong:new Set(r.wrong||[]),absent:!!r.absent,graded:!!r.graded,review:new Set(r.needReview||[]),sa:r.studentAnswers||[]}))};
   $('g_title').textContent=t.title; $('g_sub').textContent=`${t.date} · ${t.questionCount}문제 · ${rs.length}명`;
   renderGrade(); $('grade').classList.add('on');
 }
 function closeGrade(){ $('grade').classList.remove('on'); G=null; }
+function fmtStuAns(a,k){ a=String(a||''); if(!a) return '답 없음'; return k==='o'?a.split('').map(c=>'①②③④⑤'[+c-1]||c).join(' '):a; }
+// 주관식: 학생이 적은 답이 정답 표기와 달라 자동 판정을 못 한 것 → 선생님이 정답/오답을 눌러 확정
+function renderReview(){ const el=$('grv'); if(!el) return; const ans=G.test.answers||[]; const items=[];
+  G.rows.forEach((r,ri)=>[...r.review].sort((a,b)=>a-b).forEach(n=>items.push(`<div class="rvi"><b>${esc(r.res.studentName)}</b> <span class="tag mf">${n}번</span> 학생 답 <b class="sa">${esc(r.sa[n-1]||'')}</b> · 정답 <b class="ca">${esc(plain(ans[n-1]||''))}</b> <button class="sm" onclick="rvSet(${ri},${n},1)" style="color:#1a56db">정답</button><button class="sm" onclick="rvSet(${ri},${n},0)" style="color:var(--bad)">오답</button></div>`)));
+  el.style.display=items.length?'block':'none'; el.innerHTML=items.length?`<div class="rvh">✍️ 주관식 확인 필요 ${items.length}건 — 학생이 앱에 적은 답이 정답 표기와 달라 자동으로 판정하지 못했어요. 정답/오답을 누른 뒤 저장하면 오답 시험지가 만들어져요.</div>`+items.join(''):''; }
+function rvSet(ri,n,ok){ const r=G.rows[ri]; r.review.delete(n); ok?r.wrong.delete(n):r.wrong.add(n); r.graded=true; renderGrade(); }
 function renderGrade(){
-  const t=G.test, N=t.questionCount, ans=t.answers||[];
+  const t=G.test, N=t.questionCount, ans=t.answers||[]; const kinds=window.SC?SC.kindsOf(t):[]; renderReview();
   const head=`<tr><th class="nm">학생</th>${Array.from({length:N},(_,i)=>`<th class="no">${i+1}</th>`).join('')}<th>점수</th><th></th></tr><tr><th class="nm ans">정답</th>${Array.from({length:N},(_,i)=>`<th class="ans" title="${esc(plain(ans[i]||''))}">${esc(plain(ans[i]||'')).slice(0,6)}</th>`).join('')}<th class="ans"></th><th class="ans"></th></tr>`;
   const rows=G.rows.map((r,ri)=>{ const w=r.wrong.size, sc=r.absent?'결석':r.graded?`${N-w}/${N} (${Math.round((N-w)/N*100)}점)`:'<span class="note">미채점</span>';
-    return `<tr class="${r.absent?'absent':''}"><td class="nm">${esc(r.res.studentName)} <small class="note">${esc(r.res.classGroup||'')}</small> ${brTag(r.res.branch)}</td>${Array.from({length:N},(_,i)=>{ const st=r.absent?'':r.wrong.has(i+1)?'x':r.graded?'o':''; return `<td class="cell ${st}" onclick="togCell(${ri},${i+1})">${st==='x'?'✕':st==='o'?'○':''}</td>`; }).join('')}<td class="sc">${sc}</td><td class="act"><button onclick="rowAll(${ri},'o')" style="color:#1a56db">전체 정답</button><button onclick="rowAll(${ri},'x')" style="color:var(--bad)">전체 오답</button><button onclick="rowAbsent(${ri})">${r.absent?'결석 취소':'결석'}</button></td></tr>`; }).join('');
+    return `<tr class="${r.absent?'absent':''}"><td class="nm">${esc(r.res.studentName)} <small class="note">${esc(r.res.classGroup||'')}</small> ${brTag(r.res.branch)}${r.res.submitted?' <span class="pill g" title="학생이 앱에서 답안을 제출함 — 칸에 마우스를 올리면 학생 답이 보여요">앱 제출</span>':''}</td>${Array.from({length:N},(_,i)=>{ const st=r.absent?'':r.wrong.has(i+1)?'x':r.graded?'o':''; const rv=r.review.has(i+1); return `<td class="cell ${st}${rv?' rv':''}" ${r.sa.length?`title="학생 답: ${esc(fmtStuAns(r.sa[i],kinds[i]))}"`:''} onclick="togCell(${ri},${i+1})">${rv?'?':st==='x'?'✕':st==='o'?'○':''}</td>`; }).join('')}<td class="sc">${sc}</td><td class="act"><button onclick="rowAll(${ri},'o')" style="color:#1a56db">전체 정답</button><button onclick="rowAll(${ri},'x')" style="color:var(--bad)">전체 오답</button><button onclick="rowAbsent(${ri})">${r.absent?'결석 취소':'결석'}</button></td></tr>`; }).join('');
   $('gbody').innerHTML=`<table class="gt">${head.replace(/<th class="no">(\d+)<\/th>/g,(m,n)=>`<th class="no ${+n===gSel?'sel':''}" onclick="showGProb(${n})">${n}</th>`)}${rows}</table>`;
 }
-function togCell(ri,n){ const r=G.rows[ri]; if(r.absent) return; r.wrong.has(n)?r.wrong.delete(n):r.wrong.add(n); r.graded=true; renderGrade(); }
-function rowAll(ri,v){ const r=G.rows[ri]; const N=G.test.questionCount; r.wrong.clear(); if(v==='x') for(let n=1;n<=N;n++) r.wrong.add(n); r.absent=false; r.graded=true; renderGrade(); }
+function togCell(ri,n){ const r=G.rows[ri]; if(r.absent) return; r.review.delete(n); r.wrong.has(n)?r.wrong.delete(n):r.wrong.add(n); r.graded=true; renderGrade(); }
+function rowAll(ri,v){ const r=G.rows[ri]; const N=G.test.questionCount; r.wrong.clear(); r.review.clear(); if(v==='x') for(let n=1;n<=N;n++) r.wrong.add(n); r.absent=false; r.graded=true; renderGrade(); }
 function rowAbsent(ri){ const r=G.rows[ri]; r.absent=!r.absent; if(r.absent){ r.wrong.clear(); r.graded=true; } renderGrade(); }
 function gradeAll(v){ G.rows.forEach((r,i)=>{ if(!r.absent) rowAll(i,v); }); renderGrade(); }
 let gSel=0;
@@ -1323,14 +1384,15 @@ function showGProb(n){ gSel=n; const id=(G.test.problemIds||[])[n-1]; const p=by
   km(el); renderGrade(); }
 async function saveGrading(){
   const t=G.test, N=t.questionCount;
-  const rows=G.rows.map(r=>{ const wrong=r.absent?[]:[...r.wrong].sort((a,b)=>a-b); const score=r.absent?null:N-wrong.length; return { id:r.res.id, data:{ wrong, absent:r.absent, graded:r.graded, score, percentage:r.absent?null:Math.round(score/N*100), total:N } }; });
-  try{ await FB.writeResults(rows); rows.forEach(x=>{ const r=RESULTS.find(y=>y.id===x.id); if(r) Object.assign(r,x.data); }); toast('저장했어요'); renderAsg(); }catch(e){ toast('저장 실패: '+e.message); }
+  const rows=G.rows.map(r=>{ const wrong=r.absent?[]:[...r.wrong].sort((a,b)=>a-b); const score=r.absent?null:N-wrong.length; return { id:r.res.id, data:{ wrong, absent:r.absent, graded:r.graded, score, percentage:r.absent?null:Math.round(score/N*100), total:N, needReview:[...r.review].sort((a,b)=>a-b) } }; });
+  try{ await FB.writeResults(rows); rows.forEach(x=>{ const r=RESULTS.find(y=>y.id===x.id); if(r) Object.assign(r,x.data); }); toast('저장했어요'); renderAsg(); autoWrongSheets(); }catch(e){ toast('저장 실패: '+e.message); }
 }
 // 오답학습지: 채점한 학생들이 틀린 문제의 변형·유사 문제로 새 학습지 구성 (학생별로)
 function makeWrongSheet(){
   const t=G.test; const cand=G.rows.filter(r=>r.graded&&!r.absent&&r.wrong.size); if(!cand.length){ toast('오답이 입력된 학생이 없어요'); return; }
   const who=cand.length===1?cand[0]:cand[+prompt(`누구의 오답학습지를 만들까요?\n${cand.map((r,i)=>`${i+1}. ${r.res.studentName} (오답 ${r.wrong.size})`).join('\n')}\n번호를 넣어 주세요`,'1')-1];
   if(!who) return;
+  window.WRONG_SRC=who.res;   // 이 학습지를 저장하면 원래 결과에 「오답 시험지 생성됨」으로 연결
   const ids=[...who.wrong].sort((a,b)=>a-b).map(n=>(t.problemIds||[])[n-1]).filter(Boolean);
   needUnits([...new Set(ids.map(id=>(byId(id)||{}).unit).filter(Boolean))],()=>{
     const out=[];

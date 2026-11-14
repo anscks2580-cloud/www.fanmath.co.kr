@@ -535,6 +535,7 @@ select option:disabled { color:#6B6489; }
   <div class="teacher-tabs" id="tnavLegacy" hidden>
     <button class="teacher-tab active" onclick="switchTab('calendar',this);refreshTeacherCalendar()">📅 일정</button>
     <button class="teacher-tab" onclick="switchTab('hwlog',this);hwInit()">숙제 입력</button>
+    <button class="teacher-tab" onclick="switchTab('sheets',this);shInit()">HCS 시험지 현황</button>
     <button class="teacher-tab" onclick="switchTab('weekly',this)">주간성취도</button>
     <button class="teacher-tab" onclick="switchTab('monthly',this)">월말보고서</button>
     <button class="teacher-tab" onclick="switchTab('tests',this)">누적테스트</button>
@@ -596,6 +597,27 @@ select option:disabled { color:#6B6489; }
     </div>
   </div>
 
+  <!-- ══ HCS 시험지 현황 — HCS에서 출제한 시험지의 학생 답안 제출·점수·오답 시험지 (요일별: 그날 수업 있는 학생) ══ -->
+  <div class="tab-panel" id="tab-sheets">
+    <div class="card">
+      <div class="card-title" style="flex-wrap:wrap;gap:8px;">📄 HCS 시험지 현황
+        <span style="font-size:12px;color:var(--muted);font-weight:400;" id="shLabel"></span>
+        <span style="margin-left:auto;display:flex;gap:6px;">
+          <button class="btn btn-outline btn-sm" onclick="shInit(true)">↻ 새로고침</button>
+          <a class="btn btn-gold btn-sm" href="hcs/" target="_blank" rel="noopener" style="text-decoration:none;">HCS 열기</a>
+        </span>
+      </div>
+      <div style="font-size:12.5px;color:var(--muted);margin-bottom:12px;line-height:1.6;">
+        HCS에서 「출제하기」를 한 시험지가 학생마다 여기에 뜹니다. 학생이 학원 앱에서 답을 제출하면 <b>자동으로 채점</b>되어 점수·틀린 번호가 보이고,
+        HCS를 열면 틀린 문제의 <b>오답 시험지가 자동으로 만들어져</b> 학습지 목록 맨 위에 들어갑니다. 내려받기·다시 출제·채점 수정은 HCS에서 합니다.
+      </div>
+      <div class="alert err" id="sh-err"></div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;" id="shDays"></div>
+      <div id="shSummary" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;"></div>
+      <div id="shBody"><div class="empty-state"><div class="icon">📭</div>불러오는 중...</div></div>
+    </div>
+  </div>
+
   <!-- ══ 숙제 입력 — 관리부 「숙제 입력」과 같은 homeworkLogs에 저장 (날짜별 자동 연동) ══ -->
   <div class="tab-panel" id="tab-hwlog">
     <div class="card">
@@ -625,8 +647,18 @@ select option:disabled { color:#6B6489; }
         <div id="hwExisting" style="margin-top:10px;"></div>
       </div>
 
+      <div class="form-group" id="hwSheetBox" style="margin-bottom:16px;display:none;">
+        <label>📄 HCS 시험지 <small style="color:var(--muted);font-weight:400;">· 이 날 HCS에서 이 학생들에게 출제한 시험지입니다. 체크해 두면 이 숙제에 연결되어 학생 앱에서 기한과 함께 보이고 답안을 제출합니다</small></label>
+        <div id="hwSheets" style="display:flex;flex-direction:column;gap:6px;"></div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px;max-width:260px;">
+        <label>숙제 기한 <small style="color:var(--muted);font-weight:400;">· 기본값은 이 반의 다음 수업일</small></label>
+        <input type="date" id="hwDue" style="color-scheme:light;width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
+      </div>
+
       <div class="form-group" style="margin-bottom:20px;">
-        <label>숙제 내용 <span style="color:#D64545;">*</span></label>
+        <label>숙제 내용 <span style="color:#D64545;">*</span> <small style="color:var(--muted);font-weight:400;">· HCS 시험지만 숙제면 비워도 됩니다</small></label>
         <textarea id="hwContent" placeholder="예: 쎈 B단계 120~135번 / 개념원리 확인문제 p.88~92" style="min-height:90px;"></textarea>
       </div>
 
@@ -1736,6 +1768,7 @@ import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, setPe
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, setDoc, updateDoc, getDoc, getDocs, addDoc, collection, query, where, orderBy, deleteDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import * as SC from "./sheet-core.js?v=1794640000";   // HCS 시험지 ↔ 숙제·답안 제출·채점 연동 공용 모듈
 
 const firebaseConfig = {
   apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
@@ -3050,6 +3083,52 @@ function hwBranchOf(ids) {
 }
 const hwMultiBranch = () => new Set(myStudents.map(s => s.branch).filter(Boolean)).size > 1;      // 내 숙제 기록 전체 (teacherUid == 나)
 let hwEditing = null; // 수정 중인 문서 ID
+let hwTasks = [];             // sheetTasks (HCS 출제분, teacherUid == 나)
+let hwSheetSel = new Set();   // 이 숙제에 연결하려고 체크한 시험 id
+let hwSheetTouched = false;   // 선생님이 체크를 직접 바꿨는지 (바꾸기 전에는 추천분 전부 체크)
+// 이 반의 다음 수업일 (반 학생들의 등원 요일을 모아 계산)
+function hwNextClass(date, cls) {
+  const days = []; myStudents.filter(s => hwClsOf(s) === cls).forEach(s => SC.daysOf(s).forEach(d => { if (!days.includes(d)) days.push(d); }));
+  return SC.nextClassDate(days, date);
+}
+// 날짜·체크한 학생에 해당하는 HCS 시험지 추천 목록
+function hwRenderSheets() {
+  const box = document.getElementById('hwSheetBox'), el = document.getElementById('hwSheets'); if (!box || !el) return;
+  const date = document.getElementById('hwDate').value;
+  const ids = new Set([...document.querySelectorAll('#hwStudents input:checked')].map(c => c.value));
+  const byTest = new Map();
+  hwTasks.filter(t => t.date === date && ids.has(t.studentId)).forEach(t => { const o = byTest.get(t.testId) || { testId: t.testId, title: t.title, count: t.count, list: [] }; o.list.push(t); byTest.set(t.testId, o); });
+  if (!hwCls || !byTest.size) { box.style.display = 'none'; el.innerHTML = ''; return; }
+  box.style.display = '';
+  if (!hwSheetTouched) {   // 기본: 아직 다른 숙제에 연결되지 않은 시험지는 모두 체크 (수정 중이면 그 숙제에 연결된 것)
+    hwSheetSel = new Set([...byTest.values()].filter(o => o.list.some(t => hwEditing ? t.logId === hwEditing : !t.logId)).map(o => o.testId));
+  }
+  el.innerHTML = [...byTest.values()].map(o => {
+    const other = o.list.filter(t => t.logId && t.logId !== hwEditing).length;
+    const sub = o.list.filter(t => t.submitted).length;
+    return `<label style="display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border:1px solid rgba(91,63,166,0.25);border-radius:10px;background:rgba(91,63,166,0.05);cursor:pointer;font-size:13px;">
+      <input type="checkbox" value="${hwEsc(o.testId)}" ${hwSheetSel.has(o.testId) ? 'checked' : ''} onchange="hwSheetToggle(this.value,this.checked)" style="margin-top:3px;">
+      <span style="flex:1;min-width:0;"><b>${hwEsc(o.title)}</b> <span style="color:var(--muted);">${o.count}문제</span> <span style="font-size:11px;font-weight:700;color:#5B3FA6;background:rgba(245,197,24,0.25);padding:1px 7px;border-radius:99px;">추천</span>
+        <div style="font-size:11.5px;color:var(--muted);margin-top:2px;">${o.list.map(t => hwEsc(t.studentName)).join(', ')} · 제출 ${sub}/${o.list.length}${other ? ` · <span style="color:#D97B1A;">${other}명은 이미 다른 숙제에 연결됨</span>` : ''}</div></span></label>`;
+  }).join('');
+}
+window.hwSheetToggle = function (id, v) { hwSheetTouched = true; v ? hwSheetSel.add(id) : hwSheetSel.delete(id); };
+// 숙제 저장 뒤: 체크한 시험지를 이 숙제에 연결(숙제 id·기한) — 학생 앱·학부모·관리부·원장 화면이 같은 값을 봄
+async function hwLinkSheets(logId, date, ids, dueDate, testIds) {
+  const idSet = new Set(ids), sel = new Set(testIds);
+  for (const t of hwTasks) {
+    const want = t.date === date && sel.has(t.testId) && idSet.has(t.studentId);
+    let patch = null;
+    if (want && (t.logId !== logId || (t.dueDate || '') !== dueDate)) patch = { logId, dueDate };
+    else if (!want && t.logId === logId) patch = { logId: '' };
+    if (!patch) continue;
+    try {
+      await updateDoc(doc(db, 'sheetTasks', t.id), patch);
+      Object.assign(t, patch);
+      await setDoc(doc(db, 'dailyTestResults', t.id), patch, { merge: true });
+    } catch (e) { console.warn('[HCS 시험지 연결]', t.id, e.message); }
+  }
+}
 
 window.hwInit = async function () {
   if (!currentTeacher) return;
@@ -3058,6 +3137,7 @@ window.hwInit = async function () {
   await hwLoad();
 };
 window.hwOnDate = function () { hwCancel(); hwRenderClasses(); hwRenderList(); };
+document.addEventListener('change', (e) => { if (e.target && e.target.closest && e.target.closest('#hwStudents')) hwRenderSheets(); });
 
 async function hwLoad() {
   try {
@@ -3066,6 +3146,9 @@ async function hwLoad() {
     // 학생이 학원 앱에서 누른 완료 체크 (homeworkChecks — 숙제id_학생id)
     hwChecked = new Set();
     try { const cs = await getDocs(query(collection(db, 'homeworkChecks'), where('teacherUid', '==', currentTeacher.uid))); cs.forEach(d => { const x = d.data(); if (x.done) hwChecked.add(x.logId + '_' + x.studentId); }); } catch (e) { console.warn('[숙제 체크]', e.message); }
+    // HCS에서 내가 출제한 시험지(학생별) — 같은 날짜 것을 숙제에 추천·연결
+    hwTasks = [];
+    try { const ts = await getDocs(query(collection(db, 'sheetTasks'), where('teacherUid', '==', currentTeacher.uid))); ts.forEach(d => hwTasks.push({ id: d.id, ...d.data() })); } catch (e) { console.warn('[HCS 시험지]', e.message); }
   } catch (e) { showAlert(document.getElementById('hw-err'), '불러오기 오류: ' + e.message, 'err'); }
   hwRenderClasses();
   hwRenderStudents(hwEditing ? (hwRows.find(r => r.id === hwEditing)?.studentIds || null) : null);
@@ -3098,6 +3181,8 @@ window.hwPick = function (c) {
   // 반을 고르면 항상 "새 숙제 추가" — 이미 입력한 숙제는 아래 목록에 따로 보이고, 고치려면 그 목록의 "수정"을 누름
   //  (예전에는 기존 기록을 불러와 저장 시 덮어써서, 학생별로 나눠 입력하면 앞의 것이 사라졌음)
   hwEditing = null;
+  hwSheetTouched = false; hwSheetSel = new Set();
+  document.getElementById('hwDue').value = date ? hwNextClass(date, c) : '';
   document.getElementById('hwContent').value = '';
   document.getElementById('hwSaveBtn').textContent = '저장';
   document.getElementById('hwCancelBtn').style.display = 'none';
@@ -3125,7 +3210,7 @@ function hwRenderExisting() {
 
 function hwRenderStudents(checkedIds) {
   const el = document.getElementById('hwStudents');
-  if (!hwCls) { el.innerHTML = '<span style="font-size:12px;color:var(--muted);">반을 고르면 학생이 나옵니다.</span>'; hwRenderExisting(); return; }
+  if (!hwCls) { el.innerHTML = '<span style="font-size:12px;color:var(--muted);">반을 고르면 학생이 나옵니다.</span>'; hwRenderExisting(); hwRenderSheets(); return; }
   const list = myStudents.filter(s => hwClsOf(s) === hwCls).sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
   // 수정 중인 기록에 내 담당이 아닌 학생이 들어 있으면 그대로 유지되도록 함께 표시
   const extra = (checkedIds || []).filter(id => !list.some(s => s.id === id)).map(id => studentsCache.find(s => s.id === id)).filter(Boolean);
@@ -3135,6 +3220,7 @@ function hwRenderStudents(checkedIds) {
   const has = new Set(hwRows.filter(r => r.date === date && hwSameCls(r, hwCls) && r.id !== hwEditing).flatMap(r => r.studentIds || []));
   el.innerHTML = all.map(s => `<label style="display:inline-flex;align-items:center;gap:5px;cursor:pointer;"><input type="checkbox" value="${s.id}" ${!checkedIds || checkedIds.includes(s.id) ? 'checked' : ''}> ${hwEsc(s.name)}${has.has(s.id) ? ' <b style="color:#2E9E5B;font-size:11px;">✓</b>' : ''}</label>`).join('');
   hwRenderExisting();
+  hwRenderSheets();
 }
 
 // absent=true: 체크한 학생을 "결석"으로 기록 (숙제 내용 칸은 비워도 됨)
@@ -3142,8 +3228,14 @@ window.hwSave = async function (absent) {
   absent = absent === true;
   const ok = document.getElementById('hw-ok'), err = document.getElementById('hw-err');
   const date = document.getElementById('hwDate').value;
-  const content = absent ? '결석' : document.getElementById('hwContent').value.trim();
+  let content = absent ? '결석' : document.getElementById('hwContent').value.trim();
   const ids = [...document.querySelectorAll('#hwStudents input:checked')].map(c => c.value);
+  // 이 숙제에 연결할 HCS 시험지 (화면에 추천으로 떠 있고 체크된 것)
+  const shown = new Set([...document.querySelectorAll('#hwSheets input')].map(c => c.value));
+  const sheetIds = absent ? [] : [...hwSheetSel].filter(id => shown.has(id));
+  const sheets = sheetIds.map(id => { const k = hwTasks.find(t => t.testId === id); return { testId: id, title: k?.title || '', count: k?.count || 0 }; });
+  if (!content && sheets.length) content = sheets.map(s => `HCS 시험지 「${s.title}」 ${s.count}문제`).join('\n');
+  const dueDate = absent ? '' : (document.getElementById('hwDue').value || '');
   if (!date)        { showAlert(err, '날짜를 골라주세요.', 'err'); return; }
   if (!hwCls)       { showAlert(err, '반을 골라주세요.', 'err'); return; }
   if (!ids.length)  { showAlert(err, '학생을 한 명 이상 체크해주세요.', 'err'); return; }
@@ -3151,14 +3243,17 @@ window.hwSave = async function (absent) {
   const names = ids.map(id => studentsCache.find(s => s.id === id)?.name || '');
   const data = {
     date, branch: hwBranchOf(ids), teacherUid: currentTeacher.uid, teacherName: currentTeacher.name || '',
-    classGroup: hwCls, studentIds: ids, studentNames: names, content, absent,
+    classGroup: hwCls, studentIds: ids, studentNames: names, content, absent, dueDate, sheets,
     updatedAt: new Date().toISOString(), updatedBy: (currentTeacher.name || '') + ' 선생님',
   };
+  if (dueDate && date && dueDate < date) { showAlert(err, '숙제 기한이 숙제 날짜보다 앞입니다.', 'err'); return; }
   if (absent && !confirm(`${names.join(', ')} — ${ids.length}명을 결석으로 기록할까요?`)) return;
   const btn = document.getElementById('hwSaveBtn'); btn.disabled = true;
   try {
+    let logId = hwEditing;
     if (hwEditing) await updateDoc(doc(db, 'homeworkLogs', hwEditing), data);
-    else await addDoc(collection(db, 'homeworkLogs'), { ...data, source: 'teacher', createdAt: new Date().toISOString() });
+    else logId = (await addDoc(collection(db, 'homeworkLogs'), { ...data, source: 'teacher', createdAt: new Date().toISOString() })).id;
+    await hwLinkSheets(logId, date, ids, dueDate, sheetIds);
     showAlert(ok, absent ? `✅ ${hwLabel(date)} ${hwCls} ${names.join(', ')} 결석으로 기록했습니다.` : hwEditing ? `✅ ${hwCls} 숙제를 수정했습니다.` : `✅ ${hwLabel(date)} ${hwCls} 숙제를 저장했습니다. (${ids.length}명) — 관리부 숙제표에 반영됨`, 'ok');
     const keepCls = hwCls;
     hwCancel();
@@ -3171,6 +3266,8 @@ window.hwSave = async function (absent) {
 
 window.hwCancel = function () {
   hwEditing = null; hwCls = '';
+  hwSheetTouched = false; hwSheetSel = new Set();
+  const due = document.getElementById('hwDue'); if (due) due.value = '';
   document.getElementById('hwContent').value = '';
   document.getElementById('hwSaveBtn').textContent = '저장';
   document.getElementById('hwCancelBtn').style.display = 'none';
@@ -3182,6 +3279,8 @@ window.hwEdit = function (id, fromPick) {
   const r = hwRows.find(x => x.id === id); if (!r) return;
   hwEditing = id;
   hwCls = String(r.classGroup || '').trim() || '(반 미배정)';
+  hwSheetTouched = true; hwSheetSel = new Set((r.sheets || []).map(s => s.testId));
+  document.getElementById('hwDue').value = r.dueDate || '';
   document.getElementById('hwDate').value = r.date;
   hwRenderClasses();
   hwRenderStudents(r.studentIds || []);
@@ -3197,6 +3296,7 @@ window.hwDelete = async function (id) {
   if (!confirm(`${hwLabel(r.date)} ${r.classGroup} 숙제를 삭제할까요?\n(관리부 숙제표에서도 함께 지워집니다)`)) return;
   try {
     await deleteDoc(doc(db, 'homeworkLogs', id));
+    await hwLinkSheets(id, r.date, [], '', []);   // 연결돼 있던 HCS 시험지는 연결만 풂(시험지 자체는 그대로)
     if (hwEditing === id) hwCancel();
     await hwLoad();
   } catch (e) { alert('삭제 오류: ' + e.message); }
@@ -3221,7 +3321,9 @@ function hwRenderList() {
           ${hwMultiBranch() ? `<span style="font-size:11px;color:var(--muted);margin-right:4px;">[${hwEsc(r.branch || hwBranchOf(r.studentIds || []))}]</span>` : ''}<span style="font-weight:700;color:var(--purple, #5B3FA6);">${hwEsc(r.classGroup)}</span>${by}
           <span style="font-size:12px;color:var(--muted);margin-left:6px;">${(r.studentNames || []).length}명</span>
           ${(() => { const ids = r.studentIds || []; const n = ids.filter(id => hwChecked.has(r.id + '_' + id)).length; return ids.length ? `<span style="font-size:11.5px;font-weight:700;margin-left:6px;padding:1px 8px;border-radius:99px;${n >= ids.length ? 'background:rgba(46,158,91,0.12);color:#2E9E5B;' : 'background:rgba(30,24,56,0.05);color:var(--muted);'}">학생 완료 ${n}/${ids.length}</span>` : ''; })()}
+          ${r.dueDate && !r.absent ? `<span style="font-size:11.5px;font-weight:700;margin-left:6px;padding:1px 8px;border-radius:99px;background:rgba(245,197,24,0.2);color:#8a6a00;">기한 ${SC.mdw(r.dueDate)}</span>` : ''}
           <div style="font-size:13px;margin-top:4px;white-space:pre-wrap;">${hwEsc(r.content)}</div>
+          ${(r.sheets || []).map(s => { const ks = hwTasks.filter(t => t.testId === s.testId && t.logId === r.id); const sub = ks.filter(t => t.submitted).length; return `<div style="font-size:12px;margin-top:4px;"><span style="padding:2px 9px;border-radius:99px;background:rgba(91,63,166,0.1);color:#5B3FA6;font-weight:700;">📄 ${hwEsc(s.title)} · ${s.count}문제</span> <span style="color:${ks.length && sub >= ks.length ? '#2E9E5B' : 'var(--muted)'};font-weight:700;">답안 제출 ${sub}/${ks.length}</span></div>`; }).join('')}
           <div style="font-size:11.5px;color:var(--muted);margin-top:3px;">${(r.studentNames || []).map((nm, i) => hwChecked.has(r.id + '_' + (r.studentIds || [])[i]) ? `<span style="color:#2E9E5B;font-weight:700;">✅${hwEsc(nm)}</span>` : hwEsc(nm)).join(', ')}</div>
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0;">
@@ -3231,6 +3333,79 @@ function hwRenderList() {
       </div>
     </div>`;
   }).join('');
+}
+
+// ══════════════════════════════════════════
+// HCS 시험지 현황 — sheetTasks(학생별 시험지·제출) + dailyTestResults(채점·오답 시험지)
+//   요일을 고르면 그 요일에 수업이 있는 내 학생(등원 요일 기준)의 제출·점수·틀린 번호·오답 시험지 상태
+// ══════════════════════════════════════════
+let shDay = '', shTasks = [], shRes = {}, shBusy = false;
+const SH_PILL = { done: 'background:rgba(46,158,91,0.12);color:#2E9E5B;', late: 'background:rgba(214,69,69,0.12);color:#D64545;', wait: 'background:rgba(30,24,56,0.06);color:var(--muted);',
+  sent: 'background:rgba(46,158,91,0.12);color:#2E9E5B;', made: 'background:rgba(47,127,214,0.12);color:#2F7FD6;', todo: 'background:rgba(214,69,69,0.12);color:#D64545;', review: 'background:rgba(245,197,24,0.25);color:#8a6a00;', perfect: 'background:rgba(30,24,56,0.06);color:var(--muted);', none: 'color:var(--muted);' };
+const shPill = (k, label) => `<span style="display:inline-block;font-size:11.5px;font-weight:700;padding:2px 9px;border-radius:99px;white-space:nowrap;${SH_PILL[k] || ''}">${hwEsc(label)}</span>`;
+window.shInit = async function (force) {
+  if (!currentTeacher || shBusy) return;
+  if (!shDay) shDay = HW_DOW[new Date().getDay()];
+  shBusy = true;
+  const err = document.getElementById('sh-err');
+  try {
+    const n = await SC.syncSubmitted(db, { teacherUid: currentTeacher.uid });   // 학생이 제출한 답안 자동 채점
+    const [ts, rs] = await Promise.all([
+      getDocs(query(collection(db, 'sheetTasks'), where('teacherUid', '==', currentTeacher.uid))),
+      getDocs(query(collection(db, 'dailyTestResults'), where('teacherUid', '==', currentTeacher.uid))),
+    ]);
+    shTasks = []; ts.forEach(d => shTasks.push({ id: d.id, ...d.data() }));
+    shRes = {}; rs.forEach(d => { shRes[d.id] = d.data(); });
+  } catch (e) { showAlert(err, '불러오기 오류: ' + e.message + ' (Firebase 규칙이 아직 올라가지 않았을 수 있어요)', 'err'); }
+  finally { shBusy = false; }
+  shRender();
+};
+window.shPickDay = function (d) { shDay = d; shRender(); };
+window.shReopen = async function (id) {
+  const t = shTasks.find(x => x.id === id); if (!t) return;
+  if (!confirm(`${t.studentName} 학생이 「${t.title}」 답안을 다시 제출할 수 있게 열까요?\n(지금 채점 결과는 그대로 두고, 다시 제출하면 새로 채점됩니다)`)) return;
+  try { await updateDoc(doc(db, 'sheetTasks', id), { submitted: false, synced: false }); await setDoc(doc(db, 'dailyTestResults', id), { submitted: false }, { merge: true }); await shInit('quiet'); }
+  catch (e) { alert('오류: ' + e.message); }
+};
+function shRender() {
+  const today = hwYmd(new Date()), todayDow = HW_DOW[new Date().getDay()];
+  const from = new Date(); from.setDate(from.getDate() - 28); const fromStr = hwYmd(from);
+  document.getElementById('shLabel').textContent = shDay === '전체' ? '담당 학생 전체' : `${shDay}요일 수업 학생${shDay === todayDow ? ' (오늘)' : ''}`;
+  document.getElementById('shDays').innerHTML = ['월', '화', '수', '목', '금', '토', '일', '전체'].map(d =>
+    `<button type="button" class="rating-btn${shDay === d ? ' selected' : ''}" onclick="shPickDay('${d}')">${d === todayDow ? '<span style="color:#D97B1A;">●</span> ' : ''}${d}${d === '전체' ? '' : '요일'}</button>`).join('');
+  const stus = myStudents.filter(s => shDay === '전체' || SC.daysOf(s).includes(shDay));
+  const recent = shTasks.filter(t => (t.date || '') >= fromStr);
+  const byStu = {}; recent.forEach(t => (byStu[t.studentId] = byStu[t.studentId] || []).push(t));
+  const mine = stus.flatMap(s => byStu[s.id] || []);
+  const cnt = { all: mine.length, sub: mine.filter(t => t.submitted).length, late: mine.filter(t => SC.submitState(t).key === 'late').length,
+    review: mine.filter(t => (shRes[t.id]?.needReview || []).length).length, todo: mine.filter(t => SC.wrongSheetState(shRes[t.id]).key === 'todo').length,
+    made: mine.filter(t => SC.wrongSheetState(shRes[t.id]).key === 'made').length, sent: mine.filter(t => SC.wrongSheetState(shRes[t.id]).key === 'sent').length };
+  const box = (k, v, c) => `<div style="flex:1;min-width:110px;padding:10px 12px;border-radius:10px;background:rgba(30,24,56,0.04);"><div style="font-size:11.5px;color:var(--muted);">${k}</div><div style="font-size:18px;font-weight:800;color:${c || 'var(--off-white)'};">${v}</div></div>`;
+  document.getElementById('shSummary').innerHTML = box('최근 4주 시험지', cnt.all + '건') + box('답안 제출', `${cnt.sub}/${cnt.all}`, '#2E9E5B') + box('기한 지난 미제출', cnt.late + '건', cnt.late ? '#D64545' : '') +
+    box('주관식 확인 필요', cnt.review + '건', cnt.review ? '#8a6a00' : '') + box('오답 시험지', `미생성 ${cnt.todo} · 생성 ${cnt.made} · 출제 ${cnt.sent}`, cnt.todo ? '#D64545' : '');
+  const el = document.getElementById('shBody');
+  if (!stus.length) { el.innerHTML = `<div class="empty-state"><div class="icon">📭</div>${shDay === '전체' ? '담당 학생이 없습니다.' : shDay + '요일에 수업이 있는 담당 학생이 없습니다.'}</div>`; return; }
+  const groups = new Map(); stus.forEach(s => { const c = hwClsOf(s); (groups.get(c) || groups.set(c, []).get(c)).push(s); });
+  const th = 'padding:7px 8px;text-align:left;font-size:11.5px;color:var(--muted);font-weight:600;border-bottom:1px solid rgba(30,24,56,0.1);white-space:nowrap;';
+  const td = 'padding:8px;border-bottom:1px solid rgba(30,24,56,0.06);font-size:12.5px;vertical-align:top;';
+  el.innerHTML = [...groups.entries()].sort((a, b) => hwClsKey(a[0]) - hwClsKey(b[0]) || a[0].localeCompare(b[0], 'ko')).map(([cls, list]) => {
+    const rows = list.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko')).map(s => {
+      const ts = (byStu[s.id] || []).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      if (!ts.length) return `<tr><td style="${td}font-weight:700;">${hwEsc(s.name)}</td><td style="${td}color:var(--muted);" colspan="6">최근 4주 동안 HCS에서 출제한 시험지가 없습니다.</td></tr>`;
+      return ts.map((t, i) => {
+        const r = shRes[t.id] || {}, ss = SC.submitState(t), ws = SC.wrongSheetState(r), di = SC.dueInfo(t.dueDate, t.submitted);
+        const score = r.absent ? '결석' : r.graded ? `<b>${r.score}/${r.total}</b> <span style="color:var(--muted);">(${r.percentage}점)</span>` : '<span style="color:var(--muted);">–</span>';
+        const wrong = r.graded && !r.absent ? ((r.wrong || []).length ? `<span style="color:#D64545;font-weight:700;">${(r.wrong || []).join(', ')}번</span>` : '<span style="color:#2E9E5B;">없음</span>') + ((r.needReview || []).length ? `<div style="font-size:11px;color:#8a6a00;">주관식 확인: ${(r.needReview || []).join(', ')}번</div>` : '') : '<span style="color:var(--muted);">–</span>';
+        return `<tr>${i === 0 ? `<td style="${td}font-weight:700;white-space:nowrap;" rowspan="${ts.length}">${hwEsc(s.name)}</td>` : ''}
+          <td style="${td}"><b>${hwEsc(t.title)}</b>${t.retakeOf ? ' <span style="font-size:11px;color:#2F7FD6;">오답 시험지</span>' : ''}<div style="font-size:11.5px;color:var(--muted);">${SC.mdw(t.date)} 출제 · ${t.count}문제${t.logId ? ' · 숙제 연결됨' : ' · <span style="color:#D97B1A;">숙제 미연결</span>'}</div></td>
+          <td style="${td}white-space:nowrap;">${di ? `<span style="${di.late ? 'color:#D64545;font-weight:700;' : ''}">${di.text}</span>` : '<span style="color:var(--muted);">–</span>'}</td>
+          <td style="${td}">${shPill(ss.key, ss.label)}${t.submitted ? `<div style="margin-top:3px;"><button type="button" onclick="shReopen('${t.id}')" style="border:0;background:none;color:var(--muted);font-size:11px;text-decoration:underline;cursor:pointer;padding:0;">다시 제출 허용</button></div>` : ''}</td>
+          <td style="${td}white-space:nowrap;">${score}</td><td style="${td}">${wrong}</td><td style="${td}">${ws.key === 'none' ? '<span style="color:var(--muted);">–</span>' : shPill(ws.key, ws.label)}</td></tr>`;
+      }).join('');
+    }).join('');
+    return `<div style="margin-bottom:16px;"><div style="font-weight:800;color:var(--purple,#5B3FA6);margin-bottom:4px;">${hwEsc(cls)} <small style="color:var(--muted);font-weight:400;">${list.length}명</small></div>
+      <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;min-width:720px;"><tr><th style="${th}">학생</th><th style="${th}">시험지</th><th style="${th}">기한</th><th style="${th}">답안 제출</th><th style="${th}">점수</th><th style="${th}">틀린 문제</th><th style="${th}">오답 시험지</th></tr>${rows}</table></div></div>`;
+  }).join('') + '<div style="font-size:11.5px;color:var(--muted);line-height:1.6;">· 요일 기준은 학생 정보의 등원 요일입니다. · 오답 시험지는 HCS를 열 때 자동으로 만들어지며(주관식 확인이 남아 있으면 확인 뒤), 학생에게 다시 출제하면 「출제함」으로 바뀝니다.</div>';
 }
 
 // ══════════════════════════════════════════
@@ -3852,6 +4027,17 @@ async function calBuildAutoTodos() {
       });
     }
   } catch (e) { console.warn('[일정] 토요클리닉 확인 실패:', e.message); }
+
+  // HCS 시험지 — 오늘 수업 있는 내 학생 중 답안 미제출·오답 시험지 미출제 (자동 채점도 여기서 한 번 돌림)
+  try {
+    await SC.syncSubmitted(db, { teacherUid: currentTeacher.uid });
+    const ts = await getDocs(query(collection(db, 'sheetTasks'), where('teacherUid', '==', currentTeacher.uid)));
+    const dayName = CAL_DOW[dow]; const todayIds = new Set(my.filter(s => SC.daysOf(s).includes(dayName)).map(s => s.id));
+    const lim = new Date(); lim.setDate(lim.getDate() - 28); const limStr = `${lim.getFullYear()}-${String(lim.getMonth() + 1).padStart(2, '0')}-${String(lim.getDate()).padStart(2, '0')}`;
+    const open = []; ts.forEach(d => { const x = d.data(); if (todayIds.has(x.studentId) && (x.date || '') >= limStr && !x.submitted && (x.dueDate || '') <= todayStr) open.push(x); });
+    if (open.length) list.push({ key: `sheets:${todayStr}`, level: 'due', tab: 'sheets', tabInit: 'shInit',
+      title: `HCS 시험지 — 오늘 수업 학생 답안 미제출 ${open.length}건`, detail: [...new Set(open.map(x => x.studentName))].slice(0, 8).join(', ') });
+  } catch (e) { console.warn('[HCS 시험지 할 일]', e.message); }
 
   // ⑤ 숙제 입력 — 오늘 수업 있는 내 반 중 숙제 기록 없는 반 (그날 수업 반 기준)
   try {
@@ -6169,6 +6355,7 @@ window.addEventListener('message', (e) => { if (e.data && e.data.type === 'pcRea
     { id: 'home',    label: '홈',     icon: '📅', items: [{ id: 'calendar', label: '일정 · 오늘 할 일', desc: '달력 · 할 일 · 마감' }] },
     { id: 'reports', label: '보고서', icon: '📝', items: [
       { id: 'hwlog',    label: '숙제 입력', desc: '내 반 숙제 · 관리부 숙제표에 날짜별 자동 연동' },
+      { id: 'sheets',   label: 'HCS 시험지 현황', desc: '오늘 수업 학생 · 답안 제출 · 점수 · 틀린 문제 · 오답 시험지' },
       { id: 'weekly',   label: '주간성취도', desc: '중등부 · 금요일까지', middleOnly: true },
       { id: 'dailytest', label: '일일테스트', desc: '초·중등 · 시험지 등록 · 오답 입력', middleOnly: true },
       { id: 'reportreview', label: '보고서 검수', desc: '월간 학습보고서 의견 확인 · 확정', middleOnly: true },

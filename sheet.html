@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#5B3FA6">
+<title>답안 제출 | 송우찬수학학원</title>
+<link rel="icon" href="logo.png">
+<!--
+  HCS 시험지 답안 제출 (학생 전용) — sheet.html?id={시험id}_{학생uid}
+  · sheetTasks 문서에는 정답이 없음. 학생은 답만 적어 제출하고, 맞았는지 틀렸는지는 보이지 않음
+  · 객관식: ①~⑤ 누르기(답이 여러 개면 여러 개) / 주관식: 글자로 입력 + 그 칸을 누르면 기호판이 나옴
+  · 제출하면 고칠 수 없음(선생님이 다시 열어 줄 때만). 채점은 선생님 화면이 열릴 때 자동으로 됨
+-->
+<style>
+:root { --p:#5B3FA6; --p2:#F3EFFB; --y:#F5C518; --ink:#1A1230; --ink2:#6B6580; --line:#E8E4F2; --bg:#F7F5FC; --bad:#D64545; --ok:#2E9E5B; --safe-b:env(safe-area-inset-bottom,0px); }
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Pretendard","Noto Sans KR","Malgun Gothic",sans-serif; background:var(--bg); color:var(--ink); }
+.wrap { max-width:620px; margin:0 auto; padding:0 14px calc(110px + var(--safe-b)); }
+header { position:sticky; top:0; z-index:20; background:rgba(247,245,252,.96); backdrop-filter:blur(10px); padding:12px 0 10px; border-bottom:1px solid var(--line); }
+header .row { display:flex; align-items:center; gap:10px; }
+header button.back { border:0; background:#fff; width:36px; height:36px; border-radius:10px; font-size:18px; box-shadow:0 1px 3px rgba(30,24,56,.12); }
+header h1 { font-size:16px; margin:0; line-height:1.35; flex:1; min-width:0; }
+header .meta { font-size:12px; color:var(--ink2); margin-top:6px; display:flex; gap:6px 10px; flex-wrap:wrap; }
+.tag { display:inline-block; padding:2px 8px; border-radius:99px; font-size:11.5px; font-weight:800; background:var(--p2); color:var(--p); }
+.tag.late { background:#FDECEA; color:var(--bad); } .tag.ok { background:#E6F7EE; color:var(--ok); }
+.prog { height:5px; background:#E9E4F5; border-radius:99px; margin-top:9px; overflow:hidden; } .prog i { display:block; height:100%; background:var(--p); width:0; transition:width .2s; }
+.note { font-size:12.5px; color:var(--ink2); line-height:1.6; background:#fff; border:1px solid var(--line); border-radius:12px; padding:11px 13px; margin:12px 0; }
+.q { background:#fff; border:1px solid var(--line); border-radius:14px; padding:12px 13px; margin-bottom:9px; display:flex; gap:12px; align-items:flex-start; }
+.q.on { border-color:var(--p); box-shadow:0 0 0 3px rgba(91,63,166,.1); }
+.q .no { width:34px; height:34px; border-radius:10px; background:var(--p2); color:var(--p); font-weight:800; display:flex; align-items:center; justify-content:center; flex:none; font-size:14px; }
+.q.filled .no { background:var(--p); color:#fff; }
+.q .bd { flex:1; min-width:0; }
+.q .kd { font-size:11px; color:var(--ink2); margin-bottom:6px; }
+.ch { display:flex; gap:7px; flex-wrap:wrap; }
+.ch button { width:44px; height:44px; border-radius:50%; border:1.5px solid var(--line); background:#fff; font-size:17px; font-weight:700; color:var(--ink2); }
+.ch button.on { background:var(--p); border-color:var(--p); color:#fff; }
+.q input { width:100%; border:1.5px solid var(--line); border-radius:10px; padding:11px 12px; font-size:16px; font-family:inherit; outline:none; background:#fff; color:var(--ink); }
+.q input:focus { border-color:var(--p); }
+.keys { display:none; flex-wrap:wrap; gap:6px; margin-top:8px; } .q.on .keys { display:flex; }
+.keys button { border:1px solid var(--line); background:#FBFAFE; border-radius:9px; min-width:42px; height:38px; padding:0 9px; font-size:15px; color:var(--ink); font-family:inherit; }
+.keys button:active { background:var(--p2); }
+.keys .hint { flex-basis:100%; font-size:11.5px; color:var(--ink2); }
+.ro { font-size:15px; padding:8px 0 2px; word-break:break-all; } .ro.empty { color:#B9B4C8; }
+footer { position:fixed; left:0; right:0; bottom:0; z-index:25; background:rgba(255,255,255,.97); border-top:1px solid var(--line); padding:10px 14px calc(10px + var(--safe-b)); }
+footer .in { max-width:620px; margin:0 auto; display:flex; gap:10px; align-items:center; }
+footer .cnt { font-size:13px; color:var(--ink2); flex:1; } footer .cnt b { color:var(--p); font-size:16px; }
+.btn { border:0; background:var(--p); color:#fff; border-radius:12px; padding:13px 22px; font-size:15px; font-weight:800; font-family:inherit; } .btn:disabled { opacity:.5; }
+.center { text-align:center; padding:70px 20px; color:var(--ink2); line-height:1.8; } .center .em { font-size:44px; }
+.done-card { background:#fff; border:1px solid var(--line); border-radius:16px; padding:22px 18px; text-align:center; margin:14px 0; } .done-card .em { font-size:40px; } .done-card b { font-size:17px; }
+#toast { position:fixed; left:50%; bottom:calc(86px + var(--safe-b)); transform:translateX(-50%); background:rgba(26,18,48,.92); color:#fff; padding:10px 16px; border-radius:99px; font-size:13px; opacity:0; pointer-events:none; transition:opacity .2s; z-index:50; white-space:nowrap; } #toast.on { opacity:1; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="row"><button class="back" onclick="goBack()" aria-label="뒤로">‹</button><h1 id="title">답안 제출</h1></div>
+    <div class="meta" id="meta"></div>
+    <div class="prog" id="progBar"><i></i></div>
+  </header>
+  <div id="body"><div class="center"><div class="em">📄</div>불러오는 중…</div></div>
+</div>
+<footer id="foot" style="display:none"><div class="in"><div class="cnt" id="cnt"></div><button class="btn" id="submitBtn" onclick="submitSheet()">제출하기</button></div></footer>
+<div id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { dueInfo, mdw, CIRC } from "./sheet-core.js?v=1794640000";
+
+const app = initializeApp({ apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA", authDomain: "songmath.firebaseapp.com", projectId: "songmath", storageBucket: "songmath.firebasestorage.app", messagingSenderId: "936295436575", appId: "1:936295436575:web:d1e201508719850cfbe02a" });
+const auth = getAuth(app), db = getFirestore(app);
+const $ = (id) => document.getElementById(id);
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const id = new URLSearchParams(location.search).get('id') || '';
+const from = new URLSearchParams(location.search).get('from') || '';
+const KEY = 'swc_sheet_' + id;
+let task = null, ans = [], active = -1;
+// 주관식 기호판: [보이는 글자, 넣을 글자]
+const KEYS = [['√', '√'], ['분수 /', '/'], ['제곱 ^', '^'], ['π', 'π'], ['±', '±'], ['−', '-'], ['( )', '()'], ['x=', 'x='], ['y=', 'y='], ['<', '<'], ['>', '>'], ['≤', '≤'], ['≥', '≥'], ['≠', '≠'], ['°', '°'], [',', ', ']];
+
+function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 2200); }
+window.goBack = () => { if (from === 'app') location.href = 'app.html#hw'; else if (from === 'my') location.href = 'mypage.html'; else if (history.length > 1) history.back(); else location.href = 'app.html#hw'; };
+const fail = (msg) => { $('body').innerHTML = `<div class="center"><div class="em">😥</div>${msg}<br><br><button class="btn" onclick="goBack()">돌아가기</button></div>`; };
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.replace('login.html'); return; }
+  if (!id) { fail('시험지를 찾을 수 없어요.'); return; }
+  try {
+    const s = await getDoc(doc(db, 'sheetTasks', id));
+    if (!s.exists()) { fail('시험지를 찾을 수 없어요.'); return; }
+    task = s.data();
+    if (task.studentId !== user.uid) { fail('본인에게 출제된 시험지만 제출할 수 있어요.'); return; }
+    const n = task.count || (task.kinds || []).length;
+    ans = Array.from({ length: n }, (_, i) => String((task.answers || [])[i] ?? ''));
+    if (!task.submitted) { try { const d = JSON.parse(localStorage.getItem(KEY) || 'null'); if (Array.isArray(d) && d.length === n) ans = d.map((x) => String(x ?? '')); } catch (e) {} }
+    render();
+  } catch (e) { fail('불러오지 못했어요.<br><small>' + esc(e.code || e.message) + '</small>'); }
+});
+
+const kindOf = (i) => ((task.kinds || [])[i] === 'o' ? 'o' : 's');
+const filled = () => ans.filter((a) => String(a).trim()).length;
+function head() {
+  $('title').textContent = task.title || '시험지';
+  const di = dueInfo(task.dueDate, task.submitted);
+  $('meta').innerHTML = `<span>${esc(task.teacherName || '')}${task.teacherName ? ' 선생님' : ''}</span><span>${mdw(task.date)} 출제</span><span>${ans.length}문제</span>` +
+    (di ? `<span class="tag ${di.late ? 'late' : ''}">${di.text}${task.submitted ? '' : ' · ' + di.dday}</span>` : '') + (task.submitted ? '<span class="tag ok">제출 완료</span>' : '');
+}
+function render() {
+  head();
+  if (task.submitted) {
+    let when = ''; const t = task.submittedAt; const d = t && t.toDate ? t.toDate() : (t ? new Date(t) : null);
+    if (d && !isNaN(d)) when = `${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    $('progBar').style.display = 'none'; $('foot').style.display = 'none';
+    $('body').innerHTML = `<div class="done-card"><div class="em">✅</div><b>답안을 제출했어요</b><div style="font-size:13px;color:var(--ink2);margin-top:6px;line-height:1.7;">${when ? when + ' 제출 · ' : ''}선생님이 확인하고 수업 시간에 알려 주세요.<br>제출한 답은 고칠 수 없어요.</div></div>` +
+      ans.map((a, i) => `<div class="q filled"><div class="no">${i + 1}</div><div class="bd"><div class="kd">${kindOf(i) === 'o' ? '객관식' : '주관식'}</div><div class="ro ${a ? '' : 'empty'}">${a ? esc(kindOf(i) === 'o' ? a.split('').map((c) => CIRC[+c - 1] || c).join(' ') : a) : '답 없음'}</div></div></div>`).join('');
+    return;
+  }
+  $('foot').style.display = '';
+  $('body').innerHTML = `<div class="note">프린트(시험지)를 푼 다음 <b>답만</b> 적어 제출하세요. 객관식은 번호를 누르고(답이 두 개면 두 개 다), 주관식은 칸을 누르면 아래에 <b>기호판</b>이 나와요.<br>분수는 <b>3/4</b>, 루트는 <b>√3</b>, 제곱은 <b>x^2</b>처럼 적으면 돼요. 중간에 나가도 적은 답은 이 기기에 남아 있어요.</div>` +
+    ans.map((a, i) => qHtml(i)).join('');
+  count();
+}
+function qHtml(i) {
+  const a = ans[i];
+  if (kindOf(i) === 'o') return `<div class="q ${a ? 'filled' : ''}" id="q${i}"><div class="no">${i + 1}</div><div class="bd"><div class="kd">객관식</div><div class="ch">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="${a.includes(String(n)) ? 'on' : ''}" onclick="pick(${i},${n})">${CIRC[n - 1]}</button>`).join('')}</div></div></div>`;
+  return `<div class="q ${a.trim() ? 'filled' : ''} ${active === i ? 'on' : ''}" id="q${i}"><div class="no">${i + 1}</div><div class="bd"><div class="kd">주관식</div>
+    <input type="text" id="in${i}" value="${esc(a)}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="답을 적으세요" onfocus="focusQ(${i})" oninput="typeQ(${i},this.value)">
+    <div class="keys">${KEYS.map(([l, v]) => `<button type="button" onmousedown="event.preventDefault()" onclick="key(${i},'${v}')">${l}</button>`).join('')}<div class="hint">예) 2√3 · -3/4 · x=5 · x^2-2x+1 · 답이 여러 개면 쉼표로: 2, -5</div></div></div></div>`;
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(ans)); } catch (e) {} count(); }
+function count() { const f = filled(); $('cnt').innerHTML = `<b>${f}</b> / ${ans.length} 문제 입력`; document.querySelector('#progBar i').style.width = (ans.length ? f / ans.length * 100 : 0) + '%'; }
+window.pick = (i, n) => {
+  const set = new Set(ans[i].split('').filter((c) => /[1-5]/.test(c))); const k = String(n);
+  set.has(k) ? set.delete(k) : set.add(k);
+  ans[i] = [...set].sort().join('');
+  const el = $('q' + i); el.classList.toggle('filled', !!ans[i]);
+  el.querySelectorAll('.ch button').forEach((b, j) => b.classList.toggle('on', set.has(String(j + 1))));
+  save();
+};
+window.focusQ = (i) => { if (active === i) return; const prev = $('q' + active); if (prev) prev.classList.remove('on'); active = i; $('q' + i).classList.add('on'); };
+window.typeQ = (i, v) => { ans[i] = v; $('q' + i).classList.toggle('filled', !!v.trim()); save(); };
+window.key = (i, v) => {
+  const el = $('in' + i); const s = el.selectionStart ?? el.value.length, e = el.selectionEnd ?? el.value.length;
+  el.value = el.value.slice(0, s) + v + el.value.slice(e);
+  const pos = s + (v === '()' ? 1 : v.length);
+  el.focus(); try { el.setSelectionRange(pos, pos); } catch (err) {}
+  typeQ(i, el.value);
+};
+window.submitSheet = async () => {
+  const empty = ans.map((a, i) => (String(a).trim() ? 0 : i + 1)).filter(Boolean);
+  const msg = (empty.length ? `아직 답을 적지 않은 문제가 ${empty.length}개 있어요 (${empty.slice(0, 12).join(', ')}${empty.length > 12 ? ' …' : ''}번).\n\n` : '') + '제출하면 답을 고칠 수 없어요. 제출할까요?';
+  if (!confirm(msg)) return;
+  const btn = $('submitBtn'); btn.disabled = true; btn.textContent = '제출 중…';
+  try {
+    const clean = ans.map((a) => String(a).trim().slice(0, 80));
+    await updateDoc(doc(db, 'sheetTasks', id), { answers: clean, submitted: true, submittedAt: serverTimestamp() });
+    task.answers = clean; task.submitted = true; task.submittedAt = new Date(); ans = clean;
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    window.scrollTo({ top: 0 }); render(); toast('제출했어요 👏');
+  } catch (e) { btn.disabled = false; btn.textContent = '제출하기'; toast('제출하지 못했어요 (' + (e.code || e.message) + ')'); }
+};
+</script>
+</body>
+</html>

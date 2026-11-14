@@ -171,7 +171,7 @@ window.hlLoad = async function () {
         <td style="font-weight:700;color:var(--purple, #5B3FA6);">${showT ? hlEsc(r.teacherName) + 'T' : ''}</td>
         <td style="white-space:nowrap;">${hlEsc(r.classGroup)}</td>
         <td style="font-size:12.5px;color:var(--muted);">${(r.studentNames || []).map(hlEsc).join(', ')}</td>
-        <td style="color:${r.absent ? '#D64545' : 'var(--off-white)'};white-space:pre-wrap;${r.absent ? 'font-weight:700;' : ''}">${r.absent ? '🚫 결석' : hlEsc(r.content)}${r.source === 'teacher' ? '<div style="font-size:11px;color:#2E9E5B;margin-top:3px;">✎ 선생님 직접 입력</div>' : ''}</td>
+        <td style="color:${r.absent ? '#D64545' : 'var(--off-white)'};white-space:pre-wrap;${r.absent ? 'font-weight:700;' : ''}">${r.absent ? '🚫 결석' : hlEsc(r.content)}${!r.absent && r.dueDate ? `<div style="font-size:11.5px;color:#8a6a00;margin-top:3px;">기한 ${hlEsc(r.dueDate.slice(5).replace('-', '/'))}까지${(r.sheets || []).length ? ' · 📄 HCS 시험지 ' + r.sheets.length + '건 연결' : ''}</div>` : ''}${r.source === 'teacher' ? '<div style="font-size:11px;color:#2E9E5B;margin-top:3px;">✎ 선생님 직접 입력</div>' : ''}</td>
         <td style="white-space:nowrap;"><button class="btn btn-sm btn-secondary" onclick="hlEdit('${r.id}')">수정</button> <button class="btn btn-sm btn-danger" onclick="hlDelete('${r.id}')">삭제</button></td>
       </tr>`;
     }).join('');
