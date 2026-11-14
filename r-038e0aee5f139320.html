@@ -212,6 +212,23 @@ a.lk:hover { text-decoration:underline; }
 .cl-st .ok { color:var(--green); font-weight:700; } .cl-st .no { color:var(--muted); }
 .cl-empty { text-align:center; color:var(--muted); font-size:13.5px; padding:30px 0; }
 .btn-ok { background:var(--green) !important; color:#fff !important; border-color:var(--green) !important; }
+/* 관리부 달력 (원장 보기 — 나만 일정 포함 전체) */
+.oc-day { border-top:1px solid var(--border-soft); padding:12px 0; }
+.oc-day:first-child { border-top:none; padding-top:0; }
+.oc-day.today .oc-dh { color:var(--purple); }
+.oc-dh { font-size:14px; font-weight:800; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+.oc-dh .sm { margin-left:auto; font-size:12px; color:var(--muted); font-weight:600; }
+.oc-sch { font-size:12.5px; color:var(--muted); padding:4px 10px; margin-bottom:6px; background:rgba(30,24,56,0.03); border-radius:8px; }
+.oc-ev { border:1px solid var(--border-soft); border-left:4px solid #5B3FA6; border-radius:10px; padding:9px 12px; margin-bottom:6px; background:#fff; }
+.oc-ev.sb { border-left-color:#F5C518; }
+.oc-ev.done { opacity:.6; }
+.oc-ev .l1 { display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:12px; }
+.oc-ev .l1 .br { color:#5B3FA6; } .oc-ev.sb .l1 .br { color:#A87A00; }
+.oc-ev .l1 .ty { font-weight:700; } .oc-ev .l1 .tm { color:var(--muted); }
+.oc-ev .l1 .who { margin-left:auto; color:var(--muted); font-size:11.5px; }
+.oc-ev .l2 { font-size:14px; font-weight:700; margin-top:4px; }
+.oc-ev .l3 { font-size:12.5px; color:var(--muted); margin-top:2px; }
+.oc-ev .l3.memo { white-space:pre-wrap; color:var(--off-white); }
 </style>
 <script src="session-limit.js?v=1794300000"></script>
 </head>
@@ -255,6 +272,8 @@ a.lk:hover { text-decoration:underline; }
     <button class="dr-tab" data-tab="week" onclick="drTab('week')">이번 주 · 주간</button>
     <button class="dr-tab" data-tab="month" onclick="drTab('month')">이번 달 · 월말보고서</button>
     <button class="dr-tab" data-tab="comment" onclick="drTab('comment')">학부모 댓글 · 출결</button>
+    <button class="dr-tab" data-tab="cal" onclick="drTab('cal')">관리부 달력 · 전체</button>
+    <button class="dr-tab" data-tab="act" onclick="drTab('act')">선생님 활동</button>
   </div>
 
   <!-- ══ 하루 ══ -->
@@ -306,6 +325,32 @@ a.lk:hover { text-decoration:underline; }
     <div class="card" id="monthReport"></div>
   </section>
 
+  <!-- ══ 관리부 달력 (나만 일정 포함 전체) ══ -->
+  <section class="dr-panel" id="pn-cal">
+    <div class="dr-period">
+      <button class="nav-btn" onclick="drOcMove(-1)" aria-label="지난주">‹</button>
+      <span class="label" id="ocWeekLabel"></span>
+      <button class="nav-btn" onclick="drOcMove(1)" aria-label="다음주">›</button>
+      <button class="btn btn-xs" onclick="drOcMove(0)">이번 주</button>
+    </div>
+    <div class="card">
+      <div class="card-hd"><h3>관리부 달력 — 모든 일정</h3><span class="sm" id="ocSum" style="font-size:12.5px;color:var(--muted)"></span></div>
+      <div id="ocBox"></div>
+    </div>
+  </section>
+
+  <!-- ══ 선생님 활동 ══ -->
+  <section class="dr-panel" id="pn-act">
+    <div class="card">
+      <div class="card-hd"><h3>✏️ 시험 점수 입력 현황</h3><span class="r" id="actExamSum" style="font-size:12.5px;color:var(--muted)"></span></div>
+      <div id="actExam"></div>
+    </div>
+    <div class="card">
+      <div class="card-hd"><h3>🗂 학교별 부교재 프린트</h3><span class="r" id="actSmSum" style="font-size:12.5px;color:var(--muted)"></span></div>
+      <div id="actSm"></div>
+    </div>
+  </section>
+
   <!-- ══ 댓글 ══ -->
   <section class="dr-panel" id="pn-comment">
     <div class="card" id="cmBox"></div>
@@ -315,7 +360,8 @@ a.lk:hover { text-decoration:underline; }
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, signOut, onAuthStateChanged, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { getFirestore, collection, doc, getDoc, getDocs, query, where, onSnapshot, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, collectionGroup, doc, getDoc, getDocs, query, where, onSnapshot, updateDoc, deleteField } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref as sref, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const app = initializeApp({
   apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
@@ -389,9 +435,11 @@ window.drTab = (t) => {
   document.querySelectorAll('.dr-panel').forEach((p) => p.classList.toggle('on', p.id === 'pn-' + t));
   try { history.replaceState(null, '', '#' + t); } catch (e) {}
   if (t === 'comment') renderComments();
+  if (t === 'cal') renderOfficeCal();
+  if (t === 'act') renderActivity();
 };
-window.drSetBranch = (b) => { S.branch = b; try { localStorage.setItem('swc_director_branch', b); } catch (e) {} renderAll(); clRender(); };
-window.drReload = async () => { await loadBase(); S.comments = null; S.absences = null; renderAll(); };
+window.drSetBranch = (b) => { S.branch = b; try { localStorage.setItem('swc_director_branch', b); } catch (e) {} renderAll(); clRender(); if (S.tab === 'cal') renderOfficeCal(); if (S.tab === 'act') renderActivity(); };
+window.drReload = async () => { await loadBase(); S.comments = null; S.absences = null; OC.admins = null; renderAll(); if (S.tab === 'cal') renderOfficeCal(); if (S.tab === 'act') renderActivity(); };
 window.drDayMove = (n) => { S.day = ymd(addDays(parseYmd(S.day), n)); renderDay(); };
 window.drDaySet = (v) => { if (v) { S.day = v; renderDay(); } };
 window.drWeekMove = (n) => { S.weekMon = addDays(S.weekMon, 7 * n); renderWeek(); };
@@ -899,6 +947,126 @@ async function renderAll() {
   ]);
 }
 
+// ══════════════════════════════════════
+// 📅 관리부 달력 — 관리자 페이지 홈 달력(officeCalendar)의 모든 일정 + 관리자마다 「나만」으로 등록한 일정(officeCalendarPrivate/{uid}/events)까지 전부
+//   보이는 범위(👥 선생님까지 · 🏢 관리자만 · 🔒 나만)와 등록한 사람을 함께 표시
+// ══════════════════════════════════════
+const OC = { weekSun: (() => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - d.getDay()); return d; })(), admins: null, token: 0 };
+const OC_VIS = { teachers: ['👥 선생님까지', 'ok'], admins: ['🏢 관리자만', 'pur'], private: ['🔒 나만', 'warn'] };
+const ocNorm = (b) => (String(b || '').includes('산본') ? '산본관' : '평촌관');
+async function ocAdmins() {
+  if (OC.admins) return OC.admins;
+  OC.admins = {};
+  try { const s = await getDocs(collection(db, 'admins')); s.forEach((d) => { const a = d.data(); OC.admins[d.id] = a.name || (a.email || '').split('@')[0]; if (a.email) OC.admins[String(a.email).toLowerCase()] = a.name || a.email.split('@')[0]; }); } catch (e) {}
+  return OC.admins;
+}
+window.drOcMove = (n) => { OC.weekSun = n === 0 ? (() => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - d.getDay()); return d; })() : addDays(OC.weekSun, 7 * n); renderOfficeCal(); };
+async function renderOfficeCal() {
+  const token = ++OC.token;
+  const s = OC.weekSun, e = addDays(s, 6), from = ymd(s), to = ymd(e);
+  const thisSun = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - d.getDay()); return d; })();
+  const rel = Math.round((s - thisSun) / (7 * 86400000));
+  $('ocWeekLabel').textContent = `${md(s)} ~ ${md(e)}${rel === 0 ? ' · 이번 주' : rel === 1 ? ' · 다음 주' : rel === -1 ? ' · 지난주' : ''}`;
+  $('ocBox').innerHTML = '<div class="empty">불러오는 중...</div>';
+  let rows = [], privErr = '';
+  try {
+    const names = await ocAdmins();
+    const [pub, priv] = await Promise.all([
+      getDocs(query(collection(db, 'officeCalendar'), where('date', '>=', from), where('date', '<=', to))),
+      getDocs(collectionGroup(db, 'events')).catch((err) => { privErr = err.message; return null; }),
+    ]);
+    pub.forEach((d) => { const x = d.data(); rows.push({ ...x, id: d.id, vis: x.visibility === 'teachers' ? 'teachers' : 'admins', who: names[String(x.createdBy || '').toLowerCase()] || names[x.createdByUid] || (x.createdBy || '').split('@')[0] }); });
+    if (priv) priv.forEach((d) => {
+      if (d.ref.parent.parent?.parent?.id !== 'officeCalendarPrivate') return;
+      const x = d.data(); if (!x.date || x.date < from || x.date > to) return;
+      const uid = d.ref.parent.parent.id;
+      rows.push({ ...x, id: d.id, vis: 'private', who: names[uid] || names[String(x.createdBy || '').toLowerCase()] || (x.createdBy || '').split('@')[0] });
+    });
+  } catch (err) { if (token === OC.token) $('ocBox').innerHTML = `<div class="err">불러오지 못했습니다 (${esc(err.message)})</div>`; return; }
+  if (token !== OC.token) return;
+  rows = rows.filter((x) => !S.branch || ocNorm(x.branch) === S.branch);
+  const cnt = { teachers: 0, admins: 0, private: 0 }; rows.forEach((x) => cnt[x.vis]++);
+  $('ocSum').innerHTML = `${esc(S.branch || '전체 관')} · 총 ${rows.length}건 — ` + Object.entries(OC_VIS).map(([k, [l, c]]) => `<span class="chip ${c}">${l} ${cnt[k]}</span>`).join(' ');
+  const today = ymd(new Date());
+  let html = '';
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(s, i), key = ymd(d);
+    const list = rows.filter((x) => x.date === key).sort((a, b) => (a.startTime || '99').localeCompare(b.startTime || '99'));
+    const sch = S.events.filter((x) => x.start && x.start <= key && (x.end || x.start) >= key);
+    html += `<div class="oc-day${key === today ? ' today' : ''}"><div class="oc-dh">${md(d)}${key === today ? ' <span class="chip ok">오늘</span>' : ''}<span class="sm">${list.length ? list.length + '건' : ''}</span></div>` +
+      sch.map((x) => `<div class="oc-sch">📌 ${esc(x.title || '')} <small>학원 일정</small></div>`).join('') +
+      (list.length ? list.map((x) => {
+        const main = x.type === '상담' ? ([x.grade, x.studentName].filter(Boolean).join(' ') || x.title || '상담') : (x.title || x.type || '일정');
+        const sub = x.type === '상담' ? [x.title && (x.grade || x.studentName) ? x.title : '', x.school, x.method, x.parentPhone, x.counselor ? '담당 ' + x.counselor : ''].filter(Boolean).join(' · ')
+          : x.type === '회의' && x.attendees ? '참석 ' + x.attendees : '';
+        const [vl, vc] = OC_VIS[x.vis];
+        return `<div class="oc-ev ${ocNorm(x.branch) === '산본관' ? 'sb' : 'pc'}${x.done ? ' done' : ''}">
+          <div class="l1"><b class="br">${esc(ocNorm(x.branch).replace('관', ''))}</b><span class="ty">${esc(x.type || '기타')}</span><span class="tm">${esc(x.startTime ? x.startTime + (x.endTime ? '~' + x.endTime : '') : '시간 미정')}</span><span class="chip ${vc}">${vl}</span>${x.done ? '<span class="chip ok">완료</span>' : ''}<span class="who">${esc(x.who || '')} 등록</span></div>
+          <div class="l2">${esc(main)}</div>${sub ? `<div class="l3">${esc(sub)}</div>` : ''}${x.memo ? `<div class="l3 memo">${esc(x.memo)}</div>` : ''}
+        </div>`;
+      }).join('') : (sch.length ? '' : '<div class="empty" style="padding:4px 0">일정 없음</div>')) + '</div>';
+  }
+  $('ocBox').innerHTML = (privErr ? `<div class="err" style="margin-bottom:10px">「나만」 일정을 불러오지 못했습니다 — 규칙(firestore.rules)이 올라갔는지 확인해 주세요. (${esc(privErr)})</div>` : '') + html;
+}
+
+// ══════════════════════════════════════
+// ✏️ 선생님 활동 — 시험 점수 입력 현황(examScores) · 학교별 부교재 프린트(subMaterials)
+// ══════════════════════════════════════
+const ES_EXAM = { key: '2026-2-final', name: '2026년 2학기 기말고사' };   // 선생님 페이지 EXAM과 같게
+const ACT = { token: 0, sm: [] };
+const gradeOrd = (g) => { const i = ['중1', '중2', '중3', '고1', '고2', '고3'].indexOf(String(g || '').trim()); return i < 0 ? 99 : i; };
+async function renderActivity() {
+  const token = ++ACT.token;
+  $('actExam').innerHTML = '<div class="empty">불러오는 중...</div>';
+  $('actSm').innerHTML = '<div class="empty">불러오는 중...</div>';
+  let es, sm;
+  try {
+    [es, sm] = await Promise.all([
+      getDocs(query(collection(db, 'examScores'), where('examKey', '==', ES_EXAM.key))),
+      getDocs(collection(db, 'subMaterials')),
+    ]);
+  } catch (e) { if (token === ACT.token) { $('actExam').innerHTML = $('actSm').innerHTML = `<div class="err">불러오지 못했습니다 (${esc(e.message)})</div>`; } return; }
+  if (token !== ACT.token) return;
+
+  // 시험 점수: 담당 학생(초등 제외) 기준 선생님별 입력 현황
+  const saved = {}; es.forEach((d) => { const r = d.data(); if (r.studentId) saved[r.studentId] = r; });
+  const ts = activeTeachers((s) => !String(s.grade || '').trim().startsWith('초'));
+  let tot = 0, done = 0;
+  const blocks = ts.map((t) => {
+    const list = t.students.slice().sort((a, b) => gradeOrd(a.grade) - gradeOrd(b.grade) || koCmp(a.name, b.name));
+    const n = list.filter((s) => saved[s.id]).length; tot += list.length; done += n;
+    const pct = list.length ? Math.round(n / list.length * 100) : 100, full = n >= list.length;
+    const scored = list.map((s) => saved[s.id]).filter((r) => r && r.status === '응시' && typeof r.score === 'number');
+    const avg = scored.length ? (scored.reduce((a, r) => a + r.score, 0) / scored.length).toFixed(1) : '';
+    return `<details class="tg"><summary><span class="nm">${esc(t.name)} 선생님</span><span class="sm">${n} / ${list.length}명 입력${avg ? ` · 평균 ${avg}점` : ''}</span><span class="rt"><span class="bar"><i class="${full ? 'full' : ''}" style="width:${pct}%"></i></span>${full ? '<span class="chip ok">전원 입력</span>' : `<span class="chip bad">${list.length - n}명 남음</span>`}</span></summary>
+      <div class="tg-body tbl-wrap"><table class="tbl"><thead><tr><th>학생</th><th>관</th><th>학년</th><th>학교</th><th>반</th><th>점수</th><th>입력</th></tr></thead><tbody>` +
+      list.map((s) => { const r = saved[s.id]; const at = r ? tsDate(r.updatedAt) : null;
+        return `<tr class="${r ? '' : 'miss'}"><td class="nm"><b>${esc(s.name)}</b></td><td>${esc(s.branch || '')}</td><td>${esc(s.grade || '')}</td><td>${esc(s.school || '')}</td><td>${esc(s.classGroup || '')}</td>
+          <td>${r ? (r.status === '응시' ? `<b>${esc(r.score)}점</b>` : `<span class="chip warn">${esc(r.status)}</span>`) : '<span class="chip bad">미입력</span>'}</td><td>${at ? esc(md(at) + ' ' + hm(at)) : ''}</td></tr>`; }).join('') +
+      `</tbody></table></div></details>`;
+  });
+  $('actExamSum').textContent = `${ES_EXAM.name} · ${S.branch || '전체 관'} · ${done} / ${tot}명 입력`;
+  $('actExam').innerHTML = blocks.length ? blocks.join('') : '<div class="empty">담당 학생이 있는 선생님이 없습니다.</div>';
+
+  // 부교재 프린트: 최근 올린 순
+  ACT.sm = []; sm.forEach((d) => ACT.sm.push({ id: d.id, ...d.data() }));
+  const list = ACT.sm.filter((x) => !S.branch || x.branch === S.branch)
+    .sort((a, b) => (tsDate(b.createdAt)?.getTime() || Date.parse(b.createdAtStr || '') || 0) - (tsDate(a.createdAt)?.getTime() || Date.parse(a.createdAtStr || '') || 0));
+  $('actSmSum').textContent = `${S.branch || '전체 관'} · ${list.length}개`;
+  $('actSm').innerHTML = list.length ? `<div class="tbl-wrap"><table class="tbl"><thead><tr><th>올린 날</th><th>관</th><th>학년</th><th>학교</th><th>자료</th><th>올린 선생님</th><th></th></tr></thead><tbody>` +
+    list.map((x) => { const at = tsDate(x.createdAt) || (x.createdAtStr ? new Date(x.createdAtStr) : null);
+      return `<tr><td>${at ? esc(md(at) + ' ' + hm(at)) : ''}</td><td>${esc(x.branch || '')}</td><td>${esc(x.grade || '')}</td><td><b>${esc(x.school || '')}</b></td>
+        <td>${/^image\//.test(x.contentType || '') ? '🖼' : '📄'} ${esc(x.title || x.fileName || '')}</td><td>${esc(x.uploaderName || '')}</td>
+        <td><button class="btn btn-xs" onclick="drSmOpen('${esc(x.id)}')">열기</button></td></tr>`; }).join('') +
+    `</tbody></table></div>` : '<div class="empty">올라온 부교재 프린트가 없습니다.</div>';
+}
+window.drSmOpen = async (id) => {
+  const x = ACT.sm.find((v) => v.id === id); if (!x) return;
+  const w = window.open('', '_blank');
+  try { const url = await getDownloadURL(sref(getStorage(app), x.path)); if (w) w.location.href = url; else window.open(url, '_blank'); }
+  catch (e) { if (w) w.close(); alert('파일을 열지 못했습니다 (' + (e.code || e.message) + ')'); }
+};
+
 // ── 입장 확인: 지정된 원장 계정만. 나머지는 페이지가 없는 것처럼 보임 ──
 // 원장이 쓰는 관리자 계정 2개(로그인 이메일 기준) — 추가하려면 여기에 이메일을 넣으면 됨
 const DR_ALLOW = ['smc1823@nate.com', 'dncksfly@naver.com'];
@@ -1011,7 +1179,7 @@ onAuthStateChanged(auth, async (user) => {
   CL.me = String(user.email || '').toLowerCase().split('@')[0];
   try { await loadBase(); } catch (e) { gate(`<h2>불러오기 오류</h2><p>${esc(e.message)}</p>`); return; }
   const want = (location.hash || '').replace('#', '');
-  if (['day', 'week', 'month', 'comment'].includes(want)) drTab(want);
+  if (['day', 'week', 'month', 'comment', 'cal', 'act'].includes(want)) drTab(want);
   renderAll();
   clStart(user.email);
 });

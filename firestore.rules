@@ -83,6 +83,11 @@ service cloud.firestore {
         && d.keys().hasOnly(['eventTitle', 'branch', 'rating', 'content', 'authorName', 'grade',
                              'publicOk', 'privacyAgreed', 'status', 'source', 'createdAt']);
     }
+    // 원장 계정(원장 페이지 r-038e0aee5f139320.html에 들어가는 관리자 계정 2개) — 모든 기록을 볼 수 있음
+    function isDirector() {
+      return isSignedIn() && request.auth.token.email in ['smc1823@nate.com', 'dncksfly@naver.com'] &&
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
     function isAdmin() {
       return isSignedIn() &&
         exists(/databases/$(database)/documents/admins/$(request.auth.uid));
@@ -366,8 +371,14 @@ service cloud.firestore {
       allow read: if isTeacher() && resource.data.visibility == 'teachers';
     }
     // ── officeCalendarPrivate/{uid}/events: 관리부 달력 「나만」 일정 — 입력한 본인 계정만 읽기·쓰기 ──
+    // (원장 계정은 모든 관리자의 「나만」 일정까지 읽기 가능 — 원장 페이지 「관리부 달력 · 전체」)
     match /officeCalendarPrivate/{uid}/events/{docId} {
       allow read, write: if isAdmin() && request.auth.uid == uid;
+      allow read: if isDirector();
+    }
+    // 원장 페이지에서 모든 관리자의 「나만」 일정을 한 번에 불러올 때(컬렉션 그룹 조회) — 원장 계정만 읽기
+    match /{path=**}/events/{docId} {
+      allow read: if isDirector();
     }
 
     // ── teacherTodos: 선생님 '내 할 일' + '해야 할 업무' 완료 체크(kind: 'autoCheck').
