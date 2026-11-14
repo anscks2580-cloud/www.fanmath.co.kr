@@ -116,8 +116,9 @@ export function judgeAnswer(correct, given) {
     const labeled = A.every((x) => x.label) && B.every((x) => x.label);
     const eq = labeled ? same(A.map((x) => x.label + x.key), B.map((x) => x.label + x.key)) : same(A.map((x) => x.key), B.map((x) => x.key));
     if (!eq) return false;
-    // 값은 같지만 꼴이 문제인 경우는 선생님 확인: 소인수분해처럼 곱·거듭제곱 꼴을 묻는 답, 약분 안 한 분수, 정리 안 한 루트
-    if (/[×^]/.test(texToPlain(correct)) || unsimplified(given)) return null;
+    // 값이 같으면 약분 안 한 분수(6/8)·정리 안 한 루트(√12)도 정답 (2026.11.14 결정)
+    // 소인수분해처럼 곱·거듭제곱 꼴 자체를 묻는 답(2^3×3인데 24)만 선생님 확인
+    if (/[×^]/.test(texToPlain(correct))) return null;
     return true;
   }
   // 단위·말만 다른 경우(「276명」 ↔ 「276」)
@@ -125,13 +126,6 @@ export function judgeAnswer(correct, given) {
   const a2 = strip(a), b2 = strip(b);
   if (a2 && b2 && /\d/.test(a2) && (a2 === b2 || parts(a2) === parts(b2))) return true;
   return null;
-}
-const gcd = (a, b) => (b ? gcd(b, a % b) : a);
-function unsimplified(src) {
-  const s = texToPlain(src).replace(/\s+/g, '');
-  for (const m of s.matchAll(/(\d+)\/(\d+)/g)) if (gcd(+m[1], +m[2]) > 1) return true;
-  for (const m of s.matchAll(/√\(?(\d+)\)?/g)) { const n = +m[1]; for (let k = 2; k * k <= n; k++) if (n % (k * k) === 0) return true; }
-  return false;
 }
 const same = (x, y) => x.length === y.length && [...x].sort().join('|') === [...y].sort().join('|');
 export const sameAnswer = (correct, given) => judgeAnswer(correct, given) === true;

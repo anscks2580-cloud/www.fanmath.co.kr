@@ -85,7 +85,7 @@ footer .cnt { font-size:13px; color:var(--ink2); flex:1; } footer .cnt b { color
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { dueInfo, mdw, CIRC } from "./sheet-core.js?v=1794650000";
+import { dueInfo, mdw, CIRC } from "./sheet-core.js?v=1794660000";
 
 const app = initializeApp({ apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA", authDomain: "songmath.firebaseapp.com", projectId: "songmath", storageBucket: "songmath.firebasestorage.app", messagingSenderId: "936295436575", appId: "1:936295436575:web:d1e201508719850cfbe02a" });
 const auth = getAuth(app), db = getFirestore(app);
@@ -148,7 +148,7 @@ function render() {
     return;
   }
   $('foot').style.display = '';
-  $('body').innerHTML = `<div class="note">프린트(시험지)를 푼 다음 <b>답만</b> 적어 제출하세요. 객관식은 번호를 누르고(답이 두 개면 두 개 다), 주관식은 칸을 누르면 아래에 입력 도구가 나와요.<br><b>분수</b>와 <b>루트</b>는 보라색 단추를 눌러 칸에 수만 넣으면 되고, 적은 답은 바로 아래에 수학 모양으로 보여요. 분수는 꼭 <b>약분</b>해서 적으세요. 중간에 나가도 적은 답은 이 기기에 남아 있어요.</div>` +
+  $('body').innerHTML = `<div class="note">프린트(시험지)를 푼 다음 <b>답만</b> 적어 제출하세요. 객관식은 번호를 누르고(답이 두 개면 두 개 다), 주관식은 칸을 누르면 아래에 입력 도구가 나와요.<br><b>분수</b>와 <b>루트</b>는 보라색 단추를 눌러 칸에 수만 넣으면 되고, 적은 답은 바로 아래에 수학 모양으로 보여요. 중간에 나가도 적은 답은 이 기기에 남아 있어요.</div>` +
     ans.map((a, i) => qHtml(i)).join('');
   count();
 }

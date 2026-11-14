@@ -699,7 +699,7 @@ const firebaseConfig = { apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA", auth
 const app = initializeApp(firebaseConfig); const auth = getAuth(app); const db = getFirestore(app); const storage = getStorage(app);
 try { await setPersistence(auth, browserLocalPersistence); } catch (e) { console.warn('persistence', e); }
 // HCS ↔ 학원 시스템 연동 공용 모듈(답 비교·자동 채점·기한 계산). 로컬(file://)에서는 홈페이지 것을 불러옴
-let SC = null; try { SC = await import(location.protocol === 'file:' ? 'https://www.fanmath.co.kr/sheet-core.js' : '../sheet-core.js?v=1794650000'); } catch (e) { console.warn('sheet-core', e); }
+let SC = null; try { SC = await import(location.protocol === 'file:' ? 'https://www.fanmath.co.kr/sheet-core.js' : '../sheet-core.js?v=1794660000'); } catch (e) { console.warn('sheet-core', e); }
 window.SC = SC;
 // IndexedDB 캐시 (문제 데이터 파일)
 const idb = () => new Promise((res, rej) => { const q = indexedDB.open('hcs-cache', 1); q.onupgradeneeded = () => q.result.createObjectStore('files'); q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); });
