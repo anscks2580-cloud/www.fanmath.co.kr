@@ -10,7 +10,8 @@
 <!--
   HCS 시험지 답안 제출 (학생 전용) — sheet.html?id={시험id}_{학생uid}
   · sheetTasks 문서에는 정답이 없음. 학생은 답만 적어 제출하고, 맞았는지 틀렸는지는 보이지 않음
-  · 객관식: ①~⑤ 누르기(답이 여러 개면 여러 개) / 주관식: 글자로 입력 + 그 칸을 누르면 기호판이 나옴
+  · 객관식: ①~⑤ 누르기(답이 여러 개면 여러 개) / 주관식: 칸을 누르면 입력 도구가 나옴 — 「분수」「루트」는 칸에 수만 넣으면
+    정해진 꼴(3/4, 2√3)로 들어가 표기가 통일되고, 적은 답은 수학 모양으로 미리 보임 (채점은 값으로 비교)
   · 제출하면 고칠 수 없음(선생님이 다시 열어 줄 때만). 채점은 선생님 화면이 열릴 때 자동으로 됨
 -->
 <style>
@@ -42,6 +43,22 @@ header .meta { font-size:12px; color:var(--ink2); margin-top:6px; display:flex; 
 .keys button { border:1px solid var(--line); background:#FBFAFE; border-radius:9px; min-width:42px; height:38px; padding:0 9px; font-size:15px; color:var(--ink); font-family:inherit; }
 .keys button:active { background:var(--p2); }
 .keys .hint { flex-basis:100%; font-size:11.5px; color:var(--ink2); }
+.keys button.tool { background:var(--p); color:#fff; border-color:var(--p); font-weight:800; padding:0 13px; }
+.pv { display:none; margin-top:8px; padding:9px 12px; border-radius:10px; background:var(--p2); font-size:17px; min-height:44px; align-items:center; gap:8px; flex-wrap:wrap; } .q.filled .pv { display:flex; }
+.pv small { font-size:11px; color:var(--ink2); font-weight:700; }
+.fr { display:inline-flex; flex-direction:column; align-items:center; vertical-align:middle; margin:0 3px; line-height:1.25; } .fr i { font-style:normal; padding:0 4px; } .fr i:first-child { border-bottom:1.5px solid var(--ink); }
+.rt u { text-decoration:none; border-top:1.5px solid var(--ink); padding:0 2px; }
+.mk { display:none; margin-top:8px; border:1.5px solid var(--p); border-radius:12px; padding:12px; background:#fff; } .mk.on { display:block; }
+.mk .ttl { font-size:12.5px; font-weight:800; color:var(--p); margin-bottom:9px; }
+.mk .row { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.mk input { width:74px !important; text-align:center; padding:9px 4px !important; }
+.mk button { white-space:nowrap; }
+.mk .frbox { display:flex; flex-direction:column; align-items:center; gap:5px; } .mk .frbox hr { width:100%; border:0; border-top:2px solid var(--ink); margin:0; }
+.mk .sg { width:40px; height:40px; border-radius:10px; border:1.5px solid var(--line); background:#fff; font-size:18px; font-weight:800; color:var(--ink2); } .mk .sg.on { background:var(--bad); border-color:var(--bad); color:#fff; }
+.mk .big { font-size:26px; line-height:1; }
+.mk .ok { border:0; background:var(--p); color:#fff; border-radius:10px; padding:10px 16px; font-weight:800; font-family:inherit; font-size:14px; }
+.mk .no { border:0; background:none; color:var(--ink2); font-family:inherit; font-size:13px; padding:10px 6px; }
+.mk .tip { font-size:11.5px; color:var(--ink2); margin-top:8px; line-height:1.5; }
 .ro { font-size:15px; padding:8px 0 2px; word-break:break-all; } .ro.empty { color:#B9B4C8; }
 footer { position:fixed; left:0; right:0; bottom:0; z-index:25; background:rgba(255,255,255,.97); border-top:1px solid var(--line); padding:10px 14px calc(10px + var(--safe-b)); }
 footer .in { max-width:620px; margin:0 auto; display:flex; gap:10px; align-items:center; }
@@ -68,7 +85,7 @@ footer .cnt { font-size:13px; color:var(--ink2); flex:1; } footer .cnt b { color
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { dueInfo, mdw, CIRC } from "./sheet-core.js?v=1794640000";
+import { dueInfo, mdw, CIRC } from "./sheet-core.js?v=1794650000";
 
 const app = initializeApp({ apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA", authDomain: "songmath.firebaseapp.com", projectId: "songmath", storageBucket: "songmath.firebasestorage.app", messagingSenderId: "936295436575", appId: "1:936295436575:web:d1e201508719850cfbe02a" });
 const auth = getAuth(app), db = getFirestore(app);
@@ -79,7 +96,19 @@ const from = new URLSearchParams(location.search).get('from') || '';
 const KEY = 'swc_sheet_' + id;
 let task = null, ans = [], active = -1;
 // 주관식 기호판: [보이는 글자, 넣을 글자]
-const KEYS = [['√', '√'], ['분수 /', '/'], ['제곱 ^', '^'], ['π', 'π'], ['±', '±'], ['−', '-'], ['( )', '()'], ['x=', 'x='], ['y=', 'y='], ['<', '<'], ['>', '>'], ['≤', '≤'], ['≥', '≥'], ['≠', '≠'], ['°', '°'], [',', ', ']];
+const KEYS = [['−', '-'], ['π', 'π'], ['제곱 ^', '^'], ['( )', '()'], ['x=', 'x='], ['y=', 'y='], [',', ', '], ['sin', 'sin'], ['cos', 'cos'], ['tan', 'tan'], ['log', 'log'], ['θ', 'θ'], ['°', '°'], ['∞', '∞'], ['<', '<'], ['>', '>'], ['≤', '≤'], ['≥', '≥'], ['≠', '≠']];
+// 적은 답을 수학 모양으로 보여 줌: a/b → 세로 분수, √3 → 루트 줄, x^2 → 위첨자
+const TOK = '\\([^()]*\\)|[0-9a-zA-Zπθ∞°.√]+';
+const unpar = (s) => s.replace(/^\((.*)\)$/, '$1');
+const rootHtml = (s) => s.replace(/√\(([^()]*)\)|√([0-9a-zA-Zπθ∞°.]+)/g, (m, a, b) => `<span class="rt">√<u>${a ?? b}</u></span>`).replace(/\^\(([^()]*)\)|\^([0-9a-zA-Z]+)/g, (m, a, b) => `<sup>${a ?? b}</sup>`);
+function pretty(src) {
+  const s = esc(String(src || '').trim()); if (!s) return '';
+  return s.split(new RegExp(`((?:${TOK})\\/(?:${TOK}))`)).map((part, i) => {
+    if (i % 2 === 0) return rootHtml(part);
+    const m = new RegExp(`^(${TOK})\\/(${TOK})$`).exec(part);
+    return `<span class="fr"><i>${rootHtml(unpar(m[1]))}</i><i>${rootHtml(unpar(m[2]))}</i></span>`;
+  }).join('');
+}
 
 function toast(m) { const t = $('toast'); t.textContent = m; t.classList.add('on'); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove('on'), 2200); }
 window.goBack = () => { if (from === 'app') location.href = 'app.html#hw'; else if (from === 'my') location.href = 'mypage.html'; else if (history.length > 1) history.back(); else location.href = 'app.html#hw'; };
@@ -115,11 +144,11 @@ function render() {
     if (d && !isNaN(d)) when = `${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
     $('progBar').style.display = 'none'; $('foot').style.display = 'none';
     $('body').innerHTML = `<div class="done-card"><div class="em">✅</div><b>답안을 제출했어요</b><div style="font-size:13px;color:var(--ink2);margin-top:6px;line-height:1.7;">${when ? when + ' 제출 · ' : ''}선생님이 확인하고 수업 시간에 알려 주세요.<br>제출한 답은 고칠 수 없어요.</div></div>` +
-      ans.map((a, i) => `<div class="q filled"><div class="no">${i + 1}</div><div class="bd"><div class="kd">${kindOf(i) === 'o' ? '객관식' : '주관식'}</div><div class="ro ${a ? '' : 'empty'}">${a ? esc(kindOf(i) === 'o' ? a.split('').map((c) => CIRC[+c - 1] || c).join(' ') : a) : '답 없음'}</div></div></div>`).join('');
+      ans.map((a, i) => `<div class="q filled"><div class="no">${i + 1}</div><div class="bd"><div class="kd">${kindOf(i) === 'o' ? '객관식' : '주관식'}</div><div class="ro ${a ? '' : 'empty'}">${a ? (kindOf(i) === 'o' ? esc(a.split('').map((c) => CIRC[+c - 1] || c).join(' ')) : pretty(a)) : '답 없음'}</div></div></div>`).join('');
     return;
   }
   $('foot').style.display = '';
-  $('body').innerHTML = `<div class="note">프린트(시험지)를 푼 다음 <b>답만</b> 적어 제출하세요. 객관식은 번호를 누르고(답이 두 개면 두 개 다), 주관식은 칸을 누르면 아래에 <b>기호판</b>이 나와요.<br>분수는 <b>3/4</b>, 루트는 <b>√3</b>, 제곱은 <b>x^2</b>처럼 적으면 돼요. 중간에 나가도 적은 답은 이 기기에 남아 있어요.</div>` +
+  $('body').innerHTML = `<div class="note">프린트(시험지)를 푼 다음 <b>답만</b> 적어 제출하세요. 객관식은 번호를 누르고(답이 두 개면 두 개 다), 주관식은 칸을 누르면 아래에 입력 도구가 나와요.<br><b>분수</b>와 <b>루트</b>는 보라색 단추를 눌러 칸에 수만 넣으면 되고, 적은 답은 바로 아래에 수학 모양으로 보여요. 분수는 꼭 <b>약분</b>해서 적으세요. 중간에 나가도 적은 답은 이 기기에 남아 있어요.</div>` +
     ans.map((a, i) => qHtml(i)).join('');
   count();
 }
@@ -128,7 +157,10 @@ function qHtml(i) {
   if (kindOf(i) === 'o') return `<div class="q ${a ? 'filled' : ''}" id="q${i}"><div class="no">${i + 1}</div><div class="bd"><div class="kd">객관식</div><div class="ch">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="${a.includes(String(n)) ? 'on' : ''}" onclick="pick(${i},${n})">${CIRC[n - 1]}</button>`).join('')}</div></div></div>`;
   return `<div class="q ${a.trim() ? 'filled' : ''} ${active === i ? 'on' : ''}" id="q${i}"><div class="no">${i + 1}</div><div class="bd"><div class="kd">주관식</div>
     <input type="text" id="in${i}" value="${esc(a)}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="답을 적으세요" onfocus="focusQ(${i})" oninput="typeQ(${i},this.value)">
-    <div class="keys">${KEYS.map(([l, v]) => `<button type="button" onmousedown="event.preventDefault()" onclick="key(${i},'${v}')">${l}</button>`).join('')}<div class="hint">예) 2√3 · -3/4 · x=5 · x^2-2x+1 · 답이 여러 개면 쉼표로: 2, -5</div></div></div></div>`;
+    <div class="pv" id="pv${i}"><small>이렇게 제출돼요</small><span>${pretty(a)}</span></div>
+    <div class="keys"><button type="button" class="tool" onmousedown="event.preventDefault()" onclick="openMk(${i},'fr')">분수 넣기</button><button type="button" class="tool" onmousedown="event.preventDefault()" onclick="openMk(${i},'rt')">루트 넣기</button>${KEYS.map(([l, v]) => `<button type="button" onmousedown="event.preventDefault()" onclick="key(${i},'${v}')">${l}</button>`).join('')}
+      <div class="hint">분수·루트는 위 보라색 단추로 넣으세요. 답이 여러 개면 쉼표로 나눠요 (예: 2, -5)</div></div>
+    <div class="mk" id="mk${i}"></div></div></div>`;
 }
 function save() { try { localStorage.setItem(KEY, JSON.stringify(ans)); } catch (e) {} count(); }
 function count() { const f = filled(); $('cnt').innerHTML = `<b>${f}</b> / ${ans.length} 문제 입력`; document.querySelector('#progBar i').style.width = (ans.length ? f / ans.length * 100 : 0) + '%'; }
@@ -141,7 +173,38 @@ window.pick = (i, n) => {
   save();
 };
 window.focusQ = (i) => { if (active === i) return; const prev = $('q' + active); if (prev) prev.classList.remove('on'); active = i; $('q' + i).classList.add('on'); };
-window.typeQ = (i, v) => { ans[i] = v; $('q' + i).classList.toggle('filled', !!v.trim()); save(); };
+window.typeQ = (i, v) => { ans[i] = v; $('q' + i).classList.toggle('filled', !!v.trim()); const pv = $('pv' + i); if (pv) pv.lastElementChild.innerHTML = pretty(v); save(); };
+// ── 분수·루트 넣기 도구: 칸에 수만 넣으면 정해진 꼴로 답 칸(커서 자리)에 들어감 ──
+const wrap = (v) => (/^[0-9a-zA-Zπθ∞°.]+$/.test(v) || /^√[0-9a-zA-Zπθ∞°.]+$/.test(v) || /^[0-9.]+√[0-9a-zA-Zπθ∞°.]+$/.test(v) ? v : `(${v})`);
+let mkNeg = false, mkPos = null;
+window.openMk = (i, kind) => {
+  const el = $('in' + i); mkPos = [el.selectionStart ?? el.value.length, el.selectionEnd ?? el.value.length]; mkNeg = false;
+  const inp = (id, ph) => `<input type="text" id="${id}" inputmode="text" autocomplete="off" autocapitalize="off" placeholder="${ph}">`;
+  const box = $('mk' + i);
+  box.innerHTML = kind === 'fr'
+    ? `<div class="ttl">분수 넣기</div><div class="row"><button type="button" class="sg" id="mkSg" onclick="mkSign()">−</button>
+        <div class="frbox">${inp('mkA', '분자')}<hr>${inp('mkB', '분모')}</div>
+        <button type="button" class="ok" onclick="mkPut(${i},'fr')">넣기</button><button type="button" class="no" onclick="closeMk(${i})">취소</button></div>
+        <div class="tip">음수 분수는 왼쪽 「−」를 누르세요. 분자·분모에 루트가 있으면 <button type="button" class="no" style="padding:0;color:var(--p);font-weight:800;" onmousedown="event.preventDefault()" onclick="mkRoot()">√ 넣기</button>를 누른 뒤 수를 적어요 (예: √3).</div>`
+    : `<div class="ttl">루트 넣기</div><div class="row"><button type="button" class="sg" id="mkSg" onclick="mkSign()">−</button>
+        ${inp('mkA', '앞의 수')}<span class="big">√</span>${inp('mkB', '루트 안')}
+        <button type="button" class="ok" onclick="mkPut(${i},'rt')">넣기</button><button type="button" class="no" onclick="closeMk(${i})">취소</button></div>
+        <div class="tip">2√3이면 앞의 수에 2, 루트 안에 3. 앞의 수가 없으면(√5) 비워 두세요.</div>`;
+  box.classList.add('on'); setTimeout(() => { const f = $(kind === 'rt' ? 'mkB' : 'mkA'); if (f) f.focus(); }, 30);
+};
+window.mkSign = () => { mkNeg = !mkNeg; $('mkSg').classList.toggle('on', mkNeg); };
+window.mkRoot = () => { const f = document.activeElement && /^mk[AB]$/.test(document.activeElement.id) ? document.activeElement : $('mkA'); f.value += '√'; f.focus(); };
+window.closeMk = (i) => { const b = $('mk' + i); b.classList.remove('on'); b.innerHTML = ''; };
+window.mkPut = (i, kind) => {
+  const a = $('mkA').value.replace(/\s+/g, ''), b = $('mkB').value.replace(/\s+/g, '');
+  if (kind === 'fr' && (!a || !b)) { toast('분자와 분모를 모두 적어 주세요'); return; }
+  if (kind === 'rt' && !b) { toast('루트 안의 수를 적어 주세요'); return; }
+  const txt = (mkNeg ? '-' : '') + (kind === 'fr' ? `${wrap(a)}/${wrap(b)}` : `${a}√${/^[0-9a-zA-Zπθ∞°.]+$/.test(b) ? b : `(${b})`}`);
+  const el = $('in' + i); const [s, e] = mkPos || [el.value.length, el.value.length];
+  el.value = el.value.slice(0, s) + txt + el.value.slice(e);
+  closeMk(i); typeQ(i, el.value);
+  el.focus(); try { el.setSelectionRange(s + txt.length, s + txt.length); } catch (err) {}
+};
 window.key = (i, v) => {
   const el = $('in' + i); const s = el.selectionStart ?? el.value.length, e = el.selectionEnd ?? el.value.length;
   el.value = el.value.slice(0, s) + v + el.value.slice(e);

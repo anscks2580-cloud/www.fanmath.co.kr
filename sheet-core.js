@@ -60,7 +60,8 @@ function texToPlain(s) {
     s = s.replace(/\\[dt]?frac\{([^{}]*)\}\{([^{}]*)\}/g, '($1)/($2)').replace(/\\sqrt\{([^{}]*)\}/g, '√($1)')
       .replace(/\^\{([^{}]*)\}/g, '^($1)').replace(/_\{([^{}]*)\}/g, '_($1)');
   }
-  const map = { times: '×', div: '÷', pm: '±', mp: '∓', pi: 'π', leq: '≤', le: '≤', geq: '≥', ge: '≥', neq: '≠', ne: '≠', cdot: '×', circ: '°', square: '□', triangle: '△', angle: '∠', therefore: '', '%': '%' };
+  const map = { times: '×', div: '÷', pm: '±', mp: '∓', pi: 'π', leq: '≤', le: '≤', geq: '≥', ge: '≥', neq: '≠', ne: '≠', cdot: '×', circ: '°', square: '□', triangle: '△', angle: '∠', therefore: '', '%': '%',
+    sin: 'sin', cos: 'cos', tan: 'tan', log: 'log', ln: 'ln', theta: 'θ', alpha: 'α', beta: 'β', gamma: 'γ', infty: '∞', ldots: '…', cdots: '…' };
   s = s.replace(/\\([a-zA-Z]+|%)/g, (m, k) => (k in map ? map[k] : ''));
   return s.replace(/[{}]/g, '');
 }
@@ -70,15 +71,70 @@ export function canon(s) {
     .replace(/(^|[,=])\+/g, '$1').replace(/[.。]$/, '');
 }
 const parts = (c) => c.split(',').filter(Boolean).sort().join(',');
-export function sameAnswer(correct, given) {
-  const a = canon(correct), b = canon(given);
-  if (!b) return false;
+// ── 수로 계산해서 비교 (분수·루트·π·거듭제곱) — 표기가 달라도 값이 같으면 정답: 1/2 = 0.5, √12 = 2√3, (√3)/2 = √3/2
+// 숫자와 + - × ÷ / ^ √ π 괄호로만 된 식일 때만 값을 돌려주고, 문자·한글이 섞이면 NaN
+export function numVal(src) {
+  let s = texToPlain(src).replace(/\s+/g, '').replace(/[−–—]/g, '-').replace(/×|\*/g, '*').replace(/÷/g, '/').replace(/[[{]/g, '(').replace(/[\]}]/g, ')').replace(/루트/g, '√').replace(/파이/g, 'π');
+  if (!s || !/^[0-9.+\-*/()^√π]+$/.test(s) || !/[0-9π]/.test(s)) return NaN;
+  let i = 0;
+  const peek = () => s[i];
+  const expr = () => { let v = term(); while (peek() === '+' || peek() === '-') { const op = s[i++]; const r = term(); v = op === '+' ? v + r : v - r; } return v; };
+  const term = () => { let v = unary();
+    for (;;) { const c = peek();
+      if (c === '*') { i++; v *= unary(); } else if (c === '/') { i++; v /= unary(); }
+      else if (c === '√' || c === 'π' || c === '(' || (c >= '0' && c <= '9')) v *= power();   // 2√3, 2π, 3(…) 처럼 곱셈 기호를 생략한 꼴
+      else return v; } };
+  const unary = () => { if (peek() === '-') { i++; return -unary(); } if (peek() === '+') { i++; return unary(); } return power(); };
+  const power = () => { const b = atom(); if (peek() === '^') { i++; return Math.pow(b, unary()); } return b; };
+  const atom = () => { const c = peek();
+    if (c === '(') { i++; const v = expr(); if (peek() !== ')') throw new Error('paren'); i++; return v; }
+    if (c === '√') { i++; return Math.sqrt(atom()); }
+    if (c === 'π') { i++; return Math.PI; }
+    const m = /^\d+(\.\d+)?|^\.\d+/.exec(s.slice(i)); if (!m) throw new Error('num'); i += m[0].length; return parseFloat(m[0]); };
+  try { const v = expr(); return i === s.length && isFinite(v) ? v : NaN; } catch (e) { return NaN; }
+}
+// 답을 「이름표=값」 조각으로 나눔: 'x=3, y=-1' → [['x', 3], ['y', -1]] (값이 수가 아니면 정리한 글자 그대로)
+function answerParts(src) {
+  return texToPlain(src).replace(/\s+/g, '').split(',').filter(Boolean).map((p) => {
+    const m = /^([a-zA-Z])=(.+)$/.exec(p); const label = m ? m[1].toLowerCase() : ''; const body = m ? m[2] : p;
+    const v = numVal(body); return { label, num: !isNaN(v), key: isNaN(v) ? canon(body) : String(Math.round(v * 1e9) / 1e9) };
+  });
+}
+// 돌려주는 값: true 정답 / false 오답(확실) / null 판정 못 함(글·식이라 선생님 확인 필요)
+export function judgeAnswer(correct, given) {
+  const b = canon(given); if (!b) return false;
+  const a = canon(correct);
   if (a === b || parts(a) === parts(b)) return true;
-  // 단위·말(「276명」 ↔ 「276」, 「x=3」 ↔ 「3」)만 다른 경우
+  const A = answerParts(correct), B = answerParts(given);
+  if (A.length && A.every((x) => x.num)) {             // 정답이 수(들)인 문제 → 값으로 비교, 다르면 확실한 오답
+    if (!B.every((x) => x.num)) {                      // 학생이 「276명」처럼 단위를 붙였으면 떼고 다시
+      const B2 = texToPlain(given).replace(/\s+/g, '').split(',').filter(Boolean).map((p) => p.replace(/^[a-zA-Z]=/, '').replace(/[가-힣%°]+$/, ''));
+      if (B2.length === A.length && B2.every((p) => !isNaN(numVal(p)))) return same(A.map((x) => x.key), B2.map((p) => String(Math.round(numVal(p) * 1e9) / 1e9)));
+      return null;
+    }
+    if (A.length !== B.length) return false;
+    const labeled = A.every((x) => x.label) && B.every((x) => x.label);
+    const eq = labeled ? same(A.map((x) => x.label + x.key), B.map((x) => x.label + x.key)) : same(A.map((x) => x.key), B.map((x) => x.key));
+    if (!eq) return false;
+    // 값은 같지만 꼴이 문제인 경우는 선생님 확인: 소인수분해처럼 곱·거듭제곱 꼴을 묻는 답, 약분 안 한 분수, 정리 안 한 루트
+    if (/[×^]/.test(texToPlain(correct)) || unsimplified(given)) return null;
+    return true;
+  }
+  // 단위·말만 다른 경우(「276명」 ↔ 「276」)
   const strip = (t) => t.replace(/[가-힣]/g, '').replace(/^[a-z]=/, '');
   const a2 = strip(a), b2 = strip(b);
-  return !!a2 && !!b2 && /\d/.test(a2) && (a2 === b2 || parts(a2) === parts(b2));
+  if (a2 && b2 && /\d/.test(a2) && (a2 === b2 || parts(a2) === parts(b2))) return true;
+  return null;
 }
+const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+function unsimplified(src) {
+  const s = texToPlain(src).replace(/\s+/g, '');
+  for (const m of s.matchAll(/(\d+)\/(\d+)/g)) if (gcd(+m[1], +m[2]) > 1) return true;
+  for (const m of s.matchAll(/√\(?(\d+)\)?/g)) { const n = +m[1]; for (let k = 2; k * k <= n; k++) if (n % (k * k) === 0) return true; }
+  return false;
+}
+const same = (x, y) => x.length === y.length && [...x].sort().join('|') === [...y].sort().join('|');
+export const sameAnswer = (correct, given) => judgeAnswer(correct, given) === true;
 const choiceSet = (t) => { const s = new Set(); String(t || '').split('').forEach((ch) => { const i = CIRC.indexOf(ch); if (i >= 0) s.add(i + 1); else if (/[1-5]/.test(ch)) s.add(+ch); }); return [...s].sort().join(''); };
 // 학생 답(given[]) 채점 → wrong: 틀림(확인 필요 포함), review: 주관식이라 선생님이 한 번 봐야 하는 번호
 export function gradeAnswers(test, given) {
@@ -87,7 +143,9 @@ export function gradeAnswers(test, given) {
     const g = String((given || [])[i] ?? '').trim(), n = i + 1;
     if (!g) { wrong.push(n); return; }
     if (kinds[i] === 'o') { if (choiceSet(a) !== choiceSet(g)) wrong.push(n); return; }
-    if (!sameAnswer(a, g)) { wrong.push(n); review.push(n); }
+    const j = judgeAnswer(a, g);
+    if (j === false) wrong.push(n);                       // 수로 비교해 값이 다름 → 확실한 오답
+    else if (j === null) { wrong.push(n); review.push(n); }   // 글·식 답이라 자동 판정 못 함 → 선생님 확인
   });
   return { wrong, review };
 }

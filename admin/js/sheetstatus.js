@@ -20,7 +20,7 @@ window.shsInit = async function () {
   const box = document.getElementById('shsBody'); if (!box || shsBusy) return;
   shsBusy = true;
   try {
-    if (!shsSC) shsSC = await import('/sheet-core.js?v=1794640000');
+    if (!shsSC) shsSC = await import('/sheet-core.js?v=1794650000');
     if (!studentsCache.length) await loadStudents();
     if (!shsDay) shsDay = SHS_DOW[new Date().getDay()];
     if (!shsBranch) { try { shsBranch = localStorage.getItem('swc_hl_branch') || ''; } catch (e) {} if (shsBranch !== '평촌관' && shsBranch !== '산본관') shsBranch = '평촌관'; }
