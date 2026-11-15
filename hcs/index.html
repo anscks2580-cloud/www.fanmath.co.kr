@@ -513,7 +513,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none!importa
         <select id="asgPeriod" style="width:auto" onchange="renderAsg()"><option value="7">최근 1주</option><option value="30" selected>최근 1개월</option><option value="90">최근 3개월</option><option value="0">전체</option></select>
         <button class="sm" onclick="loadAssignments()">새로고침</button></div>
       <div class="body">
-        <table class="ws"><tr><th style="width:90px">날짜</th><th>학습지명</th><th style="width:120px">반</th><th style="width:200px">학생</th><th style="width:110px">채점</th><th style="width:150px"></th></tr><tbody id="asgrows"></tbody></table>
+        <table class="ws"><tr><th style="width:80px">날짜</th><th>학습지명</th><th style="width:90px">반</th><th style="width:150px">학생</th><th style="width:195px">채점</th><th style="width:205px"></th></tr><tbody id="asgrows"></tbody></table>
         <div class="note" id="asgnote" style="padding:12px 20px"></div>
       </div>
     </div>
@@ -1383,11 +1383,14 @@ function renderAsg(){
     const st=!rs.length?'<span class="pill r">학생 없음</span>':g===rs.length?`<span class="pill g">채점 완료</span>`:g?`<span class="pill y">${g}/${rs.length} 채점</span>`:'<span class="pill y">미채점</span>';
     const avg=rs.filter(r=>r.graded&&!r.absent).map(r=>r.percentage); const avgT=avg.length?` 평균 ${Math.round(avg.reduce((a,b)=>a+b,0)/avg.length)}점`:'';
     const sub=rs.filter(r=>r.submitted).length, rv=rs.filter(r=>(r.needReview||[]).length).length, wsM=rs.filter(r=>r.wrongSheetId).length, wsS=rs.filter(r=>r.wrongSheetTestId).length;
-    const link=`<div class="note" style="margin-top:3px">앱 제출 ${sub}/${rs.length}${rv?` · <b style="color:#b45309">주관식 확인 ${rv}</b>`:''}${wsM||wsS?` · 오답지 생성 ${wsM} · 출제 ${wsS}`:''}</div>`;
-    return `<tr><td class="mini">${shortDate(t.date)}</td><td class="t"><b>${esc(t.title)}</b><div>${t.questionCount}문제 | ${esc(t.range||'')}</div></td><td class="mini">${esc(t.classGroup||'')}<br>${(t.branch||'').split(', ').map(brTag).join('')}</td><td class="mini">${esc(names)}</td><td>${st}<span class="note">${avgT}</span>${link}</td><td><button class="sm pri" onclick="openGrade('${t.id}')">채점 / 오답 입력</button> <button class="sm ghost" onclick="delTest('${t.id}')">🗑</button></td></tr>`; }).join('');
+    const link=`<div class="note" style="margin-top:3px;white-space:nowrap">앱 제출 ${sub}/${rs.length}${rv?` · <b style="color:#b45309">주관식 확인 ${rv}</b>`:''}</div>${wsM||wsS?`<div class="note" style="white-space:nowrap">오답지 생성 ${wsM} · 출제 ${wsS}</div>`:''}`;
+    return `<tr><td class="mini">${shortDate(t.date)}</td><td class="t"><b>${esc(t.title)}</b><div>${t.questionCount}문제 | ${esc(t.range||'')}</div></td><td class="mini">${esc(t.classGroup||'')}<br>${(t.branch||'').split(', ').map(brTag).join('')}</td><td class="mini">${esc(names)}</td><td><div style="white-space:nowrap">${st}<span class="note">${avgT}</span></div>${link}</td><td style="white-space:nowrap"><button class="sm pri" style="padding:6px 9px" onclick="openGrade('${t.id}')">채점 / 오답 입력</button> <button class="sm" style="padding:6px 9px;color:var(--bad);border-color:#f3c2bd" onclick="delTest('${t.id}')">출제 취소</button></td></tr>`; }).join('');
   $('asgnote').textContent=list.length?'':'이 기간에 출제한 학습지가 없어요. 「수업 준비」에서 학습지를 만들고 「출제하기」를 눌러 주세요.';
 }
-async function delTest(id){ const t=TESTS.find(x=>x.id===id); if(!confirm(`「${t.title}」(${t.date}) 출제와 학생 오답 기록을 모두 지울까요?`)) return; try{ await FB.deleteTest(id); try{ await FB.deleteTasks(id); }catch(e){ console.warn(e); } toast('지웠어요'); await loadAssignments(); }catch(e){ toast('삭제 실패: '+e.message); } }
+// 출제 취소: 이 출제와 학생별 시험지(앱·학부모 화면)·채점 기록을 모두 지움. 학습지 자체는 목록에 그대로 남아 다시 출제할 수 있음
+async function delTest(id){ const t=TESTS.find(x=>x.id===id); if(!t) return; const rs=RESULTS.filter(r=>r.testId===id); const sub=rs.filter(r=>r.submitted).length, g=rs.filter(r=>r.graded&&!r.absent).length;
+  if(!confirm(`「${t.title}」(${t.date}) 출제를 취소할까요?\n\n· 학생 ${rs.length}명의 앱·학부모 화면에서 이 시험지가 사라져요.\n· 채점·오답 기록도 함께 지워져요.${sub||g?`\n\n⚠️ 이미 답안 제출 ${sub}명 · 채점 ${g}명이 있어요. 지우면 되돌릴 수 없어요.`:''}\n\n학습지는 그대로 남아서 다시 출제할 수 있어요.`)) return;
+  try{ await FB.deleteTest(id); try{ await FB.deleteTasks(id); }catch(e){ console.warn(e); } toast('출제를 취소했어요'); await loadAssignments(); }catch(e){ toast('출제 취소 실패: '+e.message); } }
 // --- 채점
 let G=null; // {test, rows:[{res, wrong:Set, absent}]}
 function openGrade(testId){
