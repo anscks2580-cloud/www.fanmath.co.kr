@@ -1375,6 +1375,14 @@ async function autoWrongSheets(){
   } }finally{ autoWsBusy=false; }
   if(made){ renderWS(); renderAsg(); toast(`오답 시험지 ${made}개를 자동으로 만들었어요 (학습지 목록 맨 위)`); }
 }
+// 출제한 시험지 보기 / 내려받기 — 출제 때 쓴 학습지(디자인 그대로). 학습지를 지웠으면 출제 기록의 문제로 다시 그림
+function showTestPrint(id,dl){ if(REMOTE&&!DB.length){ whenCore(()=>showTestPrint(id,dl)); return; }
+  const t=TESTS.find(x=>x.id===id); if(!t) return;
+  const w=WS.find(x=>x.id&&x.id===t.worksheetId)||{ title:t.title, problemIds:t.problemIds||[], opts:{ title:t.title, author:t.teacherName||'' }, createdAtStr:t.date };
+  if(!(w.problemIds||[]).length){ toast('이 시험지의 문제 정보가 없어요'); return; }
+  needUnits([...new Set(w.problemIds.map(pid=>(byId(pid)||{}).unit).filter(Boolean))],()=>{
+    $('printbody').innerHTML=sheetHTMLFrom(w); $('pv_title').textContent=`${t.title} · ${shortDate(t.date)} 출제`; $('pv_assign').style.display='none';
+    $('printview').classList.add('on'); km($('printbody')); if(dl) setTimeout(()=>window.print(),700); }); }
 function renderAsg(){
   if(!ME){ $('asgrows').innerHTML=''; $('asgnote').textContent='로그인하면 출제한 학습지가 보여요.'; return; }
   const days=+$('asgPeriod').value; const from=days?new Date(Date.now()-days*86400000).toISOString().slice(0,10):'';
@@ -1384,7 +1392,7 @@ function renderAsg(){
     const avg=rs.filter(r=>r.graded&&!r.absent).map(r=>r.percentage); const avgT=avg.length?` 평균 ${Math.round(avg.reduce((a,b)=>a+b,0)/avg.length)}점`:'';
     const sub=rs.filter(r=>r.submitted).length, rv=rs.filter(r=>(r.needReview||[]).length).length, wsM=rs.filter(r=>r.wrongSheetId).length, wsS=rs.filter(r=>r.wrongSheetTestId).length;
     const link=`<div class="note" style="margin-top:3px;white-space:nowrap">앱 제출 ${sub}/${rs.length}${rv?` · <b style="color:#b45309">주관식 확인 ${rv}</b>`:''}</div>${wsM||wsS?`<div class="note" style="white-space:nowrap">오답지 생성 ${wsM} · 출제 ${wsS}</div>`:''}`;
-    return `<tr><td class="mini">${shortDate(t.date)}</td><td class="t"><b>${esc(t.title)}</b><div>${t.questionCount}문제 | ${esc(t.range||'')}</div></td><td class="mini">${esc(t.classGroup||'')}<br>${(t.branch||'').split(', ').map(brTag).join('')}</td><td class="mini">${esc(names)}</td><td><div style="white-space:nowrap">${st}<span class="note">${avgT}</span></div>${link}</td><td style="white-space:nowrap"><button class="sm pri" style="padding:6px 9px" onclick="openGrade('${t.id}')">채점 / 오답 입력</button> <button class="sm" style="padding:6px 9px;color:var(--bad);border-color:#f3c2bd" onclick="delTest('${t.id}')">출제 취소</button></td></tr>`; }).join('');
+    return `<tr><td class="mini">${shortDate(t.date)}</td><td class="t"><b onclick="showTestPrint('${t.id}')" style="cursor:pointer" title="눌러서 시험지 미리보기">${esc(t.title)}</b><div>${t.questionCount}문제 | ${esc(t.range||'')}</div><div style="margin-top:6px;display:flex;gap:4px"><button class="sm" style="padding:4px 9px;white-space:nowrap" onclick="showTestPrint('${t.id}')">미리보기</button><button class="sm" style="padding:4px 9px;white-space:nowrap" onclick="showTestPrint('${t.id}',true)">다운로드</button></div></td><td class="mini">${esc(t.classGroup||'')}<br>${(t.branch||'').split(', ').map(brTag).join('')}</td><td class="mini">${esc(names)}</td><td><div style="white-space:nowrap">${st}<span class="note">${avgT}</span></div>${link}</td><td style="white-space:nowrap"><button class="sm pri" style="padding:6px 9px" onclick="openGrade('${t.id}')">채점 / 오답 입력</button> <button class="sm" style="padding:6px 9px;color:var(--bad);border-color:#f3c2bd" onclick="delTest('${t.id}')">출제 취소</button></td></tr>`; }).join('');
   $('asgnote').textContent=list.length?'':'이 기간에 출제한 학습지가 없어요. 「수업 준비」에서 학습지를 만들고 「출제하기」를 눌러 주세요.';
 }
 // 출제 취소: 이 출제와 학생별 시험지(앱·학부모 화면)·채점 기록을 모두 지움. 학습지 자체는 목록에 그대로 남아 다시 출제할 수 있음
@@ -1438,7 +1446,7 @@ function showGProb(n){ gSel=n; const id=(G.test.problemIds||[])[n-1]; const p=by
 async function saveGrading(){
   const t=G.test, N=t.questionCount;
   const rows=G.rows.map(r=>{ const wrong=r.absent?[]:[...r.wrong].sort((a,b)=>a-b); const score=r.absent?null:N-wrong.length; return { id:r.res.id, data:{ wrong, absent:r.absent, graded:r.graded, score, percentage:r.absent?null:Math.round(score/N*100), total:N, needReview:[...r.review].sort((a,b)=>a-b) } }; });
-  try{ await FB.writeResults(rows); rows.forEach(x=>{ const r=RESULTS.find(y=>y.id===x.id); if(r) Object.assign(r,x.data); }); toast('저장했어요'); renderAsg(); autoWrongSheets(); }catch(e){ toast('저장 실패: '+e.message); }
+  try{ await FB.writeResults(rows); rows.forEach(x=>{ const r=RESULTS.find(y=>y.id===x.id); if(r) Object.assign(r,x.data); }); toast('저장했어요'); closeGrade(); renderAsg(); autoWrongSheets(); }catch(e){ toast('저장 실패: '+e.message); }
 }
 // 오답학습지: 채점한 학생들이 틀린 문제의 변형·유사 문제로 새 학습지 구성 (학생별로)
 function makeWrongSheet(){
