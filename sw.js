@@ -5,6 +5,31 @@
  * - 학부모 앱 알림: 앱이 꺼져 있어도 알림을 받아 표시하고, 누르면 학부모 페이지를 엶
  */
 
+// ── 알림 표시 (2026.11.15) ──
+// 파이어베이스 기본 처리기는 앱 화면이 켜져 있으면 알림창을 띄우지 않고 화면에만 넘김.
+// 아이폰은 「알림창 없이 지나간 푸시」가 몇 번 쌓이면 그 휴대폰의 알림 수신 자체를 끊어 버려서 이후 알림이 영영 안 옴.
+// → 여기서 먼저 받아서 앱이 켜져 있든 꺼져 있든 항상 알림창을 띄우고, 열려 있는 화면에는 「새 알림」 신호를 보냄.
+//   (이 처리기는 파이어베이스 것보다 먼저 등록되어 먼저 실행됨)
+self.addEventListener('push', function (e) {
+  var p = null;
+  try { p = e.data ? e.data.json() : null; } catch (err) { p = null; }
+  if (!p) return;
+  var n = p.notification || {}, d = p.data || {};
+  var title = n.title || d.title;
+  if (!title) return;
+  e.stopImmediatePropagation();
+  var link = (p.fcmOptions && p.fcmOptions.link) || n.click_action || d.link || '/';
+  var opt = { body: n.body || d.body || '', icon: n.icon || '/assets/icons/icon-192.png', badge: n.badge || '/assets/icons/icon-192.png', data: { link: link } };
+  if (n.tag) { opt.tag = n.tag; opt.renotify = true; }
+  e.waitUntil((async function () {
+    await self.registration.showNotification(title, opt);
+    try {
+      var all = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      all.forEach(function (c) { c.postMessage({ type: 'swc-push', title: title, body: opt.body, link: link }); });
+    } catch (err) {}
+  })());
+});
+
 // ── 앱 알림(파이어베이스 메시징) ──
 try {
   importScripts(

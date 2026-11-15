@@ -204,9 +204,54 @@ onAuthStateChanged(auth, async (user) => {
     if (cur === 'notice') markNoticesSeen();
     render();
     pushInit();
+    setTimeout(pNewHwPopup, 400);
   } catch (e) { $app.innerHTML = `<div class="empty">불러오지 못했습니다.<br><small>${esc(e.message)}</small></div>`; }
 });
 
+
+// ══ 새 숙제 팝업 — 학부모 페이지(앱)를 켰을 때 아직 못 본 숙제·시험지를 한 번 띄움 (본 것은 이 휴대폰에 기억, 처음엔 오늘 것만) ══
+const P_NEW_KEY = () => `swc_phw_seen_${child.id}`;
+const pMd = (s) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ''); if (!m) return ''; const d = new Date(+m[1], +m[2] - 1, +m[3]); return `${+m[2]}/${+m[3]}(${'일월화수목금토'[d.getDay()]})`; };
+function pMarkHwSeen() { try { localStorage.setItem(P_NEW_KEY(), JSON.stringify([...homework.map((h) => h.id), ...pSheets.map((t) => t.id)].slice(0, 600))); } catch (e) {} }
+function pNewHwPopup() {
+  if (!child || viewer.role !== 'parent' || document.getElementById('pNewHw')) return;
+  let seen = null; try { const r = localStorage.getItem(P_NEW_KEY()); seen = r ? new Set(JSON.parse(r)) : null; } catch (e) {}
+  const from = seen ? kstDateStr(14) : kstDateStr(0);
+  const hw = homework.filter((h) => !h.absent && String(h.content || '').trim() && (h.date || '') >= from && !(seen && seen.has(h.id)));
+  const linked = new Set(hw.flatMap((h) => (h.sheets || []).map((x) => x.testId)));
+  const sh = pSheets.filter((t) => (t.date || '') >= from && !(seen && seen.has(t.id)) && !linked.has(t.testId));
+  if (!hw.length && !sh.length) { pMarkHwSeen(); return; }
+  const row = (w, c) => `<div style="padding:12px 0;border-top:1px solid #EEE9F7;"><div style="font-size:12px;color:#8A84A3;font-weight:700;">${w}</div><div style="font-size:15px;font-weight:700;line-height:1.5;margin-top:3px;white-space:pre-wrap;word-break:break-word;color:#1E1838;">${c}</div></div>`;
+  const who = (x) => `${pMd(x.date)} · ${esc(x.teacherName || '')}${x.teacherName ? ' 선생님' : ''}${x.dueDate ? ` · <b style="color:#D64545;">${pMd(x.dueDate)}까지</b>` : ''}`;
+  const el = document.createElement('div');
+  el.id = 'pNewHw';
+  el.style.cssText = 'position:fixed;inset:0;z-index:9000;background:rgba(26,18,48,.5);display:flex;align-items:flex-end;justify-content:center;';
+  el.innerHTML = `<div style="width:100%;max-width:560px;background:#fff;border-radius:24px 24px 0 0;padding:18px 20px calc(20px + env(safe-area-inset-bottom));">
+    <div style="font-size:18px;font-weight:800;color:#1E1838;">📝 ${esc(child.name || '')} 학생 새 숙제 ${hw.length + sh.length}건</div>
+    <div style="font-size:13px;color:#8A84A3;margin:3px 0 8px;">선생님이 새로 등록한 숙제입니다.</div>
+    <div style="max-height:46vh;overflow:auto;">${hw.map((h) => row(who(h), esc(h.content))).join('')}${sh.map((t) => row(who(t), `📄 시험지 「${esc(t.title || '')}」 ${t.count || 0}문제`)).join('')}</div>
+    <div style="display:flex;gap:8px;margin-top:14px;"><button id="pNewHwOk" style="flex:1;border:0;border-radius:13px;padding:14px;font-size:15px;font-weight:800;background:#F3F1F9;color:#4A4466;font-family:inherit;">확인</button><button id="pNewHwGo" style="flex:1;border:0;border-radius:13px;padding:14px;font-size:15px;font-weight:800;background:#5B3FA6;color:#fff;font-family:inherit;">숙제 보기</button></div></div>`;
+  const close = (goHw) => { pMarkHwSeen(); el.remove(); if (goHw) { cur = 'homework'; render(); window.scrollTo({ top: 0 }); } };
+  el.addEventListener('click', (e) => { if (e.target === el) close(false); });
+  document.body.appendChild(el);
+  document.getElementById('pNewHwOk').onclick = () => close(false);
+  document.getElementById('pNewHwGo').onclick = () => close(true);
+}
+// 숙제·시험지만 다시 불러와서 새 숙제 팝업 확인 (알림이 왔을 때 · 앱으로 돌아왔을 때)
+let pHwLoadAt = Date.now();
+async function pRefreshHw() {
+  if (!child || viewer.role !== 'parent') return;
+  pHwLoadAt = Date.now();
+  try {
+    const hs = await getDocs(query(collection(db, 'homeworkLogs'), where('studentIds', 'array-contains', child.id)));
+    homework = []; hs.forEach((d) => homework.push({ id: d.id, ...d.data() })); homework.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    try { const sh = await getDocs(query(collection(db, 'sheetTasks'), where('studentId', '==', child.id))); pSheets = []; sh.forEach((d) => pSheets.push({ id: d.id, ...d.data() })); pSheets.sort((a, b) => (b.date || '').localeCompare(a.date || '')); } catch (e) {}
+    if (!document.querySelector('textarea:focus, input:focus')) render();
+    pNewHwPopup();
+  } catch (e) { console.warn('[새 숙제 확인]', e.message); }
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - pHwLoadAt > 60000) pRefreshHw(); });
+try { navigator.serviceWorker && navigator.serviceWorker.addEventListener('message', (e) => { if (e.data && e.data.type === 'swc-push') pRefreshHw(); }); } catch (e) {}
 
 // ══ 출결: 최근 14일 등원·하원 (문서 id = 학생uid_날짜) ══
 function kstDateStr(offsetDays) {
