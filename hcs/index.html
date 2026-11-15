@@ -1260,8 +1260,8 @@ function fillStep3Defaults(){
 }
 function sheetOpts(){ return {title:$('f_title').value,author:$('f_author').value,color,fs:$('f_fs').value+'px',gap:$('f_gap').value+'px',sgap:$('f_sgap').value+'px',space:$('f_space').checked,showType:$('f_type').checked,key:$('f_key').checked,sol:$('f_sol').checked,solq:$('f_solq').checked,pgno:$('f_pgno').checked,solref:$('f_solref').checked}; }
 function sheetHTML(){ return sheetHTMLFrom({problemIds:SEL,opts:sheetOpts(),createdAtStr:todayStr()}); }
-// 빠른정답: 한 줄에 짧은 답 3개, 좀 긴 답 2개, 아주 긴 답 1개 (6칸 기준 2·3·6칸), 번호 순서 유지
-function keyW(ans){ const t=plain(String(ans||'')).replace(/\\(left|right|quad|qquad|displaystyle|text|mathrm)/g,'').replace(/\\[a-zA-Z]+/g,'#').replace(/[{}\s]/g,''); const n=t.length; return n<=14?2:n<=30?3:6; }
+// 빠른정답: 한 줄을 세 칸으로 — 짧은 답 1칸, 좀 긴 답 2칸, 아주 긴 답 3칸(6 기준 2·4·6), 번호 순서 유지
+function keyW(ans){ const t=plain(String(ans||'')).replace(/\\(left|right|quad|qquad|displaystyle|text|mathrm)/g,'').replace(/\\[a-zA-Z]+/g,'#').replace(/[{}\s]/g,''); const n=t.length; return n<=14?2:n<=30?4:6; }   // 세 칸 기준(2·4·6) — 세로줄이 모든 줄에서 맞도록
 function keyRows(sel){ let out='', row=[], used=0;
   const flush=()=>{ if(!row.length) return; if(used<6) row[row.length-1].w+=6-used; out+='<div class="kr">'+row.map(c=>`<div class="ki w${c.w===2?1:c.w===6?3:0}" style="grid-column:span ${c.w}"><b>${String(c.i+1).padStart(2,'0')}</b><span>${aK(c.p.answer)}</span></div>`).join('')+'</div>'; row=[]; used=0; };
   sel.forEach((p,i)=>{ const w=keyW(p.answer); if(used+w>6) flush(); row.push({p,i,w}); used+=w; if(used>=6) flush(); }); flush(); return out; }
