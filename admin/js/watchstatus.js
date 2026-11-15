@@ -90,6 +90,24 @@ async function loadWatchStatus(force) {
       });
     });
   });
+    // 2학기 기말고사 내신 자료실(/exam)에서 학원 학생이 본 영상 — 학생 앱·로그인 상태로 본 것만 기록됨 (videoId가 exam_ 로 시작)
+    //   배정 강의가 아니라서 「본 영상」만 줄로 나옴(안 본 영상·안 본 학생은 목록에 없음)
+    {
+      const EXAM = '기말고사_자료실', byId = new Map(studentsCache.map(s => [s.id, s])), seen = new Set();
+      wsProgressCache.forEach(p => {
+        if (!String(p.videoId || '').startsWith('exam_')) return;
+        const s = byId.get(p.studentUid); if (!s) return;
+        seen.add(p.videoId);
+        wsAllRows.push({
+          courseTag: EXAM,
+          studentUid: s.id, studentName: s.name || '', branch: s.branch || '', grade: s.grade || '',
+          teacherName: s.teacherName || '',
+          videoId: p.videoId, videoTitle: (p.videoTitle || '기말고사 영상') + (p.duration ? '' : ` (${Math.max(1, Math.round((p.playedSeconds || 0) / 60))}분 시청)`), tag: EXAM,
+          percent: p.percent || 0, completed: !!p.completed, lastWatchedAt: p.lastWatchedAt || null,
+        });
+      });
+      if (seen.size) courseMap.set(EXAM, { tag: EXAM, label: '2학기 기말고사 내신 자료실 (학생이 본 영상)', cat: '기말고사', order: 100000, videoCount: seen.size });
+    }
   wsCourses = [...courseMap.values()].sort((x, y) => x.order - y.order || x.label.localeCompare(y.label, 'ko'));
 
   // 강의 선택 옵션 (카테고리별 묶음)

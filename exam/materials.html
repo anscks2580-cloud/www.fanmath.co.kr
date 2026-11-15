@@ -1107,6 +1107,8 @@ function openPlayerModal(src, title){
   document.getElementById('vimeoModalTitle').textContent = title || '';
   document.getElementById('vimeoModal').style.display = 'flex';
   document.body.style.overflow = 'hidden';
+  // 송우찬수학학원 학생(로그인)이 본 영상은 시청 기록으로 남김 — app-bridge.js
+  try{ window.examTrack && window.examTrack.open(/player\.vimeo\.com/.test(src) ? 'vimeo' : 'youtube', src, title); }catch(e){}
 }
 // 선생님이 직접 올린 영상 파일 재생
 function openFileVideoModal(url, title){
@@ -1115,6 +1117,7 @@ function openFileVideoModal(url, title){
   frame.src = ''; frame.style.display = 'none';
   video.style.display = '';
   video.src = url;
+  try{ window.examTrack && window.examTrack.open('file', url, title); }catch(e){}
   video.play().catch(()=>{});
   document.getElementById('vimeoModalTitle').textContent = title || '';
   document.getElementById('vimeoModal').style.display = 'flex';
@@ -1125,6 +1128,7 @@ function closeVimeoModal(){
   const modal = document.getElementById('vimeoModal');
   const frame = document.getElementById('vimeoModalFrame');
   const video = document.getElementById('fileVideoEl');
+  try{ window.examTrack && window.examTrack.close(); }catch(e){}
   modal.style.display = 'none';
   frame.src = ''; // 닫을 때 재생 중지
   video.pause(); video.removeAttribute('src'); video.load();
@@ -1238,5 +1242,7 @@ async function loadData(){
 loadData();
 </script>
 
+<!-- 송우찬수학학원 학생 앱 연결: 로그인한 학원 학생은 인증번호 없이 입장 · 영상 시청 기록 -->
+<script type="module" src="app-bridge.js?v=1794711600"></script>
 </body>
 </html>

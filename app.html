@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>송우찬수학 · 학생</title>
+<title>송우찬수학학원</title>
 <link rel="icon" href="swc-logo.svg">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#4B3391">
@@ -102,6 +102,10 @@ button { font-family:inherit; cursor:pointer; }
 .pbar { height:6px; border-radius:99px; background:var(--p-soft); overflow:hidden; margin-top:10px; }
 .pbar i { display:block; height:100%; border-radius:99px; background:linear-gradient(90deg, #7C5CD6, var(--g)); }
 .pbar.done i { background:var(--ok); }
+.exam-go { display:flex; align-items:center; gap:12px; width:100%; border:0; text-align:left; background:linear-gradient(135deg,#5B3FA6,#7C5CD6); color:#fff; border-radius:16px; padding:14px 16px; box-shadow:0 4px 14px rgba(91,63,166,.22); }
+.exam-go .em { font-size:26px; } .exam-go .t1 { font-size:15.5px; font-weight:800; } .exam-go .t2 { font-size:12px; opacity:.85; margin-top:2px; } .exam-go .ar { margin-left:auto; font-size:20px; opacity:.8; }
+.exv { padding:11px 0; } .exv + .exv { border-top:1px solid var(--line); } .exv .t { font-size:14px; font-weight:700; line-height:1.35; }
+.exv .m { font-size:11.5px; color:var(--mute); margin-top:3px; display:flex; gap:8px; flex-wrap:wrap; } .exv .pbar { margin-top:7px; }
 
 /* 학습 통계 */
 .stats { display:grid; grid-template-columns:1fr 1px 1fr 1px 1fr; align-items:center; text-align:center; }
@@ -270,7 +274,7 @@ button { font-family:inherit; cursor:pointer; }
   <section class="page" id="pg-home">
     <div class="top">
       <img class="logo" src="swc-logo.svg" alt="">
-      <h1>송우찬수학</h1>
+      <h1>송우찬수학학원</h1>
       <div class="r"><button class="icon-btn" onclick="go('hw')" aria-label="숙제">📝<span class="dot" id="hwDot" style="display:none"></span></button></div>
     </div>
     <div class="wrap">
@@ -281,6 +285,10 @@ button { font-family:inherit; cursor:pointer; }
         <div id="hGoal"></div>
       </div>
       <div class="quick" id="hQuick"></div>
+      <div class="sec">
+        <div class="sec-h"><h2>2학기 기말고사 내신</h2><button class="more" onclick="openExam()">자료실 열기 ›</button></div>
+        <div id="hExam"></div>
+      </div>
       <div class="sec">
         <div class="sec-h"><h2>최근 수강 강의</h2><button class="more" onclick="go('class')">내 강의실 ›</button></div>
         <div id="hRecent"></div>
@@ -409,6 +417,8 @@ let sheets = [];             // sheetTasks — HCS에서 출제된 시험지(답
 let checks = {};             // logId -> { done, checkedAt }
 let study = {};              // 'YYYY-MM-DD' -> 초
 let cur = 'home';
+let examProg = [];          // 기말고사 내신 자료실(/exam)에서 본 영상 기록 — videoProgress 중 videoId가 exam_ 로 시작하는 것
+let examAll = false;
 let classView = { course: null, filter: '전체' };
 let hwView = 'todo';
 
@@ -451,8 +461,10 @@ async function loadAll() {
   const all = []; vs.forEach((d) => all.push({ id: d.id, ...d.data() }));
   myVideos = filterMine(all);
   buildCourses();
-  prog.clear();
-  if (ps) ps.forEach((d) => { const x = d.data(); prog.set(x.videoId, {
+  prog.clear(); examProg = [];
+  if (ps) ps.forEach((d) => { const x = d.data();
+    if (String(x.videoId || '').startsWith('exam_')) examProg.push({ title: x.videoTitle || '', percent: x.percent || 0, completed: !!x.completed, played: x.playedSeconds || 0, at: x.lastWatchedAt?.toMillis ? x.lastWatchedAt.toMillis() : 0, kind: x.examKind || '' });
+    prog.set(x.videoId, {
     percent: x.percent || 0, completed: isFullyWatched(x.maxWatchedSeconds || 0, x.duration || 0),
     maxWatchedSeconds: x.maxWatchedSeconds || 0, lastPositionSeconds: x.lastPositionSeconds || 0, duration: x.duration || 0,
     updatedAt: x.lastWatchedAt?.toMillis ? x.lastWatchedAt.toMillis() : 0,
@@ -573,7 +585,8 @@ function renderBadges() {
   const d = $('hwDot'); d.textContent = n; d.style.display = n ? '' : 'none';
 }
 
-// ── 다음 수업 날짜 (등원 요일 기준) ──
+// ── 내 수업 시간: 학원 홈페이지 학생 정보의 등원 요일 (예: 월수금, 화목토) ──
+function classDaysText() { const d = classDays(); return ['월', '화', '수', '목', '금', '토', '일'].filter((x) => d.includes(x)).join(''); }
 function classDays() {
   const d = stu.days;
   const arr = Array.isArray(d) ? d : String(d || '').split(/[\s,·/]+/);
@@ -603,8 +616,10 @@ function renderHome() {
   const wk = weekSeconds(), wt = hmText(wk);
   $('hQuick').innerHTML = `
     <button class="qk" onclick="go('hw')"><div class="ic">📝</div><div class="k">오늘 숙제</div><div class="v ${th.length && thDone < th.length ? 'r' : th.length ? 'ok' : ''}">${th.length ? `${thDone}/${th.length}` : '없음'}</div></button>
-    <button class="qk" onclick="go('my')"><div class="ic">📅</div><div class="k">다음 수업</div><div class="v p">${nc ? (nc.inDays === 0 ? '오늘' : nc.inDays === 1 ? '내일' : mdw(nc.date)) : '-'}</div></button>
+    <button class="qk" onclick="go('my')"><div class="ic">📅</div><div class="k">내 수업 시간</div><div class="v p">${classDaysText() || '-'}</div></button>
     <button class="qk" onclick="go('my')"><div class="ic">⏱</div><div class="k">이번 주 학습</div><div class="v">${wt.h ? wt.h + '시간 ' : ''}${wt.m}분</div></button>`;
+
+  renderExam();
 
   // 최근 수강 강의
   const recent = myVideos.filter((v) => prog.has(v.id)).sort((a, b) => (prog.get(b.id).updatedAt || 0) - (prog.get(a.id).updatedAt || 0)).slice(0, 6);
@@ -631,6 +646,26 @@ function renderHome() {
   $('hHwTitle').textContent = title;
   const ps = pendingSheets().slice(0, 3);
   $('hHw').innerHTML = (list.length ? list.map(hwRow).join('') : (ps.length ? '' : '<div class="empty">오늘은 등록된 숙제가 없어요 🙌</div>')) + ps.map(sheetRow).join('');
+}
+// ── 2학기 기말고사 내신 자료실 (/exam) ──
+//   학원 학생은 인증번호 없이 바로 들어가고, 거기서 본 영상은 시청 기록(videoProgress · studyLogs)에 남음 (exam/app-bridge.js)
+window.openExam = function () {
+  try { sessionStorage.setItem('examAuthCode', 'SWC2026'); sessionStorage.setItem('examAuthRole', 'student'); sessionStorage.setItem('examFromApp', '1'); } catch (e) {}
+  location.href = 'exam/index.html';
+};
+window.toggleExamAll = function () { examAll = !examAll; renderExam(); };
+function renderExam() {
+  const el = $('hExam'); if (!el) return;
+  const list = examProg.slice().sort((a, b) => b.at - a.at);
+  const tot = hmText(list.reduce((n, x) => n + (x.played || 0), 0));
+  const show = examAll ? list : list.slice(0, 3);
+  el.innerHTML = `<button class="exam-go" onclick="openExam()"><div class="em">📚</div><div><div class="t1">기말고사 내신 자료실</div><div class="t2">인증번호 없이 바로 들어가요 · 본 영상은 기록돼요</div></div><div class="ar">›</div></button>`
+    + (list.length ? `<div class="card" style="margin-top:8px;padding-top:6px;padding-bottom:6px;">
+        <div style="font-size:12px;color:var(--mute);font-weight:700;padding:6px 0 2px;">내가 본 영상 ${list.length}개 · 모두 ${tot.h ? tot.h + '시간 ' : ''}${tot.m}분</div>
+        ${show.map((x) => `<div class="exv"><div class="t">${esc(x.title || '기말고사 영상')}</div>
+          <div class="m"><span>${x.completed ? '✅ 다 봤어요' : x.percent ? `시청률 ${x.percent}%` : `${Math.max(1, Math.round((x.played || 0) / 60))}분 시청`}</span>${x.at ? `<span>${ymd(new Date(x.at))}</span>` : ''}</div>
+          ${x.percent || x.completed ? `<div class="pbar ${x.completed ? 'done' : ''}"><i style="width:${x.completed ? 100 : x.percent}%"></i></div>` : ''}</div>`).join('')}
+        ${list.length > 3 ? `<button onclick="toggleExamAll()" style="width:100%;border:0;background:transparent;color:var(--p);font-weight:800;font-size:12.5px;padding:10px 0 6px;">${examAll ? '접기' : `전체 ${list.length}개 보기`}</button>` : ''}</div>` : '');
 }
 function weekSeconds() {
   const now = new Date(); const mon = addDays(now, -((now.getDay() + 6) % 7));
@@ -756,8 +791,7 @@ function renderMy() {
         <div><div class="k">소속</div><div class="v ${br.includes('산본') ? 'br-s' : 'br-p'}">${esc(br || '-')}</div></div>
         <div><div class="k">반</div><div class="v">${esc(stu.classGroup || '-')}</div></div>
         <div><div class="k">담당 선생님</div><div class="v">${stu.teacherName ? esc(stu.teacherName) + ' 선생님' : '-'}</div></div>
-        <div><div class="k">수업 요일</div><div class="v">${days.length ? esc(days.join('·')) : '-'}</div></div>
-        <div style="grid-column:1/-1;"><div class="k">다음 수업</div><div class="v" style="color:var(--p)">${nc ? `${mdw(nc.date)}${nc.inDays === 0 ? ' · 오늘' : nc.inDays === 1 ? ' · 내일' : ` · ${nc.inDays}일 뒤`}` : '-'}</div></div>
+        <div><div class="k">내 수업 시간</div><div class="v" style="color:var(--p)">${classDaysText() || '-'}</div></div>
       </div>
     </div>
     <div class="sec"><div class="sec-h"><h2>🎓 나의 목표</h2><button class="more" onclick="openGoal()">${stu.goalUniv ? '수정' : '정하기'} ›</button></div>
@@ -986,19 +1020,32 @@ async function pushSaveToken() {
     onMessage(messaging, async (m) => {
       const n = m.notification || m.data || {};
       toast((n.title || '알림') + (n.body ? ' · ' + n.body : ''));
+      // 앱을 켜 놓고 보는 중에는 휴대폰이 알림창을 띄우지 않으므로 직접 띄움
+      try { const r = await navigator.serviceWorker.getRegistration('/'); if (r) await r.showNotification(n.title || '알림', { body: n.body || '', icon: '/assets/icons/icon-192.png', data: { link: (m.data && m.data.link) || '/app.html' } }); } catch (e) {}
       try { await loadAll(); render(); } catch (e) {}
     });
   }
 }
 function renderPush() {
   const box = $('pushBox'); if (!box) return;
-  const html = pushState === 'on' ? `<div class="push on">🔔 <span><b>알림 켜짐</b> · 숙제가 등록되면 알려드려요.</span></div>`
+  const html = pushState === 'on' ? `<div class="push on">🔔 <span><b>알림 켜짐</b> · 숙제·시험지가 나오면 알려드려요.</span><button onclick="testPush(this)">알림 테스트</button></div>`
     : pushState === 'off' ? `<div class="push">🔔 <span>숙제가 등록되면 <b>앱 알림</b>으로 받아 보세요.</span><button onclick="enablePush()">알림 켜기</button></div>`
     : pushState === 'denied' ? `<div class="push">🔕 <span>알림이 꺼져 있어요. 휴대폰 <b>설정 › 알림</b>에서 학원 앱 알림을 허용해 주세요.</span></div>`
     : pushState === 'error' ? `<div class="push">⚠️ <span>알림 설정 오류: ${esc(pushErr)}</span><button onclick="enablePush()">다시 시도</button></div>`
     : pushState === 'working' ? `<div class="push">⏳ <span>알림 설정 중...</span></div>` : '';
   box.innerHTML = html;
 }
+// 알림 테스트 — 서버가 이 휴대폰으로 알림 1건을 보냄 (서버 함수 appNotifyTest)
+window.testPush = async (btn) => {
+  btn.disabled = true; const old = btn.textContent; btn.textContent = '보내는 중...';
+  try {
+    await pushSaveToken();
+    const { getFunctions, httpsCallable } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js');
+    const r = (await httpsCallable(getFunctions(app, 'asia-northeast3'), 'appNotifyTest')({})).data || {};
+    toast(r.ok ? '알림을 보냈어요. 잠시 뒤 알림이 뜨는지 확인해 보세요.' : r.why === 'no-token' ? '이 휴대폰 알림 주소가 저장되지 않았어요. 앱을 껐다 켠 뒤 다시 해 보세요.' : '알림을 보내지 못했어요 (' + (r.why || '오류') + '). 앱을 껐다 켠 뒤 다시 해 보세요.');
+  } catch (e) { toast('알림 테스트 실패: ' + (e.message || e)); }
+  btn.disabled = false; btn.textContent = old;
+};
 window.enablePush = async () => {
   try {
     const perm = await Notification.requestPermission();
