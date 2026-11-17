@@ -1,23 +1,29 @@
 @echo off
-chcp 65001 >nul
+setlocal
+title ¼Û¿ìÂù¼öÇĞÇĞ¿ø ¾Û ÆÄÀÏ ¸¸µé±â
 echo ================================================
-echo  ì†¡ìš°ì°¬ìˆ˜í•™í•™ì› ì•± - í”Œë ˆì´ìŠ¤í† ì–´ì— ì˜¬ë¦´ ì•± íŒŒì¼(.aab) ë§Œë“¤ê¸°
+echo  ¼Û¿ìÂù¼öÇĞÇĞ¿ø ¾Û - ÇÃ·¹ÀÌ½ºÅä¾î¿¡ ¿Ã¸± ¾Û ÆÄÀÏ(.aab) ¸¸µé±â
 echo ================================================
-cd /d "%~dp0android"
-if not exist "songmath-upload.jks" (
-  echo [ì˜¤ë¥˜] android í´ë”ì— ì„œëª… ì—´ì‡ (songmath-upload.jks)ê°€ ì—†ìŠµë‹ˆë‹¤.
-  pause & exit /b 1
-)
-if exist "C:\Program Files\Android\Android Studio\jbr\bin\java.exe" set "JAVA_HOME=C:\Program Files\Android\Android Studio\jbr"
-call gradlew.bat bundleRelease
-if errorlevel 1 (
-  echo.
-  echo [ì‹¤íŒ¨] ìœ„ ì˜¤ë¥˜ ë‚´ìš©ì„ ìº¡ì²˜í•´ì„œ ë³´ë‚´ ì£¼ì„¸ìš”.
-  pause & exit /b 1
-)
-if not exist "..\ìŠ¤í† ì–´" mkdir "..\ìŠ¤í† ì–´"
-copy /Y "app\build\outputs\bundle\release\app-release.aab" "..\ìŠ¤í† ì–´\ì†¡ìš°ì°¬ìˆ˜í•™í•™ì›_í”Œë ˆì´ìŠ¤í† ì–´.aab" >nul
 echo.
-echo ì™„ë£Œ! _app\ìŠ¤í† ì–´\ì†¡ìš°ì°¬ìˆ˜í•™í•™ì›_í”Œë ˆì´ìŠ¤í† ì–´.aab íŒŒì¼ì„ í”Œë ˆì´ ì½˜ì†”ì— ì˜¬ë¦¬ë©´ ë©ë‹ˆë‹¤.
-explorer "..\ìŠ¤í† ì–´"
+cd /d "%~dp0android"
+if not exist "songmath-upload.jks" goto nokey
+if exist "C:\Program Files\Android\Android Studio\jbr\bin\java.exe" set "JAVA_HOME=C:\Program Files\Android\Android Studio\jbr"
+echo ¸¸µå´Â ÁßÀÔ´Ï´Ù. Ã³À½¿¡´Â ¸î ºĞ °É·Á¿ä...
+echo.
+call gradlew.bat bundleRelease
+if errorlevel 1 goto fail
+if not exist "%~dp0½ºÅä¾î" mkdir "%~dp0½ºÅä¾î"
+copy /Y "app\build\outputs\bundle\release\app-release.aab" "%~dp0½ºÅä¾î\¼Û¿ìÂù¼öÇĞÇĞ¿ø_ÇÃ·¹ÀÌ½ºÅä¾î.aab" >nul
+echo.
+echo ¿Ï·á! _app\½ºÅä¾î Æú´õÀÇ ¼Û¿ìÂù¼öÇĞÇĞ¿ø_ÇÃ·¹ÀÌ½ºÅä¾î.aab ¸¦ ÇÃ·¹ÀÌ ÄÜ¼Ö¿¡ ¿Ã¸®¸é µË´Ï´Ù.
+start "" explorer "%~dp0½ºÅä¾î"
+goto end
+:nokey
+echo [¿À·ù] android Æú´õ¿¡ ¼­¸í ¿­¼è(songmath-upload.jks)°¡ ¾ø½À´Ï´Ù.
+goto end
+:fail
+echo.
+echo [½ÇÆĞ] À§ ¿À·ù ³»¿ëÀ» Ä¸Ã³ÇØ¼­ º¸³» ÁÖ¼¼¿ä.
+:end
+echo.
 pause
