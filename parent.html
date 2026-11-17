@@ -128,7 +128,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
 <script src="/pwa.js?v=10" defer></script>
-<script src="native-app.js?v=1794920000"></script>
+<script src="native-app.js?v=1794930000"></script>
 </head>
 <body>
 <div class="wrap" id="app"><div class="empty">불러오는 중...</div></div>
@@ -643,6 +643,7 @@ function pushHtml() {
     : busy ? '알림 설정 중이에요…'
     : pushState === 'denied' ? '휴대폰에서 알림이 막혀 있어요. 휴대폰 설정 › 애플리케이션 › 송우찬수학학원 › 알림을 켠 뒤 앱을 다시 열어 주세요.'
     : pushState === 'error' ? '알림을 켜지 못했어요. 스위치를 다시 눌러 주세요. ' + esc(pushErr)
+    : pushState === 'unsupported' && window.SWCNative && window.SWCNative.is ? '앱 알림 기능을 불러오지 못했어요. 앱을 완전히 껐다가 다시 열어 주세요. ' + esc(window.SWCNative.diag ? window.SWCNative.diag() : '')
     : pushState === 'unsupported' ? '이 화면에서는 알림을 받을 수 없어요. 홈페이지 첫 화면의 앱 다운로드로 앱을 설치해서 이용해 주세요.'
     : `꺼져 있어요. 켜면 ${what}을 휴대폰 알림으로 받아요.`;
   const canToggle = pushState !== 'unsupported' && pushState !== 'denied' && !busy;

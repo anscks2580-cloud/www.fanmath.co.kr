@@ -278,7 +278,7 @@ button { font-family:inherit; cursor:pointer; }
 .toast { position:fixed; left:50%; bottom:calc(96px + var(--safe-b)); transform:translateX(-50%); z-index:300; background:var(--p-dd); color:#fff; font-size:13.5px; font-weight:700; padding:11px 18px; border-radius:99px; box-shadow:0 8px 24px rgba(26,18,48,.3); opacity:0; pointer-events:none; transition:opacity .2s; white-space:nowrap; }
 .toast.on { opacity:1; }
 </style>
-<script src="native-app.js?v=1794920000"></script>
+<script src="native-app.js?v=1794930000"></script>
 </head>
 <body>
 <div class="app" id="app">
@@ -1085,6 +1085,7 @@ function renderPush() {
     : busy ? '알림 설정 중이에요…'
     : pushState === 'denied' ? '휴대폰에서 알림이 막혀 있어요. 휴대폰 <b style="font-size:inherit">설정 › 애플리케이션 › 송우찬수학학원 › 알림</b>을 켠 뒤 앱을 다시 열어 주세요.'
     : pushState === 'error' ? '알림 설정 오류: ' + esc(pushErr)
+    : pushState === 'unsupported' && window.SWCNative && window.SWCNative.is ? '앱 알림 기능을 불러오지 못했어요. 앱을 완전히 껐다가 다시 열어 주세요.<br><span style="font-size:11px;opacity:.7">' + esc(window.SWCNative.diag ? window.SWCNative.diag() : '') + '</span>'
     : pushState === 'unsupported' ? (isIOS ? '아이폰은 <b style="font-size:inherit">홈 화면에 추가한 학원 앱</b>으로 열어야 알림을 받을 수 있어요.' : '이 화면에서는 알림을 받을 수 없어요. 학원 앱을 설치해서 열어 주세요.')
     : '꺼져 있어요. 켜면 숙제·시험지가 나올 때 알려드려요.';
   const canToggle = pushState !== 'unsupported' && pushState !== 'denied' && !busy;

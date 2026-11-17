@@ -37,7 +37,7 @@
   }
   function dataOf(n) { var d = (n && n.data) || {}; if (typeof d === 'string') { try { d = JSON.parse(d); } catch (e) { d = {}; } } return d; }
 
-  var listening = false;
+  var listening = false, lastErr = '';
   function listen() {
     var FM = plugin(); if (!FM || listening) return; listening = true;
     try {
@@ -59,9 +59,13 @@
     platform: platform,
     // 'granted' | 'denied' | 'prompt' | 'unsupported'
     permission: async function () {
-      var FM = plugin(); if (!FM) return 'unsupported';
-      try { var p = await FM.checkPermissions(); return p.receive === 'granted' ? 'granted' : p.receive === 'denied' ? 'denied' : 'prompt'; } catch (e) { return 'unsupported'; }
+      // 앱 연결이 조금 늦게 준비되는 경우 대비: 최대 3초 기다림
+      for (var i = 0; i < 15 && !plugin(); i++) await new Promise(function (r) { setTimeout(r, 200); });
+      var FM = plugin(); if (!FM) { lastErr = window.Capacitor ? '알림 기능 없음' : '앱 연결 없음'; return 'unsupported'; }
+      try { var p = await FM.checkPermissions(); lastErr = ''; return p.receive === 'granted' ? 'granted' : p.receive === 'denied' ? 'denied' : 'prompt'; } catch (e) { lastErr = (e && e.message) || String(e); return 'unsupported'; }
     },
+    // 문제 확인용 한 줄 (알림을 쓸 수 없을 때 화면 아래 작게 표시)
+    diag: function () { var C2 = window.Capacitor; return '앱 판단 ' + (is ? 'O' : 'X') + ' · 연결 ' + (C2 ? 'O' : 'X') + ' · 정식 ' + (C2 && C2.isNativePlatform && C2.isNativePlatform() ? 'O' : 'X') + ' · 알림 ' + (plugin() ? 'O' : 'X') + (lastErr ? ' · ' + lastErr : ''); },
     // 알림 주소(토큰) — ask=true면 처음 한 번 허용을 물어봄. 허용 안 되면 null
     token: async function (ask) {
       var FM = plugin(); if (!FM) return null;
