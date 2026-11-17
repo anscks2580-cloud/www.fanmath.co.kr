@@ -544,7 +544,10 @@ window.pAskDelete = async () => {
 // 화면 맨 아래: 개인정보처리방침 · 계정 삭제 요청 (학부모 본인 로그인일 때만)
 { const __pRender = render;
   render = function () { __pRender(); try { if (viewer && viewer.role === 'parent' && !isTeacherView()) { const f = document.createElement('div'); f.style.cssText = 'text-align:center;font-size:12px;color:var(--muted);margin:22px 0 10px;'; f.innerHTML = '<a href="privacy.html" style="color:var(--muted);">개인정보처리방침</a> · <button onclick="pAskDelete()" style="border:0;background:none;color:var(--muted);font-size:12px;text-decoration:underline;font-family:inherit;padding:0;">계정 삭제 요청</button>'; $app.appendChild(f); } } catch (e) {} }; }
-window.pLogout = async () => { await signOut(auth); location.replace('login.html'); };
+window.pLogout = async () => {
+  // 이 휴대폰에서 로그아웃 → 이 계정 알림이 이 휴대폰으로 더 오지 않게 알림 주소 지움
+  try { if (savedFcm && me && viewer && viewer.role === 'parent') await updateDoc(doc(db, 'parents', me.uid), { fcmToken: null }); } catch (e) {}
+  await signOut(auth); location.replace('login.html'); };
 
 const tabDot = (type) => comments.some((c) => c.targetType === type && (isTeacherView() ? (c.authorRole === 'parent' && !c.readByTeacher) : (c.authorRole === 'teacher' && !c.readByParent))) ? ' <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#C8541F;vertical-align:middle;margin-left:2px;"></span>' : '';
 // ══ 앱 알림(등원·하원·숙제·주간성취도·월간보고서·선생님 답글·공지) ══

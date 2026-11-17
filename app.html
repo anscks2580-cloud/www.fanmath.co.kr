@@ -846,7 +846,10 @@ window.askDelete = async () => {
     alert('삭제 요청이 접수됐어요. 학원에서 확인 후 처리하고 연락드릴게요.');
   } catch (e) { alert('요청하지 못했어요: ' + e.message + '\n학원(평촌관 031-386-8899 · 산본관 031-346-8899)으로 연락해 주세요.'); }
 };
-window.logout = async () => { if (!confirm('로그아웃할까요?')) return; await signOut(auth); location.replace('login.html?app=1'); };
+window.logout = async () => { if (!confirm('로그아웃할까요?')) return;
+  // 이 휴대폰에서 로그아웃 → 이 계정 알림이 이 휴대폰으로 더 오지 않게 알림 주소 지움 (다른 계정으로 로그인해도 섞이지 않음)
+  try { if (stu && stu.fcmToken) await updateDoc(doc(db, 'students', me.uid), { fcmToken: null }); } catch (e) {}
+  await signOut(auth); location.replace('login.html?app=1'); };
 
 // ══════════════════════════════════════
 // 목표 대학 (학생이 직접 입력)

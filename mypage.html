@@ -106,7 +106,11 @@ onAuthStateChanged(auth, async (user) => {
   me = user;
   try {
     const s = await getDoc(doc(db, 'students', user.uid));
-    if (!s.exists()) { $app.innerHTML = '<div class="empty">학생 계정 전용 페이지입니다.<br><a href="index.html" style="color:var(--accent);">홈으로</a></div>'; return; }
+    if (!s.exists()) {
+      // 학부모가 학생용 알림을 눌러 들어온 경우 등 → 학부모 화면으로
+      try { if ((await getDoc(doc(db, 'parents', user.uid))).exists()) { location.replace('parent.html'); return; } } catch (e) {}
+      $app.innerHTML = '<div class="empty">학생 계정 전용 페이지입니다.<br><a href="index.html" style="color:var(--accent);">홈으로</a></div>'; return;
+    }
     stu = { id: user.uid, ...s.data() };
     if (stu.status === '퇴원') { $app.innerHTML = '<div class="empty">퇴원 처리된 계정입니다. 학원에 문의해 주세요.</div>'; try { await signOut(auth); } catch (e) {} return; }
     savedFcm = stu.fcmToken || null;
