@@ -65,7 +65,7 @@
       try { var p = await FM.checkPermissions(); lastErr = ''; return p.receive === 'granted' ? 'granted' : p.receive === 'denied' ? 'denied' : 'prompt'; } catch (e) { lastErr = (e && e.message) || String(e); return 'unsupported'; }
     },
     // 문제 확인용 한 줄 (알림을 쓸 수 없을 때 화면 아래 작게 표시)
-    diag: function () { var C2 = window.Capacitor; return '앱 판단 ' + (is ? 'O' : 'X') + ' · 연결 ' + (C2 ? 'O' : 'X') + ' · 정식 ' + (C2 && C2.isNativePlatform && C2.isNativePlatform() ? 'O' : 'X') + ' · 알림 ' + (plugin() ? 'O' : 'X') + (lastErr ? ' · ' + lastErr : ''); },
+    diag: function () { var C2 = window.Capacitor; return '앱 판단 ' + (is ? 'O' : 'X') + ' · 연결 ' + (C2 ? 'O' : 'X') + ' · 정식 ' + (C2 && C2.isNativePlatform && C2.isNativePlatform() ? 'O' : 'X') + ' · 알림 ' + (plugin() ? 'O' : 'X') + (lastErr ? ' · ' + lastErr : '') + ' · 주입 ' + (window.WEBVIEW_SERVER_URL ? 'O' : 'X') + ' · 통로 ' + (window.androidBridge ? 'O' : 'X') + ' · 워커 ' + (navigator.serviceWorker && navigator.serviceWorker.controller ? 'O' : 'X') + ' · ' + location.origin; },
     // 알림 주소(토큰) — ask=true면 처음 한 번 허용을 물어봄. 허용 안 되면 null
     token: async function (ask) {
       var FM = plugin(); if (!FM) return null;
