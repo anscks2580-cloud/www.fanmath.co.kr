@@ -334,8 +334,17 @@ service cloud.firestore {
     match /appStatus/{uid} {
       allow read: if isSignedIn() && (request.auth.uid == uid || isTeacher() || isAdmin());
       allow create, update: if isSignedIn() && request.auth.uid == uid &&
-        request.resource.data.keys().hasOnly(['role', 'studentId', 'name', 'platform', 'installed', 'pushOn', 'firstSeen', 'lastSeen']);
+        request.resource.data.keys().hasOnly(['role', 'studentId', 'name', 'platform', 'native', 'installed', 'pushOn', 'firstSeen', 'lastSeen']);
       allow delete: if isAdmin();
+    }
+
+    // accountDeletionRequests: 앱 안 「계정 삭제 요청」 (학생 앱·학부모 페이지) — 본인만 요청·조회, 관리자가 처리
+    match /accountDeletionRequests/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow create, update: if isSignedIn() && request.auth.uid == uid && request.resource.data.uid == uid &&
+        request.resource.data.status == '요청' &&
+        request.resource.data.keys().hasOnly(['uid', 'role', 'name', 'studentId', 'branch', 'status', 'requestedAt']);
+      allow update, delete: if isAdmin();
     }
 
     // ── timetables: 선생님 시간표 (클리닉실 자동계산용). 조교/선생님/관리자는 읽기만, 등록·수정은 관리자만 ──

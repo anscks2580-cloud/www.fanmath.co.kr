@@ -127,7 +127,8 @@
 <meta name="apple-mobile-web-app-title" content="송우찬수학">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
-<script src="/pwa.js?v=8" defer></script>
+<script src="/pwa.js?v=9" defer></script>
+<script src="native-app.js?v=1794900000"></script>
 </head>
 <body>
 <div class="wrap" id="app"><div class="empty">불러오는 중...</div></div>
@@ -252,6 +253,7 @@ async function pRefreshHw() {
 }
 document.addEventListener('visibilitychange', () => { if (!document.hidden && Date.now() - pHwLoadAt > 60000) pRefreshHw(); });
 try { navigator.serviceWorker && navigator.serviceWorker.addEventListener('message', (e) => { if (e.data && e.data.type === 'swc-push') pRefreshHw(); }); } catch (e) {}
+window.addEventListener('swc-push', () => pRefreshHw());   // 정식 앱(native-app.js)
 
 // ══ 출결: 최근 14일 등원·하원 (문서 id = 학생uid_날짜) ══
 function kstDateStr(offsetDays) {
@@ -531,6 +533,17 @@ ${editing ? `<textarea id="cm-edit-${c.id}">${esc(c.text)}</textarea><div class=
       <div class="cm-form"><textarea id="cm-ta-${type}-${id}" placeholder="${isTeacherView() ? '답글을 입력하세요' : '댓글을 입력하세요'}" onfocus="pMarkRead('${key}')"></textarea><button onclick="pSend('${type}','${id}','${esc(teacherUid || '')}','${esc(teacherName || '')}','${esc(label)}')">보내기</button></div>
     </div>`;
 }
+// 계정 삭제 요청 — 학원 관리부가 확인 후 계정과 정보를 지움 (관리자 홈에 표시)
+window.pAskDelete = async () => {
+  if (!confirm('학부모 계정 삭제를 요청할까요?\n\n학원 관리부가 확인한 뒤 계정이 삭제되고, 이후에는 이 계정으로 로그인할 수 없어요.')) return;
+  try {
+    await setDoc(doc(db, 'accountDeletionRequests', me.uid), { uid: me.uid, role: 'parent', name: (child.name || '') + ' 학부모', studentId: child.id, branch: child.branch || '', status: '요청', requestedAt: serverTimestamp() });
+    alert('삭제 요청이 접수됐어요. 학원에서 확인 후 처리하고 연락드릴게요.');
+  } catch (e) { alert('요청하지 못했어요: ' + e.message + '\n학원(평촌관 031-386-8899 · 산본관 031-346-8899)으로 연락해 주세요.'); }
+};
+// 화면 맨 아래: 개인정보처리방침 · 계정 삭제 요청 (학부모 본인 로그인일 때만)
+{ const __pRender = render;
+  render = function () { __pRender(); try { if (viewer && viewer.role === 'parent' && !isTeacherView()) { const f = document.createElement('div'); f.style.cssText = 'text-align:center;font-size:12px;color:var(--muted);margin:22px 0 10px;'; f.innerHTML = '<a href="privacy.html" style="color:var(--muted);">개인정보처리방침</a> · <button onclick="pAskDelete()" style="border:0;background:none;color:var(--muted);font-size:12px;text-decoration:underline;font-family:inherit;padding:0;">계정 삭제 요청</button>'; $app.appendChild(f); } } catch (e) {} }; }
 window.pLogout = async () => { await signOut(auth); location.replace('login.html'); };
 
 const tabDot = (type) => comments.some((c) => c.targetType === type && (isTeacherView() ? (c.authorRole === 'parent' && !c.readByTeacher) : (c.authorRole === 'teacher' && !c.readByParent))) ? ' <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#C8541F;vertical-align:middle;margin-left:2px;"></span>' : '';
@@ -540,13 +553,22 @@ const tabDot = (type) => comments.some((c) => c.targetType === type && (isTeache
 //  · 아이폰은 홈 화면에 설치한 앱에서만 알림을 받을 수 있음
 let savedFcm = null, pushState = 'hidden', pushErr = '', pushListening = false;
 const isIOSdev = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-const isAppMode = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+const isAppMode = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || (window.SWCNative&&window.SWCNative.is)||!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
 // 앱을 열면 휴대폰 알림창에 쌓인 학원 알림은 지움 (이미 앱에서 확인하므로)
 async function clearShownNotifications() {
   try { const reg = await navigator.serviceWorker.getRegistration('/'); if (!reg) return; (await reg.getNotifications()).forEach((n) => n.close()); } catch (e) {}
 }
 async function pushInit() {
   if (viewer.role !== 'parent') { pushState = 'hidden'; return; }
+  // 정식 앱(앱스토어·플레이스토어): 휴대폰 기본 알림
+  if (window.SWCNative && window.SWCNative.is) {
+    const p = await window.SWCNative.permission();
+    if (p === 'granted') { pushState = 'on'; render(); try { await pushSaveToken(); } catch (e) { pushState = 'error'; pushErr = e.message; render(); } }
+    else if (p === 'denied') { pushState = 'denied'; render(); }
+    else if (p === 'prompt') { pushState = 'off'; render(); window.pEnablePush(); }
+    else { pushState = 'unsupported'; render(); }
+    return;
+  }
   clearShownNotifications();
   document.addEventListener('visibilitychange', () => { if (!document.hidden) clearShownNotifications(); });
   let ok = ('Notification' in window) && ('serviceWorker' in navigator);
@@ -557,6 +579,13 @@ async function pushInit() {
   else { pushState = 'off'; render(); }
 }
 async function pushSaveToken() {
+  if (window.SWCNative && window.SWCNative.is) {
+    const token = await window.SWCNative.token(true);
+    if (!token) throw new Error('알림이 허용되지 않았어요');
+    if (token !== savedFcm) { await updateDoc(doc(db, 'parents', me.uid), { fcmToken: token }); savedFcm = token; }
+    try { await setDoc(doc(db, 'appStatus', me.uid), { role: 'parent', studentId: child.id, pushOn: true, native: window.SWCNative.platform, lastSeen: serverTimestamp() }, { merge: true }); } catch (e) {}
+    return;
+  }
   const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
   await navigator.serviceWorker.ready;
   const messaging = getMessaging(app);
@@ -578,6 +607,11 @@ async function pushSaveToken() {
   }
 }
 window.pEnablePush = async () => {
+  if (window.SWCNative && window.SWCNative.is) {
+    try { pushState = 'working'; render(); await pushSaveToken(); pushState = 'on'; }
+    catch (e) { pushState = (await window.SWCNative.permission()) === 'denied' ? 'denied' : 'off'; }
+    render(); return;
+  }
   try {
     const perm = await Notification.requestPermission();
     if (perm === 'granted') { pushState = 'working'; render(); await pushSaveToken(); pushState = 'on'; }

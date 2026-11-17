@@ -42,7 +42,7 @@
     clearTimeout(window.__swcSessionT);
     current = null;
     var inApp = false;
-    try { inApp = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; } catch (e) {}
+    try { inApp = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true||!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform()); } catch (e) {}
     if (inApp) return false; // 앱에서는 자동 로그아웃 안 함
     if (!user || user.isAnonymous) return false;
     current = { user: user, signOut: doSignOut };

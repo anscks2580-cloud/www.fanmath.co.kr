@@ -266,6 +266,7 @@ button { font-family:inherit; cursor:pointer; }
 .toast { position:fixed; left:50%; bottom:calc(96px + var(--safe-b)); transform:translateX(-50%); z-index:300; background:var(--p-dd); color:#fff; font-size:13.5px; font-weight:700; padding:11px 18px; border-radius:99px; box-shadow:0 8px 24px rgba(26,18,48,.3); opacity:0; pointer-events:none; transition:opacity .2s; white-space:nowrap; }
 .toast.on { opacity:1; }
 </style>
+<script src="native-app.js?v=1794900000"></script>
 </head>
 <body>
 <div class="app" id="app">
@@ -818,11 +819,21 @@ function renderMy() {
     <div class="sec"><div class="menu">
       <a href="videos.html">📺 동영상강의 전체 화면<span class="ar">›</span></a>
       <a href="index.html">🏫 학원 홈페이지<span class="ar">›</span></a>
+      <a href="privacy.html">🔒 개인정보처리방침<span class="ar">›</span></a>
       <button onclick="logout()" class="red">로그아웃</button>
     </div></div>
+    <div style="text-align:center;margin-top:14px;"><button onclick="askDelete()" style="border:0;background:none;color:var(--mute);font-size:12px;text-decoration:underline;">계정 삭제 요청</button></div>
     <div style="text-align:center;font-size:11.5px;color:var(--mute);margin-top:18px;">송우찬수학학원 · 평촌관 · 산본관</div>`;
   renderPush();
 }
+// 계정 삭제 요청 — 학원 관리부가 확인 후 계정과 정보를 지움 (관리자 홈에 표시)
+window.askDelete = async () => {
+  if (!confirm('계정 삭제를 요청할까요?\n\n학원 관리부가 확인한 뒤 계정과 학습 기록이 삭제되고, 이후에는 이 계정으로 로그인할 수 없어요.\n(학원 수강 중이라면 먼저 학원에 말씀해 주세요)')) return;
+  try {
+    await setDoc(doc(db, 'accountDeletionRequests', me.uid), { uid: me.uid, role: 'student', name: stu.name || '', studentId: me.uid, branch: stu.branch || '', status: '요청', requestedAt: serverTimestamp() });
+    alert('삭제 요청이 접수됐어요. 학원에서 확인 후 처리하고 연락드릴게요.');
+  } catch (e) { alert('요청하지 못했어요: ' + e.message + '\n학원(평촌관 031-386-8899 · 산본관 031-346-8899)으로 연락해 주세요.'); }
+};
 window.logout = async () => { if (!confirm('로그아웃할까요?')) return; await signOut(auth); location.replace('login.html?app=1'); };
 
 // ══════════════════════════════════════
@@ -1012,6 +1023,15 @@ document.addEventListener('visibilitychange', () => {
 // ══════════════════════════════════════
 let pushState = 'hidden', pushErr = '', pushListening = false;
 async function pushInit() {
+  // 정식 앱(앱스토어·플레이스토어): 휴대폰 기본 알림
+  if (window.SWCNative && window.SWCNative.is) {
+    const p = await window.SWCNative.permission();
+    if (p === 'granted') { pushState = 'on'; renderPush(); try { await pushSaveToken(); } catch (e) { pushState = 'error'; pushErr = e.message; renderPush(); } }
+    else if (p === 'denied') { pushState = 'denied'; renderPush(); }
+    else if (p === 'prompt') { pushState = 'off'; renderPush(); window.enablePush(); }
+    else { pushState = 'unsupported'; renderPush(); }
+    return;
+  }
   try { const reg = await navigator.serviceWorker?.getRegistration('/'); if (reg) (await reg.getNotifications()).forEach((n) => n.close()); } catch (e) {}
   let ok = ('Notification' in window) && ('serviceWorker' in navigator);
   if (ok) { try { ok = await isSupported(); } catch (e) { ok = false; } }
@@ -1021,6 +1041,13 @@ async function pushInit() {
   else { pushState = 'off'; renderPush(); }
 }
 async function pushSaveToken() {
+  if (window.SWCNative && window.SWCNative.is) {
+    const token = await window.SWCNative.token(true);
+    if (!token) throw new Error('알림이 허용되지 않았어요');
+    if (token !== stu.fcmToken) { await updateDoc(doc(db, 'students', me.uid), { fcmToken: token }); stu.fcmToken = token; }
+    try { await setDoc(doc(db, 'appStatus', me.uid), { role: 'student', pushOn: true, native: window.SWCNative.platform, lastSeen: serverTimestamp() }, { merge: true }); } catch (e) {}
+    return;
+  }
   const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
   await navigator.serviceWorker.ready;
   const messaging = getMessaging(app);
@@ -1058,6 +1085,11 @@ window.testPush = async (btn) => {
   btn.disabled = false; btn.textContent = old;
 };
 window.enablePush = async () => {
+  if (window.SWCNative && window.SWCNative.is) {
+    try { pushState = 'working'; renderPush(); await pushSaveToken(); pushState = 'on'; }
+    catch (e) { pushState = (await window.SWCNative.permission()) === 'denied' ? 'denied' : 'off'; }
+    renderPush(); return;
+  }
   try {
     const perm = await Notification.requestPermission();
     if (perm === 'granted') { pushState = 'working'; renderPush(); await pushSaveToken(); pushState = 'on'; }
@@ -1072,6 +1104,13 @@ document.addEventListener('visibilitychange', async () => {
   if (document.visibilityState !== 'visible' || !me || cp || Date.now() - lastLoad < 60000) return;
   lastLoad = Date.now();
   try { await loadAll(); render(); newHwPopup(); } catch (e) {}
+});
+// 정식 앱: 보는 중에 알림이 오면(native-app.js 신호) 똑같이 처리
+window.addEventListener('swc-push', async (e) => {
+  if (!me) return; const d = e.detail || {};
+  toast((d.title || '알림') + (d.body ? ' · ' + d.body : ''));
+  if (cp) return; lastLoad = Date.now();
+  try { await loadAll(); render(); newHwPopup(); } catch (err) {}
 });
 // 알림이 도착하면(sw.js 신호) 바로 새로 불러와서 새 숙제 팝업을 띄움
 try { navigator.serviceWorker && navigator.serviceWorker.addEventListener('message', async (e) => {

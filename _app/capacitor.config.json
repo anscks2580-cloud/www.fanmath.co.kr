@@ -1,0 +1,48 @@
+{
+  "appId": "kr.co.fanmath.app",
+  "appName": "송우찬수학학원",
+  "webDir": "www",
+  "appendUserAgent": "SongmathApp",
+  "server": {
+    "url": "https://www.fanmath.co.kr",
+    "appStartPath": "login.html",
+    "errorPath": "offline.html",
+    "allowNavigation": [
+      "www.fanmath.co.kr",
+      "fanmath.co.kr"
+    ]
+  },
+  "ios": {
+    "contentInset": "never",
+    "limitsNavigationsToAppBoundDomains": false
+  },
+  "android": {
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "launchAutoHide": true,
+      "backgroundColor": "#4B3391",
+      "showSpinner": false
+    },
+    "FirebaseMessaging": {
+      "presentationOptions": [
+        "alert",
+        "badge",
+        "sound"
+      ]
+    }
+  },
+  "experimental": {
+    "ios": {
+      "spm": {
+        "packageOptions": {
+          "@capacitor-firebase/messaging": {
+            "symlink": true
+          }
+        }
+      }
+    }
+  }
+}

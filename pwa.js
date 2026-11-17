@@ -30,7 +30,8 @@
   function isStandalone() {
     return window.matchMedia('(display-mode: standalone)').matches ||
       window.matchMedia('(display-mode: fullscreen)').matches ||
-      window.navigator.standalone === true;
+      window.navigator.standalone === true ||
+      !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
   }
 
   var ICON = '/assets/icons/apple-touch-icon.png';

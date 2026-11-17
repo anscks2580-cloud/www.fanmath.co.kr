@@ -117,7 +117,7 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
 <meta name="apple-mobile-web-app-title" content="송우찬수학">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
-<script src="/pwa.js?v=8" defer></script>
+<script src="/pwa.js?v=9" defer></script>
 <!-- 앱 시작 로딩 화면 (앱으로 실행했을 때만, 처음 한 번) -->
 <style>
 #pwaSplash{position:fixed;inset:0;z-index:2147483000;background:#4B3391;overflow:hidden;transition:opacity .5s ease,transform .5s ease;-webkit-user-select:none;user-select:none}
@@ -137,7 +137,7 @@ html.pwa-splashing,html.pwa-splashing body{overflow:hidden!important;background:
 </style>
 <script>
 (function(){try{
-  var sa=window.matchMedia('(display-mode: standalone)').matches||window.matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true;
+  var sa=window.matchMedia('(display-mode: standalone)').matches||window.matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true||!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
   if(!sa||sessionStorage.getItem('pwaSplash'))return;
   sessionStorage.setItem('pwaSplash','1');
   var h=document.documentElement;h.classList.add('pwa-splashing');
@@ -239,7 +239,7 @@ try {
 
 
 // ── 앱(홈 화면 아이콘)으로 실행 중인지 ──
-const IN_APP = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+const IN_APP = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true||!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
 
 
 // 앱(홈 화면 아이콘)으로 로그인하면 「앱 설치」로 기록 → 관리자 페이지 학생 출결 탭에서 설치 현황 확인

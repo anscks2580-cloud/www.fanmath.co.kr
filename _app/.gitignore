@@ -1,0 +1,7 @@
+node_modules/
+ios/
+android/
+package-lock.json
+GoogleService-Info.plist
+google-services.json
+*.p8
