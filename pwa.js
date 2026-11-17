@@ -8,8 +8,20 @@
 (function () {
   'use strict';
 
+  // ── 정식 앱(앱스토어·플레이스토어): 서비스워커를 쓰지 않음 ──
+  // 서비스워커가 화면을 대신 받아 오면 정식 앱 연결(알림 등)이 화면에 들어가지 않음 → 이미 등록돼 있으면 지우고 한 번 새로고침
+  if (/SongmathApp/.test(navigator.userAgent)) {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function (rs) {
+        if (!rs.length) return;
+        Promise.all(rs.map(function (r) { return r.unregister(); })).then(function () {
+          try { if (!sessionStorage.getItem('swcSwCleared')) { sessionStorage.setItem('swcSwCleared', '1'); location.reload(); } } catch (e) {}
+        });
+      }).catch(function () {});
+    }
+  }
   // ── 서비스워커 등록 ──
-  if ('serviceWorker' in navigator) {
+  else if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch(function () {});
     });
@@ -31,6 +43,7 @@
     return window.matchMedia('(display-mode: standalone)').matches ||
       window.matchMedia('(display-mode: fullscreen)').matches ||
       window.navigator.standalone === true ||
+      /SongmathApp/.test(navigator.userAgent) ||
       !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
   }
 

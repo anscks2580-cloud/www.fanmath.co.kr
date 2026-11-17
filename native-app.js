@@ -9,11 +9,17 @@
    ═══════════════════════════════════════════════════════════ */
 (function () {
   var C = window.Capacitor;
-  var is = !!(C && typeof C.isNativePlatform === 'function' && C.isNativePlatform());
-  var platform = is && C.getPlatform ? C.getPlatform() : 'web';
+  var byUA = /SongmathApp/.test(navigator.userAgent || '');   // 정식 앱은 사용자 정보 끝에 SongmathApp 이 붙음 (capacitor.config appendUserAgent)
+  var is = byUA || !!(C && typeof C.isNativePlatform === 'function' && C.isNativePlatform());
+  var platform = is ? ((C && C.getPlatform && C.getPlatform() !== 'web') ? C.getPlatform() : (/iPhone|iPad|iPod/.test(navigator.userAgent) ? 'ios' : 'android')) : 'web';
   function plugin() {
     if (!is) return null;
+    C = window.Capacitor;
+    if (!C) return null;
     try { return (C.Plugins && C.Plugins.FirebaseMessaging) || (C.registerPlugin ? C.registerPlugin('FirebaseMessaging') : null); } catch (e) { return null; }
+  }
+  if (is && 'serviceWorker' in navigator) {
+    try { navigator.serviceWorker.getRegistrations().then(function (rs) { if (!rs.length) return; Promise.all(rs.map(function (r) { return r.unregister(); })).then(function () { try { if (!sessionStorage.getItem('swcSwCleared')) { sessionStorage.setItem('swcSwCleared', '1'); location.reload(); } } catch (e) {} }); }).catch(function () {}); } catch (e) {}
   }
   if (is) {
     try { document.documentElement.classList.add('swc-native', 'swc-native-' + platform); } catch (e) {}

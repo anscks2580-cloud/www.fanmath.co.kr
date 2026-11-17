@@ -28,7 +28,7 @@
 <meta name="apple-mobile-web-app-title" content="송우찬수학">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
-<script src="/pwa.js?v=9" defer></script>
+<script src="/pwa.js?v=10" defer></script>
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png">
 <link rel="apple-touch-startup-image" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/assets/splash/splash-1320x2868.png">
 <link rel="apple-touch-startup-image" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="/assets/splash/splash-1206x2622.png">
@@ -44,7 +44,7 @@
 <!-- 앱(홈 화면 아이콘)으로 켜면 홈페이지 대신 로그인 화면부터 — 로그인돼 있으면 로그인 화면이 알아서 역할별 페이지로 보냄 -->
 <script>
 (function(){try{
-  var sa=window.matchMedia('(display-mode: standalone)').matches||window.matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true||!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+  var sa=window.matchMedia('(display-mode: standalone)').matches||window.matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true||/SongmathApp/.test(navigator.userAgent)||!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
   if(sa&&/(^|[?&])source=pwa(&|$)/.test(location.search)){location.replace('/login.html?app=1');}
 }catch(e){}})();
 </script>
@@ -67,7 +67,7 @@ html.pwa-splashing,html.pwa-splashing body{overflow:hidden!important;background:
 </style>
 <script>
 (function(){try{
-  var sa=window.matchMedia('(display-mode: standalone)').matches||window.matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true||!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+  var sa=window.matchMedia('(display-mode: standalone)').matches||window.matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true||/SongmathApp/.test(navigator.userAgent)||!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
   if(!sa||sessionStorage.getItem('pwaSplash'))return;
   sessionStorage.setItem('pwaSplash','1');
   var h=document.documentElement;h.classList.add('pwa-splashing');
@@ -940,7 +940,7 @@ loadNoticePopups();
 window.doNavLogout = async function() {
   const auth = getAuth();
   await signOut(auth);
-  const inApp = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true||!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+  const inApp = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true||/SongmathApp/.test(navigator.userAgent)||!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
   if (inApp) { window.location.replace('login.html?app=1'); return; }
   window.location.reload();
 };

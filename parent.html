@@ -127,8 +127,8 @@
 <meta name="apple-mobile-web-app-title" content="송우찬수학">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
-<script src="/pwa.js?v=9" defer></script>
-<script src="native-app.js?v=1794900000"></script>
+<script src="/pwa.js?v=10" defer></script>
+<script src="native-app.js?v=1794920000"></script>
 </head>
 <body>
 <div class="wrap" id="app"><div class="empty">불러오는 중...</div></div>
@@ -553,7 +553,7 @@ const tabDot = (type) => comments.some((c) => c.targetType === type && (isTeache
 //  · 아이폰은 홈 화면에 설치한 앱에서만 알림을 받을 수 있음
 let savedFcm = null, pushState = 'hidden', pushErr = '', pushListening = false;
 const isIOSdev = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-const isAppMode = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || (window.SWCNative&&window.SWCNative.is)||!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
+const isAppMode = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || (window.SWCNative&&window.SWCNative.is)||/SongmathApp/.test(navigator.userAgent)||!!(window.Capacitor&&window.Capacitor.isNativePlatform&&window.Capacitor.isNativePlatform());
 // 앱을 열면 휴대폰 알림창에 쌓인 학원 알림은 지움 (이미 앱에서 확인하므로)
 async function clearShownNotifications() {
   try { const reg = await navigator.serviceWorker.getRegistration('/'); if (!reg) return; (await reg.getNotifications()).forEach((n) => n.close()); } catch (e) {}
