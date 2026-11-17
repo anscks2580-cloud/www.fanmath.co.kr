@@ -206,6 +206,18 @@ button { font-family:inherit; cursor:pointer; }
 .menu .red { color:var(--bad); }
 .push { display:flex; align-items:center; gap:10px; background:var(--p-soft); border:1px solid var(--p-line); border-radius:16px; padding:12px 14px; font-size:13.5px; color:var(--ink2); margin-top:12px; }
 .push b { color:var(--p); }
+.nset { background:#fff; border:1px solid var(--line, #E6E1F2); border-radius:16px; padding:4px 14px; }
+.nset .row { display:flex; align-items:center; gap:12px; padding:12px 0; }
+.nset .row + .row { border-top:1px solid var(--line, #EEE9F7); }
+.nset .tx { flex:1; font-size:14px; color:var(--ink2); line-height:1.45; }
+.nset .tx b { color:var(--ink, #1A1230); font-size:15px; }
+.nset .tx small { display:block; color:var(--mute); font-size:12px; margin-top:2px; }
+.sw { position:relative; width:52px; height:30px; border-radius:999px; background:#D5D0E0; border:0; padding:0; flex:none; transition:background .2s; }
+.sw::after { content:''; position:absolute; top:3px; left:3px; width:24px; height:24px; border-radius:50%; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.25); transition:left .2s; }
+.sw.on { background:var(--p); }
+.sw.on::after { left:25px; }
+.sw:disabled { opacity:.5; }
+.nset .tb { background:var(--p-soft); color:var(--p); border:1px solid var(--p-line); border-radius:10px; padding:8px 12px; font-size:13px; font-weight:800; white-space:nowrap; }
 .push button { margin-left:auto; background:var(--p); color:#fff; border:0; border-radius:10px; padding:9px 12px; font-size:13px; font-weight:800; white-space:nowrap; }
 .push.on { background:var(--ok-soft); border-color:#C6E6D3; } .push.on b { color:var(--ok); }
 
@@ -815,7 +827,7 @@ function renderMy() {
         <div class="chart">${bars.map((b) => { const m = Math.round(b.s / 60); const d = parseYmd(b.k); return `<div class="c ${b.s ? 'on' : ''} ${b.k === TODAY() ? 'today' : ''}">${m ? `<b>${m}</b>` : ''}<i style="height:${Math.max(3, Math.round(b.s / max * 82))}%"></i><em>${b.k === TODAY() ? '오늘' : d.getDate()}</em></div>`; }).join('')}</div>
         <div style="font-size:11.5px;color:var(--mute);margin-top:10px;">최근 14일 (숫자는 분) · 실제로 재생한 시간만 기록돼요 (화면을 끄거나 다른 앱으로 가면 기록되지 않아요)</div>
       </div></div>
-    <div id="pushBox"></div>
+    <div class="sec"><div class="sec-h"><h2>🔔 알림 설정</h2></div><div id="pushBox"></div></div>
     <div class="sec"><div class="menu">
       <a href="videos.html">📺 동영상강의 전체 화면<span class="ar">›</span></a>
       <a href="index.html">🏫 학원 홈페이지<span class="ar">›</span></a>
@@ -1026,6 +1038,7 @@ async function pushInit() {
   // 정식 앱(앱스토어·플레이스토어): 휴대폰 기본 알림
   if (window.SWCNative && window.SWCNative.is) {
     const p = await window.SWCNative.permission();
+    if (stu.fcmToken === '' && p !== 'denied' && p !== 'unsupported') { pushState = 'muted'; renderPush(); return; }
     if (p === 'granted') { pushState = 'on'; renderPush(); try { await pushSaveToken(); } catch (e) { pushState = 'error'; pushErr = e.message; renderPush(); } }
     else if (p === 'denied') { pushState = 'denied'; renderPush(); }
     else if (p === 'prompt') { pushState = 'off'; renderPush(); window.enablePush(); }
@@ -1036,6 +1049,7 @@ async function pushInit() {
   let ok = ('Notification' in window) && ('serviceWorker' in navigator);
   if (ok) { try { ok = await isSupported(); } catch (e) { ok = false; } }
   if (!ok) { pushState = 'unsupported'; renderPush(); return; }
+  if (stu.fcmToken === '' && Notification.permission !== 'denied') { pushState = 'muted'; renderPush(); return; }
   if (Notification.permission === 'granted') { pushState = 'on'; renderPush(); try { await pushSaveToken(); } catch (e) { pushState = 'error'; pushErr = e.message; renderPush(); } }
   else if (Notification.permission === 'denied') { pushState = 'denied'; renderPush(); }
   else { pushState = 'off'; renderPush(); }
@@ -1065,14 +1079,34 @@ async function pushSaveToken() {
 }
 function renderPush() {
   const box = $('pushBox'); if (!box) return;
-  const html = pushState === 'on' ? `<div class="push on">🔔 <span><b>알림 켜짐</b> · 숙제·시험지가 나오면 알려드려요.</span><button onclick="testPush(this)">알림 테스트</button></div>`
-    : pushState === 'off' ? `<div class="push">🔔 <span>숙제가 등록되면 <b>앱 알림</b>으로 받아 보세요.</span><button onclick="enablePush()">알림 켜기</button></div>`
-    : pushState === 'denied' ? `<div class="push">🔕 <span>알림이 꺼져 있어요. 휴대폰 <b>설정 › 알림</b>에서 학원 앱 알림을 허용해 주세요.</span></div>`
-    : pushState === 'error' ? `<div class="push">⚠️ <span>알림 설정 오류: ${esc(pushErr)}</span><button onclick="enablePush()">다시 시도</button></div>`
-    : pushState === 'working' ? `<div class="push">⏳ <span>알림 설정 중...</span></div>`
-    : pushState === 'unsupported' ? `<div class="push">ℹ️ <span>${/iPhone|iPad|iPod/.test(navigator.userAgent) ? '아이폰은 <b>홈 화면에 추가한 학원 앱</b>으로 열어야 알림을 받을 수 있어요 (iOS 16.4 이상). 사파리·카톡 창에서는 알림이 안 와요.' : '이 화면에서는 알림을 받을 수 없어요. 학원 앱을 설치해서 열어 주세요.'}</span></div>` : '';
-  box.innerHTML = html;
+  const on = pushState === 'on', busy = pushState === 'working';
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const sub = on ? '숙제·시험지가 나오면 이 휴대폰으로 알려드려요.'
+    : busy ? '알림 설정 중이에요…'
+    : pushState === 'denied' ? '휴대폰에서 알림이 막혀 있어요. 휴대폰 <b style="font-size:inherit">설정 › 애플리케이션 › 송우찬수학학원 › 알림</b>을 켠 뒤 앱을 다시 열어 주세요.'
+    : pushState === 'error' ? '알림 설정 오류: ' + esc(pushErr)
+    : pushState === 'unsupported' ? (isIOS ? '아이폰은 <b style="font-size:inherit">홈 화면에 추가한 학원 앱</b>으로 열어야 알림을 받을 수 있어요.' : '이 화면에서는 알림을 받을 수 없어요. 학원 앱을 설치해서 열어 주세요.')
+    : '꺼져 있어요. 켜면 숙제·시험지가 나올 때 알려드려요.';
+  const canToggle = pushState !== 'unsupported' && pushState !== 'denied' && !busy;
+  box.innerHTML = `<div class="nset">
+    <div class="row"><div class="tx"><b>숙제 알림</b><small>${sub}</small></div>
+      <button class="sw ${on || busy ? 'on' : ''}" ${canToggle ? '' : 'disabled'} onclick="togglePush()" aria-label="숙제 알림 켜기·끄기"></button></div>
+    ${on ? `<div class="row"><div class="tx"><small style="margin:0">알림이 잘 오는지 확인해 볼 수 있어요.</small></div><button class="tb" onclick="testPush(this)">알림 테스트</button></div>` : ''}
+  </div>`;
 }
+// 알림 켜기·끄기 스위치 — 끄면 이 휴대폰의 알림 주소를 비워서(빈 값) 서버가 보내지 않음
+window.togglePush = async () => {
+  if (pushState === 'on') {
+    if (!confirm('숙제 알림을 끌까요?\n끄면 숙제·시험지가 나와도 휴대폰 알림이 오지 않아요.')) return;
+    pushState = 'working'; renderPush();
+    try { await updateDoc(doc(db, 'students', me.uid), { fcmToken: '' }); stu.fcmToken = ''; pushState = 'muted'; toast('숙제 알림을 껐어요'); }
+    catch (e) { pushState = 'on'; toast('알림을 끄지 못했어요: ' + (e.message || e)); }
+    try { await setDoc(doc(db, 'appStatus', me.uid), { role: 'student', pushOn: false, lastSeen: serverTimestamp() }, { merge: true }); } catch (e) {}
+    renderPush(); return;
+  }
+  await window.enablePush();
+  if (pushState === 'on') toast('숙제 알림을 켰어요');
+};
 // 알림 테스트 — 서버가 이 휴대폰으로 알림 1건을 보냄 (서버 함수 appNotifyTest)
 window.testPush = async (btn) => {
   btn.disabled = true; const old = btn.textContent; btn.textContent = '보내는 중...';

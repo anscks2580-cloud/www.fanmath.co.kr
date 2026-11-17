@@ -163,7 +163,7 @@ onAuthStateChanged(auth, async (user) => {
   try {
     const p = await getDoc(doc(db, 'parents', user.uid));
     let studentId;
-    if (p.exists()) { studentId = p.data().studentId; viewer = { role: 'parent', name: '' }; savedFcm = p.data().fcmToken || null; }
+    if (p.exists()) { studentId = p.data().studentId; viewer = { role: 'parent', name: '' }; savedFcm = p.data().fcmToken ?? null; }
     else {
       const s = await getDoc(doc(db, 'students', user.uid));
       if (s.exists()) { studentId = user.uid; viewer = { role: 'student', name: s.data().name || '' }; } // 학생 계정으로도 열람 가능
@@ -563,6 +563,7 @@ async function pushInit() {
   // 정식 앱(앱스토어·플레이스토어): 휴대폰 기본 알림
   if (window.SWCNative && window.SWCNative.is) {
     const p = await window.SWCNative.permission();
+    if (savedFcm === '' && p !== 'denied' && p !== 'unsupported') { pushState = 'muted'; render(); return; }
     if (p === 'granted') { pushState = 'on'; render(); try { await pushSaveToken(); } catch (e) { pushState = 'error'; pushErr = e.message; render(); } }
     else if (p === 'denied') { pushState = 'denied'; render(); }
     else if (p === 'prompt') { pushState = 'off'; render(); window.pEnablePush(); }
@@ -574,6 +575,7 @@ async function pushInit() {
   let ok = ('Notification' in window) && ('serviceWorker' in navigator);
   if (ok) { try { ok = await isSupported(); } catch (e) { ok = false; } }
   if (!ok) { pushState = (isIOSdev && !isAppMode()) ? 'need-app' : 'unsupported'; render(); return; }
+  if (savedFcm === '' && Notification.permission !== 'denied') { pushState = 'muted'; render(); return; }
   if (Notification.permission === 'granted') { pushState = 'on'; render(); try { await pushSaveToken(); } catch (e) { pushState = 'error'; pushErr = e.message; render(); } }
   else if (Notification.permission === 'denied') { pushState = 'denied'; render(); }
   else { pushState = 'off'; render(); }
@@ -620,20 +622,37 @@ window.pEnablePush = async () => {
   render();
 };
 window.pInstallApp = () => { if (window.swcOpenInstall) window.swcOpenInstall(); };
+// 알림 켜기·끄기 스위치 — 끄면 이 휴대폰의 알림 주소를 비워서(빈 값) 서버가 보내지 않음
+window.pTogglePush = async () => {
+  if (pushState === 'on') {
+    if (!confirm('학원 알림을 끌까요?\n끄면 등원·하원·숙제·보고서 알림이 휴대폰으로 오지 않아요.')) return;
+    pushState = 'working'; render();
+    try { await updateDoc(doc(db, 'parents', me.uid), { fcmToken: '' }); savedFcm = ''; pushState = 'muted'; }
+    catch (e) { pushState = 'on'; alert('알림을 끄지 못했어요: ' + (e.message || e)); }
+    try { await setDoc(doc(db, 'appStatus', me.uid), { role: 'parent', studentId: child.id, pushOn: false, lastSeen: serverTimestamp() }, { merge: true }); } catch (e) {}
+    render(); return;
+  }
+  await window.pEnablePush();
+};
 function pushHtml() {
   if (isTeacherView() || pushState === 'hidden') return '';
-  const box = (bg, bd, inner) => `<div class="card" style="background:${bg};border-color:${bd};display:flex;align-items:center;gap:12px;">${inner}</div>`;
   const what = '등원·하원 · 숙제 · 주간 성취도 · 월간 보고서 · 선생님 답글 · 공지';
-  if (pushState === 'off') return box('#FFF9E6', '#F0C040', `<div style="font-size:26px;">🔔</div><div style="flex:1;"><div style="font-weight:800;font-size:14.5px;">앱 알림 켜기</div><div style="font-size:12px;color:var(--ink-2);margin-top:2px;">${what}을 휴대폰 알림으로 바로 받아보세요.</div></div><button onclick="pEnablePush()" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-family:inherit;font-weight:800;font-size:13.5px;cursor:pointer;white-space:nowrap;">알림 켜기</button>`);
-  if (pushState === 'need-app') return box('#FFF9E6', '#F0C040', `<div style="font-size:26px;">📲</div><div style="flex:1;"><div style="font-weight:800;font-size:14.5px;">앱으로 설치하면 알림을 받을 수 있어요</div><div style="font-size:12px;color:var(--ink-2);margin-top:2px;">아이폰은 홈 화면에 설치한 앱에서만 알림이 와요. 설치 후 앱에서 다시 로그인해 주세요.</div></div><button onclick="pInstallApp()" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-family:inherit;font-weight:800;font-size:13.5px;cursor:pointer;white-space:nowrap;">앱 설치</button>`);
-  if (pushState === 'working') return box('#F7F5FC', '#E3DDF3', `<div style="font-size:22px;">⏳</div><div style="font-size:13.5px;">알림을 켜는 중이에요…</div>`);
-  if (pushState === 'on') return `<div style="display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--good);background:var(--good-soft);border-radius:10px;padding:8px 12px;margin-bottom:10px;"><span>🔔</span><span style="color:var(--ink-2);"><b style="color:var(--good);white-space:nowrap;">알림 켜짐</b> · 이 휴대폰으로 ${what} 알림을 받아요</span></div>`;
-  if (pushState === 'denied') return box('#FBE9E0', '#F0B9A0', `<div style="font-size:24px;">🔕</div><div style="flex:1;font-size:12.5px;color:var(--ink-2);"><b style="color:var(--warn);font-size:14px;">알림이 꺼져 있어요</b><br>휴대폰 설정 → 알림 → 송우찬수학에서 알림을 허용한 뒤 앱을 다시 열어 주세요.</div>`);
-  if (pushState === 'unsupported') return box('#F7F5FC', '#E3DDF3', `<div style="font-size:24px;">ℹ️</div><div style="flex:1;font-size:12.5px;color:var(--ink-2);">이 화면에서는 알림을 받을 수 없어요. 홈페이지 첫 화면의 <b>앱 다운로드</b>로 앱을 설치해서 이용해 주세요.</div>`);
-  if (pushState === 'error') return box('#FBE9E0', '#F0B9A0', `<div style="font-size:24px;">⚠️</div><div style="flex:1;font-size:12.5px;color:var(--ink-2);">알림을 켜지 못했어요. 잠시 후 다시 시도해 주세요.<br><small style="color:var(--muted);">${esc(pushErr)}</small></div><button onclick="pEnablePush()" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:9px 12px;font-family:inherit;font-weight:700;font-size:13px;cursor:pointer;">다시</button>`);
-  return '';
+  if (pushState === 'need-app') return `<div class="card" style="background:#FFF9E6;border-color:#F0C040;display:flex;align-items:center;gap:12px;"><div style="font-size:26px;">📲</div><div style="flex:1;"><div style="font-weight:800;font-size:14.5px;">앱으로 설치하면 알림을 받을 수 있어요</div><div style="font-size:12px;color:var(--ink-2);margin-top:2px;">아이폰은 홈 화면에 설치한 앱에서만 알림이 와요. 설치 후 앱에서 다시 로그인해 주세요.</div></div><button onclick="pInstallApp()" style="background:var(--accent);color:#fff;border:none;border-radius:10px;padding:10px 14px;font-family:inherit;font-weight:800;font-size:13.5px;cursor:pointer;white-space:nowrap;">앱 설치</button></div>`;
+  const on = pushState === 'on', busy = pushState === 'working';
+  const sub = on ? `${what} 알림을 이 휴대폰으로 받아요`
+    : busy ? '알림 설정 중이에요…'
+    : pushState === 'denied' ? '휴대폰에서 알림이 막혀 있어요. 휴대폰 설정 › 애플리케이션 › 송우찬수학학원 › 알림을 켠 뒤 앱을 다시 열어 주세요.'
+    : pushState === 'error' ? '알림을 켜지 못했어요. 스위치를 다시 눌러 주세요. ' + esc(pushErr)
+    : pushState === 'unsupported' ? '이 화면에서는 알림을 받을 수 없어요. 홈페이지 첫 화면의 앱 다운로드로 앱을 설치해서 이용해 주세요.'
+    : `꺼져 있어요. 켜면 ${what}을 휴대폰 알림으로 받아요.`;
+  const canToggle = pushState !== 'unsupported' && pushState !== 'denied' && !busy;
+  const swOn = on || busy;
+  return `<div class="card" style="display:flex;align-items:center;gap:12px;padding:12px 16px;${on ? '' : 'background:#FFF9E6;border-color:#F0C040;'}">
+    <div style="font-size:22px;">${on ? '🔔' : '🔕'}</div>
+    <div style="flex:1;min-width:0;"><div style="font-weight:800;font-size:14.5px;">학원 알림 ${on ? '<span style="color:var(--good);">켜짐</span>' : busy ? '' : '<span style="color:var(--muted);">꺼짐</span>'}</div><div style="font-size:12px;color:var(--ink-2);margin-top:2px;line-height:1.45;">${sub}</div></div>
+    <button onclick="pTogglePush()" ${canToggle ? '' : 'disabled'} aria-label="학원 알림 켜기·끄기" style="position:relative;width:52px;height:30px;border-radius:999px;border:0;padding:0;flex:none;cursor:pointer;background:${swOn ? 'var(--accent)' : '#D5D0E0'};${canToggle ? '' : 'opacity:.5;'}"><span style="position:absolute;top:3px;left:${swOn ? 25 : 3}px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s;"></span></button>
+  </div>`;
 }
-
 function render() {
   const lvl = (v) => v >= 4 ? 'hi' : v <= 2 ? 'lo' : '';
   $app.innerHTML = `
