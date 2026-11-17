@@ -7,7 +7,13 @@ echo ================================================
 echo.
 cd /d "%~dp0android"
 if not exist "songmath-upload.jks" goto nokey
-if exist "C:\Program Files\Android\Android Studio\jbr\bin\java.exe" set "JAVA_HOME=C:\Program Files\Android\Android Studio\jbr"
+rem 자바 21을 사용 (안드로이드 스튜디오에서 쓰는 것과 같은 것) - 25는 빌드가 안 됨
+set "JAVA_HOME="
+for /d %%D in ("%USERPROFILE%\.jdks\jbr-21*" "%USERPROFILE%\.jdks\*-21*") do if not defined JAVA_HOME if exist "%%~D\bin\java.exe" set "JAVA_HOME=%%~D"
+if not defined JAVA_HOME if exist "C:\Program Files\Android\Android Studio\jbr\bin\java.exe" set "JAVA_HOME=C:\Program Files\Android\Android Studio\jbr"
+echo 사용하는 자바: %JAVA_HOME%
+set "PATH=%JAVA_HOME%\bin;%PATH%"
+call gradlew.bat --stop >nul 2>&1
 echo 만드는 중입니다. 처음에는 몇 분 걸려요...
 echo.
 call gradlew.bat bundleRelease
