@@ -15,10 +15,14 @@
   button { border:0; background:#F5C518; color:#1E1838; font-size:16px; font-weight:800; border-radius:14px; padding:15px 0; width:100%; font-family:inherit; }
   .tel { margin-top:22px; font-size:13px; opacity:.75; line-height:1.9; }
   .tel a { color:#fff; }
+  .load { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; background:#4B3391; }
+  .dot { width:34px; height:34px; border-radius:50%; border:3px solid rgba(255,255,255,.25); border-top-color:#fff; animation:sp .8s linear infinite; }
+  @keyframes sp { to { transform:rotate(360deg); } }
 </style>
 </head>
 <body>
-  <div class="box">
+  <div class="load" id="load"><div class="dot"></div></div>
+  <div class="box" id="box" style="display:none">
     <div class="ic">📶</div>
     <h1>인터넷에 연결되어 있지 않아요</h1>
     <p>와이파이나 데이터 연결을 확인한 뒤<br>다시 시도해 주세요.</p>
@@ -26,7 +30,23 @@
     <div class="tel">학원 문의<br>평촌관 <a href="tel:0313868899">031-386-8899</a> · 산본관 <a href="tel:0313468899">031-346-8899</a></div>
   </div>
 <script>
-  function retry() { location.href = 'https://www.fanmath.co.kr/login.html'; }
+  // 앱이 화면을 여는 도중 다른 화면으로 넘어가면(로그인 → 학생 앱 등) 휴대폰이 "연결 실패"로 착각해 이 화면을 띄우는 경우가 있음
+  // → 실제로 인터넷이 되면 바로 다시 들어가고, 정말 끊겼을 때만 안내를 보여줌 (짧은 시간에 3번 넘게 오면 안내 표시)
+  var HOME = 'https://www.fanmath.co.kr/login.html';
+  function retry() { location.replace(HOME); }
+  function showMsg() { document.getElementById('load').style.display = 'none'; document.getElementById('box').style.display = ''; }
+  (function () {
+    var now = Date.now(), list = [];
+    try { list = JSON.parse(sessionStorage.getItem('swcOff') || '[]').filter(function (t) { return now - t < 15000; }); } catch (e) {}
+    list.push(now);
+    try { sessionStorage.setItem('swcOff', JSON.stringify(list)); } catch (e) {}
+    if (navigator.onLine === false || list.length > 3) { showMsg(); return; }
+    var done = false;
+    var timer = setTimeout(function () { if (!done) { done = true; showMsg(); } }, 6000);
+    fetch('https://www.fanmath.co.kr/manifest.webmanifest?t=' + now, { mode: 'no-cors', cache: 'no-store' })
+      .then(function () { if (done) return; done = true; clearTimeout(timer); retry(); })
+      .catch(function () { if (done) return; done = true; clearTimeout(timer); showMsg(); });
+  })();
   // 연결이 돌아오면 자동으로 다시 시도
   window.addEventListener('online', retry);
 </script>
