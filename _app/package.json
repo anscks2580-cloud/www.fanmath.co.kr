@@ -5,7 +5,7 @@
   "description": "송우찬수학학원 정식 앱 (앱스토어·플레이스토어) — 화면은 www.fanmath.co.kr 를 그대로 불러옴",
   "scripts": {
     "patch": "node tools/patch-native.js",
-    "assets": "npx @capacitor/assets generate --iconBackgroundColor '#FFFFFF' --splashBackgroundColor '#4B3391' --splashBackgroundColorDark '#4B3391'",
+    "assets": "npx @capacitor/assets generate --iconBackgroundColor \"#FFFFFF\" --splashBackgroundColor \"#4B3391\" --splashBackgroundColorDark \"#4B3391\"",
     "sync": "npx cap sync"
   },
   "dependencies": {
