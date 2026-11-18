@@ -1,0 +1,48 @@
+송우찬수학학원 아이폰 앱 — 맥북에서 할 일 (순서대로)
+==================================================
+
+[0] 준비 (처음 한 번)
+  · 맥 App Store 에서 Xcode 설치 → 한 번 열어서 추가 구성요소 설치·동의
+  · https://nodejs.org 에서 LTS 버전 내려받아 설치
+  · 이 폴더(송우찬수학학원_아이폰앱)를 맥북 바탕화면에 두기
+
+[1] 알림 열쇠(APNs 키) 만들기 — 웹, 윈도우에서 해도 됨
+  1. developer.apple.com/account → Certificates, Identifiers & Profiles → Keys → [+]
+  2. 이름: 송우찬수학학원 알림 / "Apple Push Notifications service (APNs)" 체크 → Continue → Register
+  3. Download 눌러 .p8 파일 받기 (한 번만 받을 수 있음! 잘 보관)
+     → 화면의 Key ID (10자리) 메모
+  4. 오른쪽 위 이름 아래 또는 Membership 화면의 Team ID (10자리) 메모
+  5. 파이어베이스 콘솔(songmath) → 톱니바퀴 › 프로젝트 설정 › 클라우드 메시징 탭
+     → "Apple 앱 구성" 의 kr.co.fanmath.app → APNs 인증 키 [업로드]
+     → .p8 파일, 키 ID, 팀 ID 입력 → 업로드
+
+[2] 파이어베이스 아이폰 설정 파일 받기
+  파이어베이스 콘솔 → 프로젝트 설정 › 일반 탭 → 내 앱의 아이폰 앱(kr.co.fanmath.app)
+  → GoogleService-Info.plist 다운로드 → 이 폴더(설치_맥.command 있는 곳)에 넣기
+
+[3] 설치_맥.command 실행
+  · 더블클릭 (막히면: 마우스 오른쪽 클릭 › 열기 › 열기)
+  · 몇 분 걸리고, 끝나면 Xcode 가 자동으로 열림
+
+[4] Xcode 에서 할 일
+  1. 왼쪽 맨 위 파란 "App" 클릭 → 가운데 TARGETS 의 "App" → [Signing & Capabilities] 탭
+  2. "Automatically manage signing" 체크 → Team: Fan Mathematics Co., Ltd. 선택
+     Bundle Identifier 가 kr.co.fanmath.app 인지 확인
+  3. "+ Capability" → "Push Notifications" 추가
+     "+ Capability" → "Background Modes" 추가 → "Remote notifications" 체크
+  4. 왼쪽 파일 목록에서 App 폴더 안에 GoogleService-Info.plist 가 보이는지 확인
+     (안 보이면: Finder 에서 ios/App/App/GoogleService-Info.plist 를 Xcode 왼쪽 App 폴더로 끌어다 놓기
+      → "Copy items if needed" 체크, Target "App" 체크 → Finish)
+
+[5] 아이폰에 설치해서 확인
+  1. 아이폰을 케이블로 맥북에 연결 → 아이폰에서 "이 컴퓨터 신뢰"
+  2. 아이폰 설정 › 개인정보 보호 및 보안 › 개발자 모드 켜기 (재시동)
+  3. Xcode 위쪽 기기 선택에서 내 아이폰 고르기 → ▶ 버튼
+  4. 앱 열어서 로그인 → 내 정보 › 알림 설정 켜기 → 알림 테스트
+
+[6] 앱스토어에 올리기
+  1. Xcode 위쪽 기기 선택을 "Any iOS Device (arm64)" 로
+  2. 메뉴 Product › Archive → 끝나면 Organizer 창 → [Distribute App] → App Store Connect → Upload
+  3. appstoreconnect.apple.com 에서 앱 정보 입력 후 심사 제출 (그때 Claude 에게 물어보기)
+
+막히면 화면을 캡처해서 Claude 에게 보내기.
