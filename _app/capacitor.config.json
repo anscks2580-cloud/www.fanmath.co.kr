@@ -4,8 +4,7 @@
   "webDir": "www",
   "appendUserAgent": "SongmathApp",
   "server": {
-    "url": "https://www.fanmath.co.kr",
-    "appStartPath": "/login.html",
+    "url": "https://www.fanmath.co.kr/login.html",
     "errorPath": "offline.html",
     "allowNavigation": [
       "www.fanmath.co.kr",
