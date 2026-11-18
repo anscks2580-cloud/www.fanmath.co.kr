@@ -66,6 +66,19 @@ if (fs.existsSync(IOS)) {
   const gs = path.join(ROOT, 'GoogleService-Info.plist');
   if (fs.existsSync(gs)) { fs.copyFileSync(gs, path.join(IOS, 'GoogleService-Info.plist')); log('GoogleService-Info.plist 복사'); }
   else log('⚠️ GoogleService-Info.plist 가 아직 없음 (안내 2단계)');
+  // Xcode 프로젝트에 등록(앱 안에 들어가게) — 안 하면 앱이 파이어베이스 설정을 못 찾음
+  {
+    const pbx2 = path.join(ROOT, 'ios', 'App', 'App.xcodeproj', 'project.pbxproj');
+    let x = fs.readFileSync(pbx2, 'utf8');
+    if (fs.existsSync(gs) && !x.includes('GoogleService-Info.plist')) {
+      const BF = 'A1B2C3D4E5F6071829304A5B', FR = 'A1B2C3D4E5F6071829304A5C';
+      x = x.replace('/* End PBXBuildFile section */', `\t\t${BF} /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = ${FR} /* GoogleService-Info.plist */; };\n/* End PBXBuildFile section */`);
+      x = x.replace('/* End PBXFileReference section */', `\t\t${FR} /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };\n/* End PBXFileReference section */`);
+      x = x.replace(/(\t+)(\w+ \/\* public \*\/,\n)/, (m, t, rest) => `${t}${rest}${t}${FR} /* GoogleService-Info.plist */,\n`);
+      x = x.replace(/(\t+)(\w+ \/\* public in Resources \*\/,\n)/, (m, t, rest) => `${t}${rest}${t}${BF} /* GoogleService-Info.plist in Resources */,\n`);
+      fs.writeFileSync(pbx2, x); log('Xcode 프로젝트에 GoogleService-Info.plist 등록');
+    }
+  }
 }
 
 // ── 안드로이드 ──
