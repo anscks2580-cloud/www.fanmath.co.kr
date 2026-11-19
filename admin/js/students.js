@@ -93,6 +93,76 @@ window.selectAssignStudent = function(uid) {
 };
 
 // ── 개별 학생 등록 ──
+// 등록 안내 문구 (길어서 사라지지 않게 그대로 둠)
+function createNote(msg, type) {
+  const el = document.getElementById('createMsg');
+  el.textContent = msg; el.className = 'msg ' + type; el.style.display = 'block';
+}
+
+// 학생 문서 저장 + 학부모 계정 연결 + 입력칸 비우기 (새 계정 등록 · 예전 계정 살려서 등록 공용)
+async function finishCreateStudent(uid, f, extraNote) {
+  const assignedTags = collectCheckedTags('n-tagChecklist');
+  await setDoc(doc(db, 'students', uid), {
+    name: f.name, phone: f.phone, grade: f.grade, branch: f.branch, assignedTags,
+    teacherUid: f.teacherUid, teacherName: f.teacherName, days: f.days, classGroup: f.classGroup,
+    createdAt: new Date().toISOString()
+  });
+  let parentNote = '';
+  if (f.parentPhone && typeof window.linkParentAccount === 'function') {
+    try { await linkParentAccount({ id: uid, name: f.name }, f.parentPhone); parentNote = ' · 학부모 계정 생성'; }
+    catch (e) { parentNote = ' · ⚠️ 학부모 계정 실패: ' + e.message; }
+  }
+  createNote(`${f.name} 학생 등록 완료! (${f.branch} · 영상 접근 ${assignedTags.length}개 카테고리)${extraNote || ''}${parentNote}`, parentNote.includes('⚠️') ? 'error' : 'success');
+  document.getElementById('n-name').value = '';
+  document.getElementById('n-phone').value = '';
+  if (document.getElementById('n-parentphone')) document.getElementById('n-parentphone').value = '';
+  document.getElementById('n-classgroup').value = '';
+  renderTagChecklist('n-tagChecklist', []);
+  await loadStudents();
+}
+
+// 같은 이름의 로그인 계정이 이미 있을 때: 왜 있는지 서버에서 확인하고 상황에 맞게 처리
+//  · 재원생 → 이미 등록됨 안내   · 퇴원생 → 복귀 안내
+//  · 선생님·관리자 → 이름 구분 안내
+//  · 어느 명단에도 없음(예전에 명단에서만 지워진 계정) → 그 계정을 살려서 등록
+async function handleExistingLogin(f) {
+  let r;
+  try {
+    r = (await httpsCallable(functionsInstance, 'studentDiag')({ mode: 'name', name: f.name })).data;
+  } catch (e) {
+    createNote(`${f.name}: 같은 이름의 로그인 계정이 파이어베이스에 이미 있어 등록하지 못했습니다. ` +
+      `어떤 계정인지 확인하는 기능이 서버에 아직 없어요 — 홈페이지 폴더 → _서버함수_추가 → 학생진단 → 학생진단_배포.bat 을 한 번 실행한 뒤 다시 등록해 주세요. (${e.code || e.message})`, 'error');
+    return;
+  }
+  const email = (f.name + '@songmath.kr').toLowerCase();
+  const acc = (r.accounts || []).find((a) => String(a.email || '').toLowerCase() === email);
+  const tip = `동명이인이면 이름 뒤에 숫자를 붙여 등록해 주세요. (예: ${f.name}2)`;
+  if (!acc) { createNote(`${f.name}: 이미 등록된 이름인데 어떤 계정인지 찾지 못했습니다. 아래 「학생 진단」에서 이름 검색을 해 주세요.`, 'error'); return; }
+  if (acc.role === 'student') { createNote(`${f.name} 학생은 이미 재원생 명단에 있습니다 (${acc.branch || '관 미지정'}). ${tip}`, 'error'); return; }
+  if (acc.role === 'teacher' || acc.role === 'admin') { createNote(`${f.name}: 같은 이름의 ${acc.role === 'teacher' ? '선생님' : '관리자'} 계정이 있습니다. ${tip}`, 'error'); return; }
+  if (acc.role === 'parent') { createNote(`${f.name}: 같은 아이디의 학부모 계정이 있습니다. ${tip}`, 'error'); return; }
+  if (acc.role === 'withdrawn') {
+    await loadStudents();
+    createNote(`${f.name} 학생은 퇴원생 명단에 있습니다. 아래 「퇴원생 보기」에서 [복귀]를 눌러 주세요. ${tip}`, 'error');
+    return;
+  }
+  // 어느 명단에도 없는 계정 = 예전에 홈페이지 명단에서만 지워지고 파이어베이스 로그인 계정은 남은 경우
+  const made = acc.created ? new Date(acc.created).toLocaleDateString('ko-KR') : '-';
+  const last = acc.lastSignIn ? new Date(acc.lastSignIn).toLocaleDateString('ko-KR') : '기록 없음';
+  if (!confirm(`${f.name} — 예전에 쓰던 로그인 계정이 파이어베이스에 남아 있습니다.\n(만든 날 ${made} · 최근 로그인 ${last})\n\n` +
+    `예전에 다니던 같은 학생이면 [확인]을 눌러 주세요.\n· 그 계정을 그대로 살려서 ${f.branch} 학생으로 등록합니다\n· 비밀번호는 지금 입력한 전화번호(${f.phone})로 바뀝니다\n· 예전 계정에 남아 있던 기록이 있으면 다시 연결됩니다\n\n` +
+    `다른 학생(동명이인)이면 [취소]를 누르고 이름 뒤에 숫자를 붙여 등록해 주세요.`)) {
+    createNote(`${f.name}: 등록을 취소했습니다. ${tip}`, 'error');
+    return;
+  }
+  try {
+    await httpsCallable(functionsInstance, 'updateStudentAuth')({ uid: acc.uid, name: f.name, password: f.phone });
+    await finishCreateStudent(acc.uid, f, ' · 예전 로그인 계정을 살려서 등록');
+  } catch (e) {
+    createNote(`${f.name}: 예전 계정을 살리지 못했습니다 — ${authErrMsg(e)}`, 'error');
+  }
+}
+
 window.createStudent = async () => {
   const name = document.getElementById('n-name').value.trim();
   const phone = document.getElementById('n-phone').value.trim().replace(/-/g,'');
@@ -104,30 +174,30 @@ window.createStudent = async () => {
   const classGroup = document.getElementById('n-classgroup').value.trim();
   const parentPhone = (document.getElementById('n-parentphone')?.value || '').replace(/[^0-9]/g, '');
   if (!name || !phone) { showMsg('createMsg','이름과 전화번호를 입력해주세요.','error'); return; }
+  if (phone.length < 6) { showMsg('createMsg','전화번호가 너무 짧습니다 (비밀번호로 쓰이므로 6자리 이상).','error'); return; }
+  const f = { name, phone, grade, branch, teacherUid, teacherName, days, classGroup, parentPhone };
+
+  // 퇴원생 명단에 같은 이름이 있으면: 새로 만들지 말고 복귀 (기록이 그대로 이어짐)
+  const wd = withdrawnCache.find(s => s.name === name);
+  if (wd) {
+    if (confirm(`${name} 학생은 퇴원생 명단에 있습니다.\n(${wd.branch || '관 미지정'} · ${wd.grade || ''} · 퇴원 ${wd.leaveDate || '-'})\n\n` +
+      `예전에 다니던 같은 학생이면 [확인] → 복귀 처리합니다.\n· 학생·학부모 로그인이 다시 열리고 예전 기록이 그대로 이어집니다\n· 수납 프로그램도 「재원」으로 바뀝니다\n· 학년·반·선생님 등 바뀐 내용은 복귀 후 [수정]에서 고쳐 주세요\n\n` +
+      `다른 학생(동명이인)이면 [취소]를 누르고 이름 뒤에 숫자를 붙여 등록해 주세요.`)) {
+      const ok = await restoreStudent(wd.id, name, { skipConfirm: true });
+      if (ok) createNote(`${name} 학생을 복귀 처리했습니다. 학년·반·선생님·전화번호가 바뀌었으면 아래 목록의 [수정]에서 고쳐 주세요.`, 'success');
+    } else {
+      createNote(`${name}: 등록을 취소했습니다. 동명이인이면 이름 뒤에 숫자를 붙여 등록해 주세요. (예: ${name}2)`, 'error');
+    }
+    return;
+  }
 
   try {
     const email = name + '@songmath.kr';
     const cred = await createUserWithEmailAndPassword(secondaryAuth, email, phone);
-    const assignedTags = collectCheckedTags('n-tagChecklist');
-    await setDoc(doc(db, 'students', cred.user.uid), {
-      name, phone, grade, branch, assignedTags,
-      teacherUid, teacherName, days, classGroup,
-      createdAt: new Date().toISOString()
-    });
-    let parentNote = '';
-    if (parentPhone && typeof window.linkParentAccount === 'function') {
-      try { await linkParentAccount({ id: cred.user.uid, name }, parentPhone); parentNote = ' · 학부모 계정 생성'; }
-      catch (e) { parentNote = ' · ⚠️ 학부모 계정 실패: ' + e.message; }
-    }
-    showMsg('createMsg', `${name} 학생 등록 완료! (영상 접근 ${assignedTags.length}개 카테고리)${parentNote}`, parentNote.includes('⚠️') ? 'error' : 'success');
-    document.getElementById('n-name').value = '';
-    document.getElementById('n-phone').value = '';
-    if (document.getElementById('n-parentphone')) document.getElementById('n-parentphone').value = '';
-    document.getElementById('n-classgroup').value = '';
-    renderTagChecklist('n-tagChecklist', []);
-    await loadStudents();
+    await finishCreateStudent(cred.user.uid, f, '');
   } catch(e) {
-    showMsg('createMsg', e.code === 'auth/email-already-in-use' ? '이미 등록된 학생입니다.' : '오류: '+e.message, 'error');
+    if (e.code === 'auth/email-already-in-use') { await handleExistingLogin(f); return; }
+    showMsg('createMsg', '오류: '+e.message, 'error');
   }
 };
 
@@ -358,11 +428,11 @@ window.withdrawStudent = async (uid, name, opt) => {
 };
 
 // ── 복귀 (퇴원 취소) ────────────────────────────────────────
-window.restoreStudent = async (uid, name) => {
-  if (!confirm(`${name} 학생을 다시 재원으로 되돌릴까요?\n\n· 학생·학부모 로그인이 다시 열리고 명단에 다시 보입니다\n· 수납 프로그램도 「재원」으로 바뀌고 퇴원 때 종료된 수강반이 다시 이어집니다`)) return;
+window.restoreStudent = async (uid, name, opt) => {
+  if (!(opt && opt.skipConfirm) && !confirm(`${name} 학생을 다시 재원으로 되돌릴까요?\n\n· 학생·학부모 로그인이 다시 열리고 명단에 다시 보입니다\n· 수납 프로그램도 「재원」으로 바뀌고 퇴원 때 종료된 수강반이 다시 이어집니다`)) return;
   try {
     await httpsCallable(functionsInstance, 'restoreStudent')({ uid });
-  } catch (e) { alert('복귀 처리 실패: ' + e.message); return; }
+  } catch (e) { alert('복귀 처리 실패: ' + e.message); return false; }
   let billMsg = '';
   if (window.billLeave) {
     try { const b = await window.billLeave.restoreByHomepageStudent(uid); billMsg = (b.real || b.test) ? '\n수납: 재원으로 변경' : ''; }
@@ -370,6 +440,7 @@ window.restoreStudent = async (uid, name) => {
   }
   alert(`✅ ${name} 학생 복귀 완료${billMsg}`);
   await loadStudents();
+  return true;
 };
 
 // ── 퇴원생 목록 ─────────────────────────────────────────────
@@ -539,6 +610,7 @@ window.uploadExcel = async () => {
   btn.disabled = true;
   let ok = 0, skip = 0;
   const failList = [];
+  const skipNames = [];
 
   for (let i = 0; i < excelData.length; i++) {
     const row = excelData[i];
@@ -572,7 +644,7 @@ window.uploadExcel = async () => {
       }
     } catch(e) {
       if (e.code === 'auth/email-already-in-use') {
-        skip++;
+        skip++; skipNames.push(row.name);
       } else if (e.code === 'auth/too-many-requests') {
         // rate limit → 3초 대기 후 재시도
         await new Promise(r => setTimeout(r, 3000));
@@ -587,6 +659,7 @@ window.uploadExcel = async () => {
   }
 
   let msg = `완료! 신규 ${ok}명 / 중복(스킵) ${skip}명`;
+  if (skipNames.length) msg += ` (${skipNames.join(', ')} — 이미 있는 이름. 명단에 안 보이면 학생 관리 탭 「학생 진단」에서 이름 검색)`;
   if (failList.length > 0) msg += ` / 실패 ${failList.length}명: ${failList.join(', ')}`;
   showMsg('excelMsg', msg, ok > 0 ? 'success' : 'error');
   btn.disabled = false; btn.textContent = '일괄 등록';
