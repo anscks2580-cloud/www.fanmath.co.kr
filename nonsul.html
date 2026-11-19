@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>수리논술 상담 신청 | 송우찬수학학원 평촌관</title>
+<meta name="description" content="송우찬수학학원 평촌관 수리논술 상담 신청 — 정보를 남겨 주시면 확인 후 원장 선생님이 직접 상담 전화를 드립니다.">
+<link rel="canonical" href="https://www.fanmath.co.kr/nonsul.html">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="송우찬수학학원">
+<meta property="og:title" content="수리논술 상담 신청 | 송우찬수학학원 평촌관">
+<meta property="og:description" content="송우찬수학학원 평촌관 수리논술 상담 신청 — 정보를 남겨 주시면 확인 후 원장 선생님이 직접 상담 전화를 드립니다.">
+<meta property="og:url" content="https://www.fanmath.co.kr/nonsul.html">
+<meta property="og:image" content="https://www.fanmath.co.kr/assets/og/og-image.jpg">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="style.css">
+<style>
+  .form-wrap { max-width: 720px; margin: 0 auto; padding: 40px 24px 80px; }
+  .form-header { text-align:center; margin-bottom: 30px; }
+  .form-badge {
+    display:inline-block; font-size:11px; letter-spacing:2px; color:var(--purple, #5B3FA6);
+    border:1px solid var(--border); border-radius:100px; padding:5px 14px; margin-bottom:14px;
+  }
+  .form-header h1 { font-size:26px; font-weight:700; margin-bottom:10px; letter-spacing:-0.5px; }
+  .form-header p { font-size:13px; color:var(--muted); line-height:1.7; }
+
+  .f-section {
+    background: var(--bg-card);
+    border: 1px solid rgba(30,24,56,0.1);
+    border-radius: 14px;
+    padding: 22px 24px;
+    margin-bottom: 16px;
+  }
+  .f-label {
+    font-size: 13px; font-weight:600; color: var(--purple, #5B3FA6);
+    margin-bottom: 12px; display:flex; align-items:center; gap:6px;
+  }
+  .f-sub { font-size: 11px; color: var(--muted); font-weight:400; margin-left:4px; }
+
+  .f-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom: 10px; }
+  .f-row:last-child { margin-bottom:0; }
+  .f-field { flex:1; min-width: 140px; }
+  .f-field label { display:block; font-size:12px; color:#C9BEDD; margin-bottom:6px; font-weight:500; }
+  .f-field label .req { color: var(--purple, #5B3FA6); margin-left:2px; }
+  .f-field input[type=text], .f-field input[type=tel] {
+    width:100%; padding:11px 12px; border-radius:8px;
+    background: rgba(30,24,56,0.07); border:1px solid rgba(30,24,56,0.18);
+    color: var(--off-white); font-size:14px; font-family:inherit;
+  }
+  .f-field input:focus { outline:none; border-color: var(--gold); }
+
+  /* 설명회 선택 카드 */
+  .session-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  @media (max-width: 520px) { .session-grid { grid-template-columns:1fr; } }
+  .session-card {
+    position:relative; display:block; cursor:pointer;
+    border:1.5px solid var(--border-soft); border-radius:14px;
+    background: rgba(30,24,56,0.03); padding:18px 18px 16px;
+    transition: all .15s;
+  }
+  .session-card input { position:absolute; opacity:0; width:1px; height:1px; pointer-events:none; }
+  .session-card:hover { border-color: rgba(245,197,24,0.45); }
+  .session-card:has(input:checked) { border-color: var(--gold); background: var(--gold-glow); box-shadow: 0 0 0 1px rgba(245,197,24,0.35); }
+  .session-card .sc-branch { font-size:16px; font-weight:800; color:var(--off-white); display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .session-card .sc-branch .tick {
+    width:20px; height:20px; border-radius:50%; border:1.5px solid rgba(30,24,56,0.3);
+    display:inline-flex; align-items:center; justify-content:center; font-size:12px; color:transparent; flex-shrink:0;
+  }
+  .session-card:has(input:checked) .sc-branch .tick { background:var(--gold); border-color:var(--gold); color:var(--on-gold, #2A1E55); }
+  .session-card .sc-when { font-size:14px; font-weight:700; color:var(--purple, #5B3FA6); margin-bottom:4px; }
+  .session-card .sc-place { font-size:12px; color:var(--muted); line-height:1.5; }
+
+  .chip-group { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip-opt {
+    display:flex; align-items:center; gap:6px;
+    padding: 9px 15px; border-radius: 20px;
+    border:1px solid var(--border-soft); background: rgba(30,24,56,0.03);
+    font-size:13px; color: var(--muted); cursor:pointer; transition: all .15s;
+    position: relative;
+  }
+  .chip-opt input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+  .chip-opt:has(input:checked) { border-color: var(--gold); color: var(--purple, #5B3FA6); background: var(--gold-glow); }
+
+  .agree-box {
+    display:flex; align-items:flex-start; gap:10px; cursor:pointer;
+    font-size:13px; color:var(--off-white); line-height:1.6;
+  }
+  .agree-box input { margin-top:4px; accent-color: var(--gold); width:16px; height:16px; flex-shrink:0; }
+  .agree-detail { font-size:11.5px; color:var(--muted); line-height:1.6; margin-top:10px; padding-left:26px; }
+
+  .hidden { display:none !important; }
+
+  .submit-btn {
+    width:100%; padding:16px; margin-top: 8px;
+    background: var(--gold); color: var(--on-gold, #2A1E55); font-weight:700; font-size:15px;
+    border:none; border-radius:10px; cursor:pointer; transition: opacity .15s;
+  }
+  .submit-btn:disabled { opacity:0.5; cursor:not-allowed; }
+  .submit-btn:hover:not(:disabled) { opacity:0.9; }
+
+  .contact-line { text-align:center; font-size:12.5px; color:var(--muted); margin-top:18px; line-height:1.8; }
+  .contact-line a { color:var(--purple, #5B3FA6); text-decoration:none; font-weight:600; }
+
+  .result-box { text-align:center; padding: 50px 24px; }
+  .result-box .emoji { font-size: 44px; margin-bottom: 16px; }
+  .result-box h2 { font-size:20px; margin-bottom:12px; }
+  .result-box p { font-size:13px; color:var(--muted); line-height:1.8; }
+  .result-box .r-card {
+    display:inline-block; margin:18px auto 0; padding:16px 26px; border-radius:12px;
+    background: var(--gold-glow); border:1px solid var(--border); text-align:left;
+  }
+  .result-box .r-card b { color:var(--off-white); }
+  .result-box .r-card .when { font-size:15px; font-weight:800; color:var(--purple, #5B3FA6); margin-top:4px; }
+  .result-box .home-btn {
+    display:inline-block; margin-top:24px; padding:11px 22px; border-radius:10px;
+    border:1.5px solid var(--gold); color:var(--purple, #5B3FA6); text-decoration:none; font-size:13px; font-weight:700;
+  }
+  /* 이 페이지: 입력칸 이름 글씨를 더 진하게 */
+  .f-field label { color:#5F5878; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="index.html" style="display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#1E1838;flex-shrink:0;overflow:hidden;max-width:100%;">
+    <img src="swc-logo.svg" style="height:30px;width:30px;object-fit:contain;flex-shrink:0;display:block;" alt="SWC">
+    <span style="font-size:13px;font-weight:600;color:#1E1838;white-space:nowrap;letter-spacing:-0.3px;overflow:hidden;text-overflow:ellipsis;">송우찬수학학원</span>
+  </a>
+</nav>
+
+<div class="page">
+  <div class="form-wrap">
+    <div class="form-header">
+      <div class="form-badge">평촌관 · 수리논술</div>
+      <h1>수리논술 상담 신청</h1>
+      <p>아래 내용을 남겨 주시면<br>확인 후 원장 선생님께서 직접 상담 전화 드리겠습니다.</p>
+    </div>
+
+    <form id="nonsulForm">
+
+      <!-- 학생·학부모 연락처 -->
+      <div class="f-section">
+        <div class="f-label">학생 정보</div>
+        <div class="f-row">
+          <div class="f-field">
+            <label>학생 이름<span class="req">*</span></label>
+            <input type="text" name="studentName" required maxlength="40" placeholder="학생 이름" autocomplete="off">
+          </div>
+        </div>
+        <div class="f-row" style="margin-top:14px;">
+          <div class="f-field">
+            <label>학생 전화번호<span class="req">*</span></label>
+            <input type="tel" name="studentPhone" required maxlength="20" placeholder="010-0000-0000" inputmode="numeric" autocomplete="off">
+          </div>
+          <div class="f-field">
+            <label>학부모 전화번호<span class="req">*</span></label>
+            <input type="tel" name="parentPhone" required maxlength="20" placeholder="010-0000-0000" inputmode="numeric" autocomplete="off">
+          </div>
+        </div>
+      </div>
+
+      <!-- 수능 수학 -->
+      <div class="f-section">
+        <div class="f-label">수능 수학</div>
+        <div class="f-row">
+          <div class="f-field">
+            <label>수능 수학 선택과목<span class="req">*</span></label>
+            <div class="chip-group">
+              <label class="chip-opt"><input type="radio" name="suneungSubject" value="미적분" required>미적분</label>
+              <label class="chip-opt"><input type="radio" name="suneungSubject" value="확률과 통계">확률과 통계</label>
+              <label class="chip-opt"><input type="radio" name="suneungSubject" value="기하">기하</label>
+            </div>
+          </div>
+        </div>
+        <div class="f-row" style="margin-top:14px;">
+          <div class="f-field">
+            <label>수능 수학 점수<span class="req">*</span></label>
+            <input type="text" name="suneungScore" required maxlength="40" placeholder="예: 원점수 88점 / 2등급" autocomplete="off">
+          </div>
+        </div>
+      </div>
+
+      <!-- 수강한 과목 -->
+      <div class="f-section">
+        <div class="f-label">수강한 과목<span class="f-sub">배운 과목을 모두 선택해 주세요</span></div>
+        <div class="chip-group" id="takenGroup">
+          <label class="chip-opt"><input type="checkbox" name="taken" value="기하">기하</label>
+          <label class="chip-opt"><input type="checkbox" name="taken" value="확률과 통계">확률과 통계</label>
+          <label class="chip-opt"><input type="checkbox" name="taken" value="미적분">미적분</label>
+        </div>
+      </div>
+
+      <!-- 지원 학교 -->
+      <div class="f-section">
+        <div class="f-label">지원 학교</div>
+        <div class="f-row">
+          <div class="f-field">
+            <label>논술 지원 학교<span class="req">*</span></label>
+            <input type="text" name="applySchools" required maxlength="200" placeholder="예: ○○대 ○○학과, △△대 △△학과" autocomplete="off">
+          </div>
+        </div>
+      </div>
+
+      <!-- 개인정보 동의 -->
+      <div class="f-section">
+        <label class="agree-box">
+          <input type="checkbox" name="agree" required>
+          <span>개인정보 수집·이용에 동의합니다. <span class="req" style="color:var(--purple, #5B3FA6);">*</span></span>
+        </label>
+        <div class="agree-detail">
+          수집 항목: 학생 이름·전화번호, 학부모 전화번호, 수능 수학 선택과목·점수, 수강 과목, 지원 학교 &nbsp;|&nbsp; 이용 목적: 수리논술 상담 연락 &nbsp;|&nbsp; 보유 기간: 상담 종료 후 3개월 이내 파기
+        </div>
+      </div>
+
+      <button type="submit" class="submit-btn" id="submitBtn">수리논술 상담 신청하기</button>
+    </form>
+
+    <div class="contact-line" id="contactLine">
+      📞 문의 &nbsp;·&nbsp; 평촌관 <a href="tel:031-386-8899">031-386-8899</a>
+    </div>
+
+    <div class="result-box hidden" id="resultBox">
+      <div class="emoji">✅</div>
+      <h2>상담 신청이 접수되었습니다</h2>
+      <p>확인 후 원장 선생님께서 직접 상담 전화 드리겠습니다.</p>
+      <br>
+      <a href="index.html" class="home-btn">홈으로 돌아가기</a>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 텔레그램 알림 (상담 신청 · 설명회 신청과 같은 컨설트봇·채팅방) — 신청 내용은 텔레그램으로만 전달 ──
+const TELEGRAM_BOT_TOKEN = '8802440196:AAHh9EWYtR7ITLkXYlbYe5N4xD_sQ2JSS78';
+const TELEGRAM_CHAT_ID = '8913371664';
+
+// ── 전화번호 자동 하이픈 ──
+function formatPhone(v) {
+  const n = v.replace(/\D/g, '').slice(0, 11);
+  if (n.length < 4) return n;
+  if (n.length < 8) return n.slice(0, 3) + '-' + n.slice(3);
+  if (n.length < 11) return n.slice(0, 3) + '-' + n.slice(3, 6) + '-' + n.slice(6);
+  return n.slice(0, 3) + '-' + n.slice(3, 7) + '-' + n.slice(7);
+}
+document.querySelectorAll('input[type=tel]').forEach((el) => {
+  el.addEventListener('input', () => { el.value = formatPhone(el.value); });
+});
+
+function buildTelegramMessage(d) {
+  const v = (x) => (x ? x : '-');
+  return [
+    '✍️ 수리논술 상담 신청 [평촌관]',
+    '',
+    '🧑‍🎓 학생: ' + v(d.studentName) + ' / ' + v(d.studentPhone),
+    '👨‍👩‍👧 학부모: ' + v(d.parentPhone),
+    '📘 수능 수학 선택과목: ' + v(d.suneungSubject),
+    '💯 수능 수학 점수: ' + v(d.suneungScore),
+    '📚 수강한 과목: ' + v(d.taken),
+    '🏫 지원 학교: ' + v(d.applySchools),
+    '',
+    '🕒 ' + new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
+  ].join('\n');
+}
+async function sendTelegram(d) {
+  const res = await fetch('https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: buildTelegramMessage(d) })
+  });
+  if (!res.ok) throw new Error('Telegram ' + res.status);
+}
+
+const form = document.getElementById('nonsulForm');
+const submitBtn = document.getElementById('submitBtn');
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const fd = new FormData(form);
+  const studentPhone = (fd.get('studentPhone') || '').trim();
+  const parentPhone = (fd.get('parentPhone') || '').trim();
+  if (studentPhone.replace(/\D/g, '').length < 9) { alert('학생 전화번호를 정확히 입력해 주세요.'); return; }
+  if (parentPhone.replace(/\D/g, '').length < 9) { alert('학부모 전화번호를 정확히 입력해 주세요.'); return; }
+  const taken = fd.getAll('taken');
+  if (!taken.length) { alert('수강한 과목을 하나 이상 선택해 주세요.'); return; }
+
+  const data = {
+    studentName: (fd.get('studentName') || '').trim(),
+    studentPhone, parentPhone,
+    suneungSubject: fd.get('suneungSubject') || '',
+    suneungScore: (fd.get('suneungScore') || '').trim(),
+    taken: taken.join(', '),
+    applySchools: (fd.get('applySchools') || '').trim(),
+  };
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = '신청 중...';
+  try {
+    await sendTelegram(data);
+    form.classList.add('hidden');
+    document.getElementById('contactLine').classList.add('hidden');
+    document.getElementById('resultBox').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (err) {
+    console.error(err);
+    alert('신청이 전달되지 않았습니다. 잠시 후 다시 시도하시거나 평촌관(031-386-8899)으로 전화 주세요.');
+    submitBtn.disabled = false;
+    submitBtn.textContent = '수리논술 상담 신청하기';
+  }
+});
+</script>
+
+</body>
+</html>
