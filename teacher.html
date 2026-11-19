@@ -552,6 +552,7 @@ select option:disabled { color:#6B6489; }
     <button class="teacher-tab" onclick="switchTab('pastexams',this);initPastExamsTab()">기출문제</button>
     <button class="teacher-tab" onclick="switchTab('textbooks',this);initTextbooksTab()">시중교재</button>
     <button class="teacher-tab" onclick="switchTab('submaterials',this);smInit()">부교재 프린트</button>
+    <button class="teacher-tab" onclick="switchTab('examorig',this);eoInit()">기말고사 원본</button>
     <button class="teacher-tab" onclick="switchTab('watchstatus',this);initTeacherWatchStatus()">학생 시청현황</button>
     <button class="teacher-tab" onclick="switchTab('manual',this)">전임강사 매뉴얼</button>
   </div>
@@ -1495,6 +1496,43 @@ select option:disabled { color:#6B6489; }
       <div class="px-chips" id="smBrChips"></div>
       <div class="px-chips" id="smGrChips"></div>
       <div id="smList"><div class="px-empty">불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <!-- ══ 📄 2026년 2학기 기말고사 원본 (선생님 업로드 · 확인) ══ -->
+  <div class="tab-panel" id="tab-examorig">
+    <div class="card">
+      <div class="card-title">⬆️ 2026년 2학기 기말고사 원본 올리기</div>
+      <div class="sm-up">
+        <div class="sm-form">
+          <div><label>관</label><select id="eoBranch"><option value="평촌관">평촌관</option><option value="산본관">산본관</option></select></div>
+          <div><label>학년</label><select id="eoGrade" onchange="eoGradeChanged()"><option value="">학년 선택</option><option>중1</option><option>중2</option><option>중3</option><option>고1</option><option>고2</option><option>고3</option></select></div>
+          <div><label>학교</label><input type="text" id="eoSchool" list="eoSchoolList" placeholder="예: 백영고" autocomplete="off"><datalist id="eoSchoolList"></datalist></div>
+          <div id="eoSubjectWrap" style="display:none;"><label>과목 (고2)</label><select id="eoSubject"><option value="">과목 선택</option><option>미적분1</option><option>확률과 통계</option><option>기하</option></select></div>
+        </div>
+        <div class="sm-drop" id="eoDrop" onclick="document.getElementById('eoFile').click()">
+          📎 시험지 원본 <b>PDF 또는 사진</b>을 여기로 끌어오거나 눌러서 선택 (여러 개 가능 · 파일당 50MB까지)
+        </div>
+        <input type="file" id="eoFile" accept="application/pdf,.pdf,image/*" multiple hidden onchange="eoAddFiles(this.files);this.value=''">
+        <div class="sm-pick" id="eoPick"></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+          <button class="btn btn-gold" id="eoUpBtn" onclick="eoUpload()">올리기</button>
+        </div>
+        <div class="alert ok" id="eo-ok" style="margin-top:10px;"></div>
+        <div class="alert err" id="eo-err" style="margin-top:10px;"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;">
+        <span>📄 올라온 기말고사 원본</span>
+        <button class="btn btn-outline btn-sm" onclick="eoLoad(true)">새로고침</button>
+      </div>
+      <div class="px-toolbar">
+        <input type="search" id="eoSearch" placeholder="학교 이름으로 찾기 (예: 백영고)" oninput="eoSetQuery(this.value)">
+      </div>
+      <div class="px-chips" id="eoBrChips"></div>
+      <div class="px-chips" id="eoGrChips"></div>
+      <div id="eoList"><div class="px-empty">불러오는 중...</div></div>
     </div>
   </div>
 
@@ -6394,6 +6432,7 @@ window.addEventListener('message', (e) => { if (e.data && e.data.type === 'pcRea
       { id: 'pastexams', label: '기출문제', desc: '시험명 › 학년 › 지역 PDF' },
       { id: 'textbooks', label: '시중교재', desc: '학교급 › 학년 › 교재 PDF' },
       { id: 'submaterials', label: '부교재 프린트', desc: '학교별 부교재 프린트 · 관 › 학년 › 학교 · 올리기 · 다운로드' },
+      { id: 'examorig', label: '기말고사 원본', desc: '2026년 2학기 기말고사 원본 시험지 · 관 › 학년 › 학교 · 올리기 · 확인' },
     ] },
     { id: 'manual',  label: '매뉴얼', icon: '📖', items: [{ id: 'manual', label: '전임강사 매뉴얼', desc: '검색 · 목차' }] },
   ];
@@ -6570,6 +6609,20 @@ onAuthStateChanged(auth, async (user) => {
   }, (e) => console.warn('[기출 알림]', e));
 });
 </script>
+<!-- ══════════ 📄 기말고사 원본 올리기 안내 팝업 (선생님 로그인 시 하루 한 번 · 지금까지 올라온 현황 확인) ══════════ -->
+<div id="eoPopModal" onclick="if(event.target===this)eoPopClose()"
+  style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:9990;align-items:center;justify-content:center;padding:16px;">
+  <div style="width:100%;max-width:460px;max-height:86vh;overflow-y:auto;background:var(--bg-card,#fff);border:1px solid rgba(124,58,237,0.35);border-radius:16px;padding:24px;box-shadow:0 20px 60px rgba(30,24,56,0.2);">
+    <div style="font-size:30px;line-height:1;margin-bottom:8px;">📄</div>
+    <div style="font-size:19px;font-weight:700;margin-bottom:4px;">2026년 2학기 기말고사 원본을 올려 주세요</div>
+    <div style="font-size:13px;color:var(--muted,#888);margin-bottom:14px;line-height:1.6;">담당 학생 학교의 시험지 원본(PDF·사진)을 받는 대로 올려 주세요.<br>자료실 › 기말고사 원본에서 올리고 확인할 수 있습니다.</div>
+    <div id="eoPopBody"></div>
+    <div style="display:flex;gap:8px;margin-top:18px;">
+      <button class="btn btn-outline btn-sm" style="flex:1;" onclick="eoPopClose()">확인</button>
+      <button class="btn btn-gold btn-sm" style="flex:1;" onclick="eoPopGo()">원본 올리러 가기</button>
+    </div>
+  </div>
+</div>
 <!-- ══════════ ✏️ 시험 점수 입력 + 🗂 학교별 부교재 프린트 ══════════
      · 시험 점수: Firestore examScores/{시험키}_{학생id} — 선생님은 본인 담당 학생 것만 입력·조회
      · 부교재 프린트: Firestore subMaterials/{id} + Storage subMaterials/{id}/파일 — 선생님 누구나 올리고 내려받음, 삭제는 올린 사람만 ══════════ -->
@@ -6593,6 +6646,9 @@ const brCls = (b) => b === '산본관' ? 'sb' : 'pc';
 const ko = (a, b) => String(a || '').localeCompare(String(b || ''), 'ko');
 const GRADE_ORDER = ['중1', '중2', '중3', '고1', '고2', '고3'];
 const gradeIdx = (g) => { const i = GRADE_ORDER.indexOf(String(g || '').trim()); return i < 0 ? 99 : i; };
+// 기말고사 원본: 부교재 프린트와 같은 저장소(subMaterials)에 kind 로 구분해 저장 — 다음 시험 때는 EO_EXAM 만 바꾸면 됨
+const EO_KIND = 'examOriginal';
+const EO_EXAM = { key: '2026-2-final', name: '2026년 2학기 기말고사' };
 
 let me = null;   // { uid, name, branch }
 const meReady = new Promise((resolve) => {
@@ -6917,7 +6973,7 @@ window.smLoad = async function (force = false) {
     await meReady;
     const snap = await getDocs(collection(db, 'subMaterials'));
     smItems = [];
-    snap.forEach((d) => smItems.push({ id: d.id, ...d.data() }));
+    snap.forEach((d) => { if (d.data().kind !== EO_KIND) smItems.push({ id: d.id, ...d.data() }); });   // 기말고사 원본은 따로(기말고사 원본 메뉴)
   } catch (e) {
     smItems = null;
     box.innerHTML = `<div class="px-empty">불러오지 못했습니다 (${esc(e.code || e.message)})</div>`;
@@ -7026,6 +7082,237 @@ window.smDelete = async function (btn) {
     note('sm-ok', '삭제했습니다.', 'ok');
   } catch (e) { btn.disabled = false; note('sm-err', '삭제하지 못했습니다 (' + (e.code || e.message) + ')', 'err'); }
 };
+
+// ══════════════════════════════════════
+// 📄 기말고사 원본 — 선생님이 학교 시험지 원본을 올림 (관 › 학년 › 학교, 고2는 과목 구분)
+//   저장: Firestore subMaterials/{id} (kind: 'examOriginal', examKey) + Storage subMaterials/{id}/파일
+//   올라오면 관리자 페이지에서 지정된 원장 계정에게만 알림 (admin/js/examorig-notice.js)
+// ══════════════════════════════════════
+let eoItems = null, eoPicked = [], eoKeySeq = 0, eoBusy = false, eoInited = false;
+const eoState = { br: '', gr: '', q: '' };
+const eoTime = (it) => it.createdAtMs || (it.createdAt?.seconds ? it.createdAt.seconds * 1000 : (Date.parse(it.createdAtStr || '') || 0));
+
+async function eoFetch() {
+  await meReady;
+  const snap = await getDocs(query(collection(db, 'subMaterials'), where('kind', '==', EO_KIND)));
+  const list = [];
+  snap.forEach((d) => { if (d.data().examKey === EO_EXAM.key) list.push({ id: d.id, ...d.data() }); });
+  return list;
+}
+
+window.eoInit = async function () {
+  if (!eoInited) {
+    eoInited = true;
+    const drop = $('eoDrop');
+    drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('over'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('over'));
+    drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('over'); if (e.dataTransfer.files?.length) eoAddFiles(e.dataTransfer.files); });
+    await meReady;
+    if (BRANCHES.includes(me.branch)) $('eoBranch').value = me.branch;
+    eoFillSchools();
+  }
+  eoLoad();
+};
+window.eoGradeChanged = function () {
+  const g2 = $('eoGrade').value === '고2';
+  $('eoSubjectWrap').style.display = g2 ? '' : 'none';
+  if (!g2) $('eoSubject').value = '';
+};
+async function eoFillSchools() {
+  const set = new Set();
+  try { const snap = await getDocs(collection(db, 'students')); snap.forEach((d) => { const s = smNormSchool(d.data().school); if (s) set.add(s); }); } catch (e) {}
+  (eoItems || []).forEach((it) => it.school && set.add(it.school));
+  $('eoSchoolList').innerHTML = Array.from(set).sort(ko).map((s) => `<option value="${esc(s)}">`).join('');
+}
+window.eoAddFiles = function (files) {
+  for (const f of Array.from(files)) {
+    if (!smOkType(f)) { note('eo-err', `${f.name}: PDF나 사진 파일만 올릴 수 있습니다.`, 'err'); continue; }
+    if (f.size > SM_MAX) { note('eo-err', `${f.name}: 50MB가 넘어서 올릴 수 없습니다.`, 'err'); continue; }
+    eoPicked.push({ file: f, key: 'e' + (++eoKeySeq) });
+  }
+  eoRenderPicked();
+};
+window.eoRemovePicked = (k) => { if (eoBusy) return; eoPicked = eoPicked.filter((p) => p.key !== k); eoRenderPicked(); };
+function eoRenderPicked() {
+  $('eoPick').innerHTML = eoPicked.map((p) => `<div class="sm-pick-i" id="eop-${p.key}">
+    <span>${/^image\//.test(p.file.type) ? '🖼' : '📄'} ${esc(p.file.name)}</span><small>${smSize(p.file.size)}</small>
+    <div class="pg"><i></i></div>
+    <button class="x" onclick="eoRemovePicked('${p.key}')" title="빼기">✕</button></div>`).join('');
+}
+
+window.eoUpload = async function () {
+  if (eoBusy) return;
+  await meReady;
+  const branch = $('eoBranch').value, grade = $('eoGrade').value, school = smNormSchool($('eoSchool').value);
+  const subject = grade === '고2' ? $('eoSubject').value : '';
+  if (!grade) { note('eo-err', '학년을 선택하세요.', 'err'); return; }
+  if (!school) { note('eo-err', '학교를 입력하세요.', 'err'); $('eoSchool').focus(); return; }
+  if (grade === '고2' && !subject) { note('eo-err', '고2는 과목을 선택하세요.', 'err'); return; }
+  if (!eoPicked.length) { note('eo-err', '올릴 파일을 선택하세요.', 'err'); return; }
+  eoBusy = true;
+  const btn = $('eoUpBtn'); btn.disabled = true; btn.textContent = '올리는 중...';
+  let ok = 0; const fails = [];
+  for (const p of [...eoPicked]) {
+    const f = p.file;
+    const id = doc(collection(db, 'subMaterials')).id;
+    const safe = f.name.replace(/[\\/#?\[\]*]/g, '_');
+    const path = `subMaterials/${id}/${safe}`;
+    const contentType = smContentType(f);
+    try {
+      await new Promise((resolve, reject) => {
+        const task = uploadBytesResumable(ref(storage, path), f, { contentType });
+        task.on('state_changed', (s) => {
+          const bar = document.querySelector(`#eop-${p.key} .pg i`);
+          if (bar) bar.style.width = (s.bytesTransferred / s.totalBytes * 100) + '%';
+        }, reject, resolve);
+      });
+      await setDoc(doc(db, 'subMaterials', id), {
+        kind: EO_KIND, examKey: EO_EXAM.key, examName: EO_EXAM.name,
+        branch, grade, school, subject,
+        title: f.name.replace(/\.[^.]+$/, ''),
+        fileName: f.name, path, size: f.size, contentType,
+        uploaderUid: me.uid, uploaderName: me.name,
+        createdAt: serverTimestamp(), createdAtStr: new Date().toISOString(), createdAtMs: Date.now(),
+      });
+      eoPicked = eoPicked.filter((x) => x.key !== p.key);
+      ok++;
+    } catch (e) {
+      fails.push(`${f.name}(${e.code || e.message})`);
+      try { await deleteObject(ref(storage, path)); } catch (_) {}
+    }
+  }
+  eoBusy = false; btn.disabled = false; btn.textContent = '올리기';
+  eoRenderPicked();
+  if (ok) note('eo-ok', `${branch} ${school} ${grade}${subject ? ' ' + subject : ''} 원본 ${ok}개를 올렸습니다.`, 'ok');
+  if (fails.length) note('eo-err', '못 올린 파일: ' + fails.join(', '), 'err');
+  await eoLoad(true);
+  eoFillSchools();
+};
+
+window.eoLoad = async function (force = false) {
+  const box = $('eoList');
+  if (eoItems && !force) { eoRender(); return; }
+  box.innerHTML = '<div class="px-empty">불러오는 중...</div>';
+  try { eoItems = await eoFetch(); }
+  catch (e) { eoItems = null; box.innerHTML = `<div class="px-empty">불러오지 못했습니다 (${esc(e.code || e.message)})</div>`; return; }
+  eoRender();
+};
+window.eoSetQuery = (q) => { eoState.q = q.trim(); eoRenderList(); };
+window.eoSetBr = (v) => { eoState.br = v; eoRender(); };
+window.eoSetGr = (v) => { eoState.gr = v; eoRender(); };
+function eoRender() {
+  const chip = (fn, v, cur, label, n) => `<button class="px-chip${v === cur ? ' on' : ''}" onclick="${fn}('${v}')">${label}<span class="n">${n}</span></button>`;
+  const inBr = eoItems.filter((it) => !eoState.br || it.branch === eoState.br);
+  $('eoBrChips').innerHTML = chip('eoSetBr', '', eoState.br, '전체 관', eoItems.length) +
+    BRANCHES.map((b) => chip('eoSetBr', b, eoState.br, b, eoItems.filter((it) => it.branch === b).length)).join('');
+  $('eoGrChips').innerHTML = chip('eoSetGr', '', eoState.gr, '전체 학년', inBr.length) +
+    GRADE_ORDER.filter((g) => inBr.some((it) => it.grade === g)).map((g) => chip('eoSetGr', g, eoState.gr, g, inBr.filter((it) => it.grade === g).length)).join('');
+  eoRenderList();
+}
+function eoRenderList() {
+  const box = $('eoList');
+  const q = smNormSchool(eoState.q);
+  const list = eoItems.filter((it) => (!eoState.br || it.branch === eoState.br) && (!eoState.gr || it.grade === eoState.gr) &&
+    (!q || smNormSchool(`${it.school}${it.subject || ''}${it.fileName}`).includes(q)));
+  if (!list.length) { box.innerHTML = `<div class="px-empty">${eoItems.length ? '조건에 맞는 원본이 없습니다.' : '아직 올라온 기말고사 원본이 없습니다.'}</div>`; return; }
+  // 관 › 학년 › 학교(› 과목) 순으로 묶음
+  const groups = {};
+  list.forEach((it) => { const k = `${it.branch}|${it.grade}|${it.school}|${it.subject || ''}`; (groups[k] = groups[k] || []).push(it); });
+  const keys = Object.keys(groups).sort((a, b) => {
+    const [ab, ag, as, au] = a.split('|'), [bb, bg, bs, bu] = b.split('|');
+    return BRANCHES.indexOf(ab) - BRANCHES.indexOf(bb) || gradeIdx(ag) - gradeIdx(bg) || ko(as, bs) || ko(au, bu);
+  });
+  const dayAgo = Date.now() - 86400000;
+  box.innerHTML = `<div class="px-meta">${esc(EO_EXAM.name)} · 총 ${list.length}개</div>` + keys.map((k) => {
+    const [b, g, s, u] = k.split('|');
+    const rows = groups[k].sort((x, y) => eoTime(y) - eoTime(x));
+    return `<div class="sm-group">
+      <div class="sm-group-h"><span class="br ${brCls(b)}">${esc(b)}</span><span class="g">${esc(g)}</span>${esc(s)}${u ? ' · ' + esc(u) : ''}<small>${rows.length}개</small></div>
+      <div class="px-rows">${rows.map((it) => {
+        const t = eoTime(it), d = t ? new Date(t) : null;
+        const mine = me && it.uploaderUid === me.uid;
+        return `<div class="sm-row">
+          <span class="sm-ic">${smIsImg(it) ? '🖼' : '📄'}</span>
+          <div class="sm-info">
+            <div class="sm-t">${esc(it.fileName || it.title)}${t > dayAgo ? '<span class="mt-new">NEW</span>' : ''}</div>
+            <div class="sm-m">${esc(it.uploaderName || '')} 선생님${d ? ` · ${d.getFullYear()}. ${d.getMonth() + 1}. ${d.getDate()}.` : ''}${it.size ? ' · ' + smSize(it.size) : ''}</div>
+          </div>
+          <div class="sm-acts">
+            <button class="tb-btn" data-id="${esc(it.id)}" onclick="eoView(this)">보기</button>
+            <button class="tb-btn dl" data-id="${esc(it.id)}" onclick="eoDownload(this)">다운로드</button>
+            ${mine ? `<button class="tb-btn" data-id="${esc(it.id)}" onclick="eoDelete(this)" style="color:#D64545;">삭제</button>` : ''}
+          </div>
+        </div>`;
+      }).join('')}</div></div>`;
+  }).join('');
+}
+const eoFind = (btn) => (eoItems || []).find((x) => x.id === btn.dataset.id);
+window.eoView = async function (btn) {
+  const it = eoFind(btn); if (!it) return;
+  const w = window.open('', '_blank');   // 팝업 차단 방지: 클릭 순간 창부터 엶
+  try {
+    const url = await getDownloadURL(ref(storage, it.path));
+    if (w) w.location.href = url; else window.open(url, '_blank');
+  } catch (e) { if (w) w.close(); alert('파일을 열지 못했습니다 (' + (e.code || e.message) + ')'); }
+};
+window.eoDownload = async function (btn) {
+  if (btn.dataset.url) { window.open(btn.dataset.url, '_blank'); return; }
+  const it = eoFind(btn); if (!it) return;
+  const label = btn.textContent;
+  btn.disabled = true; btn.textContent = '받는 중...';
+  let url = '';
+  try {
+    url = await getDownloadURL(ref(storage, it.path));
+    const res = await fetch(url);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const blob = await res.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${it.school}_${it.grade}${it.subject ? '_' + it.subject : ''}_기말원본_${it.fileName || it.title}`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 60000);
+    btn.textContent = label;
+  } catch (e) {
+    if (url) { btn.dataset.url = url; btn.textContent = '눌러서 열기'; }
+    else { btn.textContent = label; alert('파일을 받지 못했습니다 (' + (e.code || e.message) + ')'); }
+  } finally { btn.disabled = false; }
+};
+window.eoDelete = async function (btn) {
+  const it = eoFind(btn); if (!it) return;
+  if (!confirm(`「${it.school} ${it.grade} — ${it.fileName || it.title}」 원본을 삭제할까요?`)) return;
+  btn.disabled = true;
+  try {
+    try { await deleteObject(ref(storage, it.path)); } catch (e) { if (e.code !== 'storage/object-not-found') throw e; }
+    await deleteDoc(doc(db, 'subMaterials', it.id));
+    eoItems = eoItems.filter((x) => x.id !== it.id);
+    eoRender();
+    note('eo-ok', '삭제했습니다.', 'ok');
+  } catch (e) { btn.disabled = false; note('eo-err', '삭제하지 못했습니다 (' + (e.code || e.message) + ')', 'err'); }
+};
+
+// ── 로그인 안내 팝업: 하루 한 번, 지금까지 올라온 원본 현황(관별 · 학년 · 학교)을 같이 보여 줌 ──
+const eoPopKey = () => 'swc_eo_pop_' + EO_EXAM.key + '_' + (me ? me.uid : '');
+const eoToday = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+window.eoPopClose = () => { $('eoPopModal').style.display = 'none'; try { localStorage.setItem(eoPopKey(), eoToday()); } catch (e) {} };
+window.eoPopGo = () => { window.eoPopClose(); if (typeof window.calGoTab === 'function') window.calGoTab('examorig', 'eoInit'); };
+meReady.then(async () => {
+  try { if (localStorage.getItem(eoPopKey()) === eoToday()) return; } catch (e) {}
+  let list = [];
+  try { list = await eoFetch(); eoItems = eoItems || list; } catch (e) { console.warn('[기말고사 원본 팝업]', e); }
+  const mine = list.filter((it) => it.uploaderUid === me.uid).length;
+  const byBranch = BRANCHES.map((b) => {
+    const rows = list.filter((it) => it.branch === b);
+    const schools = {};
+    rows.forEach((it) => { const k = `${it.grade} ${it.school}${it.subject ? '(' + it.subject + ')' : ''}`; schools[k] = (schools[k] || 0) + 1; });
+    const names = Object.keys(schools).sort((x, y) => gradeIdx(x.split(' ')[0]) - gradeIdx(y.split(' ')[0]) || ko(x, y));
+    return `<div style="border:1px solid var(--border-soft,#e5e2ee);border-radius:12px;padding:11px 14px;margin-bottom:8px;">
+      <div style="font-size:13px;font-weight:800;color:${b === '산본관' ? '#B98A00' : 'var(--purple,#5B3FA6)'};margin-bottom:4px;">${b} · ${rows.length}개</div>
+      <div style="font-size:12.5px;color:var(--muted,#888);line-height:1.7;">${names.length ? names.map(esc).join(' · ') : '아직 올라온 원본이 없습니다.'}</div>
+    </div>`;
+  }).join('');
+  $('eoPopBody').innerHTML = `<div style="font-size:12.5px;font-weight:700;margin-bottom:8px;">지금까지 올라온 원본 (내가 올린 것 ${mine}개)</div>` + byBranch;
+  setTimeout(() => { $('eoPopModal').style.display = 'flex'; }, 1600);   // 로그인 직후 다른 팝업보다 살짝 늦게, 그 아래에 뜸
+});
 </script>
 
 </body>
