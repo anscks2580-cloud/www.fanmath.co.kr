@@ -118,6 +118,8 @@
   }
   /* 이 페이지: 입력칸 이름 글씨를 더 진하게 */
   .f-field label { color:#5F5878; }
+  .school-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px 10px; }
+  @media (max-width: 520px) { .school-grid { grid-template-columns:1fr; } }
 </style>
 </head>
 <body>
@@ -191,13 +193,33 @@
         </div>
       </div>
 
-      <!-- 지원 학교 -->
+      <!-- 지원 학교 (6칸 — 안 쓴 칸은 비워 둠) -->
       <div class="f-section">
-        <div class="f-label">지원 학교</div>
-        <div class="f-row">
+        <div class="f-label">지원 학교<span class="f-sub">최대 6곳 · 안 쓰는 칸은 비워 두세요</span></div>
+        <div class="school-grid">
           <div class="f-field">
-            <label>논술 지원 학교<span class="req">*</span></label>
-            <input type="text" name="applySchools" required maxlength="200" placeholder="예: ○○대 ○○학과, △△대 △△학과" autocomplete="off">
+            <label>지원 학교 1<span class="req">*</span></label>
+            <input type="text" name="applySchool" required maxlength="60" placeholder="예: ○○대 ○○학과" autocomplete="off">
+          </div>
+          <div class="f-field">
+            <label>지원 학교 2</label>
+            <input type="text" name="applySchool" maxlength="60" placeholder="학교 · 학과" autocomplete="off">
+          </div>
+          <div class="f-field">
+            <label>지원 학교 3</label>
+            <input type="text" name="applySchool" maxlength="60" placeholder="학교 · 학과" autocomplete="off">
+          </div>
+          <div class="f-field">
+            <label>지원 학교 4</label>
+            <input type="text" name="applySchool" maxlength="60" placeholder="학교 · 학과" autocomplete="off">
+          </div>
+          <div class="f-field">
+            <label>지원 학교 5</label>
+            <input type="text" name="applySchool" maxlength="60" placeholder="학교 · 학과" autocomplete="off">
+          </div>
+          <div class="f-field">
+            <label>지원 학교 6</label>
+            <input type="text" name="applySchool" maxlength="60" placeholder="학교 · 학과" autocomplete="off">
           </div>
         </div>
       </div>
@@ -257,7 +279,8 @@ function buildTelegramMessage(d) {
     '📘 수능 수학 선택과목: ' + v(d.suneungSubject),
     '💯 수능 수학 점수: ' + v(d.suneungScore),
     '📚 수강한 과목: ' + v(d.taken),
-    '🏫 지원 학교: ' + v(d.applySchools),
+    '🏫 지원 학교 (' + d.applySchools.length + '곳)',
+    ...d.applySchools.map((x, i) => '   ' + (i + 1) + '. ' + x),
     '',
     '🕒 ' + new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
   ].join('\n');
@@ -290,7 +313,7 @@ form.addEventListener('submit', async (e) => {
     suneungSubject: fd.get('suneungSubject') || '',
     suneungScore: (fd.get('suneungScore') || '').trim(),
     taken: taken.join(', '),
-    applySchools: (fd.get('applySchools') || '').trim(),
+    applySchools: fd.getAll('applySchool').map((x) => String(x).trim()).filter(Boolean),
   };
 
   submitBtn.disabled = true;
