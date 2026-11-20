@@ -539,7 +539,8 @@ select option:disabled { color:#6B6489; }
   <div class="teacher-tabs" id="tnavLegacy" hidden>
     <button class="teacher-tab active" onclick="switchTab('calendar',this);refreshTeacherCalendar()">📅 일정</button>
     <button class="teacher-tab" onclick="switchTab('hwlog',this);hwInit()">숙제 입력</button>
-    <button class="teacher-tab" onclick="switchTab('sheets',this);shInit()">HCS 시험지 현황</button>
+    <!-- HCS 시험지 현황 — 공지 전이라 숨김 (다시 열 때: 이 줄 주석 해제 + 아래 HCS_OPEN = true + 사이드바 메뉴 줄 주석 해제)
+    <button class="teacher-tab" onclick="switchTab('sheets',this);shInit()">HCS 시험지 현황</button> -->
     <button class="teacher-tab" onclick="switchTab('weekly',this)">주간성취도</button>
     <button class="teacher-tab" onclick="switchTab('monthly',this)">월말보고서</button>
     <button class="teacher-tab" onclick="switchTab('tests',this)">누적테스트</button>
@@ -663,7 +664,7 @@ select option:disabled { color:#6B6489; }
       </div>
 
       <div class="form-group" style="margin-bottom:20px;">
-        <label>숙제 내용 <span style="color:#D64545;">*</span> <small style="color:var(--muted);font-weight:400;">· HCS 시험지만 숙제면 비워도 됩니다</small></label>
+        <label>숙제 내용 <span style="color:#D64545;">*</span> </label>
         <textarea id="hwContent" placeholder="예: 쎈 B단계 120~135번 / 개념원리 확인문제 p.88~92" style="min-height:90px;"></textarea>
       </div>
 
@@ -1811,6 +1812,7 @@ import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged, setPe
 import { getFirestore, doc, setDoc, updateDoc, getDoc, getDocs, addDoc, collection, query, where, orderBy, deleteDoc, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 import * as SC from "./sheet-core.js?v=1794660000";   // HCS 시험지 ↔ 숙제·답안 제출·채점 연동 공용 모듈
+const HCS_OPEN = false;   // HCS 공지 전 — 선생님 화면에서 HCS 관련(메뉴·숙제 연결·할 일)을 숨김. 공지할 때 true 로
 
 const firebaseConfig = {
   apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
@@ -3159,7 +3161,7 @@ function hwRenderSheets() {
   const ids = new Set([...document.querySelectorAll('#hwStudents input:checked')].map(c => c.value));
   const byTest = new Map();
   hwTasks.filter(t => t.date === date && ids.has(t.studentId)).forEach(t => { const o = byTest.get(t.testId) || { testId: t.testId, title: t.title, count: t.count, list: [] }; o.list.push(t); byTest.set(t.testId, o); });
-  if (!hwCls || !byTest.size) { box.style.display = 'none'; el.innerHTML = ''; return; }
+  if (!HCS_OPEN || !hwCls || !byTest.size) { box.style.display = 'none'; el.innerHTML = ''; return; }
   box.style.display = '';
   if (!hwSheetTouched) {   // 기본: 아직 다른 숙제에 연결되지 않은 시험지는 모두 체크 (수정 중이면 그 숙제에 연결된 것)
     hwSheetSel = new Set([...byTest.values()].filter(o => o.list.some(t => hwEditing ? t.logId === hwEditing : !t.logId)).map(o => o.testId));
@@ -4090,7 +4092,7 @@ async function calBuildAutoTodos() {
   } catch (e) { console.warn('[일정] 토요클리닉 확인 실패:', e.message); }
 
   // HCS 시험지 — 오늘 수업 있는 내 학생 중 답안 미제출·오답 시험지 미출제 (자동 채점도 여기서 한 번 돌림)
-  try {
+  if (HCS_OPEN) try {
     await SC.syncSubmitted(db, { teacherUid: currentTeacher.uid });
     const ts = await getDocs(query(collection(db, 'sheetTasks'), where('teacherUid', '==', currentTeacher.uid)));
     const dayName = CAL_DOW[dow]; const todayIds = new Set(my.filter(s => SC.daysOf(s).includes(dayName)).map(s => s.id));
@@ -6416,7 +6418,7 @@ window.addEventListener('message', (e) => { if (e.data && e.data.type === 'pcRea
     { id: 'home',    label: '홈',     icon: '📅', items: [{ id: 'calendar', label: '일정 · 오늘 할 일', desc: '달력 · 할 일 · 마감' }] },
     { id: 'reports', label: '보고서', icon: '📝', items: [
       { id: 'hwlog',    label: '숙제 입력', desc: '내 반 숙제 · 관리부 숙제표에 날짜별 자동 연동' },
-      { id: 'sheets',   label: 'HCS 시험지 현황', desc: '오늘 수업 학생 · 답안 제출 · 점수 · 틀린 문제 · 오답 시험지' },
+      // { id: 'sheets',   label: 'HCS 시험지 현황', desc: '오늘 수업 학생 · 답안 제출 · 점수 · 틀린 문제 · 오답 시험지' },   // HCS 공지 전 — 숨김
       { id: 'weekly',   label: '주간성취도', desc: '중등부 · 금요일까지', middleOnly: true },
       { id: 'dailytest', label: '일일테스트', desc: '초·중등 · 시험지 등록 · 오답 입력', middleOnly: true },
       { id: 'reportreview', label: '보고서 검수', desc: '월간 학습보고서 의견 확인 · 확정', middleOnly: true },
