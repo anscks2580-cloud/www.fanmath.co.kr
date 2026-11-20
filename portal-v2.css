@@ -155,3 +155,49 @@ html.v2-wt-b .ad-main, html.v2-wt-b .ad-groups{font-weight:600}
 @media (prefers-reduced-motion:reduce){
   html[class*="pv2-"] *, .v2-orb{animation:none!important;transition:none!important}
 }
+
+/* ═══ 한눈에 보기 (관리자 홈 · 선생님 일정 화면) ═══ */
+.v2d h3{font-size:15px}
+.v2d-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.v2d-tile{padding:16px;border-radius:16px;background:rgba(255,255,255,.75);border:1px solid rgba(91,63,166,.08);cursor:pointer;transition:transform .3s cubic-bezier(.22,1,.36,1),box-shadow .3s}
+.v2d-tile:not([data-open]):not([data-tnav]){cursor:default}
+.v2d-tile:hover{transform:translateY(-4px);box-shadow:0 12px 26px rgba(91,63,166,.14)}
+.v2d-tile .ic{width:32px;height:32px;border-radius:50%;background:var(--v2-soft,#F0EEF8);display:grid;place-items:center;font-size:15px}
+.v2d-tile .n{font-size:28px;font-weight:800;letter-spacing:-.02em;margin-top:10px;line-height:1.15;color:var(--v2-text,#5B3FA6)}
+.v2d-tile .n small{font-size:14px;color:var(--muted);font-weight:600}
+.v2d-tile .lb{font-size:13px;font-weight:700;margin-top:2px}
+.v2d-tile .sub{font-size:11.5px;color:var(--muted)}
+.v2d-tile.warn .n{color:#D64545}
+.v2d-row{display:grid;grid-template-columns:1.6fr 1fr;gap:12px}
+.v2d-panel{padding:16px;border-radius:16px;background:rgba(255,255,255,.6);border:1px solid rgba(91,63,166,.06)}
+.v2d-panel .hd{font-size:13px;font-weight:700;margin-bottom:6px}
+.v2d-panel .hd small{font-weight:500;color:var(--muted)}
+.v2d-bars{display:flex;align-items:flex-end;gap:10px;height:170px;padding-top:18px;border-bottom:1px dashed rgba(91,63,166,.18)}
+.v2d-bar{flex:1;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;min-width:0}
+.v2d-bar b{font-size:11.5px;font-weight:800;color:var(--off-white)}
+.v2d-bar .stk{width:100%;max-width:36px;flex:0 1 auto;height:calc(100% - 40px);display:flex;flex-direction:column-reverse;justify-content:flex-start;gap:2px;transform-origin:bottom;animation:v2Grow 1s cubic-bezier(.22,1,.36,1) both}
+.v2d-bar .stk i{display:block;width:100%;border-radius:8px;min-height:4px}
+.v2d-bar span{font-size:11px;color:var(--muted);white-space:nowrap;padding-bottom:4px}
+.v2d-bar:nth-child(2) .stk{animation-delay:.05s}.v2d-bar:nth-child(3) .stk{animation-delay:.1s}.v2d-bar:nth-child(4) .stk{animation-delay:.15s}
+.v2d-bar:nth-child(5) .stk{animation-delay:.2s}.v2d-bar:nth-child(6) .stk{animation-delay:.25s}.v2d-bar:nth-child(n+7) .stk{animation-delay:.3s}
+@keyframes v2Grow{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+.v2d-donut{position:relative;width:150px;height:150px;margin:8px auto}
+.v2d-donut svg{transform:rotate(-90deg)}
+.v2d-donut circle,.v2d-sub circle{fill:none;stroke-width:16}
+.v2d-sub circle{stroke-width:6}
+.v2d-donut circle.seg,.v2d-sub circle.seg{stroke-linecap:butt;animation:v2Draw 1.2s cubic-bezier(.22,1,.36,1) both}
+@keyframes v2Draw{from{stroke-dasharray:0 1000}}
+.v2d-donut .ctr{position:absolute;inset:0;display:grid;place-items:center;text-align:center}
+.v2d-donut .ctr b{display:block;font-size:24px;font-weight:800;color:var(--v2-text,#5B3FA6)}
+.v2d-donut .ctr small{font-size:11px;color:var(--muted)}
+.v2d-legend{display:flex;justify-content:center;gap:14px;font-size:12px;flex-wrap:wrap}
+.v2d-legend.sm{margin-top:10px}
+.v2d-legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+.v2d-subs{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.v2d-sub{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:14px;background:rgba(255,255,255,.7);cursor:pointer;transition:transform .25s,background .25s}
+.v2d-sub:hover{transform:translateX(4px);background:#fff}
+.v2d-sub .ring{position:relative;width:56px;height:56px;flex:none}
+.v2d-sub .ring svg{transform:rotate(-90deg)}
+.v2d-sub .ring b{position:absolute;inset:0;display:grid;place-items:center;font-size:12px;font-weight:800}
+.v2d-sub .t{font-size:13px;font-weight:700}.v2d-sub .s{font-size:11.5px;color:var(--muted)}
+@media (max-width:1023px){.v2d-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.v2d-row{grid-template-columns:1fr}}

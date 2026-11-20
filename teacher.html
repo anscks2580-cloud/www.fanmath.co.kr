@@ -478,8 +478,9 @@ select option:disabled { color:#6B6489; }
 <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
 <script src="/pwa.js?v=10" defer></script>
 <!-- 디자인 V2 (유리 질감·모션·화면 설정) — 이 두 줄을 지우면 예전 모습 -->
-<link rel="stylesheet" href="portal-v2.css?v=1795110000">
-<script src="portal-v2.js?v=1795110000"></script>
+<link rel="stylesheet" href="portal-v2.css?v=1795120000">
+<script src="portal-v2.js?v=1795120000"></script>
+<script defer src="teacher-v2-dash.js?v=1795120000"></script>
 </head>
 <body>
 
@@ -1977,6 +1978,8 @@ async function loadStudents() {
 
   // 내 담당 학생만 필터
   myStudents = studentsCache.filter(s => s.teacherUid === currentTeacher.uid);
+  // 디자인 V2 「내 반 한눈에」에 읽기 전용으로 넘겨줌 (기능에는 영향 없음)
+  try { window.__v2T = { uid: currentTeacher.uid, students: myStudents, fb: { db, getDocs, collection, query, where }, weekKey: getWeekKey }; window.dispatchEvent(new Event('v2:teacher')); } catch (e) {}
   // 메뉴 갱신: 중등 담당 학생이 없으면 '주간성취도' 메뉴를 숨김 (주간성취도는 중등부만 작성)
   if (typeof window.tnavRefresh === 'function') window.tnavRefresh({ weekly: myStudents.some(isWeeklyTarget), name: currentTeacher?.name || '' });
 
