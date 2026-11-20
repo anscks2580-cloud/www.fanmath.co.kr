@@ -1,0 +1,157 @@
+/* ═══════════════════════════════════════════════════════════
+   포털 디자인 V2 — 관리자(보라) · 선생님(노랑)
+   - 기능·요소 위치는 그대로, 겉모양(유리 질감·모션·글꼴)만 덧씌움
+   - admin.html · teacher.html 의 <html class="pv2-admin|pv2-teacher"> 로 적용
+   - 이 파일과 portal-v2.js 연결만 빼면 예전 모습으로 바로 돌아감
+   ═══════════════════════════════════════════════════════════ */
+@import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Noto+Sans+KR:wght@400;600;800&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&display=swap');
+
+html.pv2-admin{
+  --v2-main:#5B3FA6; --v2-main2:#7B5CC9; --v2-on:#fff; --v2-text:#5B3FA6;
+  --v2-glow:rgba(91,63,166,.32); --v2-bg1:#F7F6FB; --v2-bg2:#F0EEF8;
+  --v2-tint:rgba(123,92,201,.22); --v2-tint2:rgba(245,197,24,.16); --v2-soft:#F0EEF8;
+  --v2-orb1:#B9A6F0; --v2-orb2:#FBE07A;
+}
+html.pv2-teacher{
+  --v2-main:#F5C518; --v2-main2:#FFD84A; --v2-on:#2A1E55; --v2-text:#8A6400;
+  --v2-glow:rgba(245,197,24,.42); --v2-bg1:#FBF9F1; --v2-bg2:#F6F2E2;
+  --v2-tint:rgba(245,197,24,.28); --v2-tint2:rgba(245,197,24,.16); --v2-soft:#FFF6D1;
+  --v2-orb1:#FBE07A; --v2-orb2:#FFE9A8;
+}
+html.pv2-admin, html.pv2-teacher{ --v2-ease:cubic-bezier(.22,1,.36,1); --v2-ff:'Gowun Dodum'; --v2-fz:.9; }
+
+/* ── 바탕 ── */
+html.pv2-admin body, html.pv2-teacher body{
+  font-family:var(--v2-ff),'Pretendard','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  background:radial-gradient(1100px 650px at 90% -15%,var(--v2-tint) 0%,transparent 60%),
+             radial-gradient(800px 560px at -10% 110%,var(--v2-tint2) 0%,transparent 55%),
+             linear-gradient(135deg,var(--v2-bg1),var(--v2-bg2));
+  background-attachment:fixed;
+}
+.v2-orb{position:fixed;border-radius:50%;filter:blur(90px);pointer-events:none;z-index:-1;animation:v2Float 18s ease-in-out infinite}
+.v2-orb.a{width:420px;height:420px;background:var(--v2-orb1);top:-140px;left:34%;opacity:.42}
+.v2-orb.b{width:360px;height:360px;background:var(--v2-orb2);bottom:-150px;right:6%;opacity:.38;animation-delay:-6s}
+@keyframes v2Float{0%,100%{transform:translate(0,0)}50%{transform:translate(40px,30px)}}
+
+/* ── 상단 바 ── */
+html[class*="pv2-"] nav.ad-top{
+  background:rgba(255,255,255,.6); border-bottom:1px solid rgba(255,255,255,.85);
+  backdrop-filter:blur(22px) saturate(1.3); -webkit-backdrop-filter:blur(22px) saturate(1.3);
+  box-shadow:0 6px 30px rgba(91,63,166,.06);
+}
+html[class*="pv2-"] .ad-top-title{color:var(--v2-text)}
+html[class*="pv2-"] .ad-brand img{transition:transform .5s var(--v2-ease)}
+html[class*="pv2-"] .ad-brand:hover img{transform:rotate(-8deg) scale(1.08)}
+
+/* ── 사이드바 (떠 있는 유리 판) ── */
+html[class*="pv2-"] .ad-side{
+  top:calc(var(--ad-top-h) + 12px); left:12px; bottom:12px; width:calc(var(--ad-side-w) - 20px);
+  background:rgba(255,255,255,.62); border:1px solid rgba(255,255,255,.9); border-radius:20px;
+  backdrop-filter:blur(22px); -webkit-backdrop-filter:blur(22px);
+  box-shadow:0 10px 40px rgba(91,63,166,.08);
+}
+html[class*="pv2-"] .ad-search input{border-radius:12px;background:rgba(91,63,166,.06)}
+html[class*="pv2-"] .ad-search input:focus{border-color:var(--v2-main);box-shadow:0 0 0 3px var(--v2-glow)}
+html[class*="pv2-"] .ad-groups{position:relative}
+html[class*="pv2-"] .ad-group-btn{border-radius:12px;transition:background .25s,color .25s}
+html[class*="pv2-"] .ad-group.has-active .ad-group-btn{color:var(--v2-text)}
+html[class*="pv2-"] .ad-item{border-radius:12px;z-index:1;transition:color .25s,background .25s,transform .25s var(--v2-ease)}
+html[class*="pv2-"] .ad-item:hover{transform:translateX(3px);color:var(--v2-text)}
+html[class*="pv2-"] .ad-item.active{color:var(--v2-on);font-weight:700;background:linear-gradient(135deg,var(--v2-main2),var(--v2-main));box-shadow:0 8px 22px var(--v2-glow)}
+html[class*="pv2-"] .ad-item.active::before{background:var(--v2-on);opacity:.7}
+html[class*="pv2-"] .ad-item.active .badge{background:rgba(255,255,255,.85);color:#D64545}
+/* 움직이는 선택 표시가 켜지면 항목 배경은 표시에 맡김 */
+html.v2-ind-on .ad-item.active{background:transparent;box-shadow:none}
+.v2-ind{position:absolute;left:0;top:0;height:0;border-radius:12px;pointer-events:none;z-index:0;opacity:0;
+  background:linear-gradient(135deg,var(--v2-main2),var(--v2-main));box-shadow:0 8px 22px var(--v2-glow);
+  transition:top .45s var(--v2-ease),left .45s var(--v2-ease),width .45s var(--v2-ease),height .45s var(--v2-ease),opacity .25s}
+html[class*="pv2-"] .ad-side-foot .role{background:var(--v2-soft);color:var(--v2-text)}
+html[class*="pv2-"] .ad-crumb .now{color:var(--v2-text)}
+
+/* ── 본문 화면 전환: 흐림 → 선명 ── */
+html[class*="pv2-"] .tab-panel.active{animation:v2In .55s var(--v2-ease) both}
+html[class*="pv2-"] .tab-panel.active > *{animation:v2Up .6s var(--v2-ease) both}
+html[class*="pv2-"] .tab-panel.active > :nth-child(2){animation-delay:.06s}
+html[class*="pv2-"] .tab-panel.active > :nth-child(3){animation-delay:.12s}
+html[class*="pv2-"] .tab-panel.active > :nth-child(4){animation-delay:.18s}
+html[class*="pv2-"] .tab-panel.active > :nth-child(n+5){animation-delay:.22s}
+html[class*="pv2-"] .hm-grid > *{animation:v2Up .65s var(--v2-ease) both}
+html[class*="pv2-"] .hm-grid > :nth-child(2){animation-delay:.08s}
+html[class*="pv2-"] .hm-grid > :nth-child(3){animation-delay:.14s}
+html[class*="pv2-"] .hm-grid > :nth-child(4){animation-delay:.2s}
+html[class*="pv2-"] .hm-grid > :nth-child(5){animation-delay:.26s}
+html[class*="pv2-"] .hm-grid > :nth-child(n+6){animation-delay:.32s}
+@keyframes v2In{from{opacity:0;filter:blur(10px)}to{opacity:1;filter:none}}
+@keyframes v2Up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+/* ── 카드 (유리 질감) ── */
+html[class*="pv2-"] .card{
+  background:linear-gradient(160deg,rgba(255,255,255,.94),rgba(255,255,255,.76));
+  border:1px solid rgba(255,255,255,.95); border-radius:20px;
+  box-shadow:0 8px 26px rgba(91,63,166,.07); transition:box-shadow .35s var(--v2-ease);
+}
+html[class*="pv2-"] .card:hover{box-shadow:0 16px 38px rgba(91,63,166,.13)}
+html.pv2-teacher .card{box-shadow:0 8px 26px rgba(168,122,0,.08)}
+html.pv2-teacher .card:hover{box-shadow:0 16px 38px rgba(168,122,0,.14)}
+
+/* ── 홈(오늘) 작은 요소: 살짝 떠오르기 ── */
+html[class*="pv2-"] .hm-title{font-size:26px;font-weight:800}
+html[class*="pv2-"] .hm-stat .box,
+html[class*="pv2-"] .hm-row,
+html[class*="pv2-"] .hm-sub-box{border-radius:14px;background:rgba(255,255,255,.7);border-color:rgba(91,63,166,.08);transition:transform .3s var(--v2-ease),box-shadow .3s,background .25s}
+html[class*="pv2-"] .hm-stat .box:hover{transform:translateY(-4px);box-shadow:0 12px 26px rgba(91,63,166,.14)}
+html[class*="pv2-"] .hm-row:hover{transform:translateX(4px);background:#fff}
+html[class*="pv2-"] .hm-stat .n{color:var(--v2-text)}
+html[class*="pv2-"] .hm-sub-box .bar i{transition:width 1s var(--v2-ease)}
+html[class*="pv2-"] .hm-chip{border-radius:12px;transition:all .25s var(--v2-ease)}
+html[class*="pv2-"] .hm-chip:hover{transform:translateY(-2px)}
+
+/* ── 버튼 · 입력칸 ── */
+html[class*="pv2-"] .btn{border-radius:12px;transition:transform .22s var(--v2-ease),box-shadow .22s,background .22s,filter .22s}
+html[class*="pv2-"] .btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 18px rgba(91,63,166,.14)}
+html[class*="pv2-"] .btn:active:not(:disabled){transform:translateY(0) scale(.98)}
+html.pv2-admin .btn-primary{background:var(--v2-main);color:#fff;border-color:transparent}
+html.pv2-admin .btn-primary:hover:not(:disabled){filter:brightness(1.08);box-shadow:0 8px 20px var(--v2-glow)}
+html.pv2-teacher .btn-primary:hover:not(:disabled){box-shadow:0 8px 20px var(--v2-glow)}
+html[class*="pv2-"] input:not([type=checkbox]):not([type=radio]):not([type=range]),
+html[class*="pv2-"] select, html[class*="pv2-"] textarea{border-radius:10px;transition:border-color .2s,box-shadow .2s}
+html[class*="pv2-"] input:not([type=checkbox]):not([type=radio]):not([type=range]):focus,
+html[class*="pv2-"] select:focus, html[class*="pv2-"] textarea:focus{border-color:var(--v2-main);box-shadow:0 0 0 3px var(--v2-glow)}
+
+/* ── 글자 크기 (화면 설정) ── */
+html[class*="pv2-"] .ad-main, html[class*="pv2-"] .ad-groups{zoom:var(--v2-fz)}
+html.v2-wt-b .ad-main, html.v2-wt-b .ad-groups{font-weight:600}
+
+/* ── 화면 설정 버튼 · 창 ── */
+.v2-setbtn{width:36px;height:36px;border-radius:50%;border:1px solid var(--border-soft);background:rgba(255,255,255,.7);cursor:pointer;font-size:16px;
+  display:inline-grid;place-items:center;flex-shrink:0;transition:transform .3s var(--v2-ease),background .25s}
+.v2-setbtn:hover{transform:rotate(45deg);background:#fff}
+.v2-setp{position:fixed;top:calc(var(--ad-top-h) + 10px);right:16px;width:300px;max-height:calc(100vh - var(--ad-top-h) - 30px);overflow-y:auto;z-index:300;
+  background:rgba(255,255,255,.95);border:1px solid rgba(255,255,255,.95);border-radius:20px;
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 24px 60px rgba(30,24,56,.18);padding:18px;
+  font-family:var(--v2-ff),'Pretendard',sans-serif;color:var(--off-white);
+  opacity:0;transform:translateY(-10px) scale(.97);filter:blur(6px);pointer-events:none;transition:all .4s var(--v2-ease);transform-origin:top right}
+.v2-setp.on{opacity:1;transform:none;filter:none;pointer-events:auto}
+.v2-setp h4{font-size:15px;font-weight:800;display:flex;align-items:center;margin:0}
+.v2-setp h4 button{margin-left:auto;font-size:18px;opacity:.5;background:none;border:0;cursor:pointer;color:inherit}
+.v2-setp .lb{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:16px 0 8px}
+.v2-setp .rw{display:flex;align-items:center;gap:10px;margin-top:10px}
+.v2-setp input[type=range]{flex:1;accent-color:var(--v2-main)}
+.v2-setp .val{width:46px;text-align:right;font-weight:800;font-size:13px}
+.v2-setp .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.v2-setp .opt{padding:8px 4px;border-radius:10px;font-size:12.5px;background:#F7F6FB;border:1px solid rgba(91,63,166,.13);cursor:pointer;color:inherit;font-family:inherit;transition:all .25s var(--v2-ease)}
+.v2-setp .opt:hover{transform:translateY(-2px)}
+.v2-setp .opt.on{background:var(--v2-main);color:var(--v2-on);border-color:transparent;font-weight:700}
+.v2-setp .fonts{display:flex;flex-direction:column;gap:6px}
+.v2-setp .fonts .opt{text-align:left;padding:9px 12px;font-size:14px}
+.v2-setp .prev{margin-top:14px;padding:12px;border-radius:12px;background:#F7F6FB;font-size:13px;line-height:1.5}
+.v2-setp .reset{width:100%;margin-top:14px;padding:9px;border-radius:12px;font-size:12.5px;background:#F7F6FB;border:1px solid rgba(91,63,166,.13);cursor:pointer;color:inherit;font-family:inherit}
+
+/* ── 모바일 ── */
+@media (max-width:1023px){
+  html[class*="pv2-"] .ad-side{top:var(--ad-top-h);left:0;bottom:0;width:min(300px,86vw);border-radius:0 20px 20px 0;background:rgba(255,255,255,.95)}
+  .v2-setp{right:10px;left:10px;width:auto}
+}
+@media (prefers-reduced-motion:reduce){
+  html[class*="pv2-"] *, .v2-orb{animation:none!important;transition:none!important}
+}
