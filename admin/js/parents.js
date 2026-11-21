@@ -21,6 +21,12 @@ window.linkParentAccount = async function (student, parentPhoneRaw) {
 
   if (student.parentUid) {
     if (pDigits(student.parentPhone) === phone) return 'unchanged';
+    // (2026.11.21) 「비밀번호 발급」으로 난수 비밀번호를 받은 학부모는 번호만 바꾸고 비밀번호는 그대로
+    if (student.parentPwIssued) {
+      await updateDoc(doc(db, 'students', student.id), { parentPhone: phone });
+      await updateDoc(doc(db, 'parents', student.parentUid), { phone, updatedAt: new Date().toISOString() });
+      return 'updated';
+    }
     // 번호 변경 = 비밀번호 변경: 예전 번호로 로그인해서 바꿈
     try {
       const cred = await signInWithEmailAndPassword(secondaryAuth, email, pDigits(student.parentPhone));
@@ -55,7 +61,13 @@ window.linkParentAccount = async function (student, parentPhoneRaw) {
 // ── 학생 이름(=학부모 아이디)이 바뀌면 학부모 계정 이메일도 따라 바꿈 ──
 // 비밀번호(학부모 번호)로 로그인할 수 있으면 이메일만 변경, 안 되면(학부모가 비번을 바꿨으면) 안내만
 window.renameParentAccount = async function (student, oldName, newName) {
-  if (!student.parentUid || !student.parentPhone || oldName === newName) return 'none';
+  if (!student.parentUid || oldName === newName) return 'none';
+  // (2026.11.21) 비밀번호를 발급받은 학부모는 비밀번호를 몰라도 서버에서 아이디만 바꿈
+  if (student.parentPwIssued) {
+    const r = await httpsCallable(functionsInstance, 'pwIssue')({ mode: 'rename', studentId: student.id, newName });
+    return r.data && r.data.result === 'renamed' ? 'renamed' : 'none';
+  }
+  if (!student.parentPhone) return 'none';
   const oldEmail = `${oldName}.p@songmath.kr`, newEmail = `${newName}.p@songmath.kr`;
   let user;
   try { user = (await signInWithEmailAndPassword(secondaryAuth, oldEmail, pDigits(student.parentPhone))).user; }

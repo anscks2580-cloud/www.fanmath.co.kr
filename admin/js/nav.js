@@ -17,6 +17,7 @@
       { id: 'assign',      label: '강의 배정',      desc: '학생별 영상 접근 권한', keywords: ['강의배정', '배정', '수강', '권한', '강의권한', '태그'] },
       { id: 'excel',       label: '엑셀 일괄 등록', sub: '일괄 작업', desc: '엑셀 양식으로 학생 한꺼번에 등록', keywords: ['엑셀', 'excel', '일괄', '일괄등록', '대량등록', '업로드', 'xlsx'] },
       { id: 'promotion',   label: '일괄 진급',      sub: '일괄 작업', desc: '새 학기 학년 올리기', keywords: ['진급', '학년', '학년변경', '새학기', '승급'] },
+      { id: 'pwissue',     label: '비밀번호 발급',  sub: '일괄 작업', desc: '학생·학부모 새 비밀번호 발급 → 문자·카톡 보낼 명단', keywords: ['비밀번호', '비번', '암호', '발급', '재발급', '앱 출시', '학부모 비밀번호', '학생 비밀번호', '난수'] },
     ] },
     { id: 'reports', label: '수업 보고', icon: '📊', items: [
       { id: 'weekly',     label: '주간성취도', desc: '선생님이 제출한 중등부 주간성취도', keywords: ['성취도', '주간', '주간성취도', '테스트', '점수', '성적'] },
@@ -38,6 +39,7 @@
     { id: 'library', label: '자료실', icon: '📚', items: [
       { id: 'pastexams',   label: '기출문제', desc: '시험명 › 학년 › 지역 PDF (선생님 열람)', keywords: ['기출', '기출문제', '시험지', '내신', '중간고사', '기말고사', '학교시험', 'pdf', '군포', '안양', '의왕', '과천', '선생님 자료'] },
       { id: 'textbooks',   label: '시중교재', desc: '학교급 › 학년 › 교재 PDF (선생님·조교 열람)', keywords: ['시중교재', '교재', '문제집', '교재pdf', '쎈', '개념원리', '블랙라벨', 'pdf', '선생님 자료'] },
+      { id: 'varreq',      label: '변형문제 요청', desc: '선생님 변형문제 요청 검수 · 진행 상태 (지정 원장 계정만)', emails: ['dncksfly@naver.com'], keywords: ['변형', '변형문제', '변형 요청', '변형문제 요청', 'HCS', '문제 요청', '숫자 변경', '조건 변경'] },
       { id: 'tamaterials', label: '조교 자료', desc: '숙제 업로드 · 조교 작업물 (답지는 시중교재)', keywords: ['조교', '조교자료', '자료', 'ta', '첨부', '숙제', '답지'] },
     ] },
     { id: 'consult', label: '상담', icon: '📥', items: [
@@ -104,6 +106,8 @@
 
   function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
   function isVisible(groupId) { return groupId === 'home' || !visibleGroups || visibleGroups.includes(groupId); }
+  // 특정 계정에만 보이는 메뉴 (emails)
+  function itemAllowed(m) { if (!m || !Array.isArray(m.emails)) return true; const e = String((window.currentAdmin || {}).email || '').toLowerCase(); return m.emails.includes(e); }
 
   // ── 사이드바 그리기 ──
   function render() {
@@ -128,6 +132,7 @@
         const list = document.createElement('div'); list.className = 'ad-items';
         let lastSub = null;
         g.items.forEach((m) => {
+          if (!itemAllowed(m)) return;
           if (m.sub && m.sub !== lastSub) { const s = document.createElement('div'); s.className = 'ad-sub'; s.textContent = m.sub; list.appendChild(s); lastSub = m.sub; }
           const b = document.createElement('button');
           b.type = 'button'; b.className = 'ad-item'; b.dataset.menu = m.id;
@@ -185,7 +190,7 @@
   // ── 메뉴 열기: 숨겨진 기존 탭 버튼 클릭 → 기존 onclick(switchTab + 초기화) 실행 ──
   function openMenu(id, opts = {}) {
     const m = itemById[id]; if (!m) return;
-    if (!isVisible(m.group) && !opts.force) { showToastSafe('이 계정에서는 열 수 없는 메뉴입니다'); return; }
+    if ((!isVisible(m.group) || !itemAllowed(m)) && !opts.force) { showToastSafe('이 계정에서는 열 수 없는 메뉴입니다'); return; }
     const btn = legacyBtn(id); if (!btn) return;
     btn.click();
     closeDrawer();

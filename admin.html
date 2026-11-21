@@ -123,6 +123,8 @@
     <button class="admin-tab" onclick="switchTab('notice',this);initNoticeTab()">📢 공지사항</button>
     <button class="admin-tab" onclick="switchTab('schedule',this);initScheduleTab()">📅 학원 일정</button>
     <button class="admin-tab" onclick="switchTab('meetingdocs',this);initMeetingDocsTab()">🗒 회의 자료</button>
+    <button class="admin-tab" onclick="switchTab('pwissue',this);initPwIssueTab()">🔐 비밀번호 발급</button>
+    <button class="admin-tab" onclick="switchTab('varreq',this);initVarReqTab()">🧬 변형문제 요청</button>
     <button class="admin-tab" onclick="switchTab('homepopup',this);initHomePopupTab()">🪟 홈페이지 팝업</button>
   </div>
 
@@ -757,6 +759,68 @@
       </h3>
       <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">이미 올린 영상에 PDF만 붙일 때는 「+ PDF 추가」. 문제 번호별 해설 위치는 「🔖 인덱스」. 영상 제목·순서 수정이나 삭제는 강의 목록에서 해요.</div>
       <div id="wca-list"><div style="color:var(--muted);font-size:13px;">불러오는 중...</div></div>
+    </div>
+  </div>
+
+  <!-- ══ 🔐 비밀번호 발급 (학생·학부모 난수 비밀번호 · 서버 함수 pwIssue · admin/js/pwissue.js) ══ -->
+  <div class="tab-panel" id="tab-pwissue">
+    <div class="card" id="pi-bulk-card">
+      <h3>🔐 새 비밀번호 일괄 발급 <span style="font-size:12px;color:var(--muted);font-weight:400;">원장 계정만</span></h3>
+      <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:12px;">
+        앱 정식 출시 때 재원생의 <b style="color:var(--off-white);">학생 계정과 학부모 계정</b> 비밀번호를 <b style="color:var(--off-white);">알파벳 3개 + 숫자 5개</b>(예: kmr48215)로 한꺼번에 바꿉니다.<br>
+        · 이름과 전화번호만 알면 다른 학생 페이지에 들어갈 수 있던 문제가 없어집니다.<br>
+        · 바꾸는 순간 예전 비밀번호로는 로그인이 안 되고, 로그인돼 있던 앱·홈페이지도 한 번 로그아웃됩니다.<br>
+        · 새 비밀번호는 아래 명단에서 확인해 문자·카톡으로 보내 주세요 (엑셀 내려받기 → 솔라피 대량 발송).
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <select id="pi-bulk-branch" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border-soft);font-family:inherit;">
+          <option value="all">평촌관 + 산본관 전체</option><option value="평촌관">평촌관만</option><option value="산본관">산본관만</option>
+        </select>
+        <button class="btn btn-danger" id="pi-bulk-btn" onclick="piBulk()">새 비밀번호 일괄 발급</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>한 명 다시 발급 <span style="font-size:12px;color:var(--muted);font-weight:400;">비밀번호를 잊었거나 새로 들어온 학생</span></h3>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input type="text" id="pi-one-name" placeholder="학생 이름" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border-soft);font-family:inherit;width:160px;">
+        <select id="pi-one-who" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border-soft);font-family:inherit;">
+          <option value="both">학생 + 학부모</option><option value="student">학생만</option><option value="parent">학부모만</option>
+        </select>
+        <button class="btn btn-primary" onclick="piFindAndIssue()">발급</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3 style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span>📋 발급 명단</span>
+        <span style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" onclick="piMarkSent(true)">체크한 것 보냄 표시</button>
+          <button class="btn btn-secondary btn-sm" onclick="piMarkSent(false)">보냄 표시 취소</button>
+          <button class="btn btn-primary btn-sm" onclick="piExcel()">⬇ 엑셀 내려받기 (지금 조건)</button>
+        </span>
+      </h3>
+      <div id="pi-stat" style="font-size:13px;margin-bottom:10px;"></div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+        <div id="pi-filters"></div>
+        <input type="text" id="pi-q" placeholder="이름 검색" oninput="piRender()" style="padding:7px 10px;border-radius:8px;border:1px solid var(--border-soft);font-family:inherit;width:140px;">
+      </div>
+      <div class="msg" id="pi-msg" style="font-size:13px;margin-bottom:10px;"></div>
+      <div id="pi-list" style="overflow-x:auto;"></div>
+    </div>
+  </div>
+
+  <!-- ══ 🧬 변형문제 요청 (dncksfly@naver.com 원장 계정 전용 · admin/js/varreq.js) ══ -->
+  <div class="tab-panel" id="tab-varreq">
+    <div class="card">
+      <h3 style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <span>🧬 선생님 변형문제 요청</span>
+        <button class="btn btn-secondary btn-sm" onclick="vqReload()">새로고침</button>
+      </h3>
+      <div style="font-size:13px;color:var(--muted);line-height:1.8;margin-bottom:12px;">
+        검수 후 단계를 눌러 진행 상태를 바꾸면 선생님 화면에 그대로 보입니다. 「작업 묶음 내려받기」로 받은 zip을 변형 작업 지시서·코드표와 함께 Claude에게 주고,
+        만들어진 결과 파일을 HCS 담당 Claude에게 주면 HCS에 등록됩니다. (작업 묶음을 받으면 「검수 완료」 요청은 자동으로 「제작 중」이 됩니다)
+      </div>
+      <div id="vq-filters" style="margin-bottom:12px;"></div>
+      <div id="vq-list"></div>
     </div>
   </div>
 
@@ -2881,7 +2945,7 @@
 <script defer src="admin/js/01-core.js?v=1793661000"></script>
 <script defer src="admin/js/consultdeck.js"></script>
 <script defer src="admin/js/billing-leave.js?v=1793180000"></script>
-<script defer src="admin/js/students.js?v=1795070000"></script>
+<script defer src="admin/js/students.js?v=1795270000"></script>
 <script defer src="admin/js/studentdiag.js?v=1795070000"></script>
 <script defer src="admin/js/classassign.js"></script>
 <script defer src="admin/js/assign.js"></script>
@@ -2891,7 +2955,7 @@
 <script defer src="admin/js/tamaterials.js?v=1792759000"></script>
 <script defer src="admin/js/reports.js"></script>
 <script defer src="admin/js/studyreport.js?v=1793180000"></script>
-<script defer src="admin/js/parents.js?v=1792681350"></script>
+<script defer src="admin/js/parents.js?v=1795270000"></script>
 <script defer src="admin/js/homeworklog.js?v=1794660000"></script>
 <script defer src="admin/js/sheetstatus.js?v=1794660000"></script>
 <script defer src="admin/js/satclinic.js?v=1792811435"></script>
@@ -2922,12 +2986,14 @@
 <script defer src="admin/js/vimeo-upload.js?v=1793190000"></script>
 <script defer src="admin/js/weeklyclear.js?v=1794120000"></script>
 <script defer src="admin/js/exammaterials.js?v=1792850000"></script>
-<script defer src="admin/js/nav.js?v=1794400000"></script>
+<script defer src="admin/js/nav.js?v=1795270000"></script>
 <script defer src="admin/js/officecal.js?v=1794620000"></script>
 <script defer src="admin/js/home.js?v=1794300000"></script>
 <script defer src="admin/js/home-v2.js?v=1795120000"></script>
 <script defer src="admin/js/deleterequests.js?v=1794900000"></script>
 <script defer src="admin/js/examorig-notice.js?v=1795080000"></script>
+<script defer src="admin/js/pwissue.js?v=1795270000"></script>
+<script defer src="admin/js/varreq.js?v=1795270000"></script>
 
 <div id="toast"></div>
 <div id="printSheet"></div>

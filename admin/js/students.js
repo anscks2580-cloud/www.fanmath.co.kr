@@ -217,7 +217,7 @@ window.openEditModal = function(uid) {
   document.getElementById('edit-branch').value = s.branch || '평촌관';
   document.getElementById('edit-classgroup').value = s.classGroup || '';
   document.getElementById('edit-parentphone').value = s.parentPhone || '';
-  document.getElementById('edit-parentStatus').textContent = s.parentUid ? `✅ 학부모 계정 연결됨 (아이디 ${s.name} · 비밀번호 ${s.parentPhone || ''})` : '학부모 계정 없음 — 번호를 넣고 저장하면 만들어집니다';
+  document.getElementById('edit-parentStatus').textContent = s.parentUid ? `✅ 학부모 계정 연결됨 (아이디 ${s.name} · 비밀번호 ${s.parentPwIssued ? '발급된 비밀번호 — 「비밀번호 발급」 메뉴에서 확인' : (s.parentPhone || '')})` : '학부모 계정 없음 — 번호를 넣고 저장하면 만들어집니다';
 
   // 선생님 드롭다운 채우기
   const tSel = document.getElementById('edit-teacher');
@@ -353,7 +353,8 @@ window.saveEditStudent = async function() {
   const nameChanged  = name !== (s.name || '');
   const phoneChanged = phone !== (s.phone || '');
   // 비밀번호: 직접 입력값 우선, 없으면 전화번호가 바뀐 경우에만 새 전화번호로
-  const password = newPw || (phoneChanged ? phone : '');
+  //  (2026.11.21) 「비밀번호 발급」으로 난수 비밀번호를 받은 학생은 전화번호가 바뀌어도 비밀번호는 그대로
+  const password = newPw || (phoneChanged && !s.pwIssued ? phone : '');
   if (password && password.length < 6) {
     showMsg('editStudentMsg', '비밀번호는 6자 이상이어야 합니다.', 'error'); return;
   }

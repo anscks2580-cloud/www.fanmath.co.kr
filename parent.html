@@ -657,6 +657,26 @@ function pushHtml() {
     <button onclick="pTogglePush()" ${canToggle ? '' : 'disabled'} aria-label="학원 알림 켜기·끄기" style="position:relative;width:52px;height:30px;border-radius:999px;border:0;padding:0;flex:none;cursor:pointer;background:${swOn ? 'var(--accent)' : '#D5D0E0'};${canToggle ? '' : 'opacity:.5;'}"><span style="position:absolute;top:3px;left:${swOn ? 25 : 3}px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:left .2s;"></span></button>
   </div>`;
 }
+// ══ 이번 달 숙제 문제 수 (교재 숙제 + 출제된 시험지, 내준 문제 수 기준) ══
+function hwMonthHtml() {
+  const now = new Date();
+  const ym = (d) => String(d || '').slice(0, 7);
+  const cur = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  const prevD = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const prev = `${prevD.getFullYear()}-${String(prevD.getMonth() + 1).padStart(2, '0')}`;
+  const sum = (m) => {
+    const book = homework.filter((h) => !h.absent && ym(h.date) === m).reduce((a, h) => a + (+h.problemCount || 0), 0);
+    const sheet = pSheets.filter((x) => ym(x.date) === m).reduce((a, x) => a + (+x.count || 0), 0);
+    return { book, sheet, total: book + sheet };
+  };
+  const c = sum(cur), p = sum(prev);
+  if (!c.total && !p.total) return '';
+  return `<div class="card"><h2>${now.getMonth() + 1}월 숙제 문제 수</h2>
+    <div style="display:flex;align-items:baseline;gap:8px;"><b style="font-size:30px;color:#5B3FA6;">${c.total.toLocaleString()}</b><span style="font-size:14px;color:var(--muted);">문제</span></div>
+    <div style="font-size:13px;color:var(--muted);margin-top:4px;">교재 숙제 ${c.book.toLocaleString()}문제 · 시험지 ${c.sheet.toLocaleString()}문제${p.total ? ` · 지난달 ${p.total.toLocaleString()}문제` : ''}</div>
+    <div style="font-size:11.5px;color:var(--muted);margin-top:6px;">선생님이 내 준 문제 수 기준입니다.</div></div>`;
+}
+
 function render() {
   const lvl = (v) => v >= 4 ? 'hi' : v <= 2 ? 'lo' : '';
   $app.innerHTML = `
@@ -682,10 +702,12 @@ function render() {
           <div style="font-size:13px;color:var(--muted);margin-top:5px;">${s.count || 0}문제${s.range ? ' · ' + esc(s.range) : ''}${di ? ` · 기한 <b style="color:${di.late ? '#D64545' : 'var(--ink)'};">${di.text}</b>` : ''}</div>
           ${s.submitted ? `<div style="margin-top:8px;font-size:12.5px;font-weight:700;color:#2E8B57;">✅ 답안 제출 완료${t ? ` · ${t.getMonth() + 1}/${t.getDate()} ${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}` : ''}</div>` : `<div style="margin-top:8px;font-size:12.5px;font-weight:700;color:${di && di.late ? '#D64545' : 'var(--muted)'};">⏳ 아직 답안을 제출하지 않았어요${di && di.late ? ' (기한 지남)' : ''}</div>`}
         </div>`; }).join('')}</div>` : ''}
+    ${cur === 'homework' ? hwMonthHtml() : ''}
     ${cur === 'homework' ? `<div class="card"><h2>숙제</h2>${homework.length ? homework.slice(0, 60).map((h) => { const d = new Date(h.date + 'T00:00:00'); const dow = ['일','월','화','수','목','금','토'][d.getDay()]; const isToday = h.date === new Date().toISOString().slice(0, 10); return `
         <div class="wk" style="${isToday ? 'border-color:var(--accent);' : ''}">
           <div class="t"><span>${d.getMonth() + 1}월 ${d.getDate()}일 (${dow})${isToday ? ' <span class="pill" style="font-size:11px;">오늘</span>' : ''}</span><small>${esc(h.teacherName || '')} 선생님 · ${esc(h.classGroup || '')}</small></div>
           <div style="font-size:14.5px;color:var(--ink);margin-top:6px;white-space:pre-wrap;">${esc(h.content)}</div>
+          ${!h.absent && h.problemCount ? `<div style="margin-top:6px;"><span class="pill" style="font-size:12px;">📘 교재 숙제 ${h.problemCount}문제</span></div>` : ''}
           ${!h.absent && h.dueDate ? `<div style="margin-top:6px;font-size:12.5px;color:var(--muted);">기한 <b style="color:var(--ink);">${dueInfo(h.dueDate, true).text}</b></div>` : ''}
           ${h.absent ? '' : hwChecks[h.id] ? (() => { const t = hwChecks[h.id].checkedAt?.toDate ? hwChecks[h.id].checkedAt.toDate() : null; return `<div style="margin-top:8px;font-size:12.5px;font-weight:700;color:#2E8B57;">✅ 학생이 완료 체크했어요${t ? ` · ${t.getMonth() + 1}/${t.getDate()} ${String(t.getHours()).padStart(2, '0')}:${String(t.getMinutes()).padStart(2, '0')}` : ''}</div>`; })() : '<div style="margin-top:8px;font-size:12.5px;color:var(--muted);">⏳ 아직 완료 체크 안 함</div>'}
         </div>`; }).join('') : '<div class="empty">아직 등록된 숙제가 없습니다.</div>'}</div>` : ''}

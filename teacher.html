@@ -468,6 +468,7 @@ select option:disabled { color:#6B6489; }
 <script src="session-limit.js?v=1794920000"></script>
 <script src="https://player.vimeo.com/api/player.js"></script>
 <script src="video-chapters.js?v=1794130000"></script>
+<script src="hw-books.js?v=1795270000"></script>
 <!-- 앱 설치(PWA) -->
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#4B3391">
@@ -557,6 +558,7 @@ select option:disabled { color:#6B6489; }
     <button class="teacher-tab" onclick="switchTab('pastexams',this);initPastExamsTab()">기출문제</button>
     <button class="teacher-tab" onclick="switchTab('textbooks',this);initTextbooksTab()">시중교재</button>
     <button class="teacher-tab" onclick="switchTab('submaterials',this);smInit()">부교재 프린트</button>
+    <button class="teacher-tab" onclick="switchTab('varreq',this);vrInit()">변형문제 요청</button>
     <button class="teacher-tab" onclick="switchTab('examorig',this);eoInit()">기말고사 원본</button>
     <button class="teacher-tab" onclick="switchTab('watchstatus',this);initTeacherWatchStatus()">학생 시청현황</button>
     <button class="teacher-tab" onclick="switchTab('manual',this)">전임강사 매뉴얼</button>
@@ -663,9 +665,18 @@ select option:disabled { color:#6B6489; }
         <input type="date" id="hwDue" style="color-scheme:light;width:100%;padding:10px 13px;background:rgba(30,24,56,0.05);border:1px solid rgba(30,24,56,0.1);border-radius:8px;color:var(--off-white);font-size:14px;font-family:inherit;outline:none;">
       </div>
 
+      <div class="form-group" style="margin-bottom:16px;">
+        <label>📘 교재 숙제 <small style="color:var(--muted);font-weight:400;">· 교재를 골라 쪽만 적으면 문제 수가 자동으로 계산돼 학부모 앱에 보입니다 (예: 12-15, 18)</small></label>
+        <div id="hwBooks" style="display:flex;flex-direction:column;gap:6px;"></div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="hwBookAdd()">＋ 교재 추가</button>
+          <span id="hwBookSum" style="font-size:13px;font-weight:700;color:var(--purple, #5B3FA6);"></span>
+        </div>
+      </div>
+
       <div class="form-group" style="margin-bottom:20px;">
-        <label>숙제 내용 <span style="color:#D64545;">*</span> </label>
-        <textarea id="hwContent" placeholder="예: 쎈 B단계 120~135번 / 개념원리 확인문제 p.88~92" style="min-height:90px;"></textarea>
+        <label>숙제 내용 <small style="color:var(--muted);font-weight:400;">· 교재 숙제만 있으면 비워도 됩니다 (프린트 등 그 밖의 숙제·메모)</small></label>
+        <textarea id="hwContent" placeholder="예: 프린트(다각형~회전체) / 오답노트 정리" style="min-height:70px;"></textarea>
       </div>
 
       <div class="btn-row">
@@ -1505,6 +1516,45 @@ select option:disabled { color:#6B6489; }
   </div>
 
   <!-- ══ 📄 2026년 2학기 기말고사 원본 (선생님 업로드 · 확인) ══ -->
+  <!-- ══ 🧬 변형문제 요청 (선생님 → dncksfly@naver.com 원장 계정 검수 → 제작 → HCS 등록) ══ -->
+  <div class="tab-panel" id="tab-varreq">
+    <div class="card">
+      <div class="card-title">🧬 변형문제 요청하기</div>
+      <div style="font-size:12.5px;color:var(--muted);line-height:1.7;margin:-4px 0 12px;">
+        원본 문제(PDF 또는 사진)를 올리고 변형 방식을 고르면 원장님이 검수한 뒤 제작합니다. 완성된 문제는 HCS 문제은행에 원본과 같은 단원·유형으로 등록됩니다.
+      </div>
+      <div class="sm-up">
+        <div class="sm-form">
+          <div><label>관</label><select id="vrBranch"><option value="평촌관">평촌관</option><option value="산본관">산본관</option></select></div>
+          <div><label>과목</label><select id="vrSubject">
+            <option value="">과목 선택</option>
+            <optgroup label="중등"><option value="중1-1">중1-1</option><option value="중1-2">중1-2</option><option value="중2-1">중2-1</option><option value="중2-2">중2-2</option><option value="중3-1">중3-1</option><option value="중3-2">중3-2</option></optgroup>
+            <optgroup label="고등"><option value="공수1">공통수학1</option><option value="공수2">공통수학2</option><option value="대수">대수</option><option value="미적분1">미적분1</option><option value="확통">확률과 통계</option><option value="기하">기하</option><option value="미적분2">미적분2</option></optgroup>
+          </select></div>
+          <div><label>변형 방식</label><select id="vrMode"><option value="숫자">숫자만 변경</option><option value="조건">조건 변경</option></select></div>
+          <div><label>원본 한 문제당 개수</label><select id="vrCount"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+        </div>
+        <div class="sm-form" style="grid-template-columns:1fr;">
+          <div><label>메모 (출처 · 원하는 점 — 선택)</label><input type="text" id="vrMemo" placeholder="예: 평촌고 2학기 기말 12·15번, 15번은 그래프 모양도 바꿔 주세요" autocomplete="off"></div>
+        </div>
+        <div class="sm-drop" id="vrDrop" onclick="document.getElementById('vrFile').click()">
+          📎 <b>원본 문제 PDF 또는 사진</b>을 여기로 끌어오거나 눌러서 선택 (여러 개 가능 · 파일당 30MB까지)
+        </div>
+        <input type="file" id="vrFile" accept="application/pdf,.pdf,image/*" multiple hidden onchange="vrAddFiles(this.files);this.value=''">
+        <div class="sm-pick" id="vrPick"></div>
+        <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+          <button class="btn btn-gold" id="vrUpBtn" onclick="vrSubmit()">요청하기</button>
+        </div>
+        <div class="alert ok" id="vr-ok" style="margin-top:10px;"></div>
+        <div class="alert err" id="vr-err" style="margin-top:10px;"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">📋 내 변형문제 요청 <span style="font-size:12px;color:var(--muted);font-weight:400;">요청 → 검수 완료 → 제작 중 → HCS 등록 완료</span></div>
+      <div id="vrList"><div class="empty-state"><div class="icon">📭</div>불러오는 중...</div></div>
+    </div>
+  </div>
+
   <div class="tab-panel" id="tab-examorig">
     <div class="card">
       <div class="card-title">⬆️ 2026년 2학기 기말고사 원본 올리기</div>
@@ -3238,6 +3288,65 @@ function hwRenderClasses() {
   el.innerHTML = list.map(([c, o]) => `<button type="button" class="rating-btn${hwCls === c ? ' selected' : ''}" data-cls="${hwEsc(c)}" onclick="hwPick(this.dataset.cls)">${o.today ? '<span style="color:#D97B1A;">●</span> ' : ''}${multi && o.br.size ? `<small style="opacity:.75;">[${[...o.br].map(b => b.replace('관', '')).join('·')}]</small> ` : ''}${hwEsc(c)} <small style="opacity:.7;">${o.n}명</small>${done.has(c) ? ' <b style="color:#2E9E5B;">✓</b>' : ''}</button>`).join('');
 }
 
+// ══ 교재 숙제 (교재 선택 + 쪽 범위 → 문제 수 자동) ══
+let hwBookRows = [{ bookId: '', range: '' }];   // [{bookId, range}]
+setTimeout(() => { try { hwBookRender(); } catch (e) {} }, 0);
+function hwBookOptions(sel) {
+  const list = window.HW_BOOKS || [];
+  const grp = (kind) => {
+    const by = {}; list.filter(b => b.kind === kind).forEach(b => { (by[b.grade] = by[b.grade] || []).push(b); });
+    return Object.keys(by).sort().map(g => `<optgroup label="${kind} · ${g}">${by[g].map(b => `<option value="${b.id}" ${b.id === sel ? 'selected' : ''}>${hwEsc(b.name)}</option>`).join('')}</optgroup>`).join('');
+  };
+  return `<option value="">교재 선택</option>${grp('자체교재')}${grp('시중교재')}`;
+}
+function hwBookRender() {
+  const el = document.getElementById('hwBooks'); if (!el) return;
+  el.innerHTML = hwBookRows.map((r, i) => {
+    const c = r.bookId ? HW_count(r.bookId, r.range) : null;
+    const warn = c && (c.bad.length ? `읽을 수 없는 쪽: ${c.bad.join(', ')}` : (c.pages.length && c.noProb.length ? `문제 없는 쪽: ${c.noProb.join(', ')}` : ''));
+    return `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+      <select onchange="hwBookSet(${i},'bookId',this.value)" style="padding:8px 10px;border:1px solid rgba(30,24,56,0.12);border-radius:8px;font-size:13.5px;font-family:inherit;min-width:220px;">${hwBookOptions(r.bookId)}</select>
+      <input type="text" value="${hwEsc(r.range || '')}" placeholder="쪽 (예: 12-15, 18)" oninput="hwBookSet(${i},'range',this.value,true)" style="padding:8px 10px;border:1px solid rgba(30,24,56,0.12);border-radius:8px;font-size:13.5px;font-family:inherit;width:170px;">
+      <span id="hwBookCnt${i}" style="font-size:13px;font-weight:700;min-width:64px;color:${c && c.count ? '#2E9E5B' : 'var(--muted)'};">${c && c.pages.length ? c.count + '문제' : ''}</span>
+      <button type="button" class="btn btn-outline btn-sm" style="color:#D64545;" onclick="hwBookDel(${i})">✕</button>
+      <span id="hwBookWarn${i}" style="font-size:11.5px;color:#D97B1A;">${warn || ''}</span>
+    </div>`;
+  }).join('');
+  hwBookSumRender();
+}
+function hwBookSumRender() {
+  const el = document.getElementById('hwBookSum'); if (!el) return;
+  const t = hwBookTotal();
+  el.textContent = hwBookRows.length ? `교재 숙제 합계 ${t}문제` : '';
+}
+function hwBookTotal() { return hwBookRows.reduce((a, r) => a + (r.bookId ? HW_count(r.bookId, r.range).count : 0), 0); }
+window.hwBookAdd = function () { hwBookRows.push({ bookId: hwBookRows.length ? hwBookRows[hwBookRows.length - 1].bookId : '', range: '' }); hwBookRender(); };
+window.hwBookDel = function (i) { hwBookRows.splice(i, 1); hwBookRender(); };
+window.hwBookSet = function (i, k, v, soft) {
+  hwBookRows[i][k] = v;
+  if (!soft) { hwBookRender(); return; }
+  // 입력 중에는 칸을 다시 그리지 않고 숫자만 바꿈 (커서 유지)
+  const r = hwBookRows[i], c = r.bookId ? HW_count(r.bookId, r.range) : null;
+  const ce = document.getElementById('hwBookCnt' + i), we = document.getElementById('hwBookWarn' + i);
+  if (ce) { ce.textContent = c && c.pages.length ? c.count + '문제' : ''; ce.style.color = c && c.count ? '#2E9E5B' : 'var(--muted)'; }
+  if (we) we.textContent = c ? (c.bad.length ? `읽을 수 없는 쪽: ${c.bad.join(', ')}` : (c.pages.length && c.noProb.length ? `문제 없는 쪽: ${c.noProb.join(', ')}` : '')) : '';
+  hwBookSumRender();
+};
+// 저장용 정리: [{bookId, name, range, pages, count}]
+function hwBookCollect() {
+  const out = [];
+  for (const r of hwBookRows) {
+    if (!r.bookId && !String(r.range || '').trim()) continue;
+    if (!r.bookId) throw new Error('교재를 골라주세요.');
+    const c = HW_count(r.bookId, r.range);
+    if (!c.pages.length) throw new Error(`${HW_bookName(r.bookId)}의 쪽을 적어주세요.`);
+    if (c.bad.length) throw new Error(`쪽 범위를 읽을 수 없어요: ${c.bad.join(', ')} (예: 12-15, 18)`);
+    out.push({ bookId: r.bookId, name: HW_bookName(r.bookId), range: String(r.range).trim(), count: c.count });
+  }
+  return out;
+}
+const hwBookLine = (b) => `${b.name} p.${b.range.replace(/\s+/g, '')} (${b.count}문제)`;
+
 window.hwPick = function (c) {
   const date = document.getElementById('hwDate').value;
   hwCls = c;
@@ -3247,6 +3356,7 @@ window.hwPick = function (c) {
   hwSheetTouched = false; hwSheetSel = new Set();
   document.getElementById('hwDue').value = date ? hwNextClass(date, c) : '';
   document.getElementById('hwContent').value = '';
+  hwBookRows = [{ bookId: '', range: '' }]; hwBookRender();
   document.getElementById('hwSaveBtn').textContent = '저장';
   document.getElementById('hwCancelBtn').style.display = 'none';
   hwRenderClasses();
@@ -3291,7 +3401,10 @@ window.hwSave = async function (absent) {
   absent = absent === true;
   const ok = document.getElementById('hw-ok'), err = document.getElementById('hw-err');
   const date = document.getElementById('hwDate').value;
-  let content = absent ? '결석' : document.getElementById('hwContent').value.trim();
+  let memo = absent ? '' : document.getElementById('hwContent').value.trim();
+  let books = [];
+  if (!absent) { try { books = hwBookCollect(); } catch (e) { showAlert(err, e.message, 'err'); return; } }
+  let content = absent ? '결석' : [...books.map(hwBookLine), memo].filter(Boolean).join('\n');
   const ids = [...document.querySelectorAll('#hwStudents input:checked')].map(c => c.value);
   // 이 숙제에 연결할 HCS 시험지 (화면에 추천으로 떠 있고 체크된 것)
   const shown = new Set([...document.querySelectorAll('#hwSheets input')].map(c => c.value));
@@ -3302,11 +3415,12 @@ window.hwSave = async function (absent) {
   if (!date)        { showAlert(err, '날짜를 골라주세요.', 'err'); return; }
   if (!hwCls)       { showAlert(err, '반을 골라주세요.', 'err'); return; }
   if (!ids.length)  { showAlert(err, '학생을 한 명 이상 체크해주세요.', 'err'); return; }
-  if (!content)     { showAlert(err, '숙제 내용을 적어주세요.', 'err'); return; }
+  if (!content)     { showAlert(err, '교재 숙제를 고르거나 숙제 내용을 적어주세요.', 'err'); return; }
   const names = ids.map(id => studentsCache.find(s => s.id === id)?.name || '');
   const data = {
     date, branch: hwBranchOf(ids), teacherUid: currentTeacher.uid, teacherName: currentTeacher.name || '',
     classGroup: hwCls, studentIds: ids, studentNames: names, content, absent, dueDate, sheets,
+    books, memo, problemCount: books.reduce((a, b) => a + b.count, 0),
     updatedAt: new Date().toISOString(), updatedBy: (currentTeacher.name || '') + ' 선생님',
   };
   if (dueDate && date && dueDate < date) { showAlert(err, '숙제 기한이 숙제 날짜보다 앞입니다.', 'err'); return; }
@@ -3332,6 +3446,7 @@ window.hwCancel = function () {
   hwSheetTouched = false; hwSheetSel = new Set();
   const due = document.getElementById('hwDue'); if (due) due.value = '';
   document.getElementById('hwContent').value = '';
+  hwBookRows = [{ bookId: '', range: '' }]; hwBookRender();
   document.getElementById('hwSaveBtn').textContent = '저장';
   document.getElementById('hwCancelBtn').style.display = 'none';
   hwRenderClasses();
@@ -3347,7 +3462,10 @@ window.hwEdit = function (id, fromPick) {
   document.getElementById('hwDate').value = r.date;
   hwRenderClasses();
   hwRenderStudents(r.studentIds || []);
-  document.getElementById('hwContent').value = r.absent ? '' : (r.content || '');   // 결석 기록을 숙제로 바꿀 땐 내용만 적어 저장
+  // 교재 숙제가 저장된 기록은 교재 칸 + 메모로 나눠서 불러옴 (예전 기록은 내용 칸에 그대로)
+  hwBookRows = (!r.absent && Array.isArray(r.books) && r.books.length) ? r.books.map(b => ({ bookId: b.bookId, range: b.range })) : [{ bookId: '', range: '' }];
+  hwBookRender();
+  document.getElementById('hwContent').value = r.absent ? '' : (Array.isArray(r.books) && r.books.length ? (r.memo || '') : (r.content || ''));   // 결석 기록을 숙제로 바꿀 땐 내용만 적어 저장
   document.getElementById('hwSaveBtn').textContent = '수정 저장';
   document.getElementById('hwCancelBtn').style.display = '';
   if (fromPick) showAlert(document.getElementById('hw-ok'), '이 날짜에 이미 입력된 숙제를 불러왔어요. 고쳐서 저장하면 수정됩니다.', 'ok');
@@ -6440,6 +6558,7 @@ window.addEventListener('message', (e) => { if (e.data && e.data.type === 'pcRea
       { id: 'pastexams', label: '기출문제', desc: '시험명 › 학년 › 지역 PDF' },
       { id: 'textbooks', label: '시중교재', desc: '학교급 › 학년 › 교재 PDF' },
       { id: 'submaterials', label: '부교재 프린트', desc: '학교별 부교재 프린트 · 관 › 학년 › 학교 · 올리기 · 다운로드' },
+      { id: 'varreq', label: '변형문제 요청', desc: '원본 PDF·사진 올려 변형문제 요청 · 숫자만 변경 / 조건 변경 · 진행 상태' },
       { id: 'examorig', label: '기말고사 원본', desc: '2026년 2학기 기말고사 원본 시험지 · 관 › 학년 › 학교 · 올리기 · 확인' },
     ] },
     { id: 'manual',  label: '매뉴얼', icon: '📖', items: [{ id: 'manual', label: '전임강사 매뉴얼', desc: '검색 · 목차' }] },
@@ -6631,6 +6750,132 @@ onAuthStateChanged(auth, async (user) => {
     </div>
   </div>
 </div>
+<!-- ══════════ 🧬 변형문제 요청 — Firestore variantRequests/{id} + Storage variantRequests/{선생님uid}/{요청번호}/파일 ══════════ -->
+<script type="module">
+import { getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, getDocs, setDoc, deleteDoc, collection, query, where, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+const app = getApp(), auth = getAuth(app), db = getFirestore(app), storage = getStorage(app);
+const $ = (id) => document.getElementById(id);
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function note(id, msg, type) { const el = $(id); if (!el) return; el.textContent = msg; el.className = `alert ${type}`; el.style.display = 'block'; clearTimeout(el._t); el._t = setTimeout(() => { el.style.display = 'none'; }, 6000); }
+const VR_STEPS = ['요청', '검수 완료', '제작 중', 'HCS 등록 완료'];
+const VR_COLOR = { '요청': '#8A84A3', '검수 완료': '#2F7FD6', '제작 중': '#D97B1A', 'HCS 등록 완료': '#2E9E5B', '반려': '#D64545' };
+const SUBJ = { '공수1': '공통수학1', '공수2': '공통수학2', '확통': '확률과 통계' };
+let me = null, vrPicked = [], vrBusy = false, vrRows = [];
+const meReady = new Promise((resolve) => {
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) return;
+    try { const t = await getDoc(doc(db, 'teachers', user.uid)); if (!t.exists()) return; me = { uid: user.uid, name: t.data().name || '', branch: t.data().branch || '' }; resolve(me); }
+    catch (e) { console.warn('[변형요청] 선생님 정보', e); }
+  });
+});
+const vrType = (f) => f.type || (/\.pdf$/i.test(f.name) ? 'application/pdf' : /\.(png)$/i.test(f.name) ? 'image/png' : 'image/jpeg');
+window.vrAddFiles = function (files) {
+  [...(files || [])].forEach((f) => {
+    const t = vrType(f);
+    if (!(t === 'application/pdf' || t.startsWith('image/'))) { note('vr-err', `${f.name}: PDF나 사진만 올릴 수 있어요.`, 'err'); return; }
+    if (f.size > 30 * 1024 * 1024) { note('vr-err', `${f.name}: 30MB가 넘어요.`, 'err'); return; }
+    vrPicked.push({ key: Math.random().toString(36).slice(2), file: f });
+  });
+  vrRenderPicked();
+};
+window.vrRemovePick = (k) => { vrPicked = vrPicked.filter((x) => x.key !== k); vrRenderPicked(); };
+function vrRenderPicked() {
+  const el = $('vrPick'); if (!el) return;
+  el.innerHTML = vrPicked.map((p) => `<div class="sm-pi" id="vrp-${p.key}" style="display:flex;align-items:center;gap:8px;font-size:13px;padding:6px 2px;"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">📄 ${esc(p.file.name)} <small style="color:var(--muted);">${(p.file.size / 1048576).toFixed(1)}MB</small></span><span class="pg" style="width:80px;height:5px;background:rgba(30,24,56,0.08);border-radius:9px;overflow:hidden;"><i style="display:block;height:100%;width:0;background:#5B3FA6;"></i></span><button type="button" class="btn btn-outline btn-sm" onclick="vrRemovePick('${p.key}')">✕</button></div>`).join('');
+}
+function vrNewId() {
+  const d = new Date(), p = (n) => String(n).padStart(2, '0');
+  return `REQ-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
+}
+window.vrSubmit = async function () {
+  if (vrBusy) return;
+  await meReady;
+  const branch = $('vrBranch').value, subject = $('vrSubject').value, mode = $('vrMode').value, count = +$('vrCount').value || 1, memo = $('vrMemo').value.trim();
+  if (!subject) { note('vr-err', '과목을 골라 주세요.', 'err'); return; }
+  if (!vrPicked.length) { note('vr-err', '원본 문제 PDF나 사진을 올려 주세요.', 'err'); return; }
+  vrBusy = true; const btn = $('vrUpBtn'); btn.disabled = true; btn.textContent = '올리는 중...';
+  const reqId = vrNewId(); const files = []; const fails = [];
+  for (const [i, p] of vrPicked.entries()) {
+    const f = p.file; const safe = `${String(i + 1).padStart(2, '0')}_${f.name.replace(/[\\/#?\[\]*]/g, '_')}`;
+    const path = `variantRequests/${me.uid}/${reqId}/${safe}`;
+    try {
+      await new Promise((resolve, reject) => {
+        const task = uploadBytesResumable(ref(storage, path), f, { contentType: vrType(f) });
+        task.on('state_changed', (s) => { const bar = document.querySelector(`#vrp-${p.key} .pg i`); if (bar) bar.style.width = (s.bytesTransferred / s.totalBytes * 100) + '%'; }, reject, resolve);
+      });
+      files.push({ name: f.name, path, size: f.size, type: vrType(f) });
+    } catch (e) { fails.push(`${f.name}(${e.code || e.message})`); }
+  }
+  try {
+    if (!files.length) throw new Error('파일을 하나도 올리지 못했어요: ' + fails.join(', '));
+    await setDoc(doc(db, 'variantRequests', reqId), {
+      reqId, branch, subject, mode, count, memo, files,
+      teacherUid: me.uid, teacherName: me.name,
+      status: '요청', reviewNote: '', hcsCount: 0,
+      createdAt: serverTimestamp(), createdAtStr: new Date().toISOString(), updatedAtStr: new Date().toISOString(),
+    });
+    vrPicked = []; vrRenderPicked(); $('vrMemo').value = '';
+    note('vr-ok', `요청했습니다 (${reqId}). 원장님 검수 후 제작됩니다.${fails.length ? ' 못 올린 파일: ' + fails.join(', ') : ''}`, 'ok');
+    await vrLoad();
+  } catch (e) { note('vr-err', '요청 오류: ' + e.message, 'err'); }
+  finally { vrBusy = false; btn.disabled = false; btn.textContent = '요청하기'; }
+};
+async function vrLoad() {
+  await meReady;
+  const el = $('vrList'); if (!el) return;
+  try {
+    const snap = await getDocs(query(collection(db, 'variantRequests'), where('teacherUid', '==', me.uid)));
+    vrRows = []; snap.forEach((d) => vrRows.push({ id: d.id, ...d.data() }));
+    vrRows.sort((a, b) => String(b.createdAtStr || '').localeCompare(String(a.createdAtStr || '')));
+  } catch (e) { el.innerHTML = `<div class="empty-state">불러오기 오류: ${esc(e.message)}</div>`; return; }
+  if (!vrRows.length) { el.innerHTML = '<div class="empty-state"><div class="icon">📭</div>아직 요청한 변형문제가 없습니다.</div>'; return; }
+  el.innerHTML = vrRows.map((r) => {
+    const st = r.status || '요청';
+    const idx = VR_STEPS.indexOf(st);
+    const bar = st === '반려' ? `<span style="color:#D64545;font-weight:800;">반려</span>` :
+      VR_STEPS.map((s, i) => `<span style="font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:99px;${i <= idx ? `background:${VR_COLOR[s]};color:#fff;` : 'background:rgba(30,24,56,0.05);color:var(--muted);'}">${s}</span>`).join('<span style="color:var(--muted);">›</span>');
+    return `<div class="history-item" style="padding:12px 16px;border-bottom:1px solid rgba(30,24,56,0.06);">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;flex-wrap:wrap;">
+        <div style="min-width:0;">
+          <div style="font-weight:700;"><span style="color:${r.branch === '산본관' ? '#B8860B' : '#5B3FA6'};">[${esc(r.branch)}]</span> ${esc(SUBJ[r.subject] || r.subject)} · ${r.mode === '조건' ? '조건 변경' : '숫자만 변경'} · 원본당 ${r.count}개 <small style="color:var(--muted);font-weight:400;">${esc(r.reqId)} · ${esc(String(r.createdAtStr || '').slice(0, 10))}</small></div>
+          ${r.memo ? `<div style="font-size:12.5px;color:var(--muted);margin-top:3px;">${esc(r.memo)}</div>` : ''}
+          <div style="font-size:12.5px;margin-top:4px;">${(r.files || []).map((f) => `<a href="#" onclick="vrOpen('${esc(f.path)}');return false;" style="margin-right:10px;">📄 ${esc(f.name)}</a>`).join('')}</div>
+          <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-top:8px;">${bar}</div>
+          ${r.reviewNote ? `<div style="font-size:12.5px;margin-top:6px;padding:6px 10px;border-radius:8px;background:rgba(245,197,24,0.12);">💬 ${esc(r.reviewNote)}</div>` : ''}
+          ${st === 'HCS 등록 완료' && r.hcsCount ? `<div style="font-size:12.5px;margin-top:6px;color:#2E9E5B;font-weight:700;">HCS에 ${r.hcsCount}문제 등록됨 — HCS에서 「변형요청」 교재로 찾을 수 있어요</div>` : ''}
+        </div>
+        ${st === '요청' ? `<button class="btn btn-danger btn-sm" onclick="vrCancel('${r.id}')">요청 취소</button>` : ''}
+      </div></div>`;
+  }).join('');
+}
+window.vrOpen = async (path) => { try { window.open(await getDownloadURL(ref(storage, path)), '_blank'); } catch (e) { alert('파일을 열 수 없습니다: ' + e.message); } };
+window.vrCancel = async function (id) {
+  const r = vrRows.find((x) => x.id === id); if (!r) return;
+  if (!confirm('이 변형문제 요청을 취소할까요? (올린 파일도 지워집니다)')) return;
+  try {
+    for (const f of r.files || []) { try { await deleteObject(ref(storage, f.path)); } catch (_) {} }
+    await deleteDoc(doc(db, 'variantRequests', id));
+    await vrLoad();
+  } catch (e) { alert('취소 오류: ' + e.message); }
+};
+window.vrInit = async function () {
+  await meReady;
+  if (me.branch && $('vrBranch')) $('vrBranch').value = me.branch === '산본관' ? '산본관' : '평촌관';
+  const drop = $('vrDrop');
+  if (drop && !drop._bound) {
+    drop._bound = true;
+    drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.style.borderColor = '#5B3FA6'; });
+    drop.addEventListener('dragleave', () => { drop.style.borderColor = ''; });
+    drop.addEventListener('drop', (e) => { e.preventDefault(); drop.style.borderColor = ''; vrAddFiles(e.dataTransfer.files); });
+  }
+  vrLoad();
+};
+</script>
 <!-- ══════════ ✏️ 시험 점수 입력 + 🗂 학교별 부교재 프린트 ══════════
      · 시험 점수: Firestore examScores/{시험키}_{학생id} — 선생님은 본인 담당 학생 것만 입력·조회
      · 부교재 프린트: Firestore subMaterials/{id} + Storage subMaterials/{id}/파일 — 선생님 누구나 올리고 내려받음, 삭제는 올린 사람만 ══════════ -->

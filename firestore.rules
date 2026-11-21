@@ -608,6 +608,17 @@ service cloud.firestore {
       allow delete: if isAdmin() || (isTeacher() && resource.data.teacherUid == request.auth.uid);
     }
 
+    // ── variantRequests/{요청번호}: 선생님 변형문제 요청 (2026.11.21) — teacher.html 「변형문제 요청」 → 원장 검수 → 제작 → HCS 등록
+    // 선생님: 본인 요청만 보고 만들기(상태 '요청'으로만), 아직 '요청' 상태일 때만 취소(삭제). 관리자: 전부 보고 진행 상태 변경
+    match /variantRequests/{docId} {
+      allow read: if isAdmin() || (isTeacher() && resource.data.teacherUid == request.auth.uid);
+      allow create: if isTeacher() && request.resource.data.teacherUid == request.auth.uid
+        && request.resource.data.status == '요청';
+      allow update: if isAdmin();
+      allow delete: if isAdmin() || (isTeacher() && resource.data.teacherUid == request.auth.uid
+        && resource.data.status == '요청');
+    }
+
     // ── 그 외 정의되지 않은 컬렉션: 기본적으로 관리자만 접근 가능 ──
     // (단, officeCalendarPrivate는 「나만」 일정이라 다른 관리자에게도 열지 않음 — 위 규칙으로 본인만)
     match /{col}/{document=**} {
