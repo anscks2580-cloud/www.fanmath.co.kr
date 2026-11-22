@@ -228,9 +228,9 @@ table.qt .mv{cursor:pointer;color:#aab0b8;padding:0 4px}table.qt .mv:hover{color
 .sheet .q .txt{line-height:1.7;word-break:keep-all}
 .sheet .q .txt .choices{grid-template-columns:repeat(3,1fr);margin-top:6px}
 /* 긴 수식: 연산 기호 자리에서 줄바꿈 허용, 칸보다 넓으면 글자 크기를 줄여 칸 안에 (renderSheets → fitMath) */
-.sheet .q .txt .katex{white-space:normal}
+.sheet .katex{white-space:nowrap}   /* 수식은 중간에서 끊지 않음 — 줄에 안 들어가면 통째로 다음 줄, 칸보다 길면 fitMath가 글자를 줄임 */
 .sheet .q .txt{min-width:0}.sheet .q .fg{min-width:0}
-.sheet .measure .katex{white-space:nowrap!important}
+.sheet .measure .katex{white-space:nowrap!important}.sheet .choices.measure>div{white-space:nowrap!important}
 .sheet .keylist .ki span .katex{white-space:nowrap}
 .sheet .q .txt .katex-display{margin:4px 0;text-align:left}.sheet .q .txt .katex-display>.katex{text-align:left}
 .sheet .q .txt .choices>div{min-width:0}
@@ -269,7 +269,7 @@ table.qt .mv{cursor:pointer;color:#aab0b8;padding:0 4px}table.qt .mv:hover{color
 .sheet .sol .sb,.sheet .sol .sq{display:flex;gap:8px;align-items:flex-start}
 .sheet .sol .sq{margin-bottom:8px;padding-bottom:8px;border-bottom:1px dashed #ccc;color:#333}
 .sheet .sol .sbt{white-space:pre-wrap;flex:1;min-width:0}.sheet .sol .sqt{flex:1;min-width:0;line-height:1.7}
-.sheet .sol .katex{white-space:normal}.sheet .sol .katex-display{overflow-x:hidden;text-align:left}.sheet .sol .katex-display>.katex{text-align:left}
+.sheet .sol .katex-display{overflow-x:hidden;text-align:left}.sheet .sol .katex-display>.katex{text-align:left}
 .sheet .cols.c2 .sol{page-break-inside:avoid}
 .sheet .sol .katex-display{margin:2px 0}
 .sheet .sol table{border-collapse:collapse;font-size:11px;margin-top:4px}
@@ -489,11 +489,14 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none!importa
 }
 
 /* 교사용: 문항 아래 작은 해설 (학생용은 같은 칸을 비워 둠 → 두 시험지 배치가 똑같음). 왼쪽 번호 칸까지 넓게 씀 */
-.sheet .q .tsol{margin:6px 0 0 -40px;padding:5px 7px;border-top:1px dashed #d9d3ee;font-size:.66em;line-height:1.55;color:#555;white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
-.sheet .q .tsol b{color:var(--sc,#5b3fd1);margin-right:4px}
-.sheet .q .tsol .katex{white-space:normal}.sheet .q .tsol .katex-display{margin:1px 0;text-align:left}
+.sheet .q .tsol{margin:6px 0 0 -40px;padding:5px 7px;border-top:1px dashed #999;font-size:.66em;line-height:1.55;color:#222;white-space:pre-wrap;overflow-wrap:anywhere;word-break:keep-all}
+.sheet .q .tsol .tl{display:inline-block;font-weight:800;margin-right:6px;padding:0 5px;border:1px solid #555;border-radius:3px;font-size:.92em;line-height:1.4}
+.sheet .q .tans{text-align:right;margin-top:4px;font-size:.95em;line-height:1.5}
+.sheet .q .tans .tbx{display:inline-block;border:1.5px solid #000;border-radius:4px;padding:0 8px;font-weight:800;color:#000;background:#fff;white-space:nowrap;max-width:100%}
+.sheet .q .tans .tbx>i{font-style:normal;font-weight:800;margin-right:6px}
+.sheet .q .tans.hide,.sheet .q .tsol.hide{visibility:hidden}
+.sheet .q .tsol .katex-display{margin:1px 0;text-align:left}.sheet .q .tsol .katex-display>.katex{text-align:left}
 .sheet .q .tsol table{border-collapse:collapse;font-size:inherit}.sheet .q .tsol td{border:1px solid #ccc;padding:1px 4px}
-.sheet .q .tsol.hide{visibility:hidden;border-top-color:transparent}
 .sheet.tch .tmark{position:absolute;top:7mm;left:18mm;font-size:11px;font-weight:800;color:#fff;background:#d64545;border-radius:4px;padding:2px 10px;letter-spacing:1px}
 .sheet .keyhd.solhd{width:100%;margin-top:22px!important}
 /* 시험지: 풀이 칸 라벨, 해설지 머리, 빠른정답 반쪽 세로 목록 */
@@ -874,7 +877,20 @@ const KC=new Map();
 function kHTML(key,html){ let v=KC.get(key); if(v!==undefined) return v; const d=document.createElement('div'); d.innerHTML=html; km(d); v=d.innerHTML; if(window.renderMathInElement) KC.set(key,v); return v; }
 const qK=p=>kHTML('q:'+p.id+':'+(p._full?1:0),qText(p));
 const aK=s=>kHTML('a:'+s,esc(s));
-const solK=p=>kHTML('s:'+p.id,solHTML(esc(p.solution)));
+const solK=p=>kHTML('s2:'+p.id,eqBreak(solHTML(esc(p.solution))));
+// 해설의 긴 식: 「=」 바로 뒤에서만 줄을 바꿀 수 있게 식을 나눔 (+, − 같은 곳에서는 끊지 않음). 짧은 식은 그대로 한 덩어리
+function eqBreak(h){
+  return h.replace(/(^|[^$\\])\$([^$]+?)\$(?!\$)/g,(m,pre,tex)=>{
+    if(tex.length<28||/\\begin|&amp;/.test(tex)) return m;
+    const parts=[]; let depth=0, last=0;
+    for(let i=0;i<tex.length;i++){ const ch=tex[i];
+      if(ch==='{') depth++; else if(ch==='}') depth--;
+      else if(ch==='='&&depth===0&&i>last&&i<tex.length-1){ parts.push(tex.slice(last,i+1)+'{}'); last=i+1; } }
+    if(!parts.length) return m;
+    parts.push(tex.slice(last));
+    return pre+parts.map(t=>'$'+t+'$').join('<wbr>');
+  });
+}
 let BYID=new Map(), KIDS=new Map(); const byId=id=>BYID.get(id); const kidsOf=id=>KIDS.get(id)||[];
 function km(el){ if(window.renderMathInElement) renderMathInElement(el,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false}); }
 function toast(m){const d=document.createElement('div');d.className='toast';d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),1900);}
@@ -885,7 +901,10 @@ function solHTML(s){
   let lines=(s||'').split('\n'),out=[],tbl=[];
   const flush=()=>{if(tbl.length){out.push('<table>'+tbl.filter(r=>!/^\|?\s*-+/.test(r)).map(r=>'<tr>'+r.split('|').filter((c,i,a)=>i>0&&i<a.length-1).map(c=>'<td>'+c.trim()+'</td>').join('')+'</tr>').join('')+'</table>');tbl=[];}};
   for(const l of lines){if(l.trim().startsWith('|'))tbl.push(l);else{flush();out.push(l);}}
-  flush();return out.join('\n').replace(/\*\*(.+?)\*\*/g,'<b style="color:#9a6b00">$1</b>');
+  flush();
+  let h=out.join('\n').replace(/\r/g,'').replace(/[ \t]+\n/g,'\n').replace(/\n{2,}/g,'\n').trim();
+  h=h.replace(/\n*(\$\$[\s\S]+?\$\$)\n*/g,'<i class="zs"></i>$1<i class="zs"></i>').replace(/\n*(<table>[\s\S]*?<\/table>)\n*/g,'$1');
+  return h.replace(/\*\*(.+?)\*\*/g,'<b style="color:#9a6b00">$1</b>');
 }
 function bodyHTML(b){
   const lines=esc(b).split('\n'); let out='',box=[],tbl=[];
@@ -1286,8 +1305,9 @@ function sheetHTMLFrom(w){
   let pages=[];
   let h=`<div class="sheet ${o.space?'spc':''}" data-sec="q" style="${st}">${hd('')}<div class="cols ${o.space?'c1':'c2'}">`;
   // 교사용 만들기: 학생용·교사용 모두 문항 아래에 같은 크기의 해설 칸을 두어 배치(쪽 나눔)를 똑같이 맞춤 — 학생용은 그 칸이 비어 풀이 공간이 됨
-  const tsol=(p,show)=>o.teacher?`<div class="tsol${show?'':' hide'}"><b>${aK(p.answer)}</b> ${solK(p)}</div>`:'';
-  const qBlocks=(show)=>sel.map((p,i)=>`<div class="q" data-n="${i+1}"><div class="no">${String(i+1).padStart(2,'0')}</div><div class="qc">${o.showType?`<div class="ty">${esc(mfOf(p))}</div>`:''}<div class="fg"><div class="txt" style="flex:1">${qK(p)}</div>${p.figure?`<img src="${p.figure}">`:''}</div>${tsol(p,show)}</div>${o.space?'<div class="ws"><span>풀이</span></div>':''}</div>`).join('');
+  const tans=(p,show)=>o.teacher?`<div class="tans${show?'':' hide'}"><span class="tbx"><i>정답</i>${aK(p.answer)}</span></div>`:'';
+  const tsol=(p,show)=>o.teacher?`<div class="tsol${show?'':' hide'}"><span class="tl">해설</span>${solK(p)}</div>`:'';
+  const qBlocks=(show)=>sel.map((p,i)=>`<div class="q" data-n="${i+1}"><div class="no">${String(i+1).padStart(2,'0')}</div><div class="qc">${o.showType?`<div class="ty">${esc(mfOf(p))}</div>`:''}<div class="fg"><div class="txt" style="flex:1">${qK(p)}</div>${p.figure?`<img src="${p.figure}">`:''}</div>${tans(p,show)}${tsol(p,show)}</div>${o.space?'<div class="ws"><span>풀이</span></div>':''}</div>`).join('');
   h+=qBlocks(false);
   h+=`</div></div>`; pages.push(h);
   if(o.key){
@@ -1322,12 +1342,12 @@ function fitMath(root){
   root.querySelectorAll('.sheet .choices').forEach(c=>{ c.classList.add('measure');
     const wide=()=>[...c.children].some(d=>d.scrollWidth>d.clientWidth+1);
     if(wide()){ c.style.gridTemplateColumns='repeat(2,1fr)'; if(wide()) c.style.gridTemplateColumns='1fr'; }
+    [...c.children].forEach(d=>{ d.style.whiteSpace=d.scrollWidth>d.clientWidth+1?'normal':'nowrap'; });
     c.classList.remove('measure'); });
-  root.querySelectorAll('.sheet .q .katex, .sheet .sol .katex, .sheet .keylist .katex').forEach(k=>{
-    const box=k.closest('.choices>div')||k.closest('.txt,.sqt,.sbt,.av,.ki span')||k.parentElement; if(!box) return;
+  root.querySelectorAll('.sheet .q .katex, .sheet .sol .katex, .sheet .keylist .katex').forEach(k=>{ if(k.parentElement&&k.parentElement.closest('.katex')) return;
+    const box=k.closest('.choices>div')||k.closest('.tans,.tsol,.txt,.sqt,.sbt,.av,.ki span')||k.parentElement; if(!box) return;
     const avail=box.getBoundingClientRect().width; if(!avail) return;   // 화면 축소(zoom) 상태에서도 같은 기준이 되도록 둘 다 화면 크기로 잼
-    let need=0; k.querySelectorAll(':scope .katex-html > .base').forEach(b=>{ need=Math.max(need,b.getBoundingClientRect().width); });
-    if(k.closest('.katex-display')||k.closest('.keylist')) need=Math.max(need,k.getBoundingClientRect().width);
+    const need=k.getBoundingClientRect().width;   // 수식은 끊지 않으므로 통째 너비로 잼
     const ratio=need?avail/need:1;
     if(need&&ratio<1) k.style.fontSize=Math.max(.6,ratio*0.97).toFixed(3)+'em'; });
 }
