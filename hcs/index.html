@@ -163,7 +163,8 @@ table.qt .mv{cursor:pointer;color:#aab0b8;padding:0 4px}table.qt .mv:hover{color
 .qcard .qtext{flex:1;font-size:16px;line-height:1.8;word-break:keep-all;min-width:0}
 .qcard .fig{max-width:180px;align-self:flex-start}
 .btbl{border-collapse:collapse;margin:6px 0;font-size:.95em}.btbl td{border:1px solid #999;padding:2px 8px;text-align:center}
-.qbox{border:1px solid #bbb;border-radius:4px;padding:6px 10px;margin:6px 0;font-size:.95em;line-height:1.7}
+.qbox{border:1px solid #bbb;border-radius:4px;padding:6px 10px;margin:6px 0;font-size:.95em;line-height:1.7;overflow:hidden;overflow-wrap:anywhere;word-break:keep-all}
+.qbox .katex-display{margin:2px 0;text-align:left}.qbox .katex-display>.katex{text-align:left}
 .choices{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 12px;margin-top:10px}
 .choices .c{color:#333;margin-right:4px}
 .qcard .qa{display:flex;flex-direction:column;gap:8px;width:84px;align-items:flex-end;justify-content:space-between;flex:none}
@@ -910,7 +911,7 @@ const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"
 const plain=s=>(s||'').replace(/\\mathrm\{([^}]*)\}/g,'$1').replace(/\\overline\{([^}]*)\}/g,'$1').replace(/\\,/g,'').replace(/\$/g,'');
 // KaTeX 결과를 문항별로 캐시해 두고 다시 그리지 않음(화면 전환이 끊기지 않게)
 const KC=new Map();
-function kHTML(key,html){ let v=KC.get(key); if(v!==undefined) return v; const d=document.createElement('div'); d.innerHTML=html; km(d); v=d.innerHTML; if(window.renderMathInElement) KC.set(key,v); return v; }
+function kHTML(key,html){ let v=KC.get(key); if(v!==undefined) return v; const d=document.createElement('div'); d.innerHTML=texFix(html); km(d); v=d.innerHTML; if(window.renderMathInElement) KC.set(key,v); return v; }
 const qK=p=>kHTML('q:'+p.id+':'+(p._full?1:0),qText(p));
 const aK=s=>kHTML('a:'+s,esc(s));
 // 주관식 답이 길면(문장·여러 소문항·긴 식) 정답 칸에는 「풀이 참조」, 실제 답은 해설 맨 끝에 「답」으로 붙임
@@ -925,18 +926,30 @@ const ansK=p=>longAns(p.answer)?'풀이 참조':aK(p.answer);
 const solSrc=p=>{ const sol=String(p.solution||''); if(!longAns(p.answer)) return sol; return sol.replace(/\s+$/,'')+'\n**답** '+String(p.answer).replace(/\n+/g,' '); };
 const solK=p=>kHTML('s3:'+p.id,eqBreak(solHTML(esc(solSrc(p)))));
 // 해설의 긴 식: 「=」 바로 뒤에서만 줄을 바꿀 수 있게 식을 나눔 (+, − 같은 곳에서는 끊지 않음). 짧은 식은 그대로 한 덩어리
-function eqBreak(h){
+function eqBreak(h,minLen){
+  // 「=」, 부등호(≥ ≤ > < ≠) 바로 뒤에서만 줄을 바꿀 수 있게 식을 나눔 (+, − 나 괄호 안에서는 끊지 않음)
+  const RELS=['=','&gt;','&lt;','\\geq','\\leq','\\ge','\\le','\\neq','\\ne','\\Leftrightarrow','\\Rightarrow','\\iff'];
   return h.replace(/(^|[^$\\])\$([^$]+?)\$(?!\$)/g,(m,pre,tex)=>{
-    if(tex.length<28||/\\begin|&amp;/.test(tex)) return m;
-    const parts=[]; let depth=0, last=0;
+    if(tex.length<(minLen||28)||/\\begin|&amp;/.test(tex)) return m;
+    const parts=[]; let depth=0, lr=0, last=0;
     for(let i=0;i<tex.length;i++){ const ch=tex[i];
-      if(ch==='{') depth++; else if(ch==='}') depth--;
-      else if(ch==='='&&depth===0&&i>last&&i<tex.length-1){ parts.push(tex.slice(last,i+1)+'{}'); last=i+1; } }
+      if(ch==='{'){ depth++; continue; } if(ch==='}'){ depth--; continue; }
+      if(tex.startsWith('\\left',i)&&!/[a-zA-Z]/.test(tex[i+5]||'')){ lr++; i+=4; continue; }
+      if(tex.startsWith('\\right',i)&&!/[a-zA-Z]/.test(tex[i+6]||'')){ lr--; i+=5; continue; }
+      if(depth||lr) continue;
+      const r=RELS.find(t=>tex.startsWith(t,i)&&!(t[0]==='\\'&&/[a-zA-Z]/.test(tex[i+t.length]||'')));
+      if(!r) continue;
+      const end=i+r.length;
+      if(i>last&&end<tex.length){ parts.push(tex.slice(last,end)+'{}'); last=end; }
+      i=end-1;
+    }
     if(!parts.length) return m;
     parts.push(tex.slice(last));
     return pre+parts.map(t=>'$'+t+'$').join('<wbr>');
   });
 }
+// 빈칸 상자 (가)(나)…: 글자를 작게, 앞뒤에 조금 띄워 괄호·부등호에 붙지 않게
+function texFix(h){ return h.replace(/\\boxed\{\s*\\text\{\s*\(([가-힣]{1,2})\)\s*\}\s*\}/g,'\\,\\boxed{\\scriptsize\\text{($1)}}\\,').replace(/\\boxed\{\s*\(([가-힣]{1,2})\)\s*\}/g,'\\,\\boxed{\\scriptsize\\text{($1)}}\\,'); }
 let BYID=new Map(), KIDS=new Map(); const byId=id=>BYID.get(id); const kidsOf=id=>KIDS.get(id)||[];
 function km(el){ if(window.renderMathInElement) renderMathInElement(el,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}],throwOnError:false}); }
 function toast(m){const d=document.createElement('div');d.className='toast';d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),1900);}
@@ -956,9 +969,9 @@ function solHTML(s){
 }
 function bodyHTML(b){
   const lines=esc(b).split('\n'); let out='',box=[],tbl=[];
-  const flush=()=>{ if(box.length){ out+='<div class="qbox">'+box.join('<br>')+'</div>'; box=[]; } if(tbl.length){ out+='<table class="btbl">'+tbl.filter(r=>!/^\|?\s*:?-{2,}/.test(r)).map(r=>'<tr>'+r.split('|').filter((c,i,a)=>i>0&&i<a.length-1).map(c=>'<td>'+c.trim()+'</td>').join('')+'</tr>').join('')+'</table>'; tbl=[]; } };
+  const flush=()=>{ if(box.length){ out+='<div class="qbox">'+box.map(x=>eqBreak(x,18)).join('<br>')+'</div>'; box=[]; } if(tbl.length){ out+='<table class="btbl">'+tbl.filter(r=>!/^\|?\s*:?-{2,}/.test(r)).map(r=>'<tr>'+r.split('|').filter((c,i,a)=>i>0&&i<a.length-1).map(c=>'<td>'+c.trim()+'</td>').join('')+'</tr>').join('')+'</table>'; tbl=[]; } };
   for(const l of lines){ if(l.startsWith('&gt;')||l.startsWith('>')) box.push(l.replace(/^(&gt;|>)\s?/,'')); else if(l.trim().startsWith('|')) tbl.push(l); else { flush(); out+=(out&&!out.endsWith('</div>')&&!out.endsWith('</table>')?'<br>':'')+l; } }
-  flush(); return out;
+  flush(); return out.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
 }
 function qText(p){
   let h=`<div>${bodyHTML(p.body).replace(/&lt;(\/?)u>/g,'<$1u>')}`;
@@ -1458,8 +1471,9 @@ function fitMath(root){
     [...c.children].forEach(d=>{ d.style.whiteSpace=d.scrollWidth>d.clientWidth+1?'normal':'nowrap'; });
     c.classList.remove('measure'); });
   root.querySelectorAll('.sheet .q .katex, .sheet .sol .katex, .sheet .keylist .katex').forEach(k=>{ if(k.parentElement&&k.parentElement.closest('.katex')) return;
-    const box=k.closest('.choices>div')||k.closest('.tans,.tsol,.txt,.sqt,.sbt,.av,.ki span')||k.parentElement; if(!box) return;
-    const avail=box.getBoundingClientRect().width; if(!avail) return;   // 화면 축소(zoom) 상태에서도 같은 기준이 되도록 둘 다 화면 크기로 잼
+    const box=k.closest('.choices>div')||k.closest('.qbox,.tans,.tsol,.txt,.sqt,.sbt,.av,.ki span')||k.parentElement; if(!box) return;
+    let avail=box.getBoundingClientRect().width; if(!avail) return;
+    if(box.classList.contains('qbox')){ const cs=getComputedStyle(box); avail-=(parseFloat(cs.paddingLeft)+parseFloat(cs.paddingRight)+2)*(avail/(box.offsetWidth||avail)); }   // 화면 축소(zoom) 상태에서도 같은 기준이 되도록 둘 다 화면 크기로 잼
     const need=k.getBoundingClientRect().width;   // 수식은 끊지 않으므로 통째 너비로 잼
     const ratio=need?avail/need:1;
     if(need&&ratio<1) k.style.fontSize=Math.max(.6,ratio*0.97).toFixed(3)+'em'; });
