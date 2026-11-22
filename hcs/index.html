@@ -493,14 +493,24 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none!importa
 .sheet .q .tsol .tl{display:inline-block;font-weight:800;margin-right:6px;padding:0 5px;border:1px solid #555;border-radius:3px;font-size:.92em;line-height:1.4}
 /* 교사용 정답 칸: 글씨를 작게, 분수·지수처럼 높은 답도 테두리에 겹치지 않게 칸이 내용 높이만큼 늘어남 */
 .sheet .q .tans{text-align:right;margin-top:5px;font-size:.78em;line-height:1.25}
-.sheet .q .tans .tbx{display:inline-flex;align-items:center;gap:5px;border:1.2px solid #000;border-radius:4px;padding:3px 7px;font-weight:700;color:#000;background:#fff;white-space:nowrap;max-width:100%;box-sizing:border-box;vertical-align:top}
-.sheet .q .tans .tbx>i{font-style:normal;font-weight:800;font-size:.92em}
+.sheet .q .tans .tbx{display:inline-block;border:1.2px solid #000;border-radius:4px;padding:3px 7px;font-weight:700;color:#000;background:#fff;white-space:nowrap;max-width:100%;box-sizing:border-box;vertical-align:top}
+.sheet .q .tans .tbx>b{font-weight:800;font-size:.92em;margin-right:5px}
 .sheet .q .tans .tbx .katex{font-size:1em;line-height:1.2}
 .sheet .q .tans.hide,.sheet .q .tsol.hide{visibility:hidden}
 .sheet .q .tsol .katex-display{margin:1px 0;text-align:left}.sheet .q .tsol .katex-display>.katex{text-align:left}
 .sheet .q .tsol table{border-collapse:collapse;font-size:inherit}.sheet .q .tsol td{border:1px solid #ccc;padding:1px 4px}
 .sheet.tch .tmark{position:absolute;top:7mm;left:18mm;font-size:11px;font-weight:800;color:#fff;background:#d64545;border-radius:4px;padding:2px 10px;letter-spacing:1px}
 .sheet .keyhd.solhd{width:100%;margin-top:22px!important;break-after:avoid}
+/* 다운로드 창 */
+.dlrow{display:flex;align-items:center;gap:18px;padding:12px 0;border-bottom:1px solid var(--line)}
+.dlrow>b{width:72px;flex:none;font-size:14px}
+.dlchips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.dlc{cursor:pointer}.dlc input{display:none}
+.dlc span{display:inline-block;padding:8px 18px;border:1px solid #cfd6e4;border-radius:999px;font-size:14px;color:#555;background:#fff}
+.dlc input:checked+span{border-color:#5b3fd1;color:#5b3fd1;background:#f1edff;font-weight:700}
+.dlc.off{opacity:.4;pointer-events:none}
+#dlbody{position:fixed;left:-30000px;top:0;width:230mm;background:#fff}
+
 /* 빠른정답 장: 빠른정답 + 해설을 한 흐름(2단)으로 — 왼쪽 단 위 빠른정답, 그 아래·오른쪽 단 위부터 해설 */
 .sheet .cols.keyflow{margin-top:0}
 .sheet .cols.keyflow>.keyhd{width:100%;margin-top:18px!important}
@@ -723,7 +733,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none!importa
 
 <!-- ===== 출력 보기 ===== -->
 <div class="printview" id="printview">
-  <div class="pt"><b id="pv_title"></b><button onclick="document.getElementById('printview').classList.remove('on')">목록으로</button><button id="pv_assign" onclick="">학생에게 출제하기</button><button class="pri" onclick="window.print()">PDF 저장 / 인쇄</button></div>
+  <div class="pt"><b id="pv_title"></b><button onclick="document.getElementById('printview').classList.remove('on')">목록으로</button><button id="pv_assign" onclick="">학생에게 출제하기</button><button id="pv_down" onclick="pvDown()">PDF 다운로드</button><button class="pri" onclick="window.print()">인쇄하기</button></div>
   <div class="pb" id="printbody"></div>
 </div>
 
@@ -750,7 +760,27 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none!importa
 </div></div>
 
 <div id="wsmenu" class="popmenu" onclick="event.stopPropagation()"></div>
-<div class="wsbar" id="wsbar"><b id="wsbarN"></b><span style="flex:1"></span><button data-one onclick="wsBarAct('edit')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg><span>수정</span></button><button data-one onclick="wsBarAct('copy')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg><span>복제 후 수정</span></button><button onclick="wsBarAct('down')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg><span>다운로드</span></button><button onclick="wsBarAct('del')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></svg><span>선택 삭제</span></button><button class="x" title="선택 해제" onclick="wsClearSel()">✕</button></div>
+<div class="wsbar" id="wsbar"><b id="wsbarN"></b><span style="flex:1"></span><button data-one onclick="wsBarAct('edit')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg><span>수정</span></button><button data-one onclick="wsBarAct('copy')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h3"/></svg><span>복제 후 수정</span></button><button onclick="wsBarAct('print')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><rect x="3" y="9" width="18" height="8" rx="2"/><path d="M6 14h12v7H6z"/></svg><span>인쇄하기</span></button><button onclick="wsBarAct('down')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg><span>다운로드</span></button><button onclick="wsBarAct('del')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M6 7l1 13h10l1-13"/></svg><span>선택 삭제</span></button><button class="x" title="선택 해제" onclick="wsClearSel()">✕</button></div>
+<!-- ===== 학습지 다운로드 (PDF 바로 받기) ===== -->
+<div class="modal" id="m_down"><div class="box" style="width:560px">
+  <div class="mh">학습지 다운로드 <span class="note" id="dl_name" style="margin-left:8px;font-weight:400"></span><button class="sm ghost" onclick="$('m_down').classList.remove('on')">✕</button></div>
+  <div class="mb">
+    <div class="dlrow"><b>분류 선택</b><div class="dlchips" id="dl_kinds">
+      <label class="dlc"><input type="checkbox" value="q" checked><span>문제지</span></label>
+      <label class="dlc"><input type="checkbox" value="key" checked><span>빠른정답</span></label>
+      <label class="dlc"><input type="checkbox" value="sol" checked><span>정답해설</span></label>
+      <label class="dlc" id="dl_tch"><input type="checkbox" value="t"><span>교사용</span></label>
+    </div></div>
+    <div class="dlrow"><b>다운 형식</b><div class="dlchips">
+      <label class="chk" style="margin-right:18px;cursor:pointer"><input type="radio" name="dl_one" value="1" checked> 하나의 PDF로 받기</label>
+      <label class="chk" style="cursor:pointer"><input type="radio" name="dl_one" value="0"> 개별 PDF로 받기</label>
+    </div></div>
+    <div class="note" id="dl_msg" style="min-height:18px;margin-top:6px"></div>
+  </div>
+  <div class="mf"><button onclick="$('m_down').classList.remove('on')">취소</button><button class="pri" id="dl_go" onclick="doDown()">다운로드</button></div>
+</div></div>
+<div id="dlbody" aria-hidden="true"></div>
+
 <!-- ===== 학습지 만들기 확인 ===== -->
 <div class="modal" id="m_make"><div class="box" style="width:560px">
   <div class="mh">학습지 만들기<button class="sm ghost" onclick="$('m_make').classList.remove('on')">✕</button></div>
@@ -884,7 +914,17 @@ const KC=new Map();
 function kHTML(key,html){ let v=KC.get(key); if(v!==undefined) return v; const d=document.createElement('div'); d.innerHTML=html; km(d); v=d.innerHTML; if(window.renderMathInElement) KC.set(key,v); return v; }
 const qK=p=>kHTML('q:'+p.id+':'+(p._full?1:0),qText(p));
 const aK=s=>kHTML('a:'+s,esc(s));
-const solK=p=>kHTML('s2:'+p.id,eqBreak(solHTML(esc(p.solution))));
+// 주관식 답이 길면(문장·여러 소문항·긴 식) 정답 칸에는 「풀이 참조」, 실제 답은 해설 맨 끝에 「답」으로 붙임
+function longAns(a){ const t=String(a||'').trim(); if(!t||/^풀이\s*참조$/.test(t)) return false;
+  if(/\n/.test(t)) return true;
+  const txt=t.replace(/\$[^$]*\$/g,' ');   // 수식 밖 글자
+  if(/(이면|이다|이고|이므로|또는|그리고|일 때|증명|참이|거짓)/.test(txt)) return true;
+  const pl=plain(t).replace(/\\(left|right|quad|qquad|displaystyle|text|mathrm|dfrac|frac|sqrt)/g,'').replace(/\\[a-zA-Z]+/g,'#').replace(/[{}\s]/g,'');
+  if(/\(\s*2\s*\)|②.*③/.test(t)&&pl.length>12) return true;
+  return pl.length>24; }
+const ansK=p=>longAns(p.answer)?'풀이 참조':aK(p.answer);
+const solSrc=p=>{ const sol=String(p.solution||''); if(!longAns(p.answer)) return sol; return sol.replace(/\s+$/,'')+'\n**답** '+String(p.answer).replace(/\n+/g,' '); };
+const solK=p=>kHTML('s3:'+p.id,eqBreak(solHTML(esc(solSrc(p)))));
 // 해설의 긴 식: 「=」 바로 뒤에서만 줄을 바꿀 수 있게 식을 나눔 (+, − 같은 곳에서는 끊지 않음). 짧은 식은 그대로 한 덩어리
 function eqBreak(h){
   return h.replace(/(^|[^$\\])\$([^$]+?)\$(?!\$)/g,(m,pre,tex)=>{
@@ -975,12 +1015,14 @@ function wsSummary(w){ const lv=w.levelDist?LV.filter(l=>w.levelDist[l]).map(l=>
 function renderWS(){
   const q=($('wsq').value||'').trim();
   const list=WS.filter(w=>(!wsGrade||String(w.grade||'').startsWith(wsGrade))&&(!q||(w.title+' '+(w.tags||[]).join(' ')+' '+(w.teacherName||'')).includes(q)));
-  $('wsrows').innerHTML=list.map(w=>{ const i=WS.indexOf(w); return `<tr class="${WSSEL.has(w)?'sel':''}"><td class="ck"><input type="checkbox" ${WSSEL.has(w)?'checked':''} onchange="wsPick(${i},this.checked)"></td><td class="mini">${esc(w.grade||'')}<br><span style="color:#999">${esc(subjShort(w.subject||''))}</span></td><td class="mini">${esc((w.tags||[]).join(', '))}</td><td class="t"><b>${esc(w.title)}</b>${w.id?'':'<span class="tag">저장 안 됨</span>'}<div>${wsSummary(w)}</div></td><td class="mini">${esc(w.createdAtStr||'')}</td><td class="mini">${esc(w.teacherName||'')}</td><td><button class="pv" title="미리보기" onclick="showPrint(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="11.5" cy="12" r="3"/><path d="M14 14.5l2.5 2.5"/></svg></button></td><td style="text-align:center"><button class="as" onclick="openAssign(${i})">출제하기</button></td><td><button class="kebab" title="더보기" onclick="wsMenu(event,${i})">⋮</button></td></tr>`; }).join('');
+  $('wsrows').innerHTML=list.map(w=>{ const i=WS.indexOf(w); return `<tr class="${WSSEL.has(w)?'sel':''}" style="cursor:pointer" onclick="wsRowClick(event,${i})"><td class="ck"><input type="checkbox" ${WSSEL.has(w)?'checked':''} onchange="wsPick(${i},this.checked)"></td><td class="mini">${esc(w.grade||'')}<br><span style="color:#999">${esc(subjShort(w.subject||''))}</span></td><td class="mini">${esc((w.tags||[]).join(', '))}</td><td class="t"><b>${esc(w.title)}</b>${w.id?'':'<span class="tag">저장 안 됨</span>'}<div>${wsSummary(w)}</div></td><td class="mini">${esc(w.createdAtStr||'')}</td><td class="mini">${esc(w.teacherName||'')}</td><td><button class="pv" title="미리보기" onclick="showPrint(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="11.5" cy="12" r="3"/><path d="M14 14.5l2.5 2.5"/></svg></button></td><td style="text-align:center"><button class="as" onclick="openAssign(${i})">출제하기</button></td><td><button class="kebab" title="더보기" onclick="wsMenu(event,${i})">⋮</button></td></tr>`; }).join('');
   $('wsnote').textContent=ME?(list.length?'':'아직 만든 학습지가 없어요. 「⊕ 학습지 만들기」를 눌러 보세요.'):(WS.some(w=>w.id)?'지난번에 받아 둔 목록이에요. 로그인하면 새로 받아요.':'로그인하지 않으면 학습지가 저장되지 않고, 이 화면에서만 잠깐 보여요.');
   WS_VIS=list; wsBar();
 }
 // 학습지 선택 → 아래에서 올라오는 작업 막대 (수정 / 복제 후 수정 / 다운로드 / 선택 삭제)
-let WSSEL=new Set(), WS_VIS=[];
+let WSSEL=new Set(), WS_VIS=[], PVWS=[];
+// 학습지 줄 아무 곳이나 누르면 선택/해제 (버튼·체크박스를 누른 건 제외)
+function wsRowClick(e,i){ if(e.target.closest('button,input,a,select,label,.kebab')) return; const w=WS[i]; if(!w) return; wsPick(i,!WSSEL.has(w)); }
 function wsPick(i,on){ const w=WS[i]; if(!w) return; on?WSSEL.add(w):WSSEL.delete(w); renderWS(); }
 function wsAllPick(on){ WS_VIS.forEach(w=>on?WSSEL.add(w):WSSEL.delete(w)); renderWS(); }
 function wsClearSel(){ WSSEL.clear(); renderWS(); }
@@ -991,13 +1033,76 @@ function wsBar(){ [...WSSEL].forEach(w=>{ if(!WS.includes(w)) WSSEL.delete(w); }
 function wsSelIdx(){ return [...WSSEL].map(w=>WS.indexOf(w)).filter(i=>i>=0).sort((a,b)=>a-b); }
 function wsBarAct(a){ const ix=wsSelIdx(); if(!ix.length) return;
   if(a==='edit'||a==='copy'){ if(ix.length!==1){ toast('학습지를 하나만 골라 주세요'); return; } editWS(ix[0],a==='copy'); }
-  else if(a==='down') wsDownload(ix);
+  else if(a==='down') openDown(ix);
+  else if(a==='print') wsDownload(ix);
   else if(a==='del') wsDelMany(ix); }
 function wsDownload(ix){ if(REMOTE&&!DB.length){ whenCore(()=>wsDownload(ix)); return; } const ws=ix.map(i=>WS[i]);
   const units=[...new Set(ws.flatMap(w=>w.problemIds.map(id=>(byId(id)||{}).unit)).filter(Boolean))];
-  needUnits(units,async()=>{ $('pv_title').textContent=ws.length===1?ws[0].title:`학습지 ${ws.length}개`; $('printview').classList.add('on'); const ok=await renderSheets($('printbody'),ws.map(sheetHTMLFrom).join(''));
+  needUnits(units,async()=>{ PVWS=ws.slice(); $('pv_title').textContent=ws.length===1?ws[0].title:`학습지 ${ws.length}개`; $('printview').classList.add('on'); const ok=await renderSheets($('printbody'),ws.map(sheetHTMLFrom).join(''));
     if(ws.length===1){ $('pv_assign').style.display=''; $('pv_assign').onclick=()=>openAssign(ix[0]); } else $('pv_assign').style.display='none';
     if(ok) setTimeout(()=>window.print(),300); }); }
+// ── 학습지 PDF 바로 다운로드 (인쇄 창 없이) — 문제지·빠른정답·정답해설·교사용을 골라 하나의 PDF 또는 따로 ──
+let DLWS=[];
+function openDown(ix){ DLWS=ix.map(i=>WS[i]).filter(Boolean); if(!DLWS.length) return; dlOpenModal(); }
+function pvDown(){ if(!PVWS.length) return; DLWS=PVWS.slice(); dlOpenModal(); }
+function dlOpenModal(){
+  $('dl_name').textContent=DLWS.length===1?DLWS[0].title:`학습지 ${DLWS.length}개`;
+  const hasT=DLWS.some(w=>(w.opts||{}).teacher);
+  const t=$('dl_tch'); t.classList.toggle('off',!hasT); t.title=hasT?'':'교사용을 만든 학습지가 아니에요 (구성 설정에서 「교사용 만들기」)';
+  t.querySelector('input').checked=hasT;
+  $('dl_msg').textContent=''; $('dl_go').disabled=false; $('m_down').classList.add('on'); }
+const DLNAME={q:'문제지',key:'빠른정답',sol:'정답해설',t:'교사용'};
+function loadLib(src,test){ return new Promise((res,rej)=>{ if(test()) return res(); const sc=document.createElement('script'); sc.src=src; sc.onload=()=>res(); sc.onerror=()=>rej(new Error('PDF 도구를 불러오지 못했어요')); document.head.appendChild(sc); }); }
+async function dlLibs(){
+  await loadLib('https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',()=>window.html2canvas);
+  await loadLib('https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',()=>window.jspdf&&window.jspdf.jsPDF); }
+// 학습지 하나 + 고른 분류 → 화면 밖에 그려서 그 분류의 쪽(.sheet)만 돌려줌
+async function dlPages(w,kinds){
+  const o=w.opts||{}; const k=new Set(kinds);
+  const opts={...o, key:k.has('key'), sol:k.has('sol'), teacher:k.has('t')&&!!o.teacher, keysol:o.keysol!==false&&k.has('key')&&k.has('sol')};
+  const box=$('dlbody'); box.innerHTML='';
+  await renderSheets(box,sheetHTMLFrom({...w,opts}));
+  return [...box.querySelectorAll('.sheet.pgd')].filter(pg=>{ const sec=pg.dataset.sec||'q'; return sec==='q'?k.has('q'):sec==='key'?(k.has('key')||k.has('sol')):sec==='sol'?k.has('sol'):sec==='t'?k.has('t'):true; });
+}
+async function dlAddPages(pdf,pages,first){
+  for(const pg of pages){
+    const c=await html2canvas(pg,{scale:2,backgroundColor:'#ffffff',useCORS:true,logging:false});
+    if(!first.v) pdf.addPage('a4','portrait'); first.v=false;
+    pdf.addImage(c.toDataURL('image/jpeg',0.92),'JPEG',0,0,210,297,undefined,'FAST');
+  }
+}
+const dlSafe=s=>String(s||'학습지').replace(/[\\/:*?"<>|]+/g,'_').trim()||'학습지';
+async function doDown(){
+  const kinds=[...document.querySelectorAll('#dl_kinds input:checked')].map(x=>x.value).filter(v=>v!=='t'||!$('dl_tch').classList.contains('off'));
+  if(!kinds.length){ $('dl_msg').textContent='받을 분류를 하나 이상 골라 주세요'; return; }
+  const one=document.querySelector('input[name="dl_one"]:checked').value==='1';
+  if(REMOTE&&!DB.length){ $('dl_msg').textContent='문제 자료를 불러오는 중이에요…'; whenCore(()=>doDown()); return; }
+  $('dl_go').disabled=true;
+  const units=[...new Set(DLWS.flatMap(w=>w.problemIds.map(id=>(byId(id)||{}).unit)).filter(Boolean))];
+  needUnits(units,async()=>{
+    try{
+      $('dl_msg').textContent='PDF를 만드는 중이에요… (쪽이 많으면 조금 걸려요)';
+      await dlLibs(); if(document.fonts&&document.fonts.ready) await document.fonts.ready;
+      const { jsPDF }=window.jspdf;
+      const order=['q','key','sol','t'].filter(x=>kinds.includes(x));
+      if(one){
+        const pdf=new jsPDF({unit:'mm',format:'a4',orientation:'portrait',compress:true}); const first={v:true};
+        for(const w of DLWS){ $('dl_msg').textContent=`「${w.title}」 만드는 중…`; await dlAddPages(pdf,await dlPages(w,order),first); }
+        const nm=DLWS.length===1?`${dlSafe(DLWS[0].title)}_${order.map(x=>DLNAME[x]).join('+')}`:`학습지_${DLWS.length}개`;
+        pdf.save(nm+'.pdf');
+      }else{
+        for(const w of DLWS) for(const kd of order){
+          $('dl_msg').textContent=`「${w.title}」 ${DLNAME[kd]} 만드는 중…`;
+          const pages=await dlPages(w,[kd]); if(!pages.length) continue;
+          const pdf=new jsPDF({unit:'mm',format:'a4',orientation:'portrait',compress:true}); await dlAddPages(pdf,pages,{v:true});
+          pdf.save(`${dlSafe(w.title)}_${DLNAME[kd]}.pdf`); await new Promise(r=>setTimeout(r,400));
+        }
+      }
+      $('dlbody').innerHTML=''; $('m_down').classList.remove('on'); toast('PDF를 내려받았어요');
+    }catch(e){ console.warn(e); $('dl_msg').textContent='PDF를 만들지 못했어요: '+(e.message||e); }
+    finally{ $('dl_go').disabled=false; }
+  });
+}
 async function wsDelMany(ix){ const ws=ix.map(i=>WS[i]); if(!confirm(`고른 학습지 ${ws.length}개를 삭제할까요?\n(서버에서도 지워지고 되돌릴 수 없어요)`)) return;
   busy(true); let ok=0, bad=0; for(const w of ws){ try{ if(w.id) await FB.deleteWorksheet(w.id); WS.splice(WS.indexOf(w),1); WSSEL.delete(w); ok++; }catch(e){ console.warn(e); bad++; } } busy(false);
   renderWS(); wsCachePut(); toast(bad?`${ok}개 삭제, ${bad}개 실패`:`${ok}개 삭제했어요`); }
@@ -1021,7 +1126,7 @@ function editWS(i,copy){ $('wsmenu').classList.remove('on'); const w=WS[i]; if(!
     $('f_type').checked=!!o.showType; $('f_space').checked=!!o.space; $('f_key').checked=o.key!==false; $('f_sol').checked=o.sol!==false; $('f_solq').checked=!!o.solq; $('f_pgno').checked=o.pgno!==false; $('f_solref').checked=o.solref!==false; $('f_keysol').checked=o.keysol!==false; $('f_teacher').checked=!!o.teacher;
     $('wiz').classList.add('on'); renderLvlChips(); renderTree(); goStep(2); toast(copy?'복제한 학습지를 고쳐요 — 저장할 때 새 이름으로 저장돼요':'학습지를 고쳐요');
   }); }
-function showPrint(i){ if(REMOTE&&!DB.length){ whenCore(()=>showPrint(i)); return; } const w=wsOf(i); const ids=w.problemIds; $('pv_assign').style.display=''; needUnits([...new Set(ids.map(id=>(byId(id)||{}).unit).filter(Boolean))],()=>{ $('pv_title').textContent=w.title; $('pv_assign').onclick=()=>openAssign(i); $('printview').classList.add('on'); renderSheets($('printbody'),sheetHTMLFrom(w)); }); }
+function showPrint(i){ if(REMOTE&&!DB.length){ whenCore(()=>showPrint(i)); return; } const w=wsOf(i); const ids=w.problemIds; $('pv_assign').style.display=''; needUnits([...new Set(ids.map(id=>(byId(id)||{}).unit).filter(Boolean))],()=>{ PVWS=[w]; $('pv_title').textContent=w.title; $('pv_assign').onclick=()=>openAssign(i); $('printview').classList.add('on'); renderSheets($('printbody'),sheetHTMLFrom(w)); }); }
 async function delWS(i){ $('wsmenu').classList.remove('on'); const w=WS[i]; if(!w||!confirm(`「${w.title}」 학습지를 삭제할까요?\n(서버에서도 지워지고 되돌릴 수 없어요)`)) return; if(w.id){ try{ await FB.deleteWorksheet(w.id); }catch(e){ toast('삭제 실패: '+e.message); return; } } WS.splice(i,1); renderWS(); wsCachePut(); toast('삭제했어요'); }
 
 // =================== 마법사 ===================
@@ -1303,8 +1408,8 @@ function sheetHTML(){ return sheetHTMLFrom({problemIds:SEL,opts:sheetOpts(),crea
 // 빠른정답: 한 줄을 세 칸으로 — 짧은 답 1칸, 좀 긴 답 2칸, 아주 긴 답 3칸(6 기준 2·4·6), 번호 순서 유지
 function keyW(ans){ const t=plain(String(ans||'')).replace(/\\(left|right|quad|qquad|displaystyle|text|mathrm)/g,'').replace(/\\[a-zA-Z]+/g,'#').replace(/[{}\s]/g,''); const n=t.length; return n<=14?2:n<=30?4:6; }   // 세 칸 기준(2·4·6) — 세로줄이 모든 줄에서 맞도록
 function keyRows(sel){ let out='', row=[], used=0;
-  const flush=()=>{ if(!row.length) return; if(used<6) row[row.length-1].w+=6-used; out+='<div class="kr">'+row.map(c=>`<div class="ki w${c.w===2?1:c.w===6?3:0}" style="grid-column:span ${c.w}"><b>${String(c.i+1).padStart(2,'0')}</b><span>${aK(c.p.answer)}</span></div>`).join('')+'</div>'; row=[]; used=0; };
-  sel.forEach((p,i)=>{ const w=keyW(p.answer); if(used+w>6) flush(); row.push({p,i,w}); used+=w; if(used>=6) flush(); }); flush(); return out; }
+  const flush=()=>{ if(!row.length) return; if(used<6) row[row.length-1].w+=6-used; out+='<div class="kr">'+row.map(c=>`<div class="ki w${c.w===2?1:c.w===6?3:0}" style="grid-column:span ${c.w}"><b>${String(c.i+1).padStart(2,'0')}</b><span>${ansK(c.p)}</span></div>`).join('')+'</div>'; row=[]; used=0; };
+  sel.forEach((p,i)=>{ const w=longAns(p.answer)?2:keyW(p.answer); if(used+w>6) flush(); row.push({p,i,w}); used+=w; if(used>=6) flush(); }); flush(); return out; }
 function sheetHTMLFrom(w){
   const o=w.opts||{}; const sel=w.problemIds.map(byId).filter(Boolean);
   const t=esc(o.title), au=esc(o.author); const ds=(w.createdAtStr||todayStr()).replace(/-/g,'.');
@@ -1314,7 +1419,7 @@ function sheetHTMLFrom(w){
   let pages=[];
   let h=`<div class="sheet ${o.space?'spc':''}" data-sec="q" style="${st}">${hd('')}<div class="cols ${o.space?'c1':'c2'}">`;
   // 교사용 만들기: 학생용·교사용 모두 문항 아래에 같은 크기의 해설 칸을 두어 배치(쪽 나눔)를 똑같이 맞춤 — 학생용은 그 칸이 비어 풀이 공간이 됨
-  const tans=(p,show)=>o.teacher?`<div class="tans${show?'':' hide'}"><span class="tbx"><i>정답</i>${aK(p.answer)}</span></div>`:'';
+  const tans=(p,show)=>o.teacher?`<div class="tans${show?'':' hide'}"><span class="tbx"><b>정답</b>${ansK(p)}</span></div>`:'';
   const tsol=(p,show)=>o.teacher?`<div class="tsol${show?'':' hide'}"><span class="tl">해설</span>${solK(p)}</div>`:'';
   const qBlocks=(show)=>sel.map((p,i)=>`<div class="q" data-n="${i+1}"><div class="no">${String(i+1).padStart(2,'0')}</div><div class="qc">${o.showType?`<div class="ty">${esc(mfOf(p))}</div>`:''}<div class="fg"><div class="txt" style="flex:1">${qK(p)}</div>${p.figure?`<img src="${p.figure}">`:''}</div>${tans(p,show)}${tsol(p,show)}</div>${o.space?'<div class="ws"><span>풀이</span></div>':''}</div>`).join('');
   h+=qBlocks(false);
@@ -1326,7 +1431,7 @@ function sheetHTMLFrom(w){
   }
   if(o.sol){
     let s=`<div class="sheet" data-sec="sol" style="${st}">${hd('정답 및 해설')}<div class="cols c2">`;
-    s+=sel.map((p,i)=>`<div class="sol" data-n="${i+1}"><div class="sh"><b>${String(i+1).padStart(2,'0')}</b><span class="al">정답</span><span class="av">${aK(p.answer)}</span></div>${o.solq?`<div class="sq"><span class="al">문제</span><div class="sqt">${qK(p)}${p.figure?`<img src="${p.figure}" style="max-width:28mm;display:block;margin-top:4px">`:''}</div></div>`:''}<div class="sb"><span class="al">해설</span><div class="sbt">${solK(p)}</div></div></div>`).join('');
+    s+=sel.map((p,i)=>`<div class="sol" data-n="${i+1}"><div class="sh"><b>${String(i+1).padStart(2,'0')}</b><span class="al">정답</span><span class="av">${ansK(p)}</span></div>${o.solq?`<div class="sq"><span class="al">문제</span><div class="sqt">${qK(p)}${p.figure?`<img src="${p.figure}" style="max-width:28mm;display:block;margin-top:4px">`:''}</div></div>`:''}<div class="sb"><span class="al">해설</span><div class="sbt">${solK(p)}</div></div></div>`).join('');
     s+=`</div></div>`; pages.push(s);
   }
   if(o.teacher){
@@ -1549,7 +1654,7 @@ function showTestPrint(id,dl){ if(REMOTE&&!DB.length){ whenCore(()=>showTestPrin
   const w=WS.find(x=>x.id&&x.id===t.worksheetId)||{ title:t.title, problemIds:t.problemIds||[], opts:{ title:t.title, author:t.teacherName||'' }, createdAtStr:t.date };
   if(!(w.problemIds||[]).length){ toast('이 시험지의 문제 정보가 없어요'); return; }
   needUnits([...new Set(w.problemIds.map(pid=>(byId(pid)||{}).unit).filter(Boolean))],async()=>{
-    $('pv_title').textContent=`${t.title} · ${shortDate(t.date)} 출제`; $('pv_assign').style.display='none';
+    PVWS=[w]; $('pv_title').textContent=`${t.title} · ${shortDate(t.date)} 출제`; $('pv_assign').style.display='none';
     $('printview').classList.add('on'); const ok=await renderSheets($('printbody'),sheetHTMLFrom(w)); if(ok&&dl) setTimeout(()=>window.print(),300); }); }
 function renderAsg(){
   if(!ME){ $('asgrows').innerHTML=''; $('asgnote').textContent='로그인하면 출제한 학습지가 보여요.'; return; }
