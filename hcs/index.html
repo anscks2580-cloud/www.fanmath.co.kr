@@ -500,7 +500,12 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none!importa
 .sheet .q .tsol .katex-display{margin:1px 0;text-align:left}.sheet .q .tsol .katex-display>.katex{text-align:left}
 .sheet .q .tsol table{border-collapse:collapse;font-size:inherit}.sheet .q .tsol td{border:1px solid #ccc;padding:1px 4px}
 .sheet.tch .tmark{position:absolute;top:7mm;left:18mm;font-size:11px;font-weight:800;color:#fff;background:#d64545;border-radius:4px;padding:2px 10px;letter-spacing:1px}
-.sheet .keyhd.solhd{width:100%;margin-top:22px!important}
+.sheet .keyhd.solhd{width:100%;margin-top:22px!important;break-after:avoid}
+/* 빠른정답 장: 빠른정답 + 해설을 한 흐름(2단)으로 — 왼쪽 단 위 빠른정답, 그 아래·오른쪽 단 위부터 해설 */
+.sheet .cols.keyflow{margin-top:0}
+.sheet .cols.keyflow>.keyhd{width:100%;margin-top:18px!important}
+.sheet .cols.keyflow>.keyhd:first-child{margin-top:0!important}
+.sheet .keylist.inflow{column-count:1;flex:none;height:auto;overflow:visible;break-inside:avoid;margin-bottom:4px}
 /* 시험지: 풀이 칸 라벨, 해설지 머리, 빠른정답 반쪽 세로 목록 */
 .sheet .q .ws{position:relative}
 .sheet .q .ws span{position:absolute;top:2px;left:8px;font-size:10px;color:#999;font-weight:700;letter-spacing:1px}
@@ -901,7 +906,9 @@ const todayStr=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.get
 const shortDate=s=>s?s.slice(2).replace(/-/g,'.'):'';
 function solHTML(s){
   let lines=(s||'').split('\n'),out=[],tbl=[];
-  const flush=()=>{if(tbl.length){out.push('<table>'+tbl.filter(r=>!/^\|?\s*-+/.test(r)).map(r=>'<tr>'+r.split('|').filter((c,i,a)=>i>0&&i<a.length-1).map(c=>'<td>'+c.trim()+'</td>').join('')+'</tr>').join('')+'</table>');tbl=[];}};
+  // 채점 기준표(채점 요소·배점)는 해설지에 넣지 않음, 그 앞의 「채점 기준」 제목 줄도 뺌
+  const flush=()=>{if(tbl.length&&/채점|배점/.test(tbl[0])){ tbl=[]; while(out.length&&/^\s*((\*\*)?\s*[\[(]?\s*채점\s*기준\s*[\])]?\s*(\*\*)?\s*:?)?\s*$/.test(out[out.length-1])) out.pop(); return; }
+    if(tbl.length){out.push('<table>'+tbl.filter(r=>!/^\|?\s*:?-{2,}/.test(r)).map(r=>'<tr>'+r.split('|').filter((c,i,a)=>i>0&&i<a.length-1).map(c=>'<td>'+c.trim()+'</td>').join('')+'</tr>').join('')+'</table>');tbl=[];}};
   for(const l of lines){if(l.trim().startsWith('|'))tbl.push(l);else{flush();out.push(l);}}
   flush();
   let h=out.join('\n').replace(/\r/g,'').replace(/[ \t]+\n/g,'\n').replace(/\n{2,}/g,'\n').trim();
@@ -910,7 +917,7 @@ function solHTML(s){
 }
 function bodyHTML(b){
   const lines=esc(b).split('\n'); let out='',box=[],tbl=[];
-  const flush=()=>{ if(box.length){ out+='<div class="qbox">'+box.join('<br>')+'</div>'; box=[]; } if(tbl.length){ out+='<table class="btbl">'+tbl.filter(r=>!/^\|?\s*-+/.test(r)).map(r=>'<tr>'+r.split('|').filter((c,i,a)=>i>0&&i<a.length-1).map(c=>'<td>'+c.trim()+'</td>').join('')+'</tr>').join('')+'</table>'; tbl=[]; } };
+  const flush=()=>{ if(box.length){ out+='<div class="qbox">'+box.join('<br>')+'</div>'; box=[]; } if(tbl.length){ out+='<table class="btbl">'+tbl.filter(r=>!/^\|?\s*:?-{2,}/.test(r)).map(r=>'<tr>'+r.split('|').filter((c,i,a)=>i>0&&i<a.length-1).map(c=>'<td>'+c.trim()+'</td>').join('')+'</tr>').join('')+'</table>'; tbl=[]; } };
   for(const l of lines){ if(l.startsWith('&gt;')||l.startsWith('>')) box.push(l.replace(/^(&gt;|>)\s?/,'')); else if(l.trim().startsWith('|')) tbl.push(l); else { flush(); out+=(out&&!out.endsWith('</div>')&&!out.endsWith('</table>')?'<br>':'')+l; } }
   flush(); return out;
 }
@@ -1366,23 +1373,30 @@ function paginateDoc(doc){
     let first=true, cur=null;
     // 빠른정답 바로 다음에 해설: 빠른정답 마지막 장 아래쪽 남는 칸에 「정답 및 해설」 머리를 달고 이어서 채움
     let lastKey=pages.length&&pages[pages.length-1].sec==='key'?pages[pages.length-1]:null;
-    // 빠른정답은 원래대로 왼쪽 단을 위에서 아래로 채움 — 마지막 장에서 빠른정답이 왼쪽 단 안에 다 들어갔을 때만
-    // 그 바로 아래(가로 전체)부터 해설을 이어서 시작. 오른쪽 단까지 넘어갔으면 해설은 다음 장부터.
+    // 빠른정답은 원래대로 왼쪽 단을 위에서 아래로 채움. 마지막 장에서 빠른정답이 왼쪽 단 안에 다 들어갔으면
+    // 빠른정답 → 「정답 및 해설」을 한 흐름(2단)으로 이어서, 왼쪽 단 아래 → 오른쪽 단 위부터 해설을 채움.
+    // 빠른정답이 오른쪽 단까지 넘어갔으면 해설은 다음 장부터.
+    let flowBox=null;
     if(sec==='sol'&&keysol&&lastKey){
       const kl=lastKey.el.querySelector(':scope > .keylist');
+      const kh=lastKey.el.querySelector(':scope > .keyhd');
       const rows=kl?[...kl.children]:[];
       const left0=rows.length?rows[0].getBoundingClientRect().left:0;
       const inRight=rows.some(r=>r.getBoundingClientRect().left>left0+10);
       if(!kl||!rows.length||inRight) lastKey=null;
-      else{ const z=kl.getBoundingClientRect(), b=rows[rows.length-1].getBoundingClientRect(); const zoom=z.height/(kl.offsetHeight||z.height)||1;
-        kl.style.flex='none'; kl.style.height=Math.ceil((b.bottom-z.top)/zoom+2)+'px'; }
+      else{
+        flowBox=box.cloneNode(false); flowBox.classList.add('cont','keyflow');
+        lastKey.el.insertBefore(flowBox,kh||kl);
+        if(kh) flowBox.appendChild(kh);
+        flowBox.appendChild(kl); kl.classList.add('inflow');
+      }
     }
     if(sec==='sol'&&keysol&&lastKey){
-      const sh=document.createElement('div'); sh.className='keyhd solhd'; sh.innerHTML='<span>정답 및 해설</span>'; lastKey.el.appendChild(sh);
-      const b=box.cloneNode(false); b.classList.add('cont'); lastKey.el.appendChild(b);
+      const sh=document.createElement('div'); sh.className='keyhd solhd'; sh.innerHTML='<span>정답 및 해설</span>';
+      const b=flowBox; b.appendChild(sh);
       cur={el:lastKey.el,box:b,sec:'sol'}; first=false; lastKey.sec='keysol';
       items.forEach(it=>{ cur.box.appendChild(it); if(over(cur.box)&&cur.box.children.length>=1){ cur.box.removeChild(it);
-        if(!cur.box.children.length&&cur.el===lastKey.el){ sh.remove(); b.remove(); }
+        if(cur.el===lastKey.el&&cur.box.lastElementChild===sh) sh.remove();
         const pg=raw.cloneNode(false); pg.classList.add('pgd'); const nb=box.cloneNode(false); nb.classList.add('cont'); pg.appendChild(nb); doc.insertBefore(pg,raw); cur={el:pg,box:nb,sec:'sol'}; pages.push(cur); cur.box.appendChild(it); } });
       raw.remove(); return;
     }
