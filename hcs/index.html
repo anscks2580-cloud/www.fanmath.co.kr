@@ -163,7 +163,10 @@ table.qt .mv{cursor:pointer;color:#aab0b8;padding:0 4px}table.qt .mv:hover{color
 .qcard .qtext{flex:1;font-size:16px;line-height:1.8;word-break:keep-all;min-width:0}
 .qcard .fig{max-width:180px;align-self:flex-start}
 .btbl{border-collapse:collapse;margin:6px 0;font-size:.95em}.btbl td{border:1px solid #999;padding:2px 8px;text-align:center}
-.qbox{border:1px solid #bbb;border-radius:4px;padding:6px 10px;margin:6px 0;font-size:.95em;line-height:1.7;overflow:hidden;overflow-wrap:anywhere;word-break:keep-all}
+.qbox{border:1.3px solid #222;border-radius:0;padding:6px 10px;margin:6px 0;font-size:.95em;line-height:1.7;overflow:hidden;overflow-wrap:anywhere;word-break:keep-all}
+.qbox.tbox{position:relative;border:1.3px solid #222;border-radius:0;margin:16px 0 8px;padding:14px 12px 8px;overflow:visible}
+.qbox.tbox .qbt{position:absolute;left:0;right:0;top:0;transform:translateY(-55%);text-align:center;line-height:1}
+.qbox.tbox .qbt span{display:inline-block;background:#fff;padding:0 12px;font-weight:800;font-size:.95em;letter-spacing:.5px}
 .qbox .katex-display{margin:2px 0;text-align:left}.qbox .katex-display>.katex{text-align:left}
 .choices{display:grid;grid-template-columns:repeat(3,1fr);gap:4px 12px;margin-top:10px}
 .choices .c{color:#333;margin-right:4px}
@@ -969,7 +972,11 @@ function solHTML(s){
 }
 function bodyHTML(b){
   const lines=esc(b).split('\n'); let out='',box=[],tbl=[];
-  const flush=()=>{ if(box.length){ out+='<div class="qbox">'+box.map(x=>eqBreak(x,18)).join('<br>')+'</div>'; box=[]; } if(tbl.length){ out+='<table class="btbl">'+tbl.filter(r=>!/^\|?\s*:?-{2,}/.test(r)).map(r=>'<tr>'+r.split('|').filter((c,i,a)=>i>0&&i<a.length-1).map(c=>'<td>'+c.trim()+'</td>').join('')+'</tr>').join('')+'</table>'; tbl=[]; } };
+  const flush=()=>{ if(box.length){
+      // 박스 첫 줄이 「증명」「보기」 같은 제목이면 박스 윗선 가운데에 「| 증명 |」으로 얹음
+      const m=box[0].replace(/<\/?b>/g,'').match(/^\s*(?:\*\*)?\s*(?:&lt;|〈|<|\[|\(|【|｜|\|)?\s*(증명|보기|풀이|조건|과정|자료|규칙)\s*(?:&gt;|〉|>|\]|\)|】|｜|\|)?\s*(?:\*\*)?\s*:?\s*$/);
+      const ttl=m?m[1]:''; const lines=m?box.slice(1):box;
+      out+=`<div class="qbox${ttl?' tbox':''}">${ttl?`<div class="qbt"><span>|&nbsp; ${ttl} &nbsp;|</span></div>`:''}`+lines.map(x=>eqBreak(x,18)).join('<br>')+'</div>'; box=[]; } if(tbl.length){ out+='<table class="btbl">'+tbl.filter(r=>!/^\|?\s*:?-{2,}/.test(r)).map(r=>'<tr>'+r.split('|').filter((c,i,a)=>i>0&&i<a.length-1).map(c=>'<td>'+c.trim()+'</td>').join('')+'</tr>').join('')+'</table>'; tbl=[]; } };
   for(const l of lines){ if(l.startsWith('&gt;')||l.startsWith('>')) box.push(l.replace(/^(&gt;|>)\s?/,'')); else if(l.trim().startsWith('|')) tbl.push(l); else { flush(); out+=(out&&!out.endsWith('</div>')&&!out.endsWith('</table>')?'<br>':'')+l; } }
   flush(); return out.replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
 }
