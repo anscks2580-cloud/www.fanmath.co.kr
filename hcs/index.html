@@ -491,9 +491,11 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none!importa
 /* 교사용: 문항 아래 작은 해설 (학생용은 같은 칸을 비워 둠 → 두 시험지 배치가 똑같음). 왼쪽 번호 칸까지 넓게 씀 */
 .sheet .q .tsol{margin:6px 0 0 -40px;padding:5px 7px;border-top:1px dashed #999;font-size:.66em;line-height:1.55;color:#222;white-space:pre-wrap;overflow-wrap:anywhere;word-break:keep-all}
 .sheet .q .tsol .tl{display:inline-block;font-weight:800;margin-right:6px;padding:0 5px;border:1px solid #555;border-radius:3px;font-size:.92em;line-height:1.4}
-.sheet .q .tans{text-align:right;margin-top:4px;font-size:.95em;line-height:1.5}
-.sheet .q .tans .tbx{display:inline-block;border:1.5px solid #000;border-radius:4px;padding:0 8px;font-weight:800;color:#000;background:#fff;white-space:nowrap;max-width:100%}
-.sheet .q .tans .tbx>i{font-style:normal;font-weight:800;margin-right:6px}
+/* 교사용 정답 칸: 글씨를 작게, 분수·지수처럼 높은 답도 테두리에 겹치지 않게 칸이 내용 높이만큼 늘어남 */
+.sheet .q .tans{text-align:right;margin-top:5px;font-size:.78em;line-height:1.25}
+.sheet .q .tans .tbx{display:inline-flex;align-items:center;gap:5px;border:1.2px solid #000;border-radius:4px;padding:3px 7px;font-weight:700;color:#000;background:#fff;white-space:nowrap;max-width:100%;box-sizing:border-box;vertical-align:top}
+.sheet .q .tans .tbx>i{font-style:normal;font-weight:800;font-size:.92em}
+.sheet .q .tans .tbx .katex{font-size:1em;line-height:1.2}
 .sheet .q .tans.hide,.sheet .q .tsol.hide{visibility:hidden}
 .sheet .q .tsol .katex-display{margin:1px 0;text-align:left}.sheet .q .tsol .katex-display>.katex{text-align:left}
 .sheet .q .tsol table{border-collapse:collapse;font-size:inherit}.sheet .q .tsol td{border:1px solid #ccc;padding:1px 4px}
