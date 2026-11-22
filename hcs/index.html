@@ -519,6 +519,9 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none!importa
 .sheet .cols.keyflow{margin-top:0}
 .sheet .cols.keyflow>.keyhd{width:100%;margin-top:18px!important}
 .sheet .cols.keyflow>.keyhd:first-child{margin-top:0!important}
+.sheet.pgd .keylist.top2{flex:none;height:auto;overflow:visible;column-count:auto;display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:column;column-gap:10mm;margin-bottom:4px}
+.sheet .cols.keyflow>.solhd{column-span:all;width:100%!important}
+.sheet .keyhd.top2{width:100%!important}
 .sheet .keylist.inflow{column-count:1;flex:none;height:auto;overflow:visible;break-inside:avoid;margin-bottom:4px}
 /* 시험지: 풀이 칸 라벨, 해설지 머리, 빠른정답 반쪽 세로 목록 */
 .sheet .q .ws{position:relative}
@@ -1510,10 +1513,10 @@ function paginateDoc(doc){
       const inRight=rows.some(r=>r.getBoundingClientRect().left>left0+10);
       if(!kl||!rows.length||inRight) lastKey=null;
       else{
+        // 빠른정답은 시험지 위쪽에 가로 전체로(왼쪽 단 위→아래, 이어서 오른쪽 단) 두 단을 맞춰 배열, 그 아래부터 해설 2단
+        if(kh) kh.classList.add('top2'); kl.classList.add('top2'); kl.style.gridTemplateRows=`repeat(${Math.ceil(rows.length/2)},auto)`;
         flowBox=box.cloneNode(false); flowBox.classList.add('cont','keyflow');
-        lastKey.el.insertBefore(flowBox,kh||kl);
-        if(kh) flowBox.appendChild(kh);
-        flowBox.appendChild(kl); kl.classList.add('inflow');
+        lastKey.el.appendChild(flowBox);
       }
     }
     if(sec==='sol'&&keysol&&lastKey){
