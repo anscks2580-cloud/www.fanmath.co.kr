@@ -519,8 +519,9 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none!importa
 .sheet .cols.keyflow{margin-top:0}
 .sheet .cols.keyflow>.keyhd{width:100%;margin-top:18px!important}
 .sheet .cols.keyflow>.keyhd:first-child{margin-top:0!important}
-.sheet.pgd .keylist.top2{flex:none;height:auto;overflow:visible;column-count:auto;display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:column;column-gap:10mm;margin-bottom:4px}
+.sheet.pgd .keylist.top2{flex:none;height:auto;overflow:visible;column-count:auto;display:grid;grid-template-columns:1fr 1fr;grid-auto-flow:row;column-gap:0;margin-bottom:4px}
 .sheet .cols.keyflow>.solhd{column-span:all;width:100%!important}
+.sheet .keylist.top2>.kr:nth-child(2n) .ki:first-child{border-left:1px solid #c9c9d2!important}
 .sheet .keyhd.top2{width:100%!important}
 .sheet .keylist.inflow{column-count:1;flex:none;height:auto;overflow:visible;break-inside:avoid;margin-bottom:4px}
 /* 시험지: 풀이 칸 라벨, 해설지 머리, 빠른정답 반쪽 세로 목록 */
@@ -1513,8 +1514,8 @@ function paginateDoc(doc){
       const inRight=rows.some(r=>r.getBoundingClientRect().left>left0+10);
       if(!kl||!rows.length||inRight) lastKey=null;
       else{
-        // 빠른정답은 시험지 위쪽에 가로 전체로(왼쪽 단 위→아래, 이어서 오른쪽 단) 두 단을 맞춰 배열, 그 아래부터 해설 2단
-        if(kh) kh.classList.add('top2'); kl.classList.add('top2'); kl.style.gridTemplateRows=`repeat(${Math.ceil(rows.length/2)},auto)`;
+        // 빠른정답은 시험지 위쪽에 가로 전체로 한 표처럼 일자로 쭉(01→06, 07→12 …), 그 아래부터 해설 2단
+        if(kh) kh.classList.add('top2'); kl.classList.add('top2');
         flowBox=box.cloneNode(false); flowBox.classList.add('cont','keyflow');
         lastKey.el.appendChild(flowBox);
       }
@@ -1537,7 +1538,7 @@ function paginateDoc(doc){
     raw.remove();
   });
   // 빠른정답: 각 단 맨 위 줄에 윗선
-  pages.forEach(p=>{ if(p.sec!=='key'&&p.sec!=='keysol') return; let prev=null; p.el.querySelectorAll('.keylist > .kr').forEach(r=>{ if(!prev||r.offsetTop<=prev.offsetTop) r.classList.add('ctop'); prev=r; }); });
+  pages.forEach(p=>{ if(p.sec!=='key'&&p.sec!=='keysol') return; let prev=null, first=null; p.el.querySelectorAll('.keylist > .kr').forEach(r=>{ if(!first) first=r; if(!prev||r.offsetTop<prev.offsetTop||r.offsetTop===first.offsetTop) r.classList.add('ctop'); prev=r; }); });
   const pgno=doc.dataset.pgno==='1', solref=doc.dataset.solref==='1';
   const solPg={}; pages.forEach((p,i)=>{ if(p.sec==='sol'||p.sec==='keysol') p.el.querySelectorAll('.sol[data-n]').forEach(x=>{ solPg[x.dataset.n]=i+1; }); });
   pages.forEach((p,i)=>{
