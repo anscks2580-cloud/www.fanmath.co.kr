@@ -118,7 +118,7 @@
     <button class="admin-tab" onclick="switchTab('textbooks',this);initTextbookAdminTab()">📘 시중교재</button>
     <button class="admin-tab" onclick="switchTab('covers',this);initCoversTab()">📕 교재 표지 · 안내문</button>
     <button class="admin-tab" onclick="switchTab('consult',this);initConsultTab()">📥 상담 신청</button>
-    <button class="admin-tab" onclick="switchTab('consultdeck',this);initConsultDeckTab()">🎞 상담자료 관리</button>
+    <button class="admin-tab" onclick="switchTab('consultdeck',this);initConsultDeckTab();initConsultMaterials()">🎞 상담자료 관리</button>
     <button class="admin-tab" onclick="switchTab('seminar',this);initSeminarTab()">🎓 설명회 신청</button>
     <button class="admin-tab" onclick="switchTab('notice',this);initNoticeTab()">📢 공지사항</button>
     <button class="admin-tab" onclick="switchTab('schedule',this);initScheduleTab()">📅 학원 일정</button>
@@ -1144,8 +1144,38 @@
           </div>
           <p class="cdk-share-note">문자·카톡에는 짧은 주소 <b style="color:var(--purple, #5B3FA6);">www.fanmath.co.kr/h</b> 로 보내도 같은 화면이 열립니다. 편집에서 저장하면 이미 보낸 링크에도 자동으로 반영되고, [공유 중지]를 누르면 지금까지 보낸 링크는 열리지 않습니다.</p>
         </div>
-        <div style="display:flex;align-items:center;gap:12px;padding:14px 16px;border:1px solid var(--border-soft);border-radius:10px;opacity:0.55;">
-          <div style="flex:1;"><div style="font-size:15px;font-weight:700;">기타 상담자료</div><div style="font-size:12px;color:var(--muted);margin-top:3px;">준비 중</div></div>
+        <!-- 기타 상담자료: 설명회 자료 · 학교별 분석자료 보관함 (공유 링크 없음 · admin/js/consultmaterials.js) -->
+        <div style="padding:14px 16px;border:1px solid var(--border-soft);border-radius:10px;">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <div style="flex:1;min-width:180px;"><div style="font-size:15px;font-weight:700;">기타 상담자료</div><div style="font-size:12px;color:var(--muted);margin-top:3px;">설명회 자료·학교별 분석자료를 올려 두고 상담 때 바로 열어 봅니다 (관리자만 보임)</div></div>
+            <div id="cm-cats" style="display:flex;gap:6px;">
+              <button type="button" class="btn btn-sm btn-primary" data-c="seminar" onclick="cmSetCat('seminar')">🎤 설명회 자료</button>
+              <button type="button" class="btn btn-sm btn-secondary" data-c="school" onclick="cmSetCat('school')">🏫 학교별 분석자료</button>
+            </div>
+          </div>
+          <div style="margin-top:12px;padding:12px;border-radius:10px;background:rgba(91,63,166,0.04);">
+            <div style="display:grid;grid-template-columns:130px 1fr;gap:8px;align-items:center;">
+              <select id="cm-branch" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border-soft);font-family:inherit;">
+                <option value="평촌관">평촌관</option><option value="산본관">산본관</option><option value="공통">공통 (두 관)</option>
+              </select>
+              <input type="text" id="cm-title" placeholder="제목 (비우면 파일 이름)" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border-soft);font-family:inherit;">
+            </div>
+            <div id="cm-school-wrap" style="display:none;margin-top:8px;">
+              <input type="text" id="cm-school" placeholder="학교 이름 (예: 평촌고)" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border-soft);font-family:inherit;width:220px;">
+            </div>
+            <input type="text" id="cm-memo" placeholder="메모 (선택)" style="margin-top:8px;padding:8px 10px;border-radius:8px;border:1px solid var(--border-soft);font-family:inherit;width:100%;box-sizing:border-box;">
+            <div id="cm-drop" onclick="document.getElementById('cm-file').click()" style="margin-top:8px;padding:16px;border:1.5px dashed var(--border-soft);border-radius:10px;text-align:center;font-size:13px;color:var(--muted);cursor:pointer;">
+              📎 파일을 여기로 끌어오거나 눌러서 선택 (PDF·PPT·한글·워드·엑셀·사진, 여러 개 가능 · 파일당 100MB까지)
+            </div>
+            <input type="file" id="cm-file" multiple hidden accept=".pdf,.ppt,.pptx,.hwp,.hwpx,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.webp,.gif,.zip" onchange="cmAddFiles(this.files);this.value=''">
+            <div id="cm-pick"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:10px;">
+              <div id="cm-msg" style="font-size:12.5px;color:var(--muted);"></div>
+              <button class="btn btn-primary btn-sm" id="cm-up" onclick="cmUpload()">올리기</button>
+            </div>
+          </div>
+          <div id="cm-filter" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;"></div>
+          <div id="cm-list" style="margin-top:10px;"></div>
         </div>
       </div>
       <div style="font-size:12px;color:var(--muted);margin-top:16px;line-height:1.7;">
@@ -2944,6 +2974,7 @@
 <script type="module" src="admin/js/00-firebase.js?v=1792760000"></script>
 <script defer src="admin/js/01-core.js?v=1793661000"></script>
 <script defer src="admin/js/consultdeck.js"></script>
+<script defer src="admin/js/consultmaterials.js?v=1795350000"></script>
 <script defer src="admin/js/billing-leave.js?v=1793180000"></script>
 <script defer src="admin/js/students.js?v=1795270000"></script>
 <script defer src="admin/js/studentdiag.js?v=1795070000"></script>
