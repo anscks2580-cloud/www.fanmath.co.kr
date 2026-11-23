@@ -819,5 +819,17 @@ onAuthStateChanged(auth, async (user) => {
   await Promise.all([loadClinicRoom(), loadHomework(), loadTasks(), loadTaMyboxLink()]);
 });
 </script>
+<script>
+// 업무 프로그램(메뉴판)에서 연 메뉴(#메뉴) 열기 — 기존 탭 버튼을 누르는 방식
+(function () {
+  function go() {
+    var id = (location.hash || '').replace('#', ''); if (!id) return;
+    var b = Array.prototype.find.call(document.querySelectorAll('.admin-tab'), function (x) { return (x.getAttribute('onclick') || '').indexOf("switchTab('" + id + "'") === 0; });
+    if (b) b.click();
+  }
+  window.addEventListener('hashchange', go);
+  window.addEventListener('load', function () { setTimeout(go, 1500); });
+})();
+</script>
 </body>
 </html>

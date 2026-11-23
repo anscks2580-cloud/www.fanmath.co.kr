@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#4B3391">
+<title>송우찬 메신저</title>
+<link rel="icon" href="/assets/icons/icon-192.png">
+<link rel="stylesheet" href="desk.css?v=1">
+<style>
+body{display:flex;height:100vh;height:100dvh;overflow:hidden;background:#fff}
+/* ── 왼쪽: 대화 목록 ── */
+.ls{width:300px;flex:0 0 300px;display:flex;flex-direction:column;border-right:1px solid var(--line2);background:#FAF9FD}
+.me{display:flex;align-items:center;gap:10px;padding:14px 14px 10px;background:linear-gradient(135deg,#4B3391,#6A4FC0);color:#fff}
+.me img{width:38px;height:38px;border-radius:50%;background:#fff}
+.me .nm{font-weight:800;font-size:15px}.me .rl{font-size:11px;opacity:.85}
+.me .sp{flex:1}
+.me button{border:0;background:rgba(255,255,255,.16);color:#fff;border-radius:8px;height:32px;padding:0 10px;font-weight:700}
+.me button:hover{background:rgba(255,255,255,.28)}
+.tabs{display:flex;gap:4px;padding:10px 12px 6px}
+.tabs button{flex:1;height:30px;border:1px solid var(--line);border-radius:8px;background:#fff;font-weight:700;color:var(--mut)}
+.tabs button.on{background:var(--p2);border-color:var(--p2);color:#fff}
+.tabs button.on[data-b="산본관"]{background:var(--g);border-color:#E0B010;color:#2A1E55}
+.srch{padding:0 12px 8px}.srch input{width:100%;height:32px;border:1px solid var(--line);border-radius:8px;padding:0 10px;outline:none;background:#fff}
+.rooms{flex:1;overflow:auto;padding:0 6px 8px}
+.sec{font-size:11px;font-weight:800;color:var(--mut);padding:10px 8px 4px;letter-spacing:.5px}
+.rm{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:8px;border-radius:10px;text-align:left}
+.rm:hover{background:var(--pl)}
+.rm.on{background:#E6E0F6}
+.av{width:38px;height:38px;flex:0 0 38px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:14px;position:relative}
+.av.pc{background:linear-gradient(135deg,#7B61C9,#4B3391)}.av.sb{background:linear-gradient(135deg,#FFD84A,#E0A800);color:#2A1E55}.av.all{background:linear-gradient(135deg,#3BA4E8,#2F7FD6)}.av.grp{background:linear-gradient(135deg,#34C38F,#159A8C)}
+.av .on{position:absolute;right:-2px;bottom:-2px;width:11px;height:11px;border-radius:50%;background:#2ECC71;border:2px solid #FAF9FD}
+.rm .tx{flex:1;min-width:0}
+.rm .t1{display:flex;gap:6px;align-items:baseline}
+.rm .t1 b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm .t1 small{margin-left:auto;color:var(--mut);font-size:11px;flex:0 0 auto}
+.rm .t2{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--mut)}
+.rm .t2 span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rm .n{min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:#E0457B;color:#fff;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
+.keep{font-size:11px;color:var(--mut);padding:8px 14px;border-top:1px solid var(--line2);background:#fff}
+/* ── 오른쪽: 대화 ── */
+.cv{flex:1;min-width:0;display:flex;flex-direction:column;background:#F4F2FA}
+.cv-h{height:58px;flex:0 0 58px;display:flex;align-items:center;gap:10px;padding:0 16px;background:#fff;border-bottom:1px solid var(--line2)}
+.cv-h .back{display:none;border:0;background:none;font-size:20px;padding:0 6px}
+.cv-h b{font-size:16px}.cv-h small{color:var(--mut)}
+.cv-h .sp{flex:1}
+.cv-h .dk-btn{height:28px;padding:0 10px;font-size:12px}
+.msgs{flex:1;overflow:auto;padding:14px 18px}
+.day{text-align:center;margin:14px 0 8px}.day span{display:inline-block;padding:3px 12px;border-radius:999px;background:rgba(75,51,145,.08);color:var(--mut);font-size:12px;font-weight:700}
+.m{display:flex;gap:8px;margin:6px 0;align-items:flex-end}
+.m .who{font-size:12px;font-weight:800;margin:0 0 3px 2px}
+.m .bb{max-width:min(560px,72%);padding:8px 12px;border-radius:4px 14px 14px 14px;background:#fff;box-shadow:0 1px 2px rgba(30,24,56,.08);white-space:pre-wrap;word-break:break-word;line-height:1.5;font-size:14px}
+.m .tm{font-size:11px;color:var(--mut);white-space:nowrap;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.m .del{border:0;background:none;color:#B9B2D2;font-size:11px;padding:0;display:none}
+.m:hover .del{display:block}
+.m.mine{flex-direction:row-reverse}
+.m.mine .bb{background:linear-gradient(135deg,#6A4FC0,#4B3391);color:#fff;border-radius:14px 4px 14px 14px}
+.m.mine .tm{align-items:flex-start}
+.m .col{display:flex;flex-direction:column;min-width:0;max-width:100%}
+.m.mine .col{align-items:flex-end}
+.m.cont .who{display:none}
+.m .bb.deleted{background:transparent;box-shadow:none;color:var(--mut);font-style:italic;border:1px dashed var(--line)}
+.file{display:flex;align-items:center;gap:10px;text-decoration:none;color:inherit;min-width:200px}
+.file .fi{width:38px;height:38px;border-radius:9px;background:var(--pl);color:var(--p2);display:flex;align-items:center;justify-content:center;font-size:18px;flex:0 0 38px}
+.m.mine .file .fi{background:rgba(255,255,255,.2);color:#fff}
+.file b{display:block;font-size:13px;word-break:break-all}.file small{opacity:.75;font-size:11px}
+.img{display:block;max-width:300px;max-height:260px;border-radius:10px;cursor:zoom-in}
+.inp{display:flex;align-items:flex-end;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line2)}
+.inp textarea{flex:1;resize:none;border:1px solid var(--line);border-radius:12px;padding:9px 12px;max-height:140px;min-height:40px;outline:none;line-height:1.45;font-size:14px}
+.inp textarea:focus{border-color:var(--p3)}
+.inp .ib{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:#fff;font-size:18px}
+.inp .send{height:40px;padding:0 16px;border-radius:12px;border:0;background:var(--p2);color:#fff;font-weight:800}
+.inp .send:disabled{opacity:.5}
+.up{padding:6px 14px;font-size:12px;color:var(--p2);background:var(--pl);display:none}
+.blank{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--mut)}
+.blank img{width:110px;height:110px;border-radius:50%;opacity:.9}
+.drop{position:absolute;inset:0;background:rgba(75,51,145,.12);border:3px dashed var(--p3);display:none;align-items:center;justify-content:center;font-size:18px;font-weight:800;color:var(--p2);z-index:20;pointer-events:none}
+body.dragging .drop{display:flex}
+/* ── 새 대화 창 ── */
+.md{position:fixed;inset:0;background:rgba(30,24,56,.45);display:none;align-items:center;justify-content:center;z-index:50;padding:16px}
+.md.show{display:flex}
+.md .bx{width:min(440px,100%);max-height:86vh;background:#fff;border-radius:16px;display:flex;flex-direction:column;overflow:hidden;box-shadow:0 24px 60px rgba(30,24,56,.3)}
+.md .hd{padding:16px 18px 10px;font-weight:800;font-size:16px}
+.md .ppl{flex:1;overflow:auto;padding:0 10px}
+.md .p{display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;cursor:pointer}
+.md .p:hover{background:var(--pl)}
+.md .p input{accent-color:var(--p2);width:16px;height:16px}
+.md .p .av{width:32px;height:32px;flex:0 0 32px;border-radius:10px;font-size:12px}
+.md .p small{color:var(--mut)}
+.md .ft{padding:12px 18px;border-top:1px solid var(--line2);display:flex;gap:8px;align-items:center}
+.md .ft input{flex:1}
+.viewer{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:60;cursor:zoom-out}
+.viewer.show{display:flex}.viewer img{max-width:94vw;max-height:92vh}
+@media (max-width:760px){
+  .ls{width:100%;flex:1 1 auto;border-right:0}
+  .cv{display:none}
+  body.in-room .ls{display:none}
+  body.in-room .cv{display:flex}
+  .cv-h .back{display:block}
+}
+</style>
+</head>
+<body>
+<aside class="ls">
+  <div class="me"><img src="/assets/icons/splash-logo.png" alt=""><div><div class="nm" id="meName">…</div><div class="rl" id="meRole"></div></div><span class="sp"></span><button id="btnNew" title="새 대화">＋ 새 대화</button></div>
+  <div class="tabs" id="brTabs"><button data-b="전체" class="on">전체</button><button data-b="평촌관">평촌관</button><button data-b="산본관">산본관</button></div>
+  <div class="srch"><input id="q" placeholder="대화방 · 이름 검색"></div>
+  <div class="rooms" id="rooms"></div>
+  <div class="keep">🔒 선생님·관리부·조교 전용 · 대화와 파일은 <b>3개월</b>이 지나면 자동으로 지워져요</div>
+</aside>
+<section class="cv" id="cv" style="position:relative">
+  <div class="blank" id="blank"><img src="/assets/icons/splash-logo.png" alt=""><div>왼쪽에서 대화방을 골라 주세요</div></div>
+  <div class="drop">여기에 놓으면 파일을 보냅니다</div>
+</section>
+
+<div class="md" id="md"><div class="bx">
+  <div class="hd">새 대화 <small class="mut" style="font-weight:400;font-size:12px">— 1명이면 1:1, 여러 명이면 단체방</small></div>
+  <div class="tabs" id="mdTabs"><button data-b="전체" class="on">전체</button><button data-b="평촌관">평촌관</button><button data-b="산본관">산본관</button></div>
+  <div class="ppl" id="ppl"></div>
+  <div class="ft"><input class="dk-in" id="grpName" placeholder="단체방 이름 (여러 명일 때)"><button class="dk-btn" id="mdCancel">취소</button><button class="dk-btn pri" id="mdOk">시작</button></div>
+</div></div>
+<div class="viewer" id="viewer"><img alt=""></div>
+<input type="file" id="file" multiple hidden>
+
+<script type="module">
+import { auth, db, storage, APP, IN_PROGRAM, requireStaff, collection, doc, getDocs, setDoc, addDoc, updateDoc, deleteDoc,
+  query, where, orderBy, limitToLast, onSnapshot, serverTimestamp, sref, uploadBytesResumable, getDownloadURL,
+  esc, pad, normBr, toast } from './desk-fb.js?v=1';
+import { deleteObject } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+const $ = (id) => document.getElementById(id);
+const KEEP_DAYS = 90;                                   // 3개월 보관 (서버가 매일 새벽 지난 대화·파일을 지움)
+const MAX_FILE = 100 * 1024 * 1024;                     // 파일 1개 100MB까지
+const CHANNELS = [
+  { id: 'ch_all', name: '전체 방', branch: '' },
+  { id: 'ch_pc', name: '평촌관 방', branch: '평촌관' },
+  { id: 'ch_sb', name: '산본관 방', branch: '산본관' },
+];
+let ME = null;
+const people = new Map();      // uid → { name, roleLabel, branch, lastSeen }
+const rooms = new Map();       // roomId → data
+let reads = {};                // roomId → Timestamp
+let cur = null, msgUnsub = null, msgs = [];
+let brTab = localStorage.getItem('swc_desk_branch') || '전체';
+const ms = (t) => (t?.toMillis ? t.toMillis() : 0);
+
+requireStaff(async (p) => {
+  ME = p;
+  $('meName').textContent = p.name; $('meRole').textContent = p.roleLabel + (p.branch ? ' · ' + p.branch : '');
+  paintTabs($('brTabs'), brTab);
+  // 내 정보 (다른 사람 목록에 보이도록) — 2분마다 접속 표시
+  const ping = () => setDoc(doc(db, 'chatUsers', p.uid), { name: p.name, roleLabel: p.roleLabel, kind: p.kind, branch: p.branch || '', lastSeen: serverTimestamp() }, { merge: true }).catch(() => {});
+  ping(); setInterval(ping, 120000);
+  watchPeople(); watchRooms();
+  onSnapshot(doc(db, 'chatReads', p.uid), (d) => { reads = d.exists() ? d.data() : {}; renderRooms(); }, () => {});
+}, { loginUrl: 'login.html?next=chat' });
+
+/* ── 사람 목록: 메신저를 한 번이라도 켠 사람(chatUsers) + 선생님·조교 명단(teachers) ── */
+function watchPeople() {
+  onSnapshot(collection(db, 'chatUsers'), (s) => { s.forEach((d) => people.set(d.id, { ...(people.get(d.id) || {}), ...d.data() })); renderRooms(); }, () => {});
+  getDocs(collection(db, 'teachers')).then((s) => s.forEach((d) => {
+    const t = d.data(); if (!people.has(d.id)) people.set(d.id, { name: t.name, roleLabel: t.role === 'ta' ? '조교' : '선생님', branch: t.branch || '' });
+  })).catch(() => {});
+}
+const online = (u) => u && ms(u.lastSeen) > Date.now() - 4 * 60 * 1000;
+const brCls = (b) => (!b ? 'all' : normBr(b) === '산본관' ? 'sb' : 'pc');
+
+/* ── 대화방 ── */
+let firstLoad = true;
+function watchRooms() {
+  let n = 0;
+  const handle = (snap) => {
+    snap.docChanges().forEach((c) => {
+      const id = c.doc.id, old = rooms.get(id), nu = c.doc.data();
+      if (c.type === 'removed') { rooms.delete(id); return; }
+      rooms.set(id, nu);
+      // 새 메시지 알림 (처음 불러올 때는 알리지 않음)
+      if (!firstLoad && old && ms(nu.lastAt) > ms(old.lastAt) && nu.lastBy !== ME.uid && !(id === cur && document.hasFocus())) notifyRoom(id, nu);
+    });
+    renderRooms();
+    if (cur && rooms.has(cur)) paintHeader();
+  };
+  const done = () => { if (++n >= 2) { setTimeout(() => (firstLoad = false), 800); ensureChannels(); } };
+  onSnapshot(query(collection(db, 'chatRooms'), where('type', '==', 'channel')), (s) => { handle(s); done(); }, (e) => { done(); showErr(e); });
+  onSnapshot(query(collection(db, 'chatRooms'), where('members', 'array-contains', ME.uid)), (s) => { handle(s); done(); }, (e) => { done(); showErr(e); });
+}
+let errShown = false;
+function showErr(e) { if (errShown) return; errShown = true; $('rooms').innerHTML = `<div class="sec" style="color:var(--red)">메신저를 불러오지 못했어요 — 파이어베이스 규칙(firestore.rules)에 메신저 항목이 올라갔는지 확인해 주세요. (${esc(e.code || e.message)})</div>`; }
+function ensureChannels() {
+  CHANNELS.forEach((c) => { if (!rooms.has(c.id)) setDoc(doc(db, 'chatRooms', c.id), { type: 'channel', name: c.name, branch: c.branch, createdAt: serverTimestamp() }).catch(() => {}); });
+}
+function roomTitle(id, r) {
+  if (!r) return '';
+  if (r.type === 'channel') return r.name || '대화방';
+  const others = (r.members || []).filter((u) => u !== ME.uid);
+  if (r.type === 'dm') { const u = people.get(others[0]) || {}; return u.name || (r.memberNames || {})[others[0]] || '알 수 없음'; }
+  return r.name || others.map((u) => (people.get(u) || {}).name || (r.memberNames || {})[u] || '').filter(Boolean).join(', ') || '단체방';
+}
+function roomBranch(r) {
+  if (r.type === 'channel') return r.branch || '';
+  if (r.type === 'dm') { const o = (r.members || []).find((u) => u !== ME.uid); return (people.get(o) || {}).branch || ''; }
+  return '';
+}
+function unread(id, r) { return r && r.lastBy !== ME.uid && ms(r.lastAt) > ms(reads[id]) ? 1 : 0; }
+function when(t) {
+  const x = ms(t); if (!x) return ''; const d = new Date(x), n = new Date();
+  if (d.toDateString() === n.toDateString()) return `${d.getHours() < 12 ? '오전' : '오후'} ${d.getHours() % 12 || 12}:${pad(d.getMinutes())}`;
+  const y = new Date(n); y.setDate(n.getDate() - 1); if (d.toDateString() === y.toDateString()) return '어제';
+  return `${d.getMonth() + 1}/${d.getDate()}`;
+}
+function renderRooms() {
+  if (!ME) return;
+  const q = $('q').value.trim().toLowerCase();
+  const list = [...rooms.entries()].map(([id, r]) => ({ id, r, title: roomTitle(id, r), br: roomBranch(r) }))
+    .filter((x) => !q || x.title.toLowerCase().includes(q))
+    .filter((x) => brTab === '전체' || !x.br || normBr(x.br) === brTab || x.r.type === 'group');
+  const ch = list.filter((x) => x.r.type === 'channel').sort((a, b) => CHANNELS.findIndex((c) => c.id === a.id) - CHANNELS.findIndex((c) => c.id === b.id));
+  const ot = list.filter((x) => x.r.type !== 'channel').sort((a, b) => ms(b.r.lastAt) - ms(a.r.lastAt));
+  const item = (x) => {
+    const u = unread(x.id, x.r), dmU = x.r.type === 'dm' ? people.get((x.r.members || []).find((m) => m !== ME.uid)) : null;
+    const av = x.r.type === 'group' ? 'grp' : brCls(x.br);
+    const ini = x.r.type === 'channel' ? (x.br ? x.br[0] : '全') : x.title.slice(0, 2);
+    return `<button class="rm${x.id === cur ? ' on' : ''}" data-room="${esc(x.id)}"><span class="av ${av}">${esc(ini)}${dmU && online(dmU) ? '<i class="on"></i>' : ''}</span>
+      <span class="tx"><span class="t1"><b>${esc(x.title)}</b>${x.r.type === 'group' ? `<small style="margin-left:0">${(x.r.members || []).length}</small>` : ''}<small>${esc(when(x.r.lastAt))}</small></span>
+      <span class="t2"><span>${esc(x.r.lastText ? (x.r.type !== 'dm' && x.r.lastName ? x.r.lastName + ': ' : '') + x.r.lastText : '대화를 시작해 보세요')}</span>${u ? '<i class="n">N</i>' : ''}</span></span></button>`;
+  };
+  $('rooms').innerHTML = (ch.length ? '<div class="sec">공용 방</div>' + ch.map(item).join('') : '') + '<div class="sec">1:1 · 단체 대화</div>' +
+    (ot.length ? ot.map(item).join('') : '<div class="sec" style="font-weight:400">「＋ 새 대화」로 대화를 시작해 보세요</div>');
+  const total = [...rooms.entries()].reduce((a, [id, r]) => a + unread(id, r), 0);
+  document.title = (total ? `(${total}) ` : '') + '송우찬 메신저';
+  if (APP && APP.setUnread) APP.setUnread(total);
+}
+$('rooms').addEventListener('click', (e) => { const b = e.target.closest('[data-room]'); if (b) openRoom(b.dataset.room); });
+$('q').addEventListener('input', renderRooms);
+function paintTabs(el, v) { el.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.b === v)); }
+$('brTabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; brTab = b.dataset.b; paintTabs($('brTabs'), brTab); renderRooms(); });
+
+/* ── 알림 ── */
+function notifyRoom(id, r) {
+  const title = r.type === 'dm' ? (r.lastName || roomTitle(id, r)) : roomTitle(id, r);
+  const body = (r.type !== 'dm' && r.lastName ? r.lastName + ': ' : '') + (r.lastText || '');
+  if (APP && APP.notify) APP.notify('💬 ' + title, body, id);
+  else if ('Notification' in window) {
+    if (Notification.permission === 'granted') { const n = new Notification('💬 ' + title, { body, icon: '/assets/icons/icon-192.png', tag: id }); n.onclick = () => { window.focus(); openRoom(id); }; }
+    else if (Notification.permission === 'default') Notification.requestPermission();
+  }
+}
+// 프로그램 알림을 눌렀을 때 그 방 열기
+if (APP && APP.onOpenRoom) APP.onOpenRoom((id) => { if (rooms.has(id)) openRoom(id); });
+
+/* ── 대화방 열기 ── */
+function openRoom(id) {
+  if (!rooms.has(id)) return;
+  cur = id; document.body.classList.add('in-room');
+  $('cv').innerHTML = `<div class="cv-h" id="cvh"></div><div class="msgs" id="msgs"><div class="day"><span>불러오는 중…</span></div></div><div class="up" id="up"></div>
+    <div class="inp"><button class="ib" id="btnFile" title="파일 보내기 (끌어다 놓기·붙여넣기도 됨)">📎</button><textarea id="tx" rows="1" placeholder="메시지 입력 · Enter 보내기 · Shift+Enter 줄바꿈" maxlength="4000"></textarea><button class="send" id="btnSend">보내기</button></div>
+    <div class="drop">여기에 놓으면 파일을 보냅니다</div>`;
+  paintHeader(); renderRooms();
+  const tx = $('tx');
+  tx.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); sendText(); } });
+  tx.addEventListener('input', () => { tx.style.height = 'auto'; tx.style.height = Math.min(140, tx.scrollHeight) + 'px'; });
+  tx.addEventListener('paste', (e) => { const fs = [...(e.clipboardData?.files || [])]; if (fs.length) { e.preventDefault(); fs.forEach(sendFile); } });
+  $('btnSend').onclick = sendText;
+  $('btnFile').onclick = () => $('file').click();
+  tx.focus();
+  if (msgUnsub) msgUnsub();
+  msgUnsub = onSnapshot(query(collection(db, 'chatRooms', id, 'messages'), orderBy('at'), limitToLast(300)), (s) => {
+    const cutoff = Date.now() - KEEP_DAYS * 86400000;
+    msgs = []; s.forEach((d) => { const m = { id: d.id, ...d.data({ serverTimestamps: 'estimate' }) }; if (!m.at || ms(m.at) >= cutoff) msgs.push(m); });
+    renderMsgs(); markRead();
+  }, (e) => { $('msgs').innerHTML = `<div class="day"><span style="color:var(--red)">불러오지 못했어요 (${esc(e.code || e.message)})</span></div>`; });
+}
+function paintHeader() {
+  const h = $('cvh'); if (!h) return; const r = rooms.get(cur); if (!r) return;
+  const br = roomBranch(r);
+  const sub = r.type === 'channel' ? (br ? br + ' 선생님·관리부·조교 모두' : '평촌관 · 산본관 모두') : r.type === 'dm' ? ((people.get((r.members || []).find((u) => u !== ME.uid)) || {}).roleLabel || '') : `${(r.members || []).length}명`;
+  h.innerHTML = `<button class="back" id="back">‹</button><b class="${br ? (normBr(br) === '산본관' ? 'br-sb' : 'br-pc') : ''}">${esc(roomTitle(cur, r))}</b><small>${esc(sub)}</small><span class="sp"></span>
+    ${r.type === 'group' ? `<button class="dk-btn" id="btnMembers">참여자</button><button class="dk-btn" id="btnLeave">나가기</button>` : ''}`;
+  $('back').onclick = () => { document.body.classList.remove('in-room'); cur = null; renderRooms(); };
+  if (r.type === 'group') {
+    $('btnMembers').onclick = () => alert('참여자\n\n' + (r.members || []).map((u) => '· ' + ((people.get(u) || {}).name || (r.memberNames || {})[u] || u)).join('\n'));
+    $('btnLeave').onclick = async () => {
+      if (!confirm('이 단체방에서 나갈까요?')) return;
+      const members = (r.members || []).filter((u) => u !== ME.uid);
+      try { await updateDoc(doc(db, 'chatRooms', cur), { members }); cur = null; $('cv').innerHTML = '<div class="blank"><img src="/assets/icons/splash-logo.png" alt=""><div>방에서 나왔어요</div></div>'; document.body.classList.remove('in-room'); }
+      catch (e) { toast('나가지 못했어요: ' + (e.code || e.message)); }
+    };
+  }
+}
+function markRead() {
+  if (!cur || !document.hasFocus() || document.hidden) return;
+  const r = rooms.get(cur); if (!r || !unread(cur, r)) return;
+  setDoc(doc(db, 'chatReads', ME.uid), { [cur]: serverTimestamp() }, { merge: true }).catch(() => {});
+}
+window.addEventListener('focus', markRead);
+document.addEventListener('visibilitychange', markRead);
+
+function fmtSize(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + 'MB' : Math.max(1, Math.round(n / 1024)) + 'KB'; }
+function renderMsgs() {
+  const box = $('msgs'); if (!box) return;
+  const atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 120;
+  let html = '', lastDay = '', lastUid = '', lastT = 0;
+  if (!msgs.length) html = '<div class="day"><span>아직 대화가 없어요. 첫 메시지를 보내 보세요</span></div>';
+  msgs.forEach((m) => {
+    const t = ms(m.at) || Date.now(), d = new Date(t);
+    const dk = `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 ${'일월화수목금토'[d.getDay()]}요일`;
+    if (dk !== lastDay) { html += `<div class="day"><span>${dk}</span></div>`; lastDay = dk; lastUid = ''; }
+    const mine = m.uid === ME.uid, cont = m.uid === lastUid && t - lastT < 5 * 60000;
+    const u = people.get(m.uid) || {};
+    const color = u.branch && normBr(u.branch) === '산본관' ? 'var(--sb)' : 'var(--p2)';
+    let inner;
+    if (m.deleted) inner = `<div class="bb deleted">삭제된 메시지입니다</div>`;
+    else if (m.file) {
+      const isImg = /^image\//.test(m.file.type || '') && m.file.url;
+      inner = `<div class="bb">${isImg ? `<img class="img" src="${esc(m.file.url)}" data-view="${esc(m.file.url)}" alt="">` :
+        `<a class="file" href="${esc(m.file.url || '#')}" target="_blank" rel="noopener"><span class="fi">📄</span><span><b>${esc(m.file.name)}</b><small>${fmtSize(m.file.size || 0)} · 눌러서 열기</small></span></a>`}${m.text ? '<div style="margin-top:6px">' + esc(m.text) + '</div>' : ''}</div>`;
+    } else inner = `<div class="bb">${linkify(esc(m.text || ''))}</div>`;
+    html += `<div class="m${mine ? ' mine' : ''}${cont ? ' cont' : ''}"><div class="col">${mine ? '' : `<div class="who" style="color:${color}">${esc(m.name || u.name || '')}</div>`}${inner}</div>
+      <div class="tm">${mine && !m.deleted ? `<button class="del" data-del="${esc(m.id)}">삭제</button>` : ''}<span>${d.getHours() < 12 ? '오전' : '오후'} ${d.getHours() % 12 || 12}:${pad(d.getMinutes())}</span></div></div>`;
+    lastUid = m.uid; lastT = t;
+  });
+  box.innerHTML = html;
+  if (atBottom || box.dataset.first !== cur) { box.scrollTop = box.scrollHeight; box.dataset.first = cur; }
+  box.querySelectorAll('img.img').forEach((im) => im.addEventListener('load', () => { if (atBottom) box.scrollTop = box.scrollHeight; }, { once: true }));
+}
+function linkify(s) { return s.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">$1</a>'); }
+document.addEventListener('click', async (e) => {
+  const v = e.target.closest('[data-view]'); if (v) { $('viewer').querySelector('img').src = v.dataset.view; $('viewer').classList.add('show'); return; }
+  const d = e.target.closest('[data-del]');
+  if (d && cur) {
+    if (!confirm('이 메시지를 삭제할까요?')) return;
+    const m = msgs.find((x) => x.id === d.dataset.del); if (!m) return;
+    try {
+      await updateDoc(doc(db, 'chatRooms', cur, 'messages', m.id), { deleted: true, text: '', file: null });
+      if (m.file && m.file.path) deleteObject(sref(storage, m.file.path)).catch(() => {});
+    } catch (err) { toast('삭제하지 못했어요'); }
+  }
+});
+$('viewer').onclick = () => $('viewer').classList.remove('show');
+
+/* ── 보내기 ── */
+async function post(data, preview) {
+  const r = rooms.get(cur); if (!r) return;
+  const id = cur;
+  await addDoc(collection(db, 'chatRooms', id, 'messages'), { uid: ME.uid, name: ME.name, at: serverTimestamp(), ...data });
+  await updateDoc(doc(db, 'chatRooms', id), { lastText: preview.slice(0, 80), lastAt: serverTimestamp(), lastBy: ME.uid, lastName: ME.name }).catch(() => {});
+  setDoc(doc(db, 'chatReads', ME.uid), { [id]: serverTimestamp() }, { merge: true }).catch(() => {});
+}
+async function sendText() {
+  const tx = $('tx'); const t = tx.value.replace(/\s+$/, ''); if (!t.trim() || !cur) return;
+  tx.value = ''; tx.style.height = 'auto';
+  try { await post({ text: t }, t.replace(/\s+/g, ' ')); }
+  catch (e) { tx.value = t; toast('보내지 못했어요: ' + (e.code || e.message)); }
+}
+async function sendFile(f) {
+  if (!cur || !f) return;
+  if (f.size > MAX_FILE) { toast(`${f.name} — 100MB가 넘는 파일은 보낼 수 없어요`); return; }
+  const room = cur, safeName = f.name.replace(/[\\/#?%*:|"<>]/g, '_');
+  const path = `chat/${room}/${Date.now()}_${Math.random().toString(36).slice(2, 7)}_${safeName}`;
+  const up = $('up'); up.style.display = 'block'; up.textContent = `📤 ${f.name} 보내는 중… 0%`;
+  try {
+    const task = uploadBytesResumable(sref(storage, path), f, { contentType: f.type || 'application/octet-stream', contentDisposition: `inline; filename*=UTF-8''${encodeURIComponent(f.name)}` });
+    task.on('state_changed', (s) => { if ($('up')) $('up').textContent = `📤 ${f.name} 보내는 중… ${Math.round(s.bytesTransferred / s.totalBytes * 100)}%`; });
+    await task;
+    const url = await getDownloadURL(sref(storage, path));
+    if (cur !== room) { cur = room; }
+    await post({ text: '', file: { name: f.name, size: f.size, type: f.type || '', path, url } }, (/^image\//.test(f.type) ? '📷 사진' : '📎 ' + f.name));
+  } catch (e) { toast('파일을 보내지 못했어요: ' + (e.code || e.message)); }
+  finally { if ($('up')) $('up').style.display = 'none'; }
+}
+$('file').onchange = () => { [...$('file').files].forEach(sendFile); $('file').value = ''; };
+let dragN = 0;
+document.addEventListener('dragenter', (e) => { if (!cur || !e.dataTransfer?.types?.includes('Files')) return; dragN++; document.body.classList.add('dragging'); });
+document.addEventListener('dragleave', () => { if (--dragN <= 0) { dragN = 0; document.body.classList.remove('dragging'); } });
+document.addEventListener('dragover', (e) => { if (cur) e.preventDefault(); });
+document.addEventListener('drop', (e) => { e.preventDefault(); dragN = 0; document.body.classList.remove('dragging'); if (cur) [...(e.dataTransfer?.files || [])].forEach(sendFile); });
+
+/* ── 새 대화 ── */
+let mdTab = '전체';
+function renderPeople() {
+  const list = [...people.entries()].filter(([u, x]) => u !== ME.uid && x.name)
+    .filter(([, x]) => mdTab === '전체' || !x.branch || normBr(x.branch) === mdTab || x.branch === '공통')
+    .sort((a, b) => (a[1].roleLabel || '').localeCompare(b[1].roleLabel || '', 'ko') || a[1].name.localeCompare(b[1].name, 'ko'));
+  $('ppl').innerHTML = list.length ? list.map(([u, x]) => `<label class="p"><input type="checkbox" value="${esc(u)}"><span class="av ${brCls(x.branch)}">${esc(x.name.slice(0, 2))}${online(x) ? '<i class="on"></i>' : ''}</span>
+    <span><b>${esc(x.name)}</b> <small>${esc(x.roleLabel || '')}${x.branch ? ' · <span class="' + (normBr(x.branch) === '산본관' ? 'br-sb' : 'br-pc') + '">' + esc(x.branch) + '</span>' : ''}</small></span></label>`).join('')
+    : '<div class="sec">사람이 없어요 — 관리부 계정은 메신저를 한 번 켠 뒤부터 목록에 보여요</div>';
+}
+$('btnNew').onclick = () => { mdTab = brTab; paintTabs($('mdTabs'), mdTab); $('grpName').value = ''; renderPeople(); $('md').classList.add('show'); };
+$('mdTabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; mdTab = b.dataset.b; paintTabs($('mdTabs'), mdTab); renderPeople(); });
+$('mdCancel').onclick = () => $('md').classList.remove('show');
+$('mdOk').onclick = async () => {
+  const sel = [...$('ppl').querySelectorAll('input:checked')].map((i) => i.value);
+  if (!sel.length) { toast('대화할 사람을 골라 주세요'); return; }
+  const names = { [ME.uid]: ME.name }; sel.forEach((u) => (names[u] = (people.get(u) || {}).name || ''));
+  try {
+    let id;
+    if (sel.length === 1) {
+      id = 'dm_' + [ME.uid, sel[0]].sort().join('_');
+      if (!rooms.has(id)) await setDoc(doc(db, 'chatRooms', id), { type: 'dm', members: [ME.uid, sel[0]].sort(), memberNames: names, createdAt: serverTimestamp(), createdBy: ME.uid });
+    } else {
+      const ref = doc(collection(db, 'chatRooms')); id = ref.id;
+      await setDoc(ref, { type: 'group', name: $('grpName').value.trim().slice(0, 40), members: [ME.uid, ...sel], memberNames: names, createdAt: serverTimestamp(), createdBy: ME.uid });
+    }
+    $('md').classList.remove('show');
+    const wait = () => (rooms.has(id) ? openRoom(id) : setTimeout(wait, 150)); wait();
+  } catch (e) { toast('대화방을 만들지 못했어요: ' + (e.code || e.message)); }
+};
+</script>
+</body>
+</html>

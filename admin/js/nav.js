@@ -244,6 +244,11 @@
     const want = (location.hash || '').replace('#', '');
     if (want && want !== 'home' && itemById[want] && isVisible(itemById[want].group)) openMenu(want, { keepScroll: true });
   });
+  // 업무 프로그램(메뉴판)에서 다른 메뉴를 누르면 주소의 #메뉴만 바뀜 → 그 메뉴 열기
+  window.addEventListener('hashchange', () => {
+    const want = (location.hash || '').replace('#', '') || 'home';
+    if (want !== current && itemById[want]) openMenu(want);
+  });
 
   // ── 검색 ──
   const searchEl = $('menuSearch'), resultsEl = $('menuResults');

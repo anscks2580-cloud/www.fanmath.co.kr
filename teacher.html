@@ -6650,6 +6650,12 @@ window.addEventListener('message', (e) => { if (e.data && e.data.type === 'pcRea
     }
   };
 
+  // 업무 프로그램(메뉴판)에서 다른 메뉴를 누르면 주소의 #메뉴만 바뀜 → 그 메뉴 열기
+  window.addEventListener('hashchange', () => {
+    const want = (location.hash || '').replace('#', '') || 'calendar';
+    if (want !== current && itemById[want] && visible(itemById[want])) open(want);
+  });
+
   // 모바일 드로어
   const menuBtn = $('tnavMenuBtn'), backdrop = $('tnavBackdrop');
   function closeDrawer() { document.body.classList.remove('ad-side-open'); }

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>일일종합현황 · 송우찬수학학원</title>
+<link rel="icon" href="/assets/icons/icon-192.png">
+<link rel="stylesheet" href="desk.css?v=1">
+<style>
+body{background:#F0EEF5;overflow:auto}
+.tb{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px;background:#F7F6FA;border-bottom:1px solid var(--line)}
+.tb label{display:flex;align-items:center;gap:4px;font-weight:700}
+.tb input[type=radio],.tb input[type=checkbox]{accent-color:var(--p2);margin:0}
+.tb .sp{flex:1}
+.tb select,.tb input[type=date]{height:30px;border:1px solid #B9B2D2;border-radius:4px;padding:0 6px;font-weight:700;background:#fff}
+.tb .dk-btn{min-width:84px}
+.tb .dk-btn.go{background:linear-gradient(180deg,#FFE27A,#FFD43B);border-color:#E3B400;color:#2A1E55}
+.ttl{margin:14px 22px 6px;font-size:22px;font-weight:800;color:#2B3FB5;letter-spacing:-.5px;display:flex;align-items:baseline;gap:10px}
+.ttl small{font-size:13px;color:var(--mut);font-weight:700}
+.ttl .brtag{font-size:13px;padding:2px 10px;border-radius:999px;background:var(--pl);color:var(--p2)}
+.ttl .brtag.sb{background:var(--gl);color:var(--sb)}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px 26px;padding:8px 22px 30px}
+@media (max-width:1100px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:720px){.grid{grid-template-columns:1fr}}
+.pn{min-width:0}
+.pn.wide{grid-column:span 2}
+.pn-h{display:flex;align-items:flex-end;justify-content:space-between;gap:8px}
+.tab{position:relative;display:inline-block;padding:5px 22px 4px 18px;background:linear-gradient(180deg,#E9ECFB,#C9D1F2);border:1px solid #9AA6D8;border-bottom:0;border-radius:6px 14px 0 0;font-weight:800;font-size:15px;color:#1F2A6B;letter-spacing:1px}
+.go{height:24px;padding:0 10px;border:1px solid #9AA6D8;border-radius:3px;background:linear-gradient(180deg,#fff,#EEF0FA);font-weight:700;font-size:12px;margin-bottom:3px}
+.go:hover{border-color:var(--p2);color:var(--p2)}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid #8F98C4;box-shadow:0 2px 0 #C4C9E2}
+th,td{border:1px solid #CDD2E8;padding:5px 6px;text-align:center;font-variant-numeric:tabular-nums}
+thead th{background:#F1F2F8;font-weight:700;color:#333}
+tbody th{background:#F7F7FB;font-weight:700;color:#333;white-space:nowrap;text-align:center}
+td.l{text-align:left}
+td.big{font-size:15px;font-weight:800}
+td.warn,span.warn{color:var(--red);font-weight:800}
+td.ok,span.ok{color:var(--green);font-weight:800}
+th.pc,td.pc{color:var(--pc)} th.sb,td.sb{color:var(--sb)}
+.names{font-size:12px;text-align:left;color:var(--mut);line-height:1.5}
+.names b{color:var(--red)}
+.lst{background:#fff;border:1px solid #8F98C4;box-shadow:0 2px 0 #C4C9E2;max-height:228px;overflow:auto}
+.lst .r{display:flex;gap:8px;padding:6px 10px;border-top:1px solid #E5E7F2;font-size:13px}
+.lst .r:first-child{border-top:0}
+.lst .r .tm{flex:0 0 46px;color:var(--mut);font-weight:700}
+.lst .r .x{flex:1;min-width:0}
+.lst .none{padding:16px;text-align:center;color:var(--mut)}
+.pill{display:inline-block;padding:0 7px;border-radius:999px;font-size:11px;font-weight:800;background:var(--pl);color:var(--p2);margin-right:4px}
+.pill.sb{background:var(--gl);color:var(--sb)}
+.pill.red{background:#FDE7E7;color:var(--red)}
+.loading{padding:60px;text-align:center;color:var(--mut);font-size:15px}
+.foot{padding:0 22px 20px;color:var(--mut);font-size:12px}
+</style>
+</head>
+<body>
+<div class="tb">
+  <label><input type="radio" name="mode" checked> 기준일</label>
+  <input type="date" id="day">
+  <span class="sp"></span>
+  <label>구분 :</label>
+  <select id="br"><option>전체</option><option>평촌관</option><option>산본관</option></select>
+  <button class="dk-btn go" id="btnGo">조 회</button>
+  <button class="dk-btn" id="btnToday">오늘</button>
+  <label style="font-weight:400"><input type="checkbox" id="auto"> 로그인할 때 띄우기</label>
+  <button class="dk-btn" id="btnClose">닫 기</button>
+</div>
+<div class="ttl"><span id="ttl">일일종합현황</span><span class="brtag" id="brtag"></span><small id="sub"></small></div>
+<div id="out"><div class="loading">불러오는 중…</div></div>
+<div class="foot">숫자는 홈페이지 관리자·선생님 화면에 입력된 기록으로 자동 계산됩니다 · 각 표 오른쪽 위 버튼을 누르면 해당 화면이 열립니다 · 평촌관 <b class="br-pc">보라</b> · 산본관 <b class="br-sb">노랑</b></div>
+
+<script type="module">
+import { db, APP, IN_PROGRAM, requireStaff, collection, doc, getDocs, query, where, orderBy, limit,
+  esc, ymd, parseYmd, DOW, BRANCHES, normBr, GRADES, gradeOf, daysOf, isWeeklyTarget, weekKey, safe, openWork } from './desk-fb.js?v=1';
+
+const $ = (id) => document.getElementById(id);
+const AUTO_KEY = 'swc_desk_today_auto';
+const params = new URLSearchParams(location.search);
+// 로그인 직후 자동으로 열렸는데 「로그인할 때 띄우기」를 꺼 두었으면 바로 닫음
+if (params.get('auto') === '1' && localStorage.getItem(AUTO_KEY) === '0') { APP && APP.winClose ? APP.winClose() : window.close(); }
+$('auto').checked = localStorage.getItem(AUTO_KEY) !== '0';
+$('auto').onchange = () => localStorage.setItem(AUTO_KEY, $('auto').checked ? '1' : '0');
+$('day').value = ymd(new Date());
+$('br').value = localStorage.getItem('swc_desk_branch') || '전체';
+$('btnClose').onclick = () => (APP && APP.winClose ? APP.winClose() : window.close());
+$('btnToday').onclick = () => { $('day').value = ymd(new Date()); run(); };
+$('btnGo').onclick = run;
+$('day').onchange = run;
+$('br').onchange = () => { localStorage.setItem('swc_desk_branch', $('br').value); paint(); };
+
+// 메뉴판에서 관을 바꾸면 따라감
+if (APP && APP.onBroadcast) APP.onBroadcast((ch, v) => { if (ch === 'branch' && ['전체', '평촌관', '산본관'].includes(v)) { $('br').value = v; paint(); } });
+let P = null, D = null, PAGE = 'admin.html';
+requireStaff((p) => { P = p; PAGE = p.kind === 'admin' ? 'admin.html' : p.kind === 'ta' ? 'ta.html' : 'teacher.html'; run(); });
+
+/* ── 공통 그리기 도구 ── */
+const brF = () => $('br').value;
+const cols = () => (brF() === '전체' ? ['평촌관', '산본관', '합계'] : [brF()]);
+const cc = (c) => (c === '평촌관' ? 'pc' : c === '산본관' ? 'sb' : '');
+const sumBy = (arr, fn) => { const o = { '평촌관': 0, '산본관': 0 }; arr.forEach((x) => { const v = fn(x); if (v) o[normBr(x.branch)] += v === true ? 1 : v; }); o['합계'] = o['평촌관'] + o['산본관']; return o; };
+const inBr = (b) => brF() === '전체' || normBr(b) === brF();
+function panel(title, body, go, opt = {}) {
+  return `<section class="pn${opt.wide ? ' wide' : ''}"><div class="pn-h"><span class="tab">${esc(title)}</span>${go ? `<button class="go" data-go="${esc(go)}">${esc(opt.goLabel || '바로가기')}</button>` : ''}</div>${body}</section>`;
+}
+function countTable(rows, opt = {}) {   // rows: [label, {평촌관,산본관,합계}, warn?]
+  const cs = cols();
+  return `<table><thead><tr><th style="width:30%"></th>${cs.map((c) => `<th class="${cc(c)}">${c === '합계' ? '합계' : c}</th>`).join('')}</tr></thead><tbody>` +
+    rows.map(([lb, o, warn]) => `<tr><th>${esc(lb)}</th>${cs.map((c) => `<td class="big ${warn && o[c] ? 'warn' : cc(c)}">${o[c] ?? 0}</td>`).join('')}</tr>`).join('') + '</tbody></table>';
+}
+const listBox = (rows, empty) => `<div class="lst">${rows.length ? rows.join('') : `<div class="none">${esc(empty)}</div>`}</div>`;
+const brPill = (b) => `<span class="pill ${normBr(b) === '산본관' ? 'sb' : ''}">${normBr(b).replace('관', '')}</span>`;
+document.addEventListener('click', (e) => { const b = e.target.closest('[data-go]'); if (!b) return; const [pg, id] = b.dataset.go.split('#'); openWork(pg, id || ''); });
+
+/* ── 불러오기 ── */
+async function run() {
+  if (!P) return;
+  $('out').innerHTML = '<div class="loading">불러오는 중…</div>';
+  const day = $('day').value || ymd(new Date());
+  const d = parseYmd(day);
+  $('ttl').textContent = `${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일 (${DOW[d.getDay()]}) 통합정보`;
+  $('sub').textContent = P.kind === 'admin' ? `${P.name} · ${P.roleLabel}` : `${P.name} ${P.kind === 'ta' ? '조교' : '선생님'}`;
+  try {
+    const prev = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+    const prevKey = `${prev.getFullYear()}-${String(prev.getMonth() + 1).padStart(2, '0')}`;
+    const lastKey = weekKey(d, 1);
+    const lastSat = new Date(d); lastSat.setDate(d.getDate() - ((d.getDay() + 1) % 7));      // 지난(또는 오늘) 토요일
+    const nextSat = new Date(d); nextSat.setDate(d.getDate() + ((6 - d.getDay() + 7) % 7));   // 이번 주 토요일
+    const weekAgo = new Date(d); weekAgo.setDate(d.getDate() - 6); weekAgo.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(d); dayEnd.setHours(23, 59, 59, 999);
+    const isAdmin = P.kind === 'admin', isTeacher = P.kind === 'teacher';
+    const office = isAdmin ? query(collection(db, 'officeCalendar'), where('date', '==', day))
+      : query(collection(db, 'officeCalendar'), where('visibility', '==', 'teachers'), where('date', '==', day));
+    const mine = (c) => (isTeacher ? query(collection(db, c[0]), where('teacherUid', '==', P.uid), where(c[1], '==', c[2])) : query(collection(db, c[0]), where(c[1], '==', c[2])));
+    const [stS, attS, absS, hwS, ocS, seS, tS, wkS, pgS, moS, scS, scNextS, csS, mdS] = await Promise.all([
+      safe(getDocs(collection(db, 'students'))),
+      safe(getDocs(query(collection(db, 'attendance'), where('date', '==', day)))),
+      safe(getDocs(query(collection(db, 'absences'), orderBy('createdAt', 'desc'), limit(300)))),
+      safe(getDocs(query(collection(db, 'homeworkLogs'), where('date', '==', day)))),
+      safe(getDocs(office)),
+      safe(getDocs(collection(db, 'scheduleEvents'))),
+      P.kind === 'ta' ? null : safe(getDocs(collection(db, 'teachers'))),
+      P.kind === 'ta' ? null : safe(getDocs(mine(['weeklyReports', 'weekKey', lastKey]))),
+      P.kind === 'ta' ? null : safe(getDocs(mine(['progressReports', 'weekKey', lastKey]))),
+      P.kind === 'ta' ? null : safe(getDocs(mine(['monthlyReports', 'month', prevKey]))),
+      P.kind === 'ta' ? null : safe(getDocs(mine(['satClinicReports', 'date', ymd(lastSat)]))),
+      isTeacher ? safe(getDocs(mine(['satClinicReports', 'date', ymd(nextSat)]))) : null,
+      isAdmin ? safe(getDocs(query(collection(db, 'consultForms'), orderBy('createdAt', 'desc'), limit(400)))) : null,
+      P.kind === 'ta' ? null : safe(getDocs(query(collection(db, 'meetingDocs'), orderBy('date', 'desc'), limit(5)))),
+    ]);
+    const arr = (s) => { const a = []; if (s) s.forEach((x) => a.push({ id: x.id, ...x.data() })); return a; };
+    const allSt = arr(stS);
+    const toDate = (v) => (v?.toDate ? v.toDate() : v ? new Date(v) : null);
+    D = {
+      day, d, dow: DOW[d.getDay()], lastKey, prevKey, prevMonth: prev.getMonth() + 1, lastSat: ymd(lastSat), nextSat: ymd(nextSat), weekAgo, dayEnd,
+      students: allSt.filter((s) => s.status !== '퇴원'),
+      withdrawn: allSt.filter((s) => s.status === '퇴원'),
+      att: arr(attS), abs: arr(absS), hw: arr(hwS),
+      office: arr(ocS), sched: arr(seS).filter((x) => { const s = x.start || x.date || '', e = x.end || s; return s && s <= day && e >= day; }),
+      teachers: arr(tS).filter((t) => t.role !== 'ta'),
+      wk: arr(wkS), pg: arr(pgS), mo: arr(moS), sc: arr(scS), scNext: arr(scNextS),
+      consults: arr(csS).map((c) => ({ ...c, at: toDate(c.createdAt) })),
+      meetings: arr(mdS), toDate,
+    };
+    paint();
+  } catch (e) { $('out').innerHTML = `<div class="loading">불러오지 못했어요 (${esc(e.message)})</div>`; }
+}
+
+function paint() {
+  if (!D) return;
+  const b = brF(); const tag = $('brtag');
+  tag.textContent = b; tag.className = 'brtag' + (b === '산본관' ? ' sb' : '');
+  $('out').innerHTML = '<div class="grid">' + (P.kind === 'admin' ? adminPanels() : P.kind === 'ta' ? taPanels() : teacherPanels()).join('') + '</div>';
+}
+
+/* ── 공용 계산 ── */
+function todayClassStudents(list) { return list.filter((s) => daysOf(s).includes(D.dow)); }
+function absOn(day) { return D.abs.filter((a) => (a.dates || []).includes(day)); }
+function absUpcoming() { return D.abs.filter((a) => (a.dates || []).some((x) => x >= D.day)); }
+function classKey(s) { return normBr(s.branch) + '|' + (s.classGroup || `${s.grade || '기타'} (반 미배정)`); }
+function hwDone(br, cls) { return D.hw.some((h) => normBr(h.branch || '') === br && h.classGroup === cls); }
+function eventsRows() {
+  const rows = [];
+  D.office.filter((x) => inBr(x.branch)).forEach((x) => rows.push({ t: x.startTime || '', br: x.branch, h: `${x.type ? `<span class="pill">${esc(x.type)}</span>` : ''}${esc(x.title || '')}${x.studentName ? ` · ${esc(x.studentName)}${x.grade ? '(' + esc(x.grade) + ')' : ''}` : ''}` }));
+  D.sched.forEach((x) => {
+    if (P.kind !== 'admin' && x.target === 'teachers' && Array.isArray(x.teacherUids) && !x.teacherUids.includes(P.uid)) return;
+    if (x.branch && !inBr(x.branch)) return;
+    rows.push({ t: x.time || '', br: x.branch, h: `<span class="pill">학원</span>${esc(x.title || '')}` });
+  });
+  rows.sort((a, b) => (a.t || '99').localeCompare(b.t || '99'));
+  return rows.map((r) => `<div class="r"><span class="tm">${esc(r.t || '종일')}</span><span class="x">${r.br ? brPill(r.br) : ''}${r.h}</span></div>`);
+}
+function absRows(list) {
+  return list.filter((a) => inBr(a.branch)).slice(0, 30).map((a) => {
+    const ds = (a.dates || []).filter((x) => x >= D.day).sort();
+    return `<div class="r"><span class="tm">${esc((ds[0] || '').slice(5).replace('-', '/'))}</span><span class="x">${brPill(a.branch)}<b>${esc(a.studentName || '')}</b> ${esc(a.reason || '')}${P.kind === 'admin' && !a.readByAdmin ? ' <span class="pill red">확인 필요</span>' : ''}</span></div>`;
+  });
+}
+
+/* ═════ 관리부 ═════ */
+function adminPanels() {
+  const S = D.students, monthKey = D.day.slice(0, 7);
+  const inMonth = (v) => { const t = D.toDate(v); return t && ymd(t).slice(0, 7) === monthKey && ymd(t) <= D.day; };
+  const isMid = (s) => { const g = gradeOf(s); return g === '초등' || g.startsWith('중'); };
+  const out = [];
+
+  // 1. 학생 인원
+  out.push(panel('학생 인원', countTable([
+    ['재원생', sumBy(S, () => true)],
+    ['초 · 중등', sumBy(S, isMid)],
+    ['고등 · N수', sumBy(S, (s) => !isMid(s))],
+    [`${D.d.getMonth() + 1}월 신규`, sumBy(S, (s) => inMonth(s.createdAt))],
+    [`${D.d.getMonth() + 1}월 퇴원`, sumBy(D.withdrawn, (s) => s.leaveDate && String(s.leaveDate).slice(0, 7) === monthKey)],
+  ]), 'admin.html#students'));
+
+  // 2. 기준일 출결
+  const cls = todayClassStudents(S), absToday = absOn(D.day);
+  const attBy = new Map(D.att.map((a) => [a.uid, a]));
+  const absIds = new Set(absToday.map((a) => a.studentId));
+  out.push(panel(`${D.dow}요일 출결 현황`, countTable([
+    ['수업 대상', sumBy(cls, () => true)],
+    ['등원', sumBy(D.att, () => true)],
+    ['하원', sumBy(D.att, (a) => !!a.outTime)],
+    ['결석 (사유서)', sumBy(absToday, () => true)],
+    ['미등원', sumBy(cls, (s) => !attBy.has(s.id) && !absIds.has(s.id)), true],
+  ]), 'admin.html#attendance'));
+
+  // 3. 학년별 학생 인원
+  const gRows = GRADES.map((g) => [g, sumBy(S, (s) => gradeOf(s) === g)]).filter(([, o]) => o['합계']);
+  out.push(panel('학년별 학생 인원', countTable(gRows), 'admin.html#students'));
+
+  // 4. 상담 현황
+  const C = D.consults.filter((c) => !c.hidden);
+  const dayStart = new Date(D.d); dayStart.setHours(0, 0, 0, 0);
+  out.push(panel('상담 현황', countTable([
+    ['기준일 신청', sumBy(C, (c) => c.at && c.at >= dayStart && c.at <= D.dayEnd)],
+    ['최근 7일 신청', sumBy(C, (c) => c.at && c.at >= D.weekAgo && c.at <= D.dayEnd)],
+    ['상담 진행 전', sumBy(C, (c) => c.stage !== 'consultation_completed'), true],
+    ['기준일 상담 일정', sumBy(D.office, (x) => x.type === '상담')],
+  ]), 'admin.html#consult'));
+
+  // 5. 수업 보고 제출 현황 (홈 화면과 같은 기준)
+  const byT = {}; S.forEach((s) => { if (s.teacherUid) (byT[s.teacherUid] = byT[s.teacherUid] || []).push(s); });
+  const act = D.teachers.filter((t) => (byT[t.id] || []).length && (brF() === '전체' || (byT[t.id] || []).some((s) => inBr(s.branch))));
+  const wkDone = {}; D.wk.forEach((r) => (wkDone[r.teacherUid] = wkDone[r.teacherUid] || new Set()).add(r.studentId));
+  let wkT = 0, wkC = 0; const wkMiss = [];
+  act.forEach((t) => { const tg = (byT[t.id] || []).filter((s) => isWeeklyTarget(s) && inBr(s.branch)); if (!tg.length) return; const dn = tg.filter((s) => wkDone[t.id]?.has(s.id)).length; wkT += tg.length; wkC += dn; if (dn < tg.length) wkMiss.push(`${t.name}(${tg.length - dn})`); });
+  const setOf = (a) => new Set(a.map((r) => r.teacherUid));
+  const pgSet = setOf(D.pg), moSet = setOf(D.mo), scSet = setOf(D.sc);
+  const miss = (set) => act.filter((t) => !set.has(t.id)).map((t) => t.name);
+  const rep = (lb, done, total, missing, unit) => `<tr><th>${esc(lb)}</th><td class="big ${done >= total ? 'ok' : 'warn'}">${done} / ${total}${unit}</td><td class="names">${missing.length ? '미제출: <b>' + missing.map(esc).join(', ') + '</b>' : '<span class="ok">전원 제출</span>'}</td></tr>`;
+  out.push(panel('수업 보고 제출', `<table><tbody>
+      ${rep('주간성취도 (지난주)', wkC, wkT, wkMiss, '명')}
+      ${rep('반별 진도 (지난주)', act.length - miss(pgSet).length, act.length, miss(pgSet), '분')}
+      ${rep(`${D.prevMonth}월 월말보고서`, act.length - miss(moSet).length, act.length, miss(moSet), '분')}
+      <tr><th>토요클리닉 (${D.lastSat.slice(5).replace('-', '/')})</th><td class="big">${scSet.size}분</td><td class="names">보고한 선생님 ${scSet.size}분</td></tr>
+    </tbody></table>`, 'admin.html#weekly', { wide: true, goLabel: '주간성취도 열기' }));
+
+  // 6. 숙제 입력 (기준일 수업 반)
+  const clsMap = new Map(); cls.forEach((s) => { const k = classKey(s); if (!clsMap.has(k)) clsMap.set(k, { br: normBr(s.branch), cls: s.classGroup || '', n: 0 }); clsMap.get(k).n++; });
+  const clsList = [...clsMap.values()].filter((c) => c.cls && !/과외/.test(c.cls) && inBr(c.br));
+  const hwMiss = clsList.filter((c) => !hwDone(c.br, c.cls));
+  out.push(panel('숙제 입력', countTable([
+    ['수업 반', sumBy(clsList.map((c) => ({ branch: c.br })), () => true)],
+    ['숙제 입력 반', sumBy(clsList.filter((c) => hwDone(c.br, c.cls)).map((c) => ({ branch: c.br })), () => true)],
+    ['미입력 반', sumBy(hwMiss.map((c) => ({ branch: c.br })), () => true), true],
+  ]) + (hwMiss.length ? `<div class="names" style="margin-top:6px">미입력: <b>${hwMiss.slice(0, 14).map((c) => esc(c.cls)).join(', ')}${hwMiss.length > 14 ? ' 외' : ''}</b></div>` : ''), 'admin.html#homeworklog'));
+
+  // 7. 결석 사유서
+  const up = absUpcoming();
+  out.push(panel(`결석 사유서 · 예정 ${up.filter((a) => inBr(a.branch)).length}건 (확인 필요 ${up.filter((a) => inBr(a.branch) && !a.readByAdmin).length})`, listBox(absRows(up), '예정된 결석이 없어요'), 'admin.html#attendance'));
+
+  // 8. 기준일 일정
+  out.push(panel('기준일 일정', listBox(eventsRows(), '등록된 일정이 없어요'), 'admin.html#home', { goLabel: '달력 열기' }));
+  return out;
+}
+
+/* ═════ 선생님 ═════ */
+function teacherPanels() {
+  const S = D.students.filter((s) => s.teacherUid === P.uid);
+  const out = [];
+  const isMid = (s) => { const g = gradeOf(s); return g === '초등' || g.startsWith('중'); };
+  out.push(panel('내 담당 학생', countTable([
+    ['담당 학생', sumBy(S, () => true)],
+    ['초 · 중등', sumBy(S, isMid)],
+    ['고등 · N수', sumBy(S, (s) => !isMid(s))],
+    ['주간성취도 대상', sumBy(S, isWeeklyTarget)],
+  ]), 'teacher.html#calendar'));
+
+  // 기준일 수업 반 — 반 · 학생 · 등원 · 결석 · 숙제
+  const cls = todayClassStudents(S).filter((s) => inBr(s.branch));
+  const attIds = new Set(D.att.map((a) => a.uid)), absIds = new Set(absOn(D.day).map((a) => a.studentId));
+  const m = new Map(); cls.forEach((s) => { const k = classKey(s); if (!m.has(k)) m.set(k, { br: normBr(s.branch), cls: s.classGroup || `${s.grade || ''} (반 미배정)`, st: [] }); m.get(k).st.push(s); });
+  const rows = [...m.values()].sort((a, b) => a.br.localeCompare(b.br) || a.cls.localeCompare(b.cls, 'ko'));
+  out.push(panel(`${D.dow}요일 내 수업`, rows.length ? `<table><thead><tr><th>관</th><th>반</th><th>학생</th><th>등원</th><th>결석</th><th>숙제</th></tr></thead><tbody>${rows.map((r) => {
+      const att = r.st.filter((s) => attIds.has(s.id)).length, ab = r.st.filter((s) => absIds.has(s.id));
+      const hw = /과외/.test(r.cls) ? '<span class="mut">-</span>' : hwDone(r.br, r.cls) ? '<span class="ok">✔ 입력</span>' : '<span class="warn">✖ 미입력</span>';
+      return `<tr><td class="${cc(r.br)}">${r.br.replace('관', '')}</td><td class="l">${esc(r.cls)}</td><td>${r.st.length}</td><td class="big">${att}</td><td class="${ab.length ? 'warn' : ''}">${ab.length ? ab.map((s) => esc(s.name)).join(', ') : 0}</td><td>${hw}</td></tr>`;
+    }).join('')}</tbody></table>` : listBox([], `${D.dow}요일 수업 반이 없어요`), 'teacher.html#hwlog', { wide: true, goLabel: '숙제 입력 열기' }));
+
+  // 해야 할 일
+  const mid = S.filter(isWeeklyTarget), wkSet = new Set(D.wk.map((r) => r.studentId));
+  const wkDone = mid.filter((s) => wkSet.has(s.id)).length;
+  const today = new Date(); const dd = D.d.getDate();
+  const todo = (lb, ok, txt, go) => `<tr><th>${esc(lb)}</th><td class="big ${ok ? 'ok' : 'warn'}">${ok ? '완료' : '할 일'}</td><td class="names">${txt}</td><td><button class="go" data-go="${go}">열기</button></td></tr>`;
+  out.push(panel('해야 할 일', `<table><tbody>
+      ${mid.length ? todo('주간성취도 (지난주)', wkDone >= mid.length, `${wkDone} / ${mid.length}명 제출 · 금요일까지`, 'teacher.html#weekly') : ''}
+      ${todo('반별 진도 (지난주)', D.pg.length > 0, D.pg.length ? '제출 완료' : '금요일까지', 'teacher.html#progress')}
+      ${todo(`${D.prevMonth}월 월말보고서`, D.mo.length > 0, D.mo.length ? '제출 완료' : dd <= 3 ? `${D.d.getMonth() + 1}/3까지` : '<b>마감 지남</b>', 'teacher.html#monthly')}
+      ${todo(`토요클리닉 (${D.nextSat.slice(5).replace('-', '/')})`, D.scNext.length > 0, D.scNext.length ? '입력 완료' : '이번 주 토요일 것 미리 입력', 'teacher.html#clinic')}
+    </tbody></table>`, '', {}));
+
+  // 결석 예정 (내 학생)
+  const myIds = new Set(S.map((s) => s.id));
+  out.push(panel('내 학생 결석 예정', listBox(absRows(absUpcoming().filter((a) => myIds.has(a.studentId))), '예정된 결석이 없어요'), ''));
+  out.push(panel('기준일 일정', listBox(eventsRows(), '등록된 일정이 없어요'), 'teacher.html#calendar', { goLabel: '달력 열기' }));
+  out.push(panel('최근 회의 자료', listBox(D.meetings.map((x) => `<div class="r"><span class="tm">${esc(String(x.date || '').slice(5).replace('-', '/'))}</span><span class="x">${esc(x.title || x.fileName || '')}</span></div>`), '회의 자료가 없어요'), 'teacher.html#meetingdocs'));
+  return out;
+}
+
+/* ═════ 조교 ═════ */
+function taPanels() {
+  const S = D.students, cls = todayClassStudents(S), absToday = absOn(D.day);
+  const attBy = new Set(D.att.map((a) => a.uid)), absIds = new Set(absToday.map((a) => a.studentId));
+  return [
+    panel(`${D.dow}요일 출결 현황`, countTable([
+      ['수업 대상', sumBy(cls, () => true)],
+      ['등원', sumBy(D.att, () => true)],
+      ['결석 (사유서)', sumBy(absToday, () => true)],
+      ['미등원', sumBy(cls, (s) => !attBy.has(s.id) && !absIds.has(s.id)), true],
+    ]), 'ta.html#clinicroom'),
+    panel('결석 예정', listBox(absRows(absUpcoming()), '예정된 결석이 없어요'), ''),
+    panel('기준일 일정', listBox(eventsRows(), '등록된 일정이 없어요'), ''),
+  ];
+}
+</script>
+</body>
+</html>

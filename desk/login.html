@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>송우찬 업무 시스템 · 로그인</title>
+<link rel="icon" href="/assets/icons/icon-192.png">
+<link rel="stylesheet" href="desk.css?v=1">
+<style>
+html,body{background:#fff;overflow:hidden}
+body.web{display:flex;align-items:center;justify-content:center;background:#E9E5F3;min-height:100vh}
+.lg{width:520px;height:376px;background:#fff;position:relative;display:flex;flex-direction:column}
+body.web .lg{border-radius:12px;overflow:hidden;box-shadow:0 20px 60px rgba(30,24,56,.25)}
+.lg-body{flex:1;position:relative;padding:12px 16px 10px 16px;background:
+  radial-gradient(circle at 0% 100%,rgba(245,197,24,.14),transparent 45%),
+  radial-gradient(circle at 100% 0%,rgba(91,63,166,.10),transparent 50%),#fff}
+.lg-top{display:flex;gap:14px}
+.lg-logo{width:132px;flex:0 0 132px;display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:4px}
+.lg-logo img{width:118px;height:118px;border-radius:50%;box-shadow:0 6px 18px rgba(75,51,145,.22)}
+.lg-logo .sub{font-size:11px;font-weight:700;color:var(--p2);letter-spacing:-.2px;text-align:center;line-height:1.35}
+.lg-logo .sub b{color:var(--gd)}
+.lg-main{flex:1;min-width:0}
+.ribbon{display:inline-block;margin:0 0 8px -2px;padding:5px 18px 5px 14px;border-radius:999px;background:linear-gradient(90deg,var(--p),var(--p3));color:#fff;font-size:15px;font-weight:700;letter-spacing:.5px;box-shadow:0 3px 0 rgba(58,39,117,.35)}
+.ribbon i{font-style:normal;color:var(--g)}
+.clock{display:flex;gap:14px;font-size:13px;margin:0 0 9px 2px}
+.clock b{color:var(--p2)} .clock span{color:var(--blue);font-weight:700}
+.row{display:grid;grid-template-columns:62px 1fr 96px;gap:6px;align-items:center;margin-bottom:7px}
+.row label{font-size:14px;font-weight:700;color:var(--p2);text-align:right;letter-spacing:2px}
+.row .val{font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px}
+.row .val select{height:26px;border:1px solid #B9B2D2;border-radius:4px;padding:0 4px;font-weight:700;color:var(--p2)}
+.row .dk-in{width:100%;height:30px}
+.row .dk-btn{height:30px;width:96px;padding:0}
+.opts{display:flex;gap:12px;flex-wrap:wrap;margin:6px 0 2px;font-size:12px}
+.opts label{display:flex;align-items:center;gap:4px;cursor:pointer;user-select:none}
+.opts input{accent-color:var(--p2);margin:0}
+.sep{display:flex;align-items:center;gap:6px;margin:10px 0 6px;color:var(--p2);font-weight:700;font-size:13px}
+.sep::before{content:'●';font-size:9px}
+.sep::after{content:'';flex:1;height:0;border-top:2px dotted var(--p3)}
+.sep .find{order:3;height:24px;padding:0 10px;font-size:12px}
+.pw{display:grid;grid-template-columns:1fr 1fr 1fr 96px;gap:6px;align-items:end}
+.pw div{display:flex;flex-direction:column;gap:3px}
+.pw small{font-size:11px;color:var(--mut);text-align:center}
+.pw .dk-in{width:100%;height:28px}
+.pw .dk-btn{height:28px;padding:0}
+.msg{position:absolute;left:16px;right:16px;bottom:8px;font-size:12px;font-weight:700;text-align:center;min-height:16px}
+.msg.err{color:var(--red)} .msg.ok{color:var(--green)}
+.ver{position:absolute;right:12px;top:8px;font-size:10px;color:#A9A2C2}
+</style>
+</head>
+<body>
+<div class="lg">
+  <div class="dk-titlebar" id="tbar">
+    <img src="/assets/icons/splash-logo.png" alt="">
+    <span class="t">송우찬수학학원 · 업무 시스템</span>
+    <span class="sp"></span>
+    <button type="button" title="최소화" id="btnMin">–</button>
+    <button type="button" class="x" title="닫기" id="btnClose">✕</button>
+  </div>
+  <div class="lg-body">
+    <span class="ver" id="ver"></span>
+    <div class="lg-top">
+      <div class="lg-logo">
+        <img src="/assets/icons/splash-logo.png" alt="송우찬수학학원">
+        <div class="sub">학원 통합 관리<br><b>평촌관 · 산본관</b></div>
+      </div>
+      <div class="lg-main">
+        <div class="ribbon">송우찬 업무 시스템입니다<i>!!</i></div>
+        <div class="clock">시간: <b id="cTime">-</b> 날짜: <span id="cDate">-</span></div>
+        <div class="row">
+          <label>학원명</label>
+          <div class="val">송우찬수학학원
+            <select id="branch" title="처음 볼 관">
+              <option value="전체">전체</option><option value="평촌관">평촌관</option><option value="산본관">산본관</option>
+            </select></div>
+          <span></span>
+        </div>
+        <div class="row">
+          <label>아이디</label>
+          <input class="dk-in" id="uid" autocomplete="username" spellcheck="false">
+          <button class="dk-btn pri" id="btnLogin" type="button">로그인</button>
+        </div>
+        <div class="row">
+          <label>암 호</label>
+          <input class="dk-in" id="upw" type="password" autocomplete="current-password">
+          <button class="dk-btn" id="btnUpdate" type="button" title="홈페이지 수정 내용을 새로 받고 프로그램 새 버전을 확인합니다">업데이트</button>
+        </div>
+      </div>
+    </div>
+    <div class="opts">
+      <label><input type="checkbox" id="optSave"> 아이디 저장</label>
+      <label><input type="checkbox" id="optChat" checked> 메신저 같이 켜기</label>
+      <label id="optBootWrap"><input type="checkbox" id="optBoot"> 컴퓨터 켤 때 메신저 자동 실행</label>
+    </div>
+    <div class="sep">비밀번호 변경 <button class="dk-btn find" id="btnFind" type="button">암호찾기</button></div>
+    <div class="pw">
+      <div><input class="dk-in" id="pwCur" type="password" autocomplete="off"><small>현재암호</small></div>
+      <div><input class="dk-in" id="pwNew" type="password" autocomplete="new-password"><small>새암호</small></div>
+      <div><input class="dk-in" id="pwNew2" type="password" autocomplete="new-password"><small>암호확인</small></div>
+      <div><button class="dk-btn gold" id="btnPw" type="button">변 경</button><small>&nbsp;</small></div>
+    </div>
+    <div class="msg" id="msg"></div>
+  </div>
+</div>
+
+<script type="module">
+import { auth, db, APP, IN_PROGRAM, idToEmail, staffProfile, onAuthStateChanged, signInWithEmailAndPassword, signOut,
+  setPersistence, browserLocalPersistence, updatePassword, sendPasswordResetEmail, pad } from './desk-fb.js?v=1';
+
+const $ = (id) => document.getElementById(id);
+if (!IN_PROGRAM) document.body.classList.add('web');
+$('ver').textContent = IN_PROGRAM ? 'v' + (APP.version || '') : '';
+if (!IN_PROGRAM) { $('tbar').querySelectorAll('button').forEach((b) => (b.style.display = 'none')); $('optBootWrap').style.display = 'none'; }
+$('btnMin').onclick = () => APP && APP.winMinimize && APP.winMinimize();
+$('btnClose').onclick = () => (APP && APP.winClose ? APP.winClose() : window.close());
+
+// ── 시계 ──
+function tick() {
+  const d = new Date(), h = d.getHours();
+  $('cTime').textContent = `${h < 12 ? '오전' : '오후'} ${pad(h % 12 || 12)}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  $('cDate').textContent = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+tick(); setInterval(tick, 1000);
+
+// ── 저장해 둔 설정 ──
+const LS = { id: 'swc_desk_saved_id', br: 'swc_desk_branch', chat: 'swc_desk_chat_auto' };
+try {
+  const sid = localStorage.getItem(LS.id); if (sid) { $('uid').value = sid; $('optSave').checked = true; }
+  const br = localStorage.getItem(LS.br); if (br) $('branch').value = br;
+  if (localStorage.getItem(LS.chat) === '0') $('optChat').checked = false;
+} catch (e) {}
+if (IN_PROGRAM && APP.getPrefs) APP.getPrefs().then((p) => { if (p) $('optBoot').checked = !!p.autoLaunch; }).catch(() => {});
+$('optBoot').onchange = () => APP && APP.setPref && APP.setPref('autoLaunch', $('optBoot').checked);
+(($('uid').value ? $('upw') : $('uid'))).focus();
+
+function msg(t, kind = 'err') { const m = $('msg'); m.textContent = t || ''; m.className = 'msg ' + (t ? kind : ''); }
+
+// 8시간 자동 로그아웃으로 돌아온 경우 안내 (session-limit.js)
+try { if (sessionStorage.getItem('swc_session_expired')) { sessionStorage.removeItem('swc_session_expired'); msg('로그인한 지 8시간이 지나 자동으로 로그아웃되었습니다. 다시 로그인해 주세요.'); } } catch (e) {}
+
+// 프로그램을 새로 켰을 때는 무조건 다시 로그인 (예전 계정으로 자동 로그인 방지)
+//  · 같은 실행 중 메신저로 먼저 로그인했다면 메신저는 그대로 두고, 업무 화면은 아이디·암호를 다시 넣어야 열림
+let checked = false;
+onAuthStateChanged(auth, async (user) => {
+  if (checked) return; checked = true;
+  if (!user) return;
+  const fresh = IN_PROGRAM && APP.freshRun ? await APP.freshRun().catch(() => true) : true;
+  if (fresh) await signOut(auth).catch(() => {});
+});
+
+async function doLogin() {
+  const id = $('uid').value.trim(), pwRaw = $('upw').value.trim();
+  if (!id || !pwRaw) { msg('아이디와 암호를 입력해 주세요.'); return; }
+  const btn = $('btnLogin'); btn.disabled = true; btn.textContent = '확인 중…'; msg('');
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+    let cred = null, last = null;
+    for (const pw of pwRaw.includes('-') ? [pwRaw, pwRaw.replace(/-/g, '')] : [pwRaw]) {
+      try { cred = await signInWithEmailAndPassword(auth, idToEmail(id), pw); break; } catch (e) { last = e; if (e.code === 'auth/user-disabled') break; }
+    }
+    if (!cred) throw last;
+    const p = await staffProfile(cred.user);
+    if (!p) { await signOut(auth); msg('업무 프로그램은 관리부·선생님·조교 계정만 쓸 수 있어요.'); return; }
+    try {
+      if ($('optSave').checked) localStorage.setItem(LS.id, id); else localStorage.removeItem(LS.id);
+      localStorage.setItem(LS.br, $('branch').value);
+      localStorage.setItem(LS.chat, $('optChat').checked ? '1' : '0');
+    } catch (e) {}
+    finish(p);
+  } catch (e) {
+    msg(e && e.code === 'auth/user-disabled' ? '사용이 중지된 계정입니다. 원장님께 문의해 주세요.'
+      : e && e.code === 'auth/too-many-requests' ? '여러 번 틀려 잠시 막혔어요. 잠시 뒤 다시 해 주세요.'
+      : '아이디 또는 암호가 올바르지 않습니다.');
+  } finally { btn.disabled = false; btn.textContent = '로그인'; }
+}
+function finish(p) {
+  const next = new URLSearchParams(location.search).get('next') === 'chat' ? 'chat' : 'main';
+  const info = { uid: p.uid, name: p.name, kind: p.kind, roleLabel: p.roleLabel, director: p.director, chat: $('optChat').checked, next };
+  if (IN_PROGRAM && APP.loginDone) { APP.markLogin && APP.markLogin(); APP.loginDone(info); }
+  else location.replace(next === 'chat' ? 'chat.html' : 'main.html');
+}
+$('btnLogin').onclick = doLogin;
+$('uid').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('upw').focus(); });
+$('upw').addEventListener('keydown', (e) => { if (e.key === 'Enter') doLogin(); });
+
+// ── 업데이트: 홈페이지 수정 내용 새로 받기 + 프로그램 새 버전 확인 ──
+$('btnUpdate').onclick = async () => {
+  const b = $('btnUpdate'); b.disabled = true; b.textContent = '확인 중…';
+  try {
+    if (IN_PROGRAM && APP.checkUpdate) {
+      const r = await APP.checkUpdate();
+      msg(r && r.message ? r.message : '최신 상태입니다.', r && r.newer ? 'err' : 'ok');
+    } else { msg('새로 불러옵니다…', 'ok'); setTimeout(() => location.reload(), 400); }
+  } catch (e) { msg('업데이트 확인 실패: ' + (e.message || e)); }
+  finally { b.disabled = false; b.textContent = '업데이트'; }
+};
+
+// ── 암호찾기 ──
+$('btnFind').onclick = async () => {
+  const id = $('uid').value.trim();
+  if (id.includes('@') && !/@songmath\.kr$/i.test(id)) {
+    if (!confirm(id + ' 로 비밀번호 재설정 메일을 보낼까요?')) return;
+    try { await sendPasswordResetEmail(auth, id); msg('재설정 메일을 보냈어요. 메일함을 확인해 주세요.', 'ok'); }
+    catch (e) { msg('메일을 보내지 못했어요. 아이디를 확인해 주세요.'); }
+    return;
+  }
+  alert('선생님·조교 계정 암호는 관리부(원장)가 다시 정해 드립니다.\n\n평촌관 031-386-8899\n산본관 031-346-8899\n\n※ 관리부 계정(이메일 아이디)은 아이디 칸에 이메일을 넣고 「암호찾기」를 누르면 재설정 메일이 갑니다.');
+};
+
+// ── 비밀번호 변경 (아이디 + 현재암호로 확인 후 변경) ──
+$('btnPw').onclick = async () => {
+  const id = $('uid').value.trim(), cur = $('pwCur').value, n1 = $('pwNew').value, n2 = $('pwNew2').value;
+  if (!id) { msg('위 아이디 칸에 아이디를 먼저 넣어 주세요.'); $('uid').focus(); return; }
+  if (!cur || !n1 || !n2) { msg('현재암호 · 새암호 · 암호확인을 모두 넣어 주세요.'); return; }
+  if (n1.length < 6) { msg('새 암호는 6자 이상이어야 해요.'); return; }
+  if (n1 !== n2) { msg('새 암호와 암호확인이 달라요.'); return; }
+  const b = $('btnPw'); b.disabled = true;
+  try {
+    const cred = await signInWithEmailAndPassword(auth, idToEmail(id), cur);
+    const p = await staffProfile(cred.user);
+    if (!p) { await signOut(auth); msg('직원 계정만 여기서 바꿀 수 있어요.'); return; }
+    await updatePassword(cred.user, n1);
+    await signOut(auth);
+    ['pwCur', 'pwNew', 'pwNew2'].forEach((x) => ($(x).value = ''));
+    $('upw').value = ''; $('upw').focus();
+    msg('암호를 바꿨어요. 새 암호로 로그인해 주세요.', 'ok');
+  } catch (e) {
+    msg(e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password' ? '아이디 또는 현재암호가 올바르지 않습니다.' : '변경 실패: ' + (e.message || e));
+  } finally { b.disabled = false; }
+};
+</script>
+</body>
+</html>
