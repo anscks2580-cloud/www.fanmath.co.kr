@@ -393,7 +393,7 @@ let mdTab = '전체', mdMode = 'dm';
 function renderPeople() {
   const r = mdMode === 'invite' ? rooms.get(cur) : null;
   const already = new Set(r ? r.members || [] : []);
-  const list = [...people.entries()].filter(([u, x]) => u !== ME.uid && x.name && !already.has(u))
+  const list = [...people.entries()].filter(([u, x]) => u !== ME.uid && x.name && !x.retired && !already.has(u))   // 퇴사자는 목록에서 숨김
     .filter(([, x]) => mdTab === '전체' || !x.branch || normBr(x.branch) === mdTab || x.branch === '공통')
     .sort((a, b) => (a[1].roleLabel || '').localeCompare(b[1].roleLabel || '', 'ko') || a[1].name.localeCompare(b[1].name, 'ko'));
   $('ppl').innerHTML = list.length ? list.map(([u, x]) => `<label class="p"><input type="checkbox" value="${esc(u)}"><span class="av ${brCls(x.branch)}">${esc(x.name.slice(0, 2))}${online(x) ? '<i class="on"></i>' : ''}</span>
