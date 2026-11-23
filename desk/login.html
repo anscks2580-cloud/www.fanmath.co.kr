@@ -53,7 +53,7 @@ body.web .lg{box-shadow:0 10px 30px rgba(0,0,0,.18)}
 
 <script type="module">
 import { auth, APP, IN_PROGRAM, idToEmail, staffProfile, onAuthStateChanged, signInWithEmailAndPassword, signOut,
-  setPersistence, browserLocalPersistence } from './desk-fb.js?v=2';
+  setPersistence, browserLocalPersistence } from './desk-fb.js?v=4';
 
 const $ = (id) => document.getElementById(id);
 const NEXT = new URLSearchParams(location.search).get('next') === 'chat' ? 'chat' : 'main';
@@ -96,7 +96,7 @@ async function doLogin() {
     try { localStorage.setItem(ID_KEY, id); } catch (e) {}
     const info = { uid: p.uid, name: p.name, kind: p.kind, roleLabel: p.roleLabel, director: p.director, next: NEXT };
     if (IN_PROGRAM && APP.loginDone) { APP.markLogin && APP.markLogin(); APP.loginDone(info); }
-    else location.replace(NEXT === 'chat' ? 'chat.html' : 'main.html');
+    else location.replace(NEXT === 'chat' ? 'chat.html' : 'main.html?start=1');
   } catch (e) {
     msg(e && e.code === 'auth/user-disabled' ? '사용이 중지된 계정입니다. 원장님께 문의해 주세요.'
       : e && e.code === 'auth/too-many-requests' ? '여러 번 틀려 잠시 막혔어요. 잠시 뒤 다시 해 주세요.'

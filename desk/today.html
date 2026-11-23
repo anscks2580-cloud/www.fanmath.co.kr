@@ -70,19 +70,21 @@ th.pc,td.pc{color:var(--pc)} th.sb,td.sb{color:var(--sb)}
 <div class="foot">숫자는 홈페이지 관리자·선생님 화면에 입력된 기록으로 자동 계산됩니다 · 각 표 오른쪽 위 버튼을 누르면 해당 화면이 열립니다 · 평촌관 <b class="br-pc">보라</b> · 산본관 <b class="br-sb">노랑</b></div>
 
 <script type="module">
-import { db, APP, IN_PROGRAM, requireStaff, collection, doc, getDocs, query, where, orderBy, limit,
-  esc, ymd, parseYmd, DOW, BRANCHES, normBr, GRADES, gradeOf, daysOf, isWeeklyTarget, weekKey, safe, openWork } from './desk-fb.js?v=2';
+import { db, APP, INNER, IN_PROGRAM, requireStaff, collection, doc, getDocs, query, where, orderBy, limit,
+  esc, ymd, parseYmd, DOW, BRANCHES, normBr, GRADES, gradeOf, daysOf, isWeeklyTarget, weekKey, safe, openWork } from './desk-fb.js?v=4';
 
 const $ = (id) => document.getElementById(id);
 const AUTO_KEY = 'swc_desk_today_auto';
 const params = new URLSearchParams(location.search);
 // 로그인 직후 자동으로 열렸는데 「로그인할 때 띄우기」를 꺼 두었으면 바로 닫음
-if (params.get('auto') === '1' && localStorage.getItem(AUTO_KEY) === '0') { APP && APP.winClose ? APP.winClose() : window.close(); }
+const closeMe = () => (INNER ? INNER.hide('today') : APP && APP.winClose ? APP.winClose() : window.close());
+if (params.get('auto') === '1' && localStorage.getItem(AUTO_KEY) === '0') closeMe();
 $('auto').checked = localStorage.getItem(AUTO_KEY) !== '0';
 $('auto').onchange = () => localStorage.setItem(AUTO_KEY, $('auto').checked ? '1' : '0');
 $('day').value = ymd(new Date());
 $('br').value = localStorage.getItem('swc_desk_branch') || '전체';
-$('btnClose').onclick = () => (APP && APP.winClose ? APP.winClose() : window.close());
+$('btnClose').onclick = closeMe;
+if (INNER) $('btnClose').style.display = 'none';   // 안쪽 창은 제목 줄의 ✕ 로 닫음
 $('btnToday').onclick = () => { $('day').value = ymd(new Date()); run(); };
 $('btnGo').onclick = run;
 $('day').onchange = run;
@@ -90,6 +92,7 @@ $('br').onchange = () => { localStorage.setItem('swc_desk_branch', $('br').value
 
 // 메뉴판에서 관을 바꾸면 따라감
 if (APP && APP.onBroadcast) APP.onBroadcast((ch, v) => { if (ch === 'branch' && ['전체', '평촌관', '산본관'].includes(v)) { $('br').value = v; paint(); } });
+window.addEventListener('message', (e) => { if (e.origin === location.origin && e.data && ['전체', '평촌관', '산본관'].includes(e.data.branch)) { $('br').value = e.data.branch; paint(); } });
 let P = null, D = null, PAGE = 'admin.html';
 requireStaff((p) => { P = p; PAGE = p.kind === 'admin' ? 'admin.html' : p.kind === 'ta' ? 'ta.html' : 'teacher.html'; run(); });
 

@@ -28,7 +28,9 @@ export { onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence
   onSnapshot, serverTimestamp, Timestamp, sref, uploadBytesResumable, getDownloadURL };
 
 // 설치형 프로그램 안에서 열렸는지 (preload.js 가 window.songmathApp 을 열어 둠)
-export const APP = window.songmathApp || null;
+// 업무시스템 메뉴판 창 안(안쪽 창·탭)에서 열렸으면 메뉴판 창의 기능을 같이 씀
+export const INNER = (() => { try { return window.parent !== window && window.parent.deskInner ? window.parent.deskInner : null; } catch (e) { return null; } })();
+export const APP = window.songmathApp || (() => { try { return window.parent !== window ? window.parent.songmathApp || null : null; } catch (e) { return null; } })();
 export const IN_PROGRAM = !!(APP && APP.isApp);
 
 // 원장 계정 (원장 페이지에 들어가는 관리자 계정 2개 — firestore.rules isDirector 와 같은 값)
@@ -122,10 +124,15 @@ export const safe = (p) => Promise.resolve(p).catch(() => null);
 // 업무 화면(홈페이지 관리자·선생님 화면의 특정 메뉴) 열기 — 프로그램이면 업무 창, 인터넷 창이면 새 탭
 export function openWork(page, menuId) {
   const url = new URL('/' + page + (menuId ? '#' + menuId : ''), location.origin).href;
-  if (APP && APP.openWork) APP.openWork(url);
-  else window.open(url, 'swcWork');
+  if (window.deskOpen) return window.deskOpen(url);                      // 메뉴판 창 안
+  try { if (window.parent !== window && window.parent.deskOpen) return window.parent.deskOpen(url); } catch (e) {}   // 안쪽 창(일일종합현황)
+  if (APP && APP.openWork) return APP.openWork(url);                     // 프로그램: 메뉴판 창의 탭으로 보냄
+  try { if (window.opener && window.opener.deskOpen) { window.opener.deskOpen(url); window.opener.focus(); return; } } catch (e) {}
+  window.open(url, 'swcWork');
 }
 export function openDeskWindow(name) {   // 'today' | 'chat' | 'main'
+  const inner = window.deskInner || INNER;
+  if (name === 'today' && inner) return inner.show('today');            // 일일종합현황은 업무시스템 화면 안에서
   if (APP && APP.openWindow) APP.openWindow(name);
   else window.open(new URL(name + '.html', location.href).href, 'swc_' + name, name === 'today' ? 'width=1320,height=860' : name === 'chat' ? 'width=980,height=720' : '');
 }

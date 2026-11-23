@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex,nofollow">
-<title>송우찬수학학원 · 업무 시스템</title>
+<title>송우찬수학학원 업무시스템</title>
 <link rel="icon" href="/assets/icons/icon-192.png">
 <link rel="stylesheet" href="desk.css?v=2">
 <script src="/session-limit.js?v=3"></script>
@@ -40,6 +40,36 @@ body{display:flex;height:100vh;overflow:hidden;background:#fff}
 .brsel button.on{background:var(--p2);color:#fff}
 .brsel button.on[data-b="산본관"]{background:var(--g);color:#1F1F27}
 .body{flex:1;display:flex;min-height:0}
+.body[hidden]{display:none}
+/* ── 탭 (메뉴판 · 연 메뉴들) ── */
+.tabs{height:30px;flex:0 0 30px;display:flex;align-items:flex-end;gap:2px;padding:0 10px;background:#E9E8EF;border-bottom:1px solid #B9B6C6;overflow-x:auto;overflow-y:hidden}
+.tabs::-webkit-scrollbar{height:0}
+.tab{display:flex;align-items:center;gap:6px;height:26px;padding:0 6px 0 11px;border:1px solid #C3C0CF;border-bottom:0;background:#F4F4F7;color:#4A4858;font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer;flex:0 0 auto;max-width:200px}
+.tab .tl{overflow:hidden;text-overflow:ellipsis}
+.tab:hover{background:#fff}
+.tab.on{background:#fff;color:var(--p2);border-color:#B9B6C6;border-top:2px solid var(--p2);height:28px;margin-bottom:-1px}
+.tab.home{padding-right:11px}
+.tab .x{width:16px;height:16px;border:0;background:none;color:#9A97A8;font-size:11px;line-height:16px;padding:0}
+.tab .x:hover{background:#C8352E;color:#fff}
+.work{flex:1;min-height:0;position:relative;background:#fff}
+.work[hidden]{display:none}
+.work iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
+.work iframe[hidden]{display:none}
+/* ── 안쪽 창 (일일종합현황) — 업무시스템 화면 밖으로 못 나감 ── */
+.mn{position:relative}
+.mdi{position:absolute;inset:0;pointer-events:none;z-index:30;overflow:hidden}
+.iw{position:absolute;display:flex;flex-direction:column;background:#fff;border:1px solid #2E2160;box-shadow:0 6px 24px rgba(20,16,40,.28);pointer-events:auto;min-width:360px;min-height:260px;resize:both;overflow:hidden}
+.iw[hidden]{display:none}
+.iw-h{height:28px;flex:0 0 28px;display:flex;align-items:center;gap:6px;padding-left:9px;background:#2E2160;color:#fff;cursor:move;user-select:none}
+.iw.back .iw-h{background:#5C557A}
+.iw-h .t{flex:1;font-weight:700;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.iw-h button{width:34px;height:28px;border:0;background:transparent;color:#fff;font-size:12px}
+.iw-h button:hover{background:rgba(255,255,255,.15)}
+.iw-h button.x:hover{background:#C8352E}
+.iw-b{flex:1;position:relative;min-height:0}
+.iw-b iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.iw.max{left:0!important;top:0!important;width:100%!important;height:100%!important;resize:none}
+.mdi.dragging iframe{pointer-events:none}
 .board{flex:1;min-width:0;overflow:auto;padding:14px 16px 24px}
 .board h2{margin:0 0 10px;font-size:12px;color:var(--mut);font-weight:700}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px 14px}
@@ -109,7 +139,10 @@ body{display:flex;height:100vh;overflow:hidden;background:#fff}
     </div>
     <div class="clock" id="clock"></div>
   </div>
-  <div class="body">
+  <div class="mdi" id="mdi"></div>
+  <div class="tabs" id="tabs"></div>
+  <div class="work" id="work" hidden></div>
+  <div class="body" id="boardView">
     <section class="board" id="board"></section>
     <aside class="rt">
       <div class="box" style="display:contents">
@@ -126,8 +159,8 @@ body{display:flex;height:100vh;overflow:hidden;background:#fff}
 
 <script type="module">
 import { auth, db, APP, IN_PROGRAM, requireStaff, signOut, collection, doc, getDocs, query, where, onSnapshot,
-  esc, ymd, pad, normBr, openWork, openDeskWindow, toast } from './desk-fb.js?v=2';
-import { ADMIN_GROUPS, ROLE_PRESETS, TEACHER_GROUPS, TA_GROUPS } from './menu.js?v=2';
+  esc, ymd, pad, normBr, openWork, openDeskWindow, toast } from './desk-fb.js?v=4';
+import { ADMIN_GROUPS, ROLE_PRESETS, TEACHER_GROUPS, TA_GROUPS } from './menu.js?v=4';
 
 const $ = (id) => document.getElementById(id);
 let P = null, GROUPS = [], PAGE = 'admin.html', view = 'all';
@@ -142,7 +175,7 @@ function tick() { const d = new Date(), h = d.getHours(); $('clock').textContent
 // 관 선택 (일일종합현황 · 메신저에서 먼저 볼 관)
 let br = localStorage.getItem('swc_desk_branch') || '전체';
 function paintBr() { $('brsel').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.b === br)); }
-$('brsel').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; br = b.dataset.b; localStorage.setItem('swc_desk_branch', br); paintBr(); APP && APP.broadcast && APP.broadcast('branch', br); });
+$('brsel').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; br = b.dataset.b; localStorage.setItem('swc_desk_branch', br); paintBr(); APP && APP.broadcast && APP.broadcast('branch', br); try { const f = window.deskInner && window.deskInner.frame('today'); f && f.contentWindow.postMessage({ branch: br }, location.origin); } catch (e) {} });
 paintBr();
 
 requireStaff((p, user) => {
@@ -156,13 +189,73 @@ requireStaff((p, user) => {
       .map((g) => ({ ...g, items: g.items.filter((m) => !m.emails || m.emails.includes(p.email)) }));
   } else GROUPS = p.kind === 'ta' ? TA_GROUPS : TEACHER_GROUPS;
   $('who').innerHTML = `${esc(p.name)} ${p.kind === 'admin' ? '' : '선생님'}<small>${esc(p.roleLabel)}</small>`;
-  $('webSub').textContent = p.kind === 'admin' ? '관리자 페이지를 통째로 열기' : p.kind === 'ta' ? '조교 페이지를 통째로 열기' : '선생님 페이지를 통째로 열기';
+  $('webSub').textContent = p.kind === 'admin' ? '관리자 페이지를 메뉴째 열기' : p.kind === 'ta' ? '조교 페이지를 메뉴째 열기' : '선생님 페이지를 메뉴째 열기';
   $('cardDirector').hidden = !p.director;
-  document.title = `송우찬수학학원 · 업무 시스템 — ${p.name}`;
+  document.title = `송우찬수학학원 업무시스템 — ${p.name}`;
   render();
   loadSchedule();
   watchUnread();
+  if (new URLSearchParams(location.search).get('start') === '1') { inner.mount('today', true, '?auto=1'); history.replaceState(null, '', 'main.html'); }
 });
+
+/* ── 안쪽 창 관리: 업무시스템 화면 안에서만 움직이고, 밖으로 빠져나가지 않음 ── */
+const inner = (() => {
+  const W = {};   // name → { el, frame }
+  const DEF = {
+    today: { title: '일일종합현황', src: 'today.html', w: 1180, h: 760, pos: 'center' },
+  };
+  let z = 40;
+  const box = () => $('mdi').getBoundingClientRect();
+  function clamp(el) {
+    if (el.classList.contains('max')) return;
+    const b = box(); const w = Math.min(el.offsetWidth, b.width), h = Math.min(el.offsetHeight, b.height);
+    if (el.offsetWidth > b.width) el.style.width = b.width + 'px';
+    if (el.offsetHeight > b.height) el.style.height = b.height + 'px';
+    el.style.left = Math.max(0, Math.min(parseFloat(el.style.left) || 0, b.width - w)) + 'px';
+    el.style.top = Math.max(0, Math.min(parseFloat(el.style.top) || 0, b.height - h)) + 'px';
+  }
+  function front(el) { el.style.zIndex = ++z; Object.values(W).forEach((x) => x.el.classList.toggle('back', x.el !== el)); }
+  function mount(name, show, q) {
+    if (W[name]) { if (show) open(name); return W[name]; }
+    const d = DEF[name], b = box();
+    const el = document.createElement('div'); el.className = 'iw'; el.hidden = !show;
+    const w = Math.min(d.w, b.width - 20), h = Math.min(d.h, b.height - 20);
+    el.style.width = w + 'px'; el.style.height = h + 'px';
+    el.style.left = (d.pos === 'br' ? b.width - w - 10 : (b.width - w) / 2) + 'px';
+    el.style.top = (d.pos === 'br' ? b.height - h - 10 : Math.max(10, (b.height - h) / 2)) + 'px';
+    el.innerHTML = `<div class="iw-h"><span class="t">${esc(d.title)}</span><button data-a="max" title="크게/원래대로">□</button><button class="x" data-a="close" title="닫기">✕</button></div><div class="iw-b"><iframe src="${d.src}${q || ''}"></iframe></div>`;
+    $('mdi').appendChild(el);
+    const frame = el.querySelector('iframe');
+    frame.addEventListener('load', () => { try { hookOpen(frame.contentWindow); } catch (e) {} });
+    W[name] = { el, frame };
+    el.addEventListener('mousedown', () => front(el), true);
+    el.querySelector('[data-a=close]').onclick = () => hide(name);
+    el.querySelector('[data-a=max]').onclick = () => { el.classList.toggle('max'); clamp(el); };
+    // 제목 줄을 끌어서 이동 (업무시스템 화면 안에서만)
+    const hd = el.querySelector('.iw-h');
+    hd.addEventListener('dblclick', (e) => { if (!e.target.closest('button')) { el.classList.toggle('max'); clamp(el); } });
+    hd.addEventListener('mousedown', (e) => {
+      if (e.target.closest('button') || el.classList.contains('max')) return;
+      e.preventDefault();
+      const sx = e.clientX, sy = e.clientY, ox = parseFloat(el.style.left) || 0, oy = parseFloat(el.style.top) || 0;
+      $('mdi').classList.add('dragging');
+      const mv = (ev) => { el.style.left = ox + ev.clientX - sx + 'px'; el.style.top = oy + ev.clientY - sy + 'px'; clamp(el); };
+      const up = () => { $('mdi').classList.remove('dragging'); window.removeEventListener('mousemove', mv); window.removeEventListener('mouseup', up); };
+      window.addEventListener('mousemove', mv); window.addEventListener('mouseup', up);
+    });
+    // 크기 조절 뒤에도 화면 밖으로 나가지 않게
+    new ResizeObserver(() => clamp(el)).observe(el);
+    if (show) front(el);
+    return W[name];
+  }
+  function open(name) { const x = W[name] || mount(name, true); x.el.hidden = false; clamp(x.el); front(x.el); if (name === 'today' && x.opened) try { x.frame.contentWindow.location.reload(); } catch (e) {} x.opened = true; }
+  function hide(name) { const x = W[name]; if (!x) return; x.el.hidden = true; x.opened = true; }
+  window.addEventListener('resize', () => Object.values(W).forEach((x) => clamp(x.el)));
+  return { mount, show: open, hide, frame: (n) => W[n] && W[n].frame };
+})();
+window.deskInner = inner;
+// 프로그램 메뉴(F2)로 부를 때
+if (APP && APP.onInner) APP.onInner((name) => { if (name === 'today') inner.show('today'); });
 
 // ── 메뉴판 그리기 ──
 function allItems() { const a = []; GROUPS.forEach((g, gi) => g.items.forEach((m) => a.push({ ...m, g, gi }))); return a; }
@@ -189,21 +282,151 @@ function render() {
     </div>`).join('') + '</div>';
 }
 function openItem(id) {
-  if (id === '@today') return openDeskWindow('today');
+  if (id === '@today') return inner.show('today');
   if (id === '@chat') return openDeskWindow('chat');
   writeArr(REC_KEY(), [id].concat(readArr(REC_KEY()).filter((x) => x !== id)).slice(0, 12));
-  openWork(PAGE, id);
+  openTab(PAGE, id);
 }
+
+/* ── 탭: 메뉴를 누르면 새 창이 아니라 이 창 안에서 열림 ──
+   홈페이지 관리자·선생님 화면을 한 번만 불러 두고(페이지마다 화면 1개) 메뉴만 바꿔 끼움 → 빠름
+   그 화면의 왼쪽 메뉴·윗줄은 숨기고 내용만 보여줌 (메뉴 이동은 위쪽 탭과 메뉴판으로) */
+const tabs = [];            // { key, page, id, label }
+const frames = {};          // page → iframe
+let activeTab = 'board';
+function labelOf(page, id) {
+  if (id === '@full') return '홈페이지 원래 화면';
+  if (page === 'r-038e0aee5f139320.html') return '원장 보고';
+  const m = allItems().find((x) => x.id === id);
+  if (m) return m.label;
+  return id ? id : page === 'admin.html' ? '관리자 화면' : page === 'ta.html' ? '조교 화면' : '선생님 화면';
+}
+function openTab(page, id) {
+  id = id || '';
+  const key = page + '#' + id;
+  if (!tabs.find((t) => t.key === key)) tabs.push({ key, page, id, label: labelOf(page, id) });
+  activate(key);
+}
+// 자료 보기 탭 (PDF·이미지·상담자료 미리보기 등 — 홈페이지 화면에서 「새 창」으로 열던 것)
+let viewN = 0;
+function openViewTab(url, label) {
+  const ex = tabs.find((t) => t.view && t.url === url);
+  if (ex) { activate(ex.key); return; }
+  const key = 'view:' + (++viewN);
+  let nm = label;
+  if (!nm) { try { const u = new URL(url); nm = decodeURIComponent((u.pathname.split('/').pop() || '').replace(/^.*%2F/i, '')).split('/').pop() || '자료 보기'; } catch (e) { nm = '자료 보기'; } }
+  tabs.push({ key, page: key, id: '', view: true, url, label: '📄 ' + nm.slice(0, 40) });
+  activate(key);
+}
+// 홈페이지 화면 안의 window.open(새 창)을 → 이 창 안의 자료 보기 탭으로
+function inAppUrl(u) { try { const x = new URL(u, location.href); return x.protocol === 'blob:' || x.protocol === 'data:' || /(^|\.)fanmath\.co\.kr$|firebasestorage\.googleapis\.com$|\.firebasestorage\.app$|\.firebaseapp\.com$/.test(x.hostname) || x.origin === location.origin; } catch (e) { return false; } }
+function hookOpen(win) {
+  if (!win || win.__deskHooked) return;
+  win.__deskHooked = true;
+  const go = (u) => {
+    if (!u) return;
+    const abs = new URL(u, win.location.href).href;
+    if (!inAppUrl(abs)) { APP && APP.openExternal ? APP.openExternal(abs) : window.open(abs, '_blank'); return; }
+    const page = new URL(abs).pathname.replace(/^\//, '');
+    if (new URL(abs).origin === location.origin && /^(admin|teacher|ta)\.html$/.test(page)) { openTab(page, new URL(abs).hash.replace('#', '')); return; }
+    openViewTab(abs);
+  };
+  win.open = function (url) {
+    // 「빈 창 먼저 열고 나중에 주소 넣기」 방식과 document.write 방식도 받아 줌
+    let html = '', opened = false;
+    const doc = { write: (x) => { html += x; }, writeln: (x) => { html += x + '\n'; }, open: () => {}, close: () => { if (html && !opened) { opened = true; go(URL.createObjectURL(new Blob([html], { type: 'text/html' }))); } }, title: '', body: null };
+    const fake = {
+      closed: false, opener: win, document: doc,
+      close() { this.closed = true; }, focus() {}, blur() {}, print() {}, postMessage() {},
+      location: { set href(u) { opened = true; go(u); }, get href() { return url || 'about:blank'; }, assign(u) { opened = true; go(u); }, replace(u) { opened = true; go(u); } },
+    };
+    if (url && url !== 'about:blank') { opened = true; go(url); }
+    setTimeout(() => { if (html && !opened) doc.close(); }, 1200);
+    return fake;
+  };
+  // target="_blank" 링크도 같은 방식으로
+  win.document.addEventListener('click', (e) => {
+    const a = e.target.closest && e.target.closest('a[target="_blank"], a[target="_new"]');
+    if (!a || a.hasAttribute('download') || !a.href || a.href.startsWith('javascript:')) return;
+    e.preventDefault(); go(a.href);
+  }, true);
+}
+const HIDE_CSS = `nav.ad-top,.ad-side,.ad-backdrop,#adMenuBtn,#tnavMenuBtn{display:none!important}
+  .ad-main,html[class*="pv2-"] .ad-main{margin-left:0!important;padding-top:14px!important}
+  body{padding-top:0!important}`;
+function frameFor(t) {
+  const fk = t.view ? t.key : t.id === '@full' ? 'full:' + t.page : t.page;
+  let f = frames[fk];
+  if (f && f.isConnected) return f;
+  f = document.createElement('iframe');
+  f.src = t.view ? t.url : '/' + t.page + (t.id && t.id !== '@full' ? '#' + t.id : '');
+  f.addEventListener('load', () => {
+    try {
+      const d = f.contentDocument; if (!d) return;
+      hookOpen(f.contentWindow);
+      if (t.id !== '@full' && !t.view && !d.getElementById('deskHide')) { const st = d.createElement('style'); st.id = 'deskHide'; st.textContent = HIDE_CSS; (d.head || d.documentElement).appendChild(st); }
+      // 홈페이지 화면 안에서 로그인 화면으로 넘어가면(로그아웃 등) 프로그램도 로그인 창으로
+      if (/\/login\.html$/.test(f.contentWindow.location.pathname)) location.replace('login.html');
+    } catch (e) {}
+  });
+  frames[fk] = f; $('work').appendChild(f);
+  return f;
+}
+const frameKey = (t) => (t.view ? t.key : t.id === '@full' ? 'full:' + t.page : t.page);
+function activate(key) {
+  activeTab = key;
+  const t = tabs.find((x) => x.key === key);
+  $('boardView').hidden = !!t; $('work').hidden = !t;
+  if (t) {
+    const f = frameFor(t);
+    Object.values(frames).forEach((x) => (x.hidden = x !== f));
+    if (!t.view && t.id !== '@full') try { if (f.contentWindow && f.contentWindow.location.pathname.endsWith(t.page) && (f.contentWindow.location.hash || '').replace('#', '') !== t.id) f.contentWindow.location.hash = t.id; } catch (e) {}
+  }
+  paintTabs();
+}
+function closeTab(key) {
+  const i = tabs.findIndex((t) => t.key === key); if (i < 0) return;
+  const [t] = tabs.splice(i, 1);
+  // 같은 화면을 쓰는 탭이 하나도 안 남으면 그 화면도 닫음
+  const fk = frameKey(t);
+  if (!tabs.some((x) => frameKey(x) === fk) && frames[fk]) { frames[fk].remove(); delete frames[fk]; }
+  if (activeTab === key) activate(tabs.length ? tabs[Math.max(0, i - 1)].key : 'board');
+  else paintTabs();
+}
+function paintTabs() {
+  $('tabs').innerHTML = `<div class="tab home${activeTab === 'board' ? ' on' : ''}" data-tab="board"><span class="tl">■ 메뉴판</span></div>` +
+    tabs.map((t) => `<div class="tab${activeTab === t.key ? ' on' : ''}" data-tab="${esc(t.key)}" title="${esc(t.label)}"><span class="tl">${esc(t.label)}</span><button class="x" data-close="${esc(t.key)}" title="닫기">✕</button></div>`).join('');
+}
+$('tabs').addEventListener('click', (e) => {
+  const c = e.target.closest('[data-close]'); if (c) { e.stopPropagation(); closeTab(c.dataset.close); return; }
+  const t = e.target.closest('[data-tab]'); if (t) activate(t.dataset.tab);
+});
+$('tabs').addEventListener('auxclick', (e) => { const t = e.target.closest('[data-tab]'); if (e.button === 1 && t && t.dataset.tab !== 'board') closeTab(t.dataset.tab); });
+document.addEventListener('keydown', (e) => {
+  if (e.ctrlKey && e.key.toLowerCase() === 'w' && activeTab !== 'board') { e.preventDefault(); closeTab(activeTab); }
+});
+// 일일종합현황 등 다른 창에서 「바로가기」를 누르면 여기 탭으로 열림
+function openUrl(url) {
+  try {
+    const u = new URL(url, location.origin);
+    const page = u.pathname.replace(/^\//, '');
+    if (/^(admin|teacher|ta)\.html$|^r-[0-9a-f]+\.html$/.test(page)) { openTab(page, u.hash.replace('#', '')); return true; }
+  } catch (e) {}
+  return false;
+}
+window.deskOpen = (url) => { if (!openUrl(url)) { if (inAppUrl(url)) openViewTab(url); else if (APP && APP.openExternal) APP.openExternal(url); } inner.hide('today'); window.focus(); };
+if (APP && APP.onOpenWork) APP.onOpenWork((url) => window.deskOpen(url));
+paintTabs();
 $('board').addEventListener('click', (e) => {
   const f = e.target.closest('[data-fav]');
   if (f) { e.stopPropagation(); const id = f.dataset.fav, a = readArr(FAV_KEY()); writeArr(FAV_KEY(), a.includes(id) ? a.filter((x) => x !== id) : a.concat(id)); toast(a.includes(id) ? '나의 메뉴에서 뺐어요' : '나의 메뉴에 넣었어요'); render(); return; }
   const b = e.target.closest('[data-open]'); if (b) openItem(b.dataset.open);
 });
 document.querySelectorAll('.sd-nav [data-view]').forEach((b) => b.addEventListener('click', () => {
-  view = b.dataset.view; document.querySelectorAll('.sd-nav [data-view]').forEach((x) => x.classList.toggle('on', x === b)); render();
+  view = b.dataset.view; document.querySelectorAll('.sd-nav [data-view]').forEach((x) => x.classList.toggle('on', x === b)); render(); activate('board');
 }));
 // 검색: 입력하면 맞는 메뉴를 노랗게, 엔터 = 첫 번째 메뉴 열기
-$('q').addEventListener('input', () => { if (view !== 'all') document.querySelector('[data-view=all]').click(); else render(); });
+$('q').addEventListener('input', () => { if (view !== 'all') document.querySelector('[data-view=all]').click(); else { render(); activate('board'); } });
 $('q').addEventListener('keydown', (e) => {
   if (e.key === 'Escape') { $('q').value = ''; render(); }
   if (e.key === 'Enter') { const h = document.querySelector('.grp .it.hit'); if (h) { openItem(h.dataset.open); $('q').value = ''; render(); } }
@@ -215,10 +438,10 @@ document.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.
 document.addEventListener('click', (e) => {
   const b = e.target.closest('[data-act]'); if (!b || !P) return;
   const a = b.dataset.act;
-  if (a === 'today') openDeskWindow('today');
-  else if (a === 'chat') openDeskWindow('chat');
-  else if (a === 'web') openWork(PAGE, '');
-  else if (a === 'director') openWork('r-038e0aee5f139320.html', '');
+  if (a === 'today') inner.show('today');
+  else if (a === 'chat') openDeskWindow('chat');   // 메신저는 따로 창
+  else if (a === 'web') openTab(PAGE, '@full');
+  else if (a === 'director') openTab('r-038e0aee5f139320.html', '');
   else if (a === 'site') { const u = location.origin + '/'; APP && APP.openExternal ? APP.openExternal(u) : window.open(u, '_blank'); }
   else if (a === 'logout') { if (confirm('로그아웃할까요?')) logout(false); }
 });
