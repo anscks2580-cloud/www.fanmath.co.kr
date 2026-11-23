@@ -186,15 +186,12 @@ function watchRooms() {
     renderRooms();
     if (cur && rooms.has(cur)) paintHeader();
   };
-  const done = () => { if (++n >= 2) { setTimeout(() => (firstLoad = false), 800); ensureChannels(); } };
+  const done = () => { if (++n >= 2) setTimeout(() => (firstLoad = false), 800); };
   onSnapshot(query(collection(db, 'chatRooms'), where('type', '==', 'channel')), (s) => { handle(s); done(); }, (e) => { done(); showErr(e); });
   onSnapshot(query(collection(db, 'chatRooms'), where('members', 'array-contains', ME.uid)), (s) => { handle(s); done(); }, (e) => { done(); showErr(e); });
 }
 let errShown = false;
 function showErr(e) { if (errShown) return; errShown = true; $('rooms').innerHTML = `<div class="sec" style="color:var(--red)">메신저를 불러오지 못했어요 — 파이어베이스 규칙(firestore.rules)에 메신저 항목이 올라갔는지 확인해 주세요. (${esc(e.code || e.message)})</div>`; }
-function ensureChannels() {
-  CHANNELS.forEach((c) => { if (!rooms.has(c.id)) setDoc(doc(db, 'chatRooms', c.id), { type: 'channel', name: c.name, branch: c.branch, createdAt: serverTimestamp() }).catch(() => {}); });
-}
 function roomTitle(id, r) {
   if (!r) return '';
   if (r.type === 'channel') return r.name || '대화방';
@@ -203,7 +200,7 @@ function roomTitle(id, r) {
   return r.name || others.map((u) => (people.get(u) || {}).name || (r.memberNames || {})[u] || '').filter(Boolean).join(', ') || '단체방';
 }
 function roomBranch(r) {
-  if (r.type === 'channel') return r.branch || '';
+  if (r.type === 'channel' || r.fixed) return r.branch || '';
   if (r.type === 'dm') { const o = (r.members || []).find((u) => u !== ME.uid); return (people.get(o) || {}).branch || ''; }
   return '';
 }
@@ -219,18 +216,19 @@ function renderRooms() {
   const q = $('q').value.trim().toLowerCase();
   const list = [...rooms.entries()].map(([id, r]) => ({ id, r, title: roomTitle(id, r), br: roomBranch(r) }))
     .filter((x) => !q || x.title.toLowerCase().includes(q))
-    .filter((x) => brTab === '전체' || !x.br || normBr(x.br) === brTab || x.r.type === 'group');
-  const ch = list.filter((x) => x.r.type === 'channel').sort((a, b) => CHANNELS.findIndex((c) => c.id === a.id) - CHANNELS.findIndex((c) => c.id === b.id));
-  const ot = list.filter((x) => x.r.type !== 'channel').sort((a, b) => ms(b.r.lastAt) - ms(a.r.lastAt));
+    .filter((x) => brTab === '전체' || !x.br || x.br === '공통' || normBr(x.br) === brTab);
+  // 고정 방(학원에서 정한 방) → 정해진 순서, 나머지(1:1·단체) → 최근 대화 순
+  const ch = list.filter((x) => x.r.type === 'channel' || x.r.fixed).sort((a, b) => (a.r.order || 99) - (b.r.order || 99));
+  const ot = list.filter((x) => x.r.type !== 'channel' && !x.r.fixed).sort((a, b) => ms(b.r.lastAt) - ms(a.r.lastAt));
   const item = (x) => {
     const u = unread(x.id, x.r), dmU = x.r.type === 'dm' ? people.get((x.r.members || []).find((m) => m !== ME.uid)) : null;
-    const av = x.r.type === 'group' ? 'grp' : brCls(x.br);
-    const ini = x.r.type === 'channel' ? (x.br ? x.br[0] : '全') : x.title.slice(0, 2);
+    const av = x.r.fixed ? brCls(x.br) : x.r.type === 'group' ? 'grp' : brCls(x.br);
+    const ini = x.r.type === 'channel' ? (x.br ? x.br[0] : '全') : x.r.fixed ? (x.br ? x.br[0] : '공') : x.title.slice(0, 2);
     return `<button class="rm${x.id === cur ? ' on' : ''}" data-room="${esc(x.id)}"><span class="av ${av}">${esc(ini)}${dmU && online(dmU) ? '<i class="on"></i>' : ''}</span>
       <span class="tx"><span class="t1"><b>${esc(x.title)}</b>${x.r.type === 'group' ? `<small style="margin-left:0">${(x.r.members || []).length}</small>` : ''}<small>${esc(when(x.r.lastAt))}</small></span>
       <span class="t2"><span>${esc(x.r.lastText ? (x.r.type !== 'dm' && x.r.lastName ? x.r.lastName + ': ' : '') + x.r.lastText : '대화를 시작해 보세요')}</span>${u ? '<i class="n">N</i>' : ''}</span></span></button>`;
   };
-  $('rooms').innerHTML = (ch.length ? '<div class="sec">공용 방</div>' + ch.map(item).join('') : '') + '<div class="sec">1:1 · 단체 대화</div>' +
+  $('rooms').innerHTML = (ch.length ? '<div class="sec">학원 방</div>' + ch.map(item).join('') : '') + '<div class="sec">1:1 · 단체 대화</div>' +
     (ot.length ? ot.map(item).join('') : '<div class="sec" style="font-weight:400">「＋ 새 대화」로 대화를 시작해 보세요</div>');
   const total = [...rooms.entries()].reduce((a, [id, r]) => a + unread(id, r), 0);
   document.title = (total ? `(${total}) ` : '') + '송우찬수학학원 메신저';
@@ -279,11 +277,13 @@ function openRoom(id) {
 function paintHeader() {
   const h = $('cvh'); if (!h) return; const r = rooms.get(cur); if (!r) return;
   const br = roomBranch(r);
-  const sub = r.type === 'channel' ? (br ? br + ' 선생님·관리부·조교 모두' : '평촌관 · 산본관 모두') : r.type === 'dm' ? ((people.get((r.members || []).find((u) => u !== ME.uid)) || {}).roleLabel || '') : `${(r.members || []).length}명`;
+  const sub = r.fixed ? `${br ? br + ' · ' : ''}${(r.members || []).length}명 · 학원 방` : r.type === 'channel' ? (br ? br + ' 선생님·관리부·조교 모두' : '평촌관 · 산본관 모두') : r.type === 'dm' ? ((people.get((r.members || []).find((u) => u !== ME.uid)) || {}).roleLabel || '') : `${(r.members || []).length}명`;
   h.innerHTML = `<button class="back" id="back">‹</button><b class="${br ? (normBr(br) === '산본관' ? 'br-sb' : 'br-pc') : ''}">${esc(roomTitle(cur, r))}</b><small>${esc(sub)}</small><span class="sp"></span>
-    ${r.type === 'group' ? `<button class="dk-btn" id="btnMembers">참여자 ${(r.members || []).length}</button><button class="dk-btn" id="btnInvite">＋ 초대</button>${r.createdBy === ME.uid || ME.kind === 'admin' ? '<button class="dk-btn" id="btnRename">이름 변경</button>' : ''}<button class="dk-btn" id="btnLeave">나가기</button>` : ''}`;
+    ${r.fixed ? `<button class="dk-btn" id="btnMembers">참여자 ${(r.memberNames ? new Set(Object.values(r.memberNames)).size : (r.members || []).length)}</button>` : r.type === 'group' ? `<button class="dk-btn" id="btnMembers">참여자 ${(r.members || []).length}</button><button class="dk-btn" id="btnInvite">＋ 초대</button>${r.createdBy === ME.uid || ME.kind === 'admin' ? '<button class="dk-btn" id="btnRename">이름 변경</button>' : ''}<button class="dk-btn" id="btnLeave">나가기</button>` : ''}`;
   $('back').onclick = () => { document.body.classList.remove('in-room'); cur = null; renderRooms(); };
-  if (r.type === 'group') {
+  if (r.fixed) {
+    $('btnMembers').onclick = () => alert(r.name + ' 참여자\n\n' + [...new Set((r.members || []).map((u) => (r.memberNames || {})[u] || (people.get(u) || {}).name || u))].map((n) => '· ' + n).join('\n'));
+  } else if (r.type === 'group') {
     $('btnMembers').onclick = () => alert('참여자\n\n' + (r.members || []).map((u) => '· ' + ((people.get(u) || {}).name || (r.memberNames || {})[u] || u)).join('\n'));
     $('btnInvite').onclick = () => openPicker('invite');
     const rn = $('btnRename');
