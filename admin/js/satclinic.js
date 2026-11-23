@@ -63,7 +63,7 @@ function scFillTeachers() {
   const sel = document.getElementById('clinicTeacherFilter');
   const keep = sel.value;
   const ts = teachingTeachers()
-    .filter((t) => studentsCache.some((s) => s.teacherUid === t.id && s.branch === scBranch) || t.branch === scBranch)
+    .filter((t) => studentsCache.some((s) => s.teacherUid === t.id && s.branch === scBranch) || t.branch === scBranch || t.branch === '공통')
     .sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
   sel.innerHTML = '<option value="">전체 선생님</option>' + ts.map((t) => `<option value="${t.id}">${scEsc(t.name)}</option>`).join('');
   if (ts.some((t) => t.id === keep)) sel.value = keep;
@@ -127,7 +127,7 @@ function scRender() {
   const tUid = document.getElementById('clinicTeacherFilter').value;
   const slot = document.getElementById('clinicSlotFilter').value;
   const grade = document.getElementById('clinicGradeFilter').value;
-  const inBranch = satClinicData.filter((r) => r.branch === scBranch);
+  const inBranch = satClinicData.filter((r) => r.branch === scBranch || r.branch === '공통');   // 공통 선생님 「없음」 보고는 두 관 모두에
   const none = inBranch.filter((r) => r.isNone && (!tUid || r.teacherUid === tUid));
   satClinicView = inBranch.filter((r) => !r.isNone
     && (!tUid || r.teacherUid === tUid)

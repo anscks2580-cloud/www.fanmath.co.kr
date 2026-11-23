@@ -169,7 +169,7 @@ function watchPeople() {
   })).catch(() => {});
 }
 const online = (u) => u && ms(u.lastSeen) > Date.now() - 4 * 60 * 1000;
-const brCls = (b) => (!b ? 'all' : normBr(b) === '산본관' ? 'sb' : 'pc');
+const brCls = (b) => (!b || b === '공통' ? 'all' : normBr(b) === '산본관' ? 'sb' : 'pc');   // 공통(평촌·산본 둘 다) = 파랑
 
 /* ── 대화방 ── */
 let firstLoad = true;

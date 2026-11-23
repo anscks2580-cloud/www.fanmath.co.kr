@@ -688,7 +688,7 @@ window.loadSatClinicTA = async function (force) {
   }
 };
 function satView() {
-  return (satRows || []).filter(r => r.branch === satBranch).sort((a, b) => a.slot.min - b.slot.min
+  return (satRows || []).filter(r => r.branch === satBranch || r.branch === '공통').sort((a, b) => a.slot.min - b.slot.min
     || (a.teacherName || '').localeCompare(b.teacherName || '', 'ko')
     || satGradeKey(a.grade) - satGradeKey(b.grade) || (a.studentName || '').localeCompare(b.studentName || '', 'ko'));
 }

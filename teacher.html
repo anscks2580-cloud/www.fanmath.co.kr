@@ -4068,7 +4068,7 @@ async function calLoadEvents() {
       const e = { id: d.id, ...d.data() };
       const target = e.target || 'all';
       const mine = target === 'all'
-        || (target === 'branch' && e.branch && e.branch === t.branch)
+        || (target === 'branch' && e.branch && (e.branch === t.branch || t.branch === '공통'))   // 공통 선생님 = 평촌·산본 둘 다
         || (target === 'teachers' && (e.teacherUids || []).includes(t.uid));
       if (mine && e.start) calEvents.push(e);
     });
