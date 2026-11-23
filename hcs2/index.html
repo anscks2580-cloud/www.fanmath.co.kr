@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>APEX 영어학원 HCS (시연)</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<script src="data.js?v=20261123"></script>
+<style>
+:root{--nv:#1e1838;--p:#5b3fa6;--p2:#f1edfa;--p3:#cfc3ee;--gd:#b8912f;--gd2:#fbf5e6;--line:#e5e7eb;--sub:#8b8f97;--bg:#f4f5f7;--txt:#222}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{font-family:Pretendard,"Malgun Gothic",sans-serif;color:var(--txt);background:var(--bg);font-size:14px;letter-spacing:-.2px;-webkit-font-smoothing:antialiased}
+button{font:inherit;cursor:pointer;border:1px solid #d8dbe0;background:#fff;border-radius:4px;padding:8px 14px;color:#333}
+button:hover{background:#f7f8fa}
+button.pri{background:var(--p);border-color:var(--p);color:#fff;font-weight:600}
+button.pri:hover{background:#4c3290}
+button.nv{background:var(--nv);border-color:var(--nv);color:#fff;font-weight:600}
+button.sm{padding:5px 10px;font-size:12.5px}
+button:disabled{opacity:.4;cursor:default}
+input,select{font:inherit;border:1px solid #d8dbe0;border-radius:4px;padding:8px 11px;background:#fff;outline:none}
+input:focus,select:focus{border-color:var(--p)}
+input[type=checkbox]{accent-color:var(--p);width:16px;height:16px;margin:0;cursor:pointer}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border:1px solid #dfe2e7;border-radius:4px;background:#fff;cursor:pointer;font-size:13px;color:#444;white-space:nowrap;user-select:none}
+.chip:hover{border-color:#c3c7ce}
+.chip.on{border-color:var(--p);color:var(--p);background:var(--p2);font-weight:600}
+.chip.dis{opacity:.4;cursor:default}
+.chip i{font-style:normal;font-size:11.5px;color:#999}
+.chip.on i{color:var(--p)}
+.tag{display:inline-block;font-size:11.5px;padding:2px 7px;border-radius:3px;background:#f2f3f5;color:#555;white-space:nowrap}
+.tag.p{background:var(--p2);color:var(--p)}
+.tag.g{background:var(--gd2);color:#8a6a17}
+.tag.n{background:#e9e8f0;color:var(--nv)}
+/* 상단 */
+.nav{height:56px;background:var(--nv);display:flex;align-items:center;padding:0 22px;gap:40px;position:sticky;top:0;z-index:30}
+.logo{display:flex;align-items:center;gap:9px;color:#fff;font-weight:800;font-size:15px;letter-spacing:.5px}
+.logo .mk{width:28px;height:28px;border:1.5px solid var(--gd);color:var(--gd);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900}
+.logo b{color:var(--gd)}
+.menu{display:flex;gap:28px}
+.menu span{color:#b9b5cc;cursor:pointer;font-size:14.5px;padding:6px 0;border-bottom:2px solid transparent}
+.menu span.on{color:#fff;font-weight:700;border-color:var(--gd)}
+.nav .who{margin-left:auto;color:#cfcbe0;font-size:12.5px;display:flex;align-items:center;gap:10px}
+.nav .who em{font-style:normal;border:1px solid #4a4466;padding:4px 10px;border-radius:3px}
+.demo{background:var(--gd2);border-bottom:1px solid #eadfbf;color:#7a5c12;font-size:12.5px;padding:6px 22px}
+main{padding:18px 22px 60px;max-width:1500px;margin:0 auto}
+.view{display:none}.view.on{display:block}
+.card{background:#fff;border:1px solid var(--line);border-radius:6px}
+.note{color:var(--sub);font-size:12.5px}
+h2{font-size:17px;margin:0}
+h3{font-size:14px;margin:0 0 10px}
+/* 목록 */
+.lh{display:flex;align-items:center;gap:8px;padding:18px 20px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.lh h2{margin-right:16px}
+.lh .r{margin-left:auto;display:flex;gap:8px}
+table.t{width:100%;border-collapse:collapse}
+table.t th{font-weight:500;color:#888;font-size:12.5px;text-align:left;padding:10px 14px;border-bottom:1px solid var(--line);background:#fafbfc;white-space:nowrap}
+table.t td{padding:12px 14px;border-bottom:1px solid #f0f1f3;vertical-align:middle}
+table.t tr:hover td{background:#fcfbff}
+.wsname{font-weight:600;cursor:pointer}
+.wsname:hover{color:var(--p);text-decoration:underline}
+.empty{padding:50px;text-align:center;color:#999}
+.stat{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.stat .card{padding:12px 16px;min-width:150px}
+.stat b{display:block;font-size:20px;color:var(--nv);margin-top:3px}
+/* 만들기 */
+.steps{display:flex;align-items:center;gap:0;margin-bottom:14px}
+.steps div{flex:1;padding:11px 16px;background:#fff;border:1px solid var(--line);color:#999;font-size:13.5px;position:relative}
+.steps div+div{border-left:0}
+.steps div.on{color:var(--p);font-weight:700;background:var(--p2);border-color:var(--p3)}
+.steps div.done{color:#555}
+.steps b{display:inline-block;width:20px;height:20px;border-radius:50%;background:#e6e7ea;color:#fff;text-align:center;line-height:20px;font-size:11.5px;margin-right:7px}
+.steps .on b{background:var(--p)}.steps .done b{background:#888}
+.mk2{display:grid;grid-template-columns:1fr 300px;gap:14px;align-items:start}
+.sec{padding:16px 18px;border-bottom:1px solid #f0f1f3}
+.sec:last-child{border-bottom:0}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.lbl{font-size:12.5px;color:#666;margin-bottom:8px;font-weight:600;display:flex;align-items:center;gap:8px}
+.lbl .a{margin-left:auto;font-weight:400;color:var(--p);cursor:pointer;font-size:12px}
+.srcgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:6px}
+.srcgrid .chip{justify-content:space-between}
+.kgrp{display:flex;gap:10px;align-items:flex-start;padding:6px 0;border-top:1px dashed #eee}
+.kgrp:first-child{border-top:0}
+.kgrp .kn{width:74px;flex:none;font-weight:600;font-size:13px;padding-top:6px;color:var(--nv)}
+.side{position:sticky;top:74px}
+.side .sec{padding:14px 16px}
+.sumrow{display:flex;justify-content:space-between;padding:5px 0;font-size:13px}
+.sumrow b{color:var(--nv)}
+.big{font-size:26px;font-weight:800;color:var(--p)}
+.bar{height:7px;background:#eef0f3;border-radius:2px;overflow:hidden;margin:3px 0 8px}
+.bar i{display:block;height:100%;background:var(--p)}
+.qcard{display:grid;grid-template-columns:44px 1fr 150px;gap:12px;padding:14px 16px;border-bottom:1px solid #f0f1f3;align-items:start}
+.qcard .n{font-size:18px;font-weight:800;color:var(--nv);text-align:center}
+.qcard .pr{font-weight:600;margin:6px 0 8px;font-size:13.5px}
+.qcard .im{max-height:190px;overflow:hidden;position:relative;border:1px solid #f0f1f3;cursor:zoom-in}
+.qcard .im img{width:100%;max-width:440px;display:block}
+.qcard .im:after{content:"";position:absolute;left:0;right:0;bottom:0;height:40px;background:linear-gradient(transparent,#fff)}
+.qcard .im.open{max-height:none;cursor:zoom-out}.qcard .im.open:after{display:none}
+.qcard .acts{display:flex;flex-direction:column;gap:5px}
+.qcard.flash{animation:fl 1s}
+@keyframes fl{from{background:var(--gd2)}to{background:#fff}}
+.fld{margin-bottom:14px}
+.fld label{display:block;font-size:12.5px;color:#666;font-weight:600;margin-bottom:6px}
+.chk{display:flex;align-items:center;gap:8px;padding:7px 0;font-size:13.5px;cursor:pointer}
+.foot{display:flex;justify-content:space-between;margin-top:14px}
+/* DB */
+.dbgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;padding:16px}
+.dbc{border:1px solid var(--line);border-radius:5px;overflow:hidden;cursor:pointer;background:#fff}
+.dbc:hover{border-color:var(--p3);box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.dbc .th{height:170px;overflow:hidden;border-bottom:1px solid #f0f1f3}
+.dbc .th img{width:100%;display:block}
+.dbc .mt{padding:8px 10px;display:flex;gap:4px;flex-wrap:wrap}
+.pager{display:flex;gap:4px;justify-content:center;padding:0 0 18px}
+.pager button{min-width:34px}
+.pager button.on{background:var(--p);color:#fff;border-color:var(--p)}
+.modal{position:fixed;inset:0;background:rgba(20,16,40,.55);z-index:50;display:none;align-items:flex-start;justify-content:center;overflow:auto;padding:40px 20px}
+.modal.on{display:flex}
+.modal .box{background:#fff;border-radius:6px;width:min(880px,100%);padding:20px 22px;position:relative}
+.modal .x{position:absolute;right:14px;top:12px;border:0;font-size:20px;background:none}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.mgrid img{width:100%;border:1px solid #eee}
+/* 출력 미리보기 */
+.ptool{display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.ptool .tabs{display:flex;gap:4px;margin-left:12px}
+.ptool .r{margin-left:auto;display:flex;gap:8px;align-items:center}
+.pages{display:flex;flex-direction:column;align-items:center;gap:18px}
+.page{width:794px;height:1123px;background:#fff;box-shadow:0 1px 6px rgba(0,0,0,.12);padding:40px 46px 34px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.ph{border-bottom:2.5px solid var(--nv);padding-bottom:8px;margin-bottom:12px;display:flex;align-items:flex-end;gap:14px}
+.ph .t1{font-size:10.5px;color:var(--gd);font-weight:800;letter-spacing:1.5px}
+.ph .t2{font-size:19px;font-weight:800;color:var(--nv);margin-top:2px}
+.ph .t3{font-size:10.5px;color:#777;margin-top:3px}
+.ph .nm{margin-left:auto;display:flex;gap:6px;font-size:11px;color:#444}
+.ph .nm span{border:1px solid #bbb;padding:5px 8px;min-width:96px}
+.ph2{display:flex;justify-content:space-between;font-size:10px;color:#888;border-bottom:1px solid #ccc;padding-bottom:5px;margin-bottom:12px}
+.ph2 b{color:var(--nv)}
+.cols{flex:1;display:flex;gap:26px;min-height:0;position:relative}
+.cols:before{content:"";position:absolute;left:50%;top:0;bottom:0;border-left:1px solid #ddd}
+.col{flex:1;min-width:0;overflow:hidden}
+.pf{font-size:9.5px;color:#999;text-align:center;padding-top:8px;border-top:1px solid #eee;margin-top:6px;display:flex;justify-content:space-between}
+.q{margin-bottom:var(--gap,26px)}
+.q .qh{display:flex;gap:6px;font-size:12px;font-weight:700;line-height:1.45;margin-bottom:7px;color:#111}
+.q .qh .no{font-size:15px;font-weight:900;color:var(--nv);flex:none;line-height:1.1}
+.q .qh .sr{font-weight:500;color:#888;font-size:10px;white-space:nowrap}
+.q img.qi{width:100%;height:auto;display:block}
+.q .ta{margin-top:6px;border-top:1px dashed #aaa;padding-top:5px;font-size:10.5px}
+.q .ta b{color:#000}
+.q .ta img{width:88%;height:auto;display:block;margin-top:3px}
+.qa-title{font-size:15px;font-weight:800;color:var(--nv);margin:0 0 10px}
+table.qa{border-collapse:collapse;width:100%;font-size:11px}
+table.qa td{border:1px solid #bbb;padding:4px 6px}
+table.qa td.a{font-size:13px;font-weight:700}
+table.qa td.k{background:#f3f3f3;font-weight:700;text-align:center;width:34px}
+.ex{margin-bottom:14px;font-size:11px}
+.ex .eh{font-weight:800;font-size:12px;margin-bottom:4px;display:flex;gap:6px;align-items:center}
+.ex .eh .sr{font-weight:400;color:#888;font-size:10px}
+.ex img{width:100%;display:block}
+.ex .none{color:#888;font-size:10.5px}
+@media print{
+  @page{size:A4;margin:0}
+  body{background:#fff}
+  .nav,.demo,.ptool,.view:not(#v_print){display:none!important}
+  main{padding:0;max-width:none}
+  .pages{gap:0}
+  .page{box-shadow:none;page-break-after:always;break-after:page}
+}
+</style>
+</head>
+<body>
+<div class="nav">
+  <div class="logo"><div class="mk">A</div>APEX 영어학원 <b>HCS</b></div>
+  <div class="menu">
+    <span data-v="v_list" class="on">학습지</span>
+    <span data-v="v_db">문항 DB</span>
+  </div>
+  <div class="who"><em>시연용 계정 · 관리자</em></div>
+</div>
+<div class="demo">시연 버전입니다 — 고2·고3 2025년 9월 모의고사 변형문제 815문항이 들어가 있습니다. 만든 학습지는 이 기기 브라우저에만 저장됩니다.</div>
+<main>
+
+<!-- 학습지 목록 -->
+<section class="view on" id="v_list">
+  <div class="stat" id="stat"></div>
+  <div class="card">
+    <div class="lh">
+      <h2>학습지 목록</h2>
+      <span class="chip on" data-lg="">전체</span><span class="chip" data-lg="고2">고2</span><span class="chip" data-lg="고3">고3</span>
+      <div class="r"><input id="lq" placeholder="학습지 이름 검색" style="width:220px"><button class="pri" id="btnNew">+ 학습지 만들기</button></div>
+    </div>
+    <table class="t"><thead><tr><th style="width:60px">학년</th><th>학습지 이름</th><th>출처</th><th style="width:70px">문항 수</th><th>유형 구성</th><th style="width:100px">만든 날짜</th><th style="width:270px">출력</th><th style="width:60px"></th></tr></thead><tbody id="wsbody"></tbody></table>
+  </div>
+</section>
+
+<!-- 학습지 만들기 -->
+<section class="view" id="v_make">
+  <div class="steps" id="steps"><div data-s="1"><b>1</b>범위 선택</div><div data-s="2"><b>2</b>상세 편집</div><div data-s="3"><b>3</b>구성 설정</div></div>
+
+  <div id="st1" class="mk2">
+    <div class="card">
+      <div class="sec">
+        <div class="lbl">학년</div>
+        <div class="row" id="gradeRow"></div>
+      </div>
+      <div class="sec">
+        <div class="lbl">출처</div>
+        <div class="row" id="kindSrcRow">
+          <span class="chip on">모의고사 변형</span>
+          <span class="chip dis" title="준비중">학교 기출 변형 <i>준비중</i></span>
+          <span class="chip dis" title="준비중">교과서 본문 <i>준비중</i></span>
+          <span class="chip dis" title="준비중">부교재 <i>준비중</i></span>
+        </div>
+      </div>
+      <div class="sec">
+        <div class="lbl">시험 회차</div>
+        <div class="row" id="exRow"></div>
+      </div>
+      <div class="sec">
+        <div class="lbl">원문 문항 번호 <span class="a" id="srcAll">전체 선택 / 해제</span></div>
+        <div class="srcgrid" id="srcGrid"></div>
+      </div>
+      <div class="sec">
+        <div class="lbl">문제 유형 <span class="a" id="kAll">전체 선택 / 해제</span></div>
+        <div id="kindBox"></div>
+      </div>
+      <div class="sec">
+        <div class="lbl">문제 수</div>
+        <div class="row" id="cntRow"></div>
+      </div>
+      <div class="sec">
+        <div class="lbl">문항 배치</div>
+        <div class="row" id="ordRow"></div>
+      </div>
+    </div>
+    <div class="side card">
+      <div class="sec">
+        <div class="note">선택 범위의 문항</div>
+        <div class="big" id="poolN">0</div>
+        <div class="sumrow"><span>학년</span><b id="sG">-</b></div>
+        <div class="sumrow"><span>원문 번호</span><b id="sS">-</b></div>
+        <div class="sumrow"><span>유형</span><b id="sK">-</b></div>
+        <div class="sumrow"><span>만들 문제 수</span><b id="sN">-</b></div>
+      </div>
+      <div class="sec"><div class="note" style="margin-bottom:8px">유형별 문항 수</div><div id="sBars"></div></div>
+      <div class="sec"><button class="pri" style="width:100%;padding:11px" id="go2">다음 단계 →</button></div>
+    </div>
+  </div>
+
+  <div id="st2" class="mk2" style="display:none">
+    <div class="card">
+      <div class="lh" style="padding:13px 16px"><h3 style="margin:0">문항 <span id="eN"></span>개</h3><span class="note">문제 이미지를 누르면 전체가 펼쳐집니다.</span>
+        <div class="r"><button class="sm" id="addOne">+ 같은 범위에서 1문항 추가</button><button class="sm" id="reShuffle">전체 다시 뽑기</button></div></div>
+      <div id="qlist"></div>
+    </div>
+    <div class="side card">
+      <div class="sec"><h3>유형 분포</h3><div id="eBars"></div></div>
+      <div class="sec"><h3>원문 번호 분포</h3><div id="eSrc" class="row"></div></div>
+      <div class="sec" style="display:flex;gap:6px"><button style="flex:1" id="back1">← 이전</button><button class="pri" style="flex:2" id="go3">다음 단계 →</button></div>
+    </div>
+  </div>
+
+  <div id="st3" class="mk2" style="display:none">
+    <div class="card" style="padding:18px 20px">
+      <div class="fld"><label>학습지 이름</label><input id="wName" style="width:100%"></div>
+      <div class="fld"><label>머리글 (학원명)</label><input id="wHead" style="width:100%" value="APEX 영어학원"></div>
+      <div class="fld"><label>담당 선생님</label><input id="wT" style="width:260px" value="시연용"></div>
+      <div class="fld"><label>출력 구성</label>
+        <label class="chk"><input type="checkbox" id="oQ" checked> 문제지 (학생용)</label>
+        <label class="chk"><input type="checkbox" id="oA" checked> 빠른정답</label>
+        <label class="chk"><input type="checkbox" id="oE" checked> 해설지</label>
+        <label class="chk"><input type="checkbox" id="oT"> 교사용 (문제 아래 정답·해설 작게)</label>
+      </div>
+      <div class="fld"><label>문항 간격 <span id="gapV" class="note"></span></label><input type="range" id="wGap" min="10" max="70" step="2" value="26" style="width:260px;padding:0"></div>
+    </div>
+    <div class="side card">
+      <div class="sec"><div class="sumrow"><span>학년</span><b id="cG"></b></div><div class="sumrow"><span>문항 수</span><b id="cN"></b></div><div class="sumrow"><span>시험 회차</span><b id="cE" style="text-align:right"></b></div></div>
+      <div class="sec" style="display:flex;gap:6px"><button style="flex:1" id="back2">← 이전</button><button class="pri" style="flex:2" id="save">저장하고 미리보기</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- 출력 미리보기 -->
+<section class="view" id="v_print">
+  <div class="ptool">
+    <button id="pBack">← 학습지 목록</button>
+    <b id="pTitle" style="font-size:15px"></b>
+    <div class="tabs" id="pTabs"></div>
+    <div class="r"><span class="note">인쇄 창에서 「PDF로 저장」을 고르면 PDF가 됩니다.</span><button class="nv" id="pPrint">인쇄 / PDF 저장</button></div>
+  </div>
+  <div class="pages" id="pages"></div>
+</section>
+
+<!-- 문항 DB -->
+<section class="view" id="v_db">
+  <div class="card">
+    <div class="lh">
+      <h2>문항 DB</h2>
+      <select id="dG"><option value="">전체 학년</option><option>고2</option><option>고3</option></select>
+      <select id="dS"><option value="">전체 원문 번호</option></select>
+      <select id="dC"><option value="">전체 유형</option></select>
+      <span class="note" id="dN"></span>
+    </div>
+    <div class="dbgrid" id="dbgrid"></div>
+    <div class="pager" id="pager"></div>
+  </div>
+</section>
+</main>
+
+<div class="modal" id="modal"><div class="box"><button class="x" onclick="closeM()">×</button><div id="mbody"></div></div></div>
+
+<script>
+const K=APEX_KEYS, Q=APEX_DATA.map(r=>Object.fromEntries(K.map((k,i)=>[k,r[i]])));
+const BY={};Q.forEach(q=>BY[q.id]=q);
+const CIR='①②③④⑤';
+const GRADES=[{g:'고1',dis:1},{g:'고2'},{g:'고3'}];
+const EXAMS={'고2':['2025년 9월 고2 학력평가'],'고3':['2025년 9월 고3 모의평가']};
+const EXSHORT={'2025년 9월 고2 학력평가':'25년 9월 학평','2025년 9월 고3 모의평가':'25년 9월 모평'};
+const SOON=['2025년 6월','2025년 11월','2026년 3월'];
+const CATS=[['대의파악',['글의 목적','글의 요지','글의 주제','글의 제목','필자의 주장']],['요약문',['요약문 완성']],['내용일치',['내용 일치','내용 불일치']],['어법',['어법상 틀린 것','어법상 옳은 것']],['어휘',['문맥상 부적절한 낱말','문맥상 적절한 낱말']],['서술형',['어법 고치기','요약문 쓰기']]];
+const ALLK=CATS.flatMap(c=>c[1]);
+const srcKey=s=>parseInt(s);
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const ansTxt=q=>typeof q.ans==='number'?CIR[q.ans-1]:(q.ans||'풀이 참조');
+const img=id=>'img/'+id+'.png';
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function today(){const d=new Date();return d.getFullYear()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+String(d.getDate()).padStart(2,'0')}
+
+/* ===== 저장소 ===== */
+const LS='apexhcs_ws_v1';
+function loadWS(){try{return JSON.parse(localStorage.getItem(LS))||null}catch(e){return null}}
+function saveWS(){try{localStorage.setItem(LS,JSON.stringify(WS))}catch(e){}}
+let WS=loadWS();
+if(!WS){
+  const pick=(g,ks,n,srcs)=>{let p=Q.filter(q=>q.g===g&&ks.includes(q.kind)&&(!srcs||srcs.includes(q.src)));return spread(p,n).sort((a,b)=>srcKey(a.src)-srcKey(b.src)||a.no-b.no).map(q=>q.id)};
+  WS=[
+   {id:'s1',name:'고2 9월 학평 · 대의파악',g:'고2',ex:['2025년 9월 고2 학력평가'],items:pick('고2',CATS[0][1],20),date:'2026.11.23',t:'시연용',head:'APEX 영어학원',gap:26,out:{q:1,a:1,e:1,t:0}},
+   {id:'s2',name:'고3 9월 모평 · 어법·어휘 (29~39번)',g:'고3',ex:['2025년 9월 고3 모의평가'],items:pick('고3',['어법상 틀린 것','어법상 옳은 것','문맥상 부적절한 낱말','문맥상 적절한 낱말'],16,['29','30','31','32','33','34','35','36','37','38','39']),date:'2026.11.23',t:'시연용',head:'APEX 영어학원',gap:26,out:{q:1,a:1,e:1,t:0}}
+  ];
+  saveWS();
+}
+
+/* ===== 화면 전환 ===== */
+function show(v){$$('.view').forEach(e=>e.classList.toggle('on',e.id===v));$$('.menu span').forEach(s=>s.classList.toggle('on',s.dataset.v===v||(v!=='v_db'&&s.dataset.v==='v_list')));window.scrollTo(0,0)}
+$$('.menu span').forEach(s=>s.onclick=()=>{show(s.dataset.v);if(s.dataset.v==='v_list')renderList();if(s.dataset.v==='v_db')renderDB()});
+
+/* ===== 목록 ===== */
+let LG='';
+$$('[data-lg]').forEach(c=>c.onclick=()=>{LG=c.dataset.lg;$$('[data-lg]').forEach(x=>x.classList.toggle('on',x===c));renderList()});
+$('#lq').oninput=renderList;
+function compo(items){const c={};items.forEach(id=>{const q=BY[id];if(q)c[q.cat]=(c[q.cat]||0)+1});return Object.entries(c).map(([k,v])=>`<span class="tag p">${k} ${v}</span>`).join(' ')}
+function renderList(){
+  const g2=Q.filter(q=>q.g==='고2').length,g3=Q.length-g2;
+  $('#stat').innerHTML=`<div class="card"><span class="note">전체 문항</span><b>${Q.length.toLocaleString()}</b></div><div class="card"><span class="note">고2 · 2025년 9월</span><b>${g2}</b></div><div class="card"><span class="note">고3 · 2025년 9월</span><b>${g3}</b></div><div class="card"><span class="note">만든 학습지</span><b>${WS.length}</b></div>`;
+  const kw=$('#lq').value.trim();
+  const L=WS.filter(w=>(!LG||w.g===LG)&&(!kw||w.name.includes(kw)));
+  $('#wsbody').innerHTML=L.length?L.map(w=>`<tr>
+    <td><span class="tag n">${w.g}</span></td>
+    <td><span class="wsname" data-open="${w.id}">${esc(w.name)}</span><div class="note">${esc(w.t||'')}</div></td>
+    <td class="note">${w.ex.map(e=>EXSHORT[e]||e).join(', ')} 변형</td>
+    <td>${w.items.length}</td>
+    <td>${compo(w.items)}</td>
+    <td class="note">${w.date}</td>
+    <td><button class="sm" data-p="${w.id}|q">학습지</button> <button class="sm" data-p="${w.id}|a">빠른정답</button> <button class="sm" data-p="${w.id}|e">해설</button> <button class="sm" data-p="${w.id}|t">교사용</button></td>
+    <td style="white-space:nowrap"><button class="sm" data-del="${w.id}" title="삭제">삭제</button></td></tr>`).join(''):`<tr><td colspan="8" class="empty">학습지가 없습니다. 「+ 학습지 만들기」를 눌러 보세요.</td></tr>`;
+  $$('[data-open]').forEach(b=>b.onclick=()=>openPrint(b.dataset.open,'q'));
+  $$('[data-p]').forEach(b=>b.onclick=()=>{const[i,m]=b.dataset.p.split('|');openPrint(i,m)});
+  $$('[data-del]').forEach(b=>b.onclick=()=>{if(confirm('이 학습지를 삭제할까요?')){WS=WS.filter(w=>w.id!==b.dataset.del);saveWS();renderList()}});
+}
+
+/* ===== 만들기 1단계 ===== */
+const M={g:'고2',ex:new Set(),src:new Set(),kinds:new Set(ALLK),n:20,ord:'src',items:[]};
+$('#btnNew').onclick=()=>{M.items=[];setGrade('고2');step(1);show('v_make')};
+function setGrade(g){M.g=g;M.ex=new Set(EXAMS[g]);M.src=new Set(srcList());renderS1()}
+function srcList(){return [...new Set(Q.filter(q=>q.g===M.g&&M.ex.has(q.ex)).map(q=>q.src))].sort((a,b)=>srcKey(a)-srcKey(b))}
+function pool(){return Q.filter(q=>q.g===M.g&&M.ex.has(q.ex)&&M.src.has(q.src)&&M.kinds.has(q.kind))}
+function renderS1(){
+  $('#gradeRow').innerHTML=GRADES.map(x=>`<span class="chip ${x.dis?'dis':''} ${M.g===x.g?'on':''}" data-g="${x.g}">${x.g}${x.dis?' <i>준비중</i>':''}</span>`).join('');
+  $$('#gradeRow .chip:not(.dis)').forEach(c=>c.onclick=()=>setGrade(c.dataset.g));
+  $('#exRow').innerHTML=EXAMS[M.g].map(e=>`<span class="chip ${M.ex.has(e)?'on':''}" data-e="${e}">${e} <i>${Q.filter(q=>q.ex===e).length}</i></span>`).join('')+SOON.map(s=>`<span class="chip dis">${s} <i>준비중</i></span>`).join('');
+  $$('#exRow [data-e]').forEach(c=>c.onclick=()=>{const e=c.dataset.e;M.ex.has(e)?M.ex.delete(e):M.ex.add(e);renderS1()});
+  const base=Q.filter(q=>q.g===M.g&&M.ex.has(q.ex)&&M.kinds.has(q.kind));
+  $('#srcGrid').innerHTML=srcList().map(s=>`<span class="chip ${M.src.has(s)?'on':''}" data-s="${s}">${s}번 <i>${base.filter(q=>q.src===s).length}</i></span>`).join('')||'<span class="note">시험 회차를 선택하세요.</span>';
+  $$('#srcGrid .chip').forEach(c=>c.onclick=()=>{const s=c.dataset.s;M.src.has(s)?M.src.delete(s):M.src.add(s);renderS1()});
+  const b2=Q.filter(q=>q.g===M.g&&M.ex.has(q.ex)&&M.src.has(q.src));
+  $('#kindBox').innerHTML=CATS.map(([c,ks])=>`<div class="kgrp"><div class="kn">${c}</div><div class="row">${ks.map(k=>{const n=b2.filter(q=>q.kind===k).length;return `<span class="chip ${M.kinds.has(k)?'on':''} ${n?'':'dis'}" data-k="${k}">${k} <i>${n}</i></span>`}).join('')}</div></div>`).join('');
+  $$('#kindBox .chip:not(.dis)').forEach(c=>c.onclick=()=>{const k=c.dataset.k;M.kinds.has(k)?M.kinds.delete(k):M.kinds.add(k);renderS1()});
+  $('#cntRow').innerHTML=[10,15,20,25,30,40].map(n=>`<span class="chip ${M.n===n?'on':''}" data-n="${n}">${n}문항</span>`).join('')+`<input id="nIn" type="number" min="1" max="100" placeholder="직접 입력" style="width:100px;margin-left:4px" value="${[10,15,20,25,30,40].includes(M.n)?'':M.n}">`;
+  $$('#cntRow .chip').forEach(c=>c.onclick=()=>{M.n=+c.dataset.n;renderS1()});
+  $('#nIn').onchange=e=>{const v=+e.target.value;if(v>0){M.n=Math.min(100,v);renderS1()}};
+  $('#ordRow').innerHTML=[['src','원문 번호순'],['cat','유형별로 묶기'],['rand','무작위 섞기']].map(([k,t])=>`<span class="chip ${M.ord===k?'on':''}" data-o="${k}">${t}</span>`).join('');
+  $$('#ordRow .chip').forEach(c=>c.onclick=()=>{M.ord=c.dataset.o;renderS1()});
+  const P=pool();
+  $('#poolN').textContent=P.length+'문항';
+  $('#sG').textContent=M.g;
+  const sl=srcList();$('#sS').textContent=M.src.size===sl.length?'전체 ('+sl.length+'개 지문)':M.src.size+'개 지문';
+  $('#sK').textContent=M.kinds.size===ALLK.length?'전체':M.kinds.size+'개 유형';
+  $('#sN').textContent=Math.min(M.n,P.length)+'문항';
+  const cc={};P.forEach(q=>cc[q.cat]=(cc[q.cat]||0)+1);const mx=Math.max(1,...Object.values(cc));
+  $('#sBars').innerHTML=CATS.map(([c])=>cc[c]?`<div class="sumrow" style="padding:0"><span>${c}</span><span>${cc[c]}</span></div><div class="bar"><i style="width:${cc[c]/mx*100}%"></i></div>`:'').join('')||'<span class="note">선택된 문항이 없습니다.</span>';
+  $('#go2').disabled=!P.length;
+}
+$('#srcAll').onclick=()=>{const s=srcList();M.src=M.src.size===s.length?new Set():new Set(s);renderS1()};
+$('#kAll').onclick=()=>{M.kinds=M.kinds.size===ALLK.length?new Set():new Set(ALLK);renderS1()};
+
+// 지문·유형이 고르게 섞이도록 뽑기
+function spread(P,n){
+  const g={};shuffle(P).forEach(q=>(g[q.src+'|'+q.cat]=g[q.src+'|'+q.cat]||[]).push(q));
+  const keys=shuffle(Object.keys(g));const out=[];
+  while(out.length<n&&keys.some(k=>g[k].length)){for(const k of keys){if(g[k].length&&out.length<n)out.push(g[k].shift())}}
+  return out;
+}
+function order(arr){
+  if(M.ord==='rand')return shuffle(arr);
+  const ci=c=>CATS.findIndex(x=>x[0]===c);
+  if(M.ord==='cat')return arr.sort((a,b)=>ci(a.cat)-ci(b.cat)||ALLK.indexOf(a.kind)-ALLK.indexOf(b.kind)||srcKey(a.src)-srcKey(b.src)||a.no-b.no);
+  return arr.sort((a,b)=>srcKey(a.src)-srcKey(b.src)||ci(a.cat)-ci(b.cat)||a.no-b.no);
+}
+$('#go2').onclick=()=>{M.items=order(spread(pool(),M.n)).map(q=>q.id);step(2)};
+
+/* ===== 2단계 ===== */
+function step(s){
+  ['st1','st2','st3'].forEach((id,i)=>$('#'+id).style.display=(i+1===s)?'grid':'none');
+  $$('#steps div').forEach(d=>{const n=+d.dataset.s;d.className=n===s?'on':(n<s?'done':'')});
+  if(s===1)renderS1();if(s===2)renderS2();if(s===3)renderS3();window.scrollTo(0,0);
+}
+$$('#steps div').forEach(d=>d.onclick=()=>{const n=+d.dataset.s;if(n===1||(n>=2&&M.items.length))step(n)});
+function renderS2(flashId){
+  $('#eN').textContent=M.items.length;
+  $('#qlist').innerHTML=M.items.map((id,i)=>{const q=BY[id];return `<div class="qcard ${id===flashId?'flash':''}" data-id="${id}">
+    <div class="n">${i+1}</div>
+    <div><div class="row"><span class="tag n">원문 ${q.src}번</span><span class="tag p">${q.cat} · ${q.kind}</span><span class="tag g">정답 ${esc(ansTxt(q))}</span><span class="tag">${EXSHORT[q.ex]} #${q.no}</span></div>
+      <div class="pr">${esc(q.prompt)}</div><div class="im"><img src="${img(id)}" loading="lazy" alt=""></div></div>
+    <div class="acts"><button class="sm" data-a="swap">유사 문항으로 교체</button><button class="sm" data-a="up">▲ 위로</button><button class="sm" data-a="dn">▼ 아래로</button><button class="sm" data-a="del">삭제</button></div></div>`}).join('')||'<div class="empty">문항이 없습니다.</div>';
+  $$('#qlist .im').forEach(e=>e.onclick=()=>e.classList.toggle('open'));
+  $$('#qlist [data-a]').forEach(b=>b.onclick=()=>{
+    const id=b.closest('.qcard').dataset.id,i=M.items.indexOf(id),a=b.dataset.a;
+    if(a==='del')M.items.splice(i,1);
+    if(a==='up'&&i>0)[M.items[i-1],M.items[i]]=[M.items[i],M.items[i-1]];
+    if(a==='dn'&&i<M.items.length-1)[M.items[i+1],M.items[i]]=[M.items[i],M.items[i+1]];
+    if(a==='swap'){const q=BY[id];const used=new Set(M.items);
+      let c=Q.filter(x=>!used.has(x.id)&&x.g===q.g&&x.kind===q.kind&&M.ex.has(x.ex));
+      if(!c.length)c=Q.filter(x=>!used.has(x.id)&&x.g===q.g&&x.cat===q.cat);
+      if(!c.length)return alert('바꿀 수 있는 유사 문항이 없습니다.');
+      const n=c[Math.floor(Math.random()*c.length)];M.items[i]=n.id;return renderS2(n.id)}
+    renderS2();
+  });
+  const cc={};M.items.forEach(id=>{const q=BY[id];cc[q.kind]=(cc[q.kind]||0)+1});const mx=Math.max(1,...Object.values(cc));
+  $('#eBars').innerHTML=ALLK.filter(k=>cc[k]).map(k=>`<div class="sumrow" style="padding:0"><span>${k}</span><span>${cc[k]}</span></div><div class="bar"><i style="width:${cc[k]/mx*100}%"></i></div>`).join('');
+  const sc={};M.items.forEach(id=>{const s=BY[id].src;sc[s]=(sc[s]||0)+1});
+  $('#eSrc').innerHTML=Object.keys(sc).sort((a,b)=>srcKey(a)-srcKey(b)).map(s=>`<span class="tag">${s}번 ×${sc[s]}</span>`).join('');
+  $('#go3').disabled=!M.items.length;
+}
+$('#addOne').onclick=()=>{const used=new Set(M.items);const c=pool().filter(q=>!used.has(q.id));if(!c.length)return alert('범위 안에 더 넣을 문항이 없습니다.');const n=spread(c,1)[0];M.items.push(n.id);renderS2(n.id)};
+$('#reShuffle').onclick=()=>{M.items=order(spread(pool(),M.n)).map(q=>q.id);renderS2()};
+$('#back1').onclick=()=>step(1);$('#go3').onclick=()=>step(3);
+
+/* ===== 3단계 ===== */
+function defName(){
+  const cc={};M.items.forEach(id=>{const q=BY[id];cc[q.cat]=(cc[q.cat]||0)+1});
+  const top=Object.entries(cc).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  const ex=[...M.ex].map(e=>EXSHORT[e].replace('25년 ','').replace(' ',' ')).join('·');
+  return `${M.g} ${ex} · ${top.slice(0,2).join('·')}${top.length>2?' 외':''}`;
+}
+function renderS3(){
+  $('#wName').value=defName();$('#cG').textContent=M.g;$('#cN').textContent=M.items.length+'문항';$('#cE').textContent=[...M.ex].join(', ');
+  $('#gapV').textContent=$('#wGap').value+'px';
+}
+$('#wGap').oninput=()=>$('#gapV').textContent=$('#wGap').value+'px';
+$('#back2').onclick=()=>step(2);
+$('#save').onclick=()=>{
+  const w={id:'w'+Date.now(),name:$('#wName').value.trim()||defName(),g:M.g,ex:[...M.ex],items:M.items.slice(),date:today(),t:$('#wT').value.trim(),head:$('#wHead').value.trim()||'APEX 영어학원',gap:+$('#wGap').value,
+    out:{q:$('#oQ').checked?1:0,a:$('#oA').checked?1:0,e:$('#oE').checked?1:0,t:$('#oT').checked?1:0}};
+  WS.unshift(w);saveWS();
+  const first=w.out.q?'q':w.out.t?'t':w.out.a?'a':'e';openPrint(w.id,first);
+};
+
+/* ===== 출력 ===== */
+let PW=null,PM='q';
+$('#pBack').onclick=()=>{show('v_list');renderList()};
+$('#pPrint').onclick=()=>window.print();
+function openPrint(id,m){PW=WS.find(w=>w.id===id);if(!PW)return;PM=m;show('v_print');renderPrint()}
+function renderPrint(){
+  const w=PW;$('#pTitle').textContent=w.name;
+  const tabs=[['q','학습지'],['a','빠른정답'],['e','해설지'],['t','교사용']];
+  $('#pTabs').innerHTML=tabs.map(([k,t])=>`<span class="chip ${PM===k?'on':''}" data-m="${k}">${t}</span>`).join('');
+  $$('#pTabs .chip').forEach(c=>c.onclick=()=>{PM=c.dataset.m;renderPrint()});
+  const box=$('#pages');box.innerHTML='';
+  const items=w.items.map(id=>BY[id]).filter(Boolean);
+  const sub={q:'',a:'빠른정답',e:'해설',t:'교사용'}[PM];
+  if(PM==='a'){paginate(box,w,sub,[quickTable(items)],true);return}
+  const blocks=items.map((q,i)=>PM==='e'?exBlock(q,i):qBlock(q,i,PM==='t',w.gap));
+  paginate(box,w,sub,blocks,false);
+}
+function qBlock(q,i,teacher,gap){
+  const d=document.createElement('div');d.className='q';d.style.setProperty('--gap',(gap||26)+'px');
+  d.innerHTML=`<div class="qh"><span class="no">${i+1}</span><span>${esc(q.prompt)} <span class="sr">[${q.src}번 변형]</span></span></div><img class="qi" src="${img(q.id)}" width="${q.w}" height="${q.hh}" alt="">`+
+   (teacher?`<div class="ta"><b>정답 ${esc(ansTxt(q))}</b> · ${q.cat} · ${q.kind}${q.h?`<img src="${img(q.id+'h')}" alt="">`:''}</div>`:'');
+  return d;
+}
+function exBlock(q,i){
+  const d=document.createElement('div');d.className='ex';
+  d.innerHTML=`<div class="eh"><span>${i+1}.</span><span>정답 ${esc(ansTxt(q))}</span><span class="sr">원문 ${q.src}번 · ${q.kind}</span></div>`+(q.h?`<img src="${img(q.id+'h')}" alt="">`:`<div class="none">${q.cat==='서술형'?'모범 답안: '+esc(q.ans||''):'정답만 제공되는 문항입니다.'}</div>`);
+  return d;
+}
+function quickTable(items){
+  const d=document.createElement('div');
+  const per=Math.ceil(items.length/2);const half=[items.slice(0,per),items.slice(per)];
+  const tbl=(arr,off)=>`<table class="qa">${arr.map((q,j)=>`<tr><td class="k">${off+j+1}</td><td class="a">${esc(ansTxt(q))}</td><td style="color:#888;width:130px;font-size:10px">${q.src}번 · ${q.kind}</td></tr>`).join('')}</table>`;
+  d.innerHTML=`<div class="qa-title">빠른정답</div><div style="display:flex;gap:20px;align-items:flex-start"><div style="flex:1">${tbl(half[0],0)}</div><div style="flex:1">${tbl(half[1],per)}</div></div>`;
+  return d;
+}
+function newPage(box,w,sub,pno,full){
+  const p=document.createElement('div');p.className='page';
+  const ex=w.ex.map(e=>e).join(', ');
+  p.innerHTML=(pno===1?`<div class="ph"><div><div class="t1">${esc(w.head)}</div><div class="t2">${esc(w.name)}${sub?` <span style="font-size:13px;color:#888;font-weight:600">· ${sub}</span>`:''}</div><div class="t3">${esc(ex)} 변형 · ${w.items.length}문항${w.t?' · '+esc(w.t)+' 선생님':''}</div></div>${sub?'':'<div class="nm"><span>반</span><span>이름</span><span>점수</span></div>'}</div>`
+    :`<div class="ph2"><span><b>${esc(w.head)}</b> · ${esc(w.name)}${sub?' · '+sub:''}</span><span>${esc(ex)}</span></div>`)+
+    (full?`<div class="cols" style="display:block"><div class="col" style="height:100%"></div></div>`:`<div class="cols"><div class="col"></div><div class="col"></div></div>`)+
+    `<div class="pf"><span>APEX 영어학원 HCS</span><span>${pno}</span></div>`;
+  box.appendChild(p);return [...p.querySelectorAll('.col')];
+}
+function paginate(box,w,sub,blocks,full){
+  let pno=1,cols=newPage(box,w,sub,pno,full),ci=0;
+  for(const b of blocks){
+    let col=cols[ci];col.appendChild(b);
+    if(col.scrollHeight>col.clientHeight+1&&col.children.length>1){
+      col.removeChild(b);ci++;
+      if(ci>=cols.length){pno++;cols=newPage(box,w,sub,pno,full);ci=0}
+      col=cols[ci];col.appendChild(b);
+    }
+    if(col.scrollHeight>col.clientHeight+1&&col.children.length===1){ // 한 단보다 긴 문항은 축소
+      const im=b.querySelector('img.qi,img');if(im){const over=col.scrollHeight-col.clientHeight;const h=im.getBoundingClientRect().height;const r=Math.max(.5,(h-over-4)/h);im.style.width=(r*100)+'%';im.style.margin='0 auto'}
+    }
+  }
+}
+
+/* ===== 문항 DB ===== */
+let DP=1;
+(function initDB(){
+  const ss=[...new Set(Q.map(q=>q.src))].sort((a,b)=>srcKey(a)-srcKey(b));
+  $('#dS').innerHTML+=ss.map(s=>`<option value="${s}">${s}번</option>`).join('');
+  $('#dC').innerHTML+=CATS.map(([c,ks])=>`<optgroup label="${c}">${ks.map(k=>`<option>${k}</option>`).join('')}</optgroup>`).join('');
+  ['#dG','#dS','#dC'].forEach(s=>$(s).onchange=()=>{DP=1;renderDB()});
+})();
+function renderDB(){
+  const g=$('#dG').value,s=$('#dS').value,c=$('#dC').value;
+  const L=Q.filter(q=>(!g||q.g===g)&&(!s||q.src===s)&&(!c||q.kind===c));
+  const per=40,pages=Math.max(1,Math.ceil(L.length/per));DP=Math.min(DP,pages);
+  $('#dN').textContent=L.length+'문항';
+  $('#dbgrid').innerHTML=L.slice((DP-1)*per,DP*per).map(q=>`<div class="dbc" data-id="${q.id}"><div class="th"><img src="${img(q.id)}" loading="lazy" alt=""></div><div class="mt"><span class="tag n">${q.g}</span><span class="tag">${q.src}번</span><span class="tag p">${q.kind}</span><span class="tag g">${esc(ansTxt(q))}</span></div></div>`).join('');
+  $$('.dbc').forEach(c=>c.onclick=()=>openQ(c.dataset.id));
+  let pg='';for(let i=1;i<=pages;i++)pg+=`<button class="${i===DP?'on':''}" data-pg="${i}">${i}</button>`;
+  $('#pager').innerHTML=pages>1?pg:'';
+  $$('[data-pg]').forEach(b=>b.onclick=()=>{DP=+b.dataset.pg;renderDB();window.scrollTo(0,0)});
+}
+function openQ(id){
+  const q=BY[id];
+  $('#mbody').innerHTML=`<div class="row" style="margin-bottom:10px"><span class="tag n">${q.g}</span><span class="tag">${q.ex}</span><span class="tag">원문 ${q.src}번</span><span class="tag p">${q.cat} · ${q.kind}</span><span class="tag">문항 #${q.no}</span></div>
+   <div style="font-weight:700;margin-bottom:10px">${esc(q.prompt)}</div>
+   <div class="mgrid"><div><img src="${img(id)}" alt=""></div><div><div style="font-size:15px;margin-bottom:8px"><b>정답</b> <span style="color:var(--p);font-weight:800">${esc(ansTxt(q))}</span></div>${q.h?`<img src="${img(id+'h')}" alt="">`:'<div class="note">해설 없음 (정답만 제공)</div>'}</div></div>`;
+  $('#modal').classList.add('on');
+}
+function closeM(){$('#modal').classList.remove('on')}
+$('#modal').onclick=e=>{if(e.target.id==='modal')closeM()};
+
+renderList();
+</script>
+</body>
+</html>
