@@ -8,8 +8,8 @@
 export const ADMIN_GROUPS = [
   { id: 'home', label: '오늘', color: '#5B3FA6', items: [
     { id: 'home', label: '관리부 홈 (달력)' },
-    { id: '@today', label: '일일종합현황', desc: '프로그램 전용' },
-    { id: '@chat', label: '메신저', desc: '프로그램 전용' },
+    { id: '@today', label: '일일종합현황' },
+    { id: '@chat', label: '메신저' },
   ] },
   { id: 'student', label: '학생', color: '#2F7FD6', items: [
     { id: 'students', label: '학생 관리', k: '학생 원생 등록 정보 계정 명단 삭제 퇴원' },
@@ -73,8 +73,8 @@ export const ROLE_PRESETS = { master: null, office: ['home', 'student', 'reports
 export const TEACHER_GROUPS = [
   { id: 'home', label: '오늘', color: '#5B3FA6', items: [
     { id: 'calendar', label: '일정 · 오늘 할 일' },
-    { id: '@today', label: '일일종합현황', desc: '프로그램 전용' },
-    { id: '@chat', label: '메신저', desc: '프로그램 전용' },
+    { id: '@today', label: '일일종합현황' },
+    { id: '@chat', label: '메신저' },
   ] },
   { id: 'reports', label: '보고서', color: '#159A8C', items: [
     { id: 'hwlog', label: '숙제 입력', k: '숙제 과제' },
@@ -109,8 +109,8 @@ export const TEACHER_GROUPS = [
 
 export const TA_GROUPS = [
   { id: 'home', label: '오늘', color: '#5B3FA6', items: [
-    { id: '@today', label: '일일종합현황', desc: '프로그램 전용' },
-    { id: '@chat', label: '메신저', desc: '프로그램 전용' },
+    { id: '@today', label: '일일종합현황' },
+    { id: '@chat', label: '메신저' },
   ] },
   { id: 'ta', label: '조교 업무', color: '#159A8C', items: [
     { id: 'clinicroom', label: '클리닉실 현황', k: '클리닉' },
