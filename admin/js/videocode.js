@@ -113,6 +113,10 @@ function vcParseTag(tagRaw) {
     return { prefix:`7${s.code}0`, type:"Song's Tip", grade:s.grade, when:s.when, subject:`Song's Tip · ${m[1]}`, book:'', teacher:'' };
   }
 
+  // 보충강의실 선생님별 특별 섹션: 보충_산본_송우찬 원장T 예비고1 → 8211 (끝자리 1 = 예비고1)
+  if ((m = tag.match(/^보충_(평촌|산본)_(.+) 예비고1$/)) && VC_TEACHERS[m[2]]) {
+    return { prefix:`8${VC_BRANCH[m[1]]}${VC_TEACHERS[m[2]]}1`, type:'보충강의실', grade:'예비고1', when:'예비고1 보충', subject:`보충강의실 · ${m[1]}관 예비고1`, book:'', teacher:m[2] };
+  }
   if ((m = tag.match(/^보충_(평촌|산본)_(.+)$/)) && VC_TEACHERS[m[2]]) {
     return { prefix:`8${VC_BRANCH[m[1]]}${VC_TEACHERS[m[2]]}0`, type:'보충강의실', grade:'', when:'반별 보충', subject:`보충강의실 · ${m[1]}관`, book:'', teacher:m[2] };
   }
