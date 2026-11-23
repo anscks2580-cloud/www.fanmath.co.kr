@@ -1190,8 +1190,13 @@ async function fetchWcSubfolders(rootUri) {
   return out;
 }
 // 폴더 → 강의 카테고리(태그). 주간 클리어 안의 '중1' 폴더는 일반 '중1'과 구분해서 주간클리어_중1
+// 비메오 폴더 이름이 강의 카테고리와 다를 때 맞춰 주는 표 (비메오에서 직접 만든 폴더)
+const VIMEO_FOLDER_ALIAS = {
+  '송우찬 원장T 예비고1': '보충_산본_송우찬 원장T 예비고1',
+};
 function vimeoFolderTag(f) {
   const name = String(f?.name || '').trim();
+  if (VIMEO_FOLDER_ALIAS[name]) return VIMEO_FOLDER_ALIAS[name];
   const anc = f?.metadata?.connections?.ancestor_path || [];
   const inWc = !!f?._wcParent || anc.some(a => WC_ROOT_RE.test(a?.name || ''));
   if (inWc) {
