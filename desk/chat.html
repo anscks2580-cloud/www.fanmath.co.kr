@@ -14,11 +14,13 @@ body{display:flex;height:100vh;height:100dvh;overflow:hidden;background:#fff}
 .ls{width:260px;flex:0 0 260px;display:flex;flex-direction:column;border-right:1px solid var(--line2);background:#FAFAFC}
 .me{display:flex;align-items:center;gap:8px;padding:8px 10px;background:#2E2160;color:#fff}
 .me img{width:28px;height:28px;border-radius:50%;background:#fff}
+.me .who{flex:1;min-width:0}
 .me .nm{font-weight:700;font-size:12.5px}.me .rl{font-size:10.5px;color:#CFC9E4}
+.me .nm,.me .rl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .me .sp{flex:1}
-.me button{border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;height:24px;padding:0 8px;font-weight:700;font-size:11.5px}
+.me button{flex:0 0 auto;white-space:nowrap;border:1px solid rgba(255,255,255,.35);background:transparent;color:#fff;height:24px;padding:0 7px;font-weight:700;font-size:11.5px}
 .me button:hover{background:rgba(255,255,255,.12)}
-.me button+button{margin-left:-3px}
+.me img{flex:0 0 28px}
 .sys{text-align:center;margin:6px 0}.sys span{display:inline-block;padding:2px 10px;background:#E8E6F0;color:#5A576A;font-size:11px}
 .tabs{display:flex;border-bottom:1px solid var(--line2)}
 .tabs button{flex:1;height:28px;border:0;border-bottom:2px solid transparent;background:transparent;font-weight:700;color:var(--mut);font-size:11.5px}
@@ -106,7 +108,7 @@ body.dragging .drop{display:flex}
 </head>
 <body>
 <aside class="ls">
-  <div class="me"><img src="/assets/icons/splash-logo.png" alt=""><div><div class="nm" id="meName">…</div><div class="rl" id="meRole"></div></div><span class="sp"></span><button id="btnNew" title="1:1 대화">＋ 1:1</button><button id="btnGroup" title="단체방 만들기">＋ 단체방</button></div>
+  <div class="me"><img src="/assets/icons/splash-logo.png" alt=""><div class="who"><div class="nm" id="meName">…</div><div class="rl" id="meRole"></div></div><button id="btnNew" title="1:1 대화">＋1:1</button><button id="btnGroup" title="단체방 만들기">＋단체방</button></div>
   <div class="tabs" id="brTabs"><button data-b="전체" class="on">전체</button><button data-b="평촌관">평촌관</button><button data-b="산본관">산본관</button></div>
   <div class="srch"><input id="q" placeholder="대화방 · 이름 검색"></div>
   <div class="rooms" id="rooms"></div>
