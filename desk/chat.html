@@ -54,14 +54,14 @@ body{display:flex;height:100vh;height:100dvh;overflow:hidden;background:#fff}
 .day{text-align:center;margin:10px 0 6px}.day span{display:inline-block;padding:1px 10px;background:#E2E1EA;color:var(--mut);font-size:10.5px;font-weight:700}
 .m{display:flex;gap:6px;margin:4px 0;align-items:flex-end}
 .m .who{font-size:11px;font-weight:700;margin:0 0 2px 1px}
-.m .bb{max-width:min(520px,72%);padding:6px 9px;border-radius:3px;background:#fff;border:1px solid #E0DFE8;white-space:pre-wrap;word-break:break-word;line-height:1.45;font-size:12.5px}
+.m .bb{max-width:100%;padding:6px 9px;border-radius:3px;background:#fff;border:1px solid #E0DFE8;white-space:pre-wrap;word-break:break-word;line-height:1.45;font-size:12.5px}
 .m .tm{font-size:10px;color:var(--mut);white-space:nowrap;display:flex;flex-direction:column;align-items:flex-end;gap:1px}
 .m .del{border:0;background:none;color:#A9A6B6;font-size:10px;padding:0;display:none}
 .m:hover .del{display:block}
 .m.mine{flex-direction:row-reverse}
 .m.mine .bb{background:#4B3391;border-color:#4B3391;color:#fff}
 .m.mine .tm{align-items:flex-start}
-.m .col{display:flex;flex-direction:column;min-width:0;max-width:100%}
+.m .col{display:flex;flex-direction:column;min-width:0;flex:0 1 auto;max-width:min(520px,72%)}
 .m.mine .col{align-items:flex-end}
 .m.cont .who{display:none}
 .m .bb.deleted{background:transparent;color:var(--mut);font-style:italic;border:1px dashed var(--line)}
@@ -277,7 +277,7 @@ function openRoom(id) {
 function paintHeader() {
   const h = $('cvh'); if (!h) return; const r = rooms.get(cur); if (!r) return;
   const br = roomBranch(r);
-  const sub = r.fixed ? `${br ? br + ' · ' : ''}${(r.members || []).length}명 · 학원 방` : r.type === 'channel' ? (br ? br + ' 선생님·관리부·조교 모두' : '평촌관 · 산본관 모두') : r.type === 'dm' ? ((people.get((r.members || []).find((u) => u !== ME.uid)) || {}).roleLabel || '') : `${(r.members || []).length}명`;
+  const sub = r.fixed ? `${br ? br + ' · ' : ''}${r.memberNames ? new Set(Object.values(r.memberNames)).size : (r.members || []).length}명 · 학원 방` : r.type === 'channel' ? (br ? br + ' 선생님·관리부·조교 모두' : '평촌관 · 산본관 모두') : r.type === 'dm' ? ((people.get((r.members || []).find((u) => u !== ME.uid)) || {}).roleLabel || '') : `${(r.members || []).length}명`;
   h.innerHTML = `<button class="back" id="back">‹</button><b class="${br ? (normBr(br) === '산본관' ? 'br-sb' : 'br-pc') : ''}">${esc(roomTitle(cur, r))}</b><small>${esc(sub)}</small><span class="sp"></span>
     ${r.fixed ? `<button class="dk-btn" id="btnMembers">참여자 ${(r.memberNames ? new Set(Object.values(r.memberNames)).size : (r.members || []).length)}</button>` : r.type === 'group' ? `<button class="dk-btn" id="btnMembers">참여자 ${(r.members || []).length}</button><button class="dk-btn" id="btnInvite">＋ 초대</button>${r.createdBy === ME.uid || ME.kind === 'admin' ? '<button class="dk-btn" id="btnRename">이름 변경</button>' : ''}<button class="dk-btn" id="btnLeave">나가기</button>` : ''}`;
   $('back').onclick = () => { document.body.classList.remove('in-room'); cur = null; renderRooms(); };
