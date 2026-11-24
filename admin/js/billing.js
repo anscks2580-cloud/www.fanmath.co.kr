@@ -329,47 +329,84 @@
     S.charges.set(c.id, { ...c, status: '취소', history: hist });
   }
 
-  function payModal(s, charges, after) {
-    const sum = charges.reduce((a, c) => a + remain(c), 0);
-    const cards = S.settings.cardCompanies || [];
+  // 납입 형태 — 큰 버튼으로 (색으로 바로 구분)
+  const METHOD_UI = [
+    { v: '카드', ic: '💳', sub: '학원 카드기', cls: 'card' },
+    { v: '현금', ic: '💵', sub: '현금 · 현금영수증', cls: 'cash' },
+    { v: '계좌이체', ic: '🏦', sub: '무통장 · 이체', cls: 'bank' },
+    { v: '온라인결제', ic: '📱', sub: '결제 링크로 받음', cls: 'online' },
+    { v: '결제선생', ic: '🧾', sub: '결제선생', cls: 'etc' },
+    { v: '기타', ic: '⋯', sub: '그 밖의 방법', cls: 'etc' },
+  ];
+  function methodBadge(m) { const x = METHOD_UI.find((y) => y.v === m); return '<span class="bl-mb ' + (x ? x.cls : 'etc') + '">' + (x ? x.ic + ' ' : '') + esc(m || '') + '</span>'; }
+  function payModal(s, charges, after, pre) {
+    const picked = new Set(pre || charges.map((c) => c.id));
+    const cards = (S.settings.cardCompanies || []).filter((c) => c !== '기타');
     const body =
-      '<div class="bl-box"><div style="font-size:12px;color:var(--muted);margin-bottom:6px;">' + esc(s.name) + ' · 선택한 청구 ' + charges.length + '건</div>' +
-      charges.map((c) => '<div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span>' + esc(c.title) + ' <small style="color:var(--muted)">' + shortD(c.dueDate) + '</small></span><b>' + won(remain(c)) + '원</b></div>').join('') +
-      '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;border-top:1px solid var(--bl-line);padding-top:8px;"><span>남은 금액 합계</span><span class="bl-total">' + won(sum) + '원</span></div></div>' +
-      '<div class="row"><label class="bl-f"><span>납입일</span><input type="date" class="bl-in" data-k="date" value="' + today() + '"></label>' +
-      '<label class="bl-f"><span>납입액</span><input class="bl-in num" data-k="amount" value="' + won(sum) + '" inputmode="numeric"></label></div>' +
-      '<div class="bl-f"><span>납입 형태</span><div class="bl-chips" data-k="method">' + METHODS.map((m, i) => '<button type="button" class="bl-chip' + (i === 0 ? ' on' : '') + '" data-v="' + m + '">' + m + '</button>').join('') + '</div></div>' +
-      '<label class="bl-f" data-k="cardwrap" hidden><span>카드사</span><select class="bl-in" data-k="card">' + opts(cards, '', '선택') + '</select></label>' +
+      '<div class="bl-pay-who"><b>' + esc(s.name) + '</b> <span>' + esc(s.branch || '') + ' · ' + esc(classNames(s)) + '</span></div>' +
+      '<div class="bl-step">① 받을 청구</div>' +
+      '<div class="bl-box bl-pick">' + charges.map((c) => '<label class="bl-pick-row"><input type="checkbox" data-c="' + c.id + '" data-r="' + remain(c) + '"' + (picked.has(c.id) ? ' checked' : '') + '>' +
+        '<span class="t">' + esc(c.title) + ' <small>' + shortD(c.dueDate) + (c.dueDate < today() ? ' · 기한 지남' : '') + '</small></span><b>' + won(remain(c)) + '원</b></label>').join('') + '</div>' +
+      '<div class="bl-step">② 어떻게 받았나요?</div>' +
+      '<div class="bl-mtiles" data-k="method">' + METHOD_UI.map((m, i) => '<button type="button" class="bl-mtile ' + m.cls + (i === 0 ? ' on' : '') + '" data-v="' + m.v + '"><i>' + m.ic + '</i><b>' + m.v + '</b><small>' + m.sub + '</small></button>').join('') + '</div>' +
+      '<div data-k="cardwrap"><div class="bl-step sm">카드사</div><div class="bl-chips" data-k="card">' + cards.map((c) => '<button type="button" class="bl-chip" data-v="' + esc(c) + '">' + esc(c) + '</button>').join('') + '</div></div>' +
       '<div class="bl-box gold" data-k="cashwrap"><div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center;">' +
       '<label class="bl-chk"><input type="checkbox" data-k="cashNeed" checked> 현금영수증 발행 대상</label>' +
       '<label class="bl-chk"><input type="checkbox" data-k="cashIssued"> 카드기에서 이미 발행함</label>' +
       '<input class="bl-in w140" data-k="cashNo" placeholder="승인번호 (선택)"></div>' +
       '<div class="bl-note" style="margin-top:6px;">발행 대상인데 아직 발행 안 했으면 현금영수증 메뉴의 "미발행"에 남아요.</div></div>' +
-      '<label class="bl-f"><span>메모</span><input class="bl-in" data-k="memo" placeholder="예: 10월분 · 어머님 계좌이체"></label>' +
-      '<div class="bl-note">납입액이 합계보다 적으면 기한이 빠른 청구부터 채우고 나머지는 부분납으로 남아요.</div>';
-    modal({ title: '납입 처리', body,
+      '<div class="bl-step">③ 금액 · 날짜</div>' +
+      '<div class="row"><label class="bl-f"><span>받은 금액</span><input class="bl-in num big" data-k="amount" inputmode="numeric"></label>' +
+      '<label class="bl-f"><span>납입일</span><input type="date" class="bl-in" data-k="date" value="' + today() + '"></label></div>' +
+      '<div class="bl-note" data-k="partnote"></div>' +
+      '<label class="bl-f"><span>메모 (선택)</span><input class="bl-in" data-k="memo" placeholder="예: 어머님 계좌이체 · 분할 1회차"></label>' +
+      '<div class="bl-pay-sum" data-k="sum"></div>';
+    let ok = null;
+    modal({ title: '납입 처리', wide: true, body,
       onOpen: (root) => {
-        const chips = root.querySelector('[data-k=method]');
-        const sync = () => {
-          const m = chips.querySelector('.on').dataset.v;
-          root.querySelector('[data-k=cardwrap]').hidden = m !== '카드';
-          root.querySelector('[data-k=cashwrap]').hidden = m === '카드' || m === '결제선생' || m === '온라인결제';
-          root.querySelector('[data-k=cashNeed]').checked = CASH_METHODS.includes(m);
-        };
-        chips.addEventListener('click', (e) => { const b = e.target.closest('.bl-chip'); if (!b) return; chips.querySelectorAll('.bl-chip').forEach((x) => x.classList.toggle('on', x === b)); sync(); });
+        const tiles = root.querySelector('[data-k=method]');
         const amt = root.querySelector('[data-k=amount]');
+        let touched = false;
+        const sel = () => [...root.querySelectorAll('[data-c]')].filter((x) => x.checked);
+        const due = () => sel().reduce((a, x) => a + Number(x.dataset.r), 0);
+        const method = () => tiles.querySelector('.on').dataset.v;
+        const card = () => { const c = root.querySelector('[data-k=card] .on'); return c ? c.dataset.v : ''; };
+        const sync = () => {
+          const m = method(), d = due(), a = touched ? num(amt.value) : d;
+          if (!touched) amt.value = won(d);
+          root.querySelector('[data-k=cardwrap]').hidden = m !== '카드';
+          root.querySelector('[data-k=cashwrap]').hidden = !CASH_METHODS.includes(m);
+          const pn = root.querySelector('[data-k=partnote]');
+          pn.innerHTML = a && a < d ? '<b style="color:var(--bl-amber)">분할 납입</b> — ' + won(a) + '원만 받고 남은 <b>' + won(d - a) + '원은 미수</b>로 남아요 (기한 빠른 청구부터 채움).' : (a > d ? '<b style="color:var(--bl-red)">받은 금액이 청구보다 ' + won(a - d) + '원 많아요</b>' : '');
+          const x = METHOD_UI.find((y) => y.v === m);
+          root.querySelector('[data-k=sum]').innerHTML = '<span class="bl-mb ' + x.cls + '">' + x.ic + ' ' + m + (m === '카드' && card() ? ' · ' + esc(card()) : '') + '</span> <b>' + won(a) + '원</b> 받음' + (sel().length ? ' · 청구 ' + sel().length + '건' : '');
+          if (ok) ok.textContent = m + ' ' + won(a) + '원 납입 처리';
+        };
+        tiles.addEventListener('click', (e) => { const b = e.target.closest('.bl-mtile'); if (!b) return; tiles.querySelectorAll('.bl-mtile').forEach((x) => x.classList.toggle('on', x === b)); root.querySelector('[data-k=cashNeed]').checked = CASH_METHODS.includes(b.dataset.v); sync(); });
+        root.querySelector('[data-k=card]').addEventListener('click', (e) => { const b = e.target.closest('.bl-chip'); if (!b) return; root.querySelectorAll('[data-k=card] .bl-chip').forEach((x) => x.classList.toggle('on', x === b)); sync(); });
+        root.querySelectorAll('[data-c]').forEach((x) => x.addEventListener('change', () => { touched = false; sync(); }));
+        amt.addEventListener('input', () => { touched = true; sync(); });
         amt.addEventListener('blur', () => { amt.value = won(num(amt.value)); });
+        ok = root.closest('.bl-modal').querySelector('footer .btn-primary');
         sync();
       },
       buttons: [{ label: '취소' }, { label: '납입 처리', cls: 'btn-primary', onClick: async (root) => {
         const method = root.querySelector('[data-k=method] .on').dataset.v;
+        const ids = [...root.querySelectorAll('[data-c]')].filter((x) => x.checked).map((x) => x.dataset.c);
+        const list = charges.filter((c) => ids.includes(c.id));
+        if (!list.length) { alert('받을 청구를 하나 이상 골라 주세요'); return false; }
+        const cardC = root.querySelector('[data-k=card] .on');
+        if (method === '카드' && !cardC && !confirm('카드사를 안 골랐어요. 카드사 없이 처리할까요?')) return false;
+        const sum = list.reduce((a, c) => a + remain(c), 0);
         const cashShown = !root.querySelector('[data-k=cashwrap]').hidden;
-        const p = { date: val(root, '[data-k=date]'), amount: val(root, '[data-k=amount]'), method, cardCompany: val(root, '[data-k=card]'),
+        const p = { date: val(root, '[data-k=date]'), amount: val(root, '[data-k=amount]'), method, cardCompany: cardC ? cardC.dataset.v : '',
           memo: val(root, '[data-k=memo]'), cashNeed: cashShown && chk(root, '[data-k=cashNeed]'), cashIssued: cashShown && chk(root, '[data-k=cashIssued]'), cashNo: val(root, '[data-k=cashNo]') };
         if (!p.date) { alert('납입일을 넣어 주세요'); return false; }
-        if (num(p.amount) > sum && !confirm('납입액이 남은 금액보다 ' + won(num(p.amount) - sum) + '원 많아요. 그대로 처리할까요?')) return false;
-        await payCharges(s, charges, p);
-        toast(s.name + ' ' + won(num(p.amount)) + '원 납입 처리했어요');
+        if (!num(p.amount)) { alert('받은 금액을 넣어 주세요'); return false; }
+        if (num(p.amount) < sum && !confirm(won(num(p.amount)) + '원만 받고 남은 ' + won(sum - num(p.amount)) + '원은 미수로 남길까요?')) return false;
+        if (num(p.amount) > sum && !confirm('받은 금액이 청구보다 ' + won(num(p.amount) - sum) + '원 많아요. 그대로 처리할까요?')) return false;
+        await payCharges(s, list, p);
+        toast(s.name + ' · ' + method + ' ' + won(num(p.amount)) + '원 납입 처리했어요');
         after && after();
       } }] });
   }
@@ -496,7 +533,7 @@
       list.map((p) => '<tr class="' + (p.canceled ? 'off' : '') + '">' +
         (showStudent ? '<td><button class="lnk" onclick="BL.openStudent(\'' + p.bsId + '\')">' + esc(p.studentName) + '</button> <small style="color:var(--muted)">' + branchShort(p.branch) + '</small></td>' : '') +
         '<td>' + dueCell(p) + '</td><td>' + shortD(p.date) + paidLate(p) + '</td><td>' + (p.kind === '환불' ? '<span class="bl-st unpaid">환불</span>' : p.canceled ? '<span class="bl-st cancel">취소</span>' : '납입') + '</td>' +
-        '<td class="r"><b>' + won(p.amount) + '</b></td><td>' + esc(p.method || '') + (p.cardCompany ? ' · ' + esc(p.cardCompany) : '') + onlineCell(p) + '</td>' +
+        '<td class="r"><b>' + won(p.amount) + '</b></td><td>' + methodBadge(p.method) + (p.cardCompany ? ' <small>' + esc(p.cardCompany) + '</small>' : '') + onlineCell(p) + '</td>' +
         '<td class="wrap">' + esc((p.allocations || []).map((a) => a.title).join(', ') || p.memo || '') + '</td>' +
         '<td>' + cashCell(p) + '</td><td>' + esc(p.by || '') + '</td>' +
         (showStudent ? '' : '<td>' + (p.canceled ? '<small style="color:var(--muted)">' + esc(p.canceledBy || '') + ' 취소</small>' : '<button class="bl-mini red" onclick="BL.cancelPay(\'' + p.id + '\')">납입 취소</button>') + '</td>') +
@@ -638,28 +675,14 @@
     const t = today();
     S.cur.charges = charges; S.cur.pays = pays;
 
-    box.innerHTML =
-      // 기본 정보
-      '<div class="card"><div class="bl-head"><h3>' + esc(s.name) + '</h3><span class="bl-tag">' + esc(s.branch || '관 미지정') + '</span>' +
-      '<span class="bl-tag ' + (s.status === '재원' ? 'gold' : 'gray') + '">' + esc(s.status || '') + '</span>' +
-      (s.payDay ? '<span class="bl-tag">매월 ' + s.payDay + '일 납입</span>' : '<span class="bl-tag gray" style="color:var(--bl-red)">납입일 없음 · 자동 발생 안 됨</span>') +
-      (hp ? '<span class="bl-tag gray">' + (hp.status === '퇴원' ? '홈페이지 퇴원' : '홈페이지 계정 연결됨') + '</span>' : '') +
-      '<div class="sum"><span>미납 <b style="color:var(--bl-red)">' + won(openC.reduce((a, c) => a + remain(c), 0)) + '원</b></span><span>총 납입 <b>' + won(totPaid) + '원</b></span></div></div>' +
-      '<div class="bl-profile" id="blProf">' +
-      fld('이름', 'name', s.name) + fldSel('관', 'branch', ['평촌관', '산본관'], s.branch) + fld('학년', 'grade', s.grade, '예: 고2') + fld('학교', 'school', s.school) +
-      fld('학부모 연락처', 'parentPhone', s.parentPhone) + fld('학생 연락처', 'phone', s.phone) + fldSel('상태', 'status', ['재원', '휴원', '퇴원'], s.status) + fld('매월 납입일', 'payDay', s.payDay || '', '1~31', 'num') +
-      fld('입학일', 'joinDate', s.joinDate, '', 'date') + fld('퇴원일', 'leaveDate', s.leaveDate, '', 'date') + fld('아카 학생번호', 'acaNo', s.acaNo, '아카 이전 때 사용') +
-      '<label class="bl-f"><span>홈페이지 학생 연결</span><select class="bl-in" data-p="studentId">' + hpOptions(s.studentId) + '</select></label>' +
-      '<label class="bl-f span4"><span>메모</span><textarea class="bl-in" rows="2" data-p="memo">' + esc(s.memo || '') + '</textarea></label></div>' +
-      '<div style="display:flex;gap:8px;margin-top:12px;"><button class="btn btn-primary btn-sm" onclick="BL.saveProfile()">기본 정보 저장</button>' +
-      '<span class="sp" style="flex:1"></span><button class="btn btn-danger btn-sm" onclick="BL.deleteStudent()">수납 학생 삭제</button></div></div>' +
-      // 수강반
-      '<div class="card"><div class="bl-head"><h3>수강반</h3><span class="bl-note">수강료 − 할인 = 매달 청구액. 자동이 켜져 있으면 납입일 기준으로 매달 청구가 생겨요.</span>' +
-      '<div class="sum"><button class="btn btn-secondary btn-sm" onclick="BL.addEnroll()">+ 수강반 추가</button></div></div>' +
-      enrollTable(s) + '</div>' +
-      // 청구
-      '<div class="card"><div class="bl-head"><h3>청구 · 미납</h3><div class="bl-seg" id="blCv"><button type="button" data-v="open" class="' + (u.chargeView === 'open' ? 'on' : '') + '">남은 것 (' + openC.length + ')</button><button type="button" data-v="all" class="' + (u.chargeView !== 'open' ? 'on' : '') + '">전체 (' + charges.length + ')</button></div>' +
-      '<div class="sum"><button class="btn btn-primary btn-sm" onclick="BL.paySelected()">선택 납입 처리</button><button class="btn btn-secondary btn-sm" onclick="BL.payLink()" title="체크한 청구만, 체크 안 하면 남은 청구 전부">💳 결제 링크 보내기</button><button class="btn btn-secondary btn-sm" onclick="BL.addChargeCur()">+ 청구 추가</button><button class="btn btn-secondary btn-sm" onclick="BL.refund()">환불 기록</button></div></div>' +
+    const openSum = openC.reduce((a, c) => a + remain(c), 0);
+    const overN = openC.filter((c) => c.dueDate && c.dueDate < t).length;
+    const tab = u.tab || 'charges';
+    const tabs = [['charges', '청구 · 미납', openC.length], ['pays', '납입 이력', pays.filter((p) => !p.canceled).length], ['enroll', '수강반', activeEnrolls(s).length], ['profile', '기본 정보', '']];
+    let body = '';
+    if (tab === 'charges') body =
+      '<div class="bl-head" style="margin-bottom:8px;"><div class="bl-seg" id="blCv"><button type="button" data-v="open" class="' + (u.chargeView === 'open' ? 'on' : '') + '">남은 것 (' + openC.length + ')</button><button type="button" data-v="all" class="' + (u.chargeView !== 'open' ? 'on' : '') + '">전체 (' + charges.length + ')</button></div>' +
+      '<span class="bl-note">체크한 청구만 납입·결제 링크에 들어가요. 체크 안 하면 남은 청구 전부예요.</span></div>' +
       (shown.length ? '<div class="bl-tw mid"><table class="bl-t"><thead><tr><th class="c"><input type="checkbox" id="blCall"></th><th>내역</th><th>납입기한</th><th>납입일</th><th class="r">청구액</th><th class="r">납입액</th><th class="r">남은 금액</th><th>상태</th><th>미납 사유 · 메모</th><th></th></tr></thead><tbody>' +
         shown.map((c) => { const can = c.status !== '취소' && remain(c) > 0; return '<tr class="' + (c.status === '취소' ? 'off' : '') + '">' +
           '<td class="c">' + (can ? '<input type="checkbox" class="blCk" value="' + c.id + '">' : '') + '</td>' +
@@ -668,16 +691,47 @@
           '<td class="r">' + won(c.amount) + '</td><td class="r">' + won(c.paid) + '</td><td class="r"><b>' + won(c.status === '취소' ? 0 : remain(c)) + '</b></td><td>' + stBadge(c, t) + '</td>' +
           '<td class="wrap">' + esc([c.unpaidReason, c.note].filter(Boolean).join(' · ')) + '</td>' +
           '<td>' + (c.status === '취소' ? '' : '<button class="bl-mini" onclick="BL.editCharge(\'' + c.id + '\')">변경</button> <button class="bl-mini" onclick="BL.reasonCharge(\'' + c.id + '\')">사유</button> ' + ((c.paid || 0) > 0 ? '' : '<button class="bl-mini red" onclick="BL.cancelChargeUI(\'' + c.id + '\')">취소</button>')) + '</td></tr>'; }).join('') +
-        '</tbody></table></div>' : '<div class="bl-empty">' + (u.chargeView === 'open' ? '남은 청구가 없어요 👍' : '청구 기록이 없어요') + '</div>') + '</div>' +
-      // 납입 이력
-      '<div class="card"><div class="bl-head"><h3>납입 이력</h3></div>' + payTable(pays, false) + '</div>';
+        '</tbody></table></div>' : '<div class="bl-empty">' + (u.chargeView === 'open' ? '남은 청구가 없어요 👍' : '청구 기록이 없어요') + '</div>');
+    else if (tab === 'pays') body = payTable(pays, false);
+    else if (tab === 'enroll') body =
+      '<div class="bl-head" style="margin-bottom:8px;"><span class="bl-note">수강료 − 할인 = 매달 청구액. 자동이 켜져 있으면 납입일 기준으로 매달 청구가 생겨요.</span>' +
+      '<div class="sum"><button class="btn btn-secondary btn-sm" onclick="BL.addEnroll()">+ 수강반 추가</button></div></div>' + enrollTable(s);
+    else body =
+      '<div class="bl-profile" id="blProf">' +
+      fld('이름', 'name', s.name) + fldSel('관', 'branch', ['평촌관', '산본관'], s.branch) + fld('학년', 'grade', s.grade, '예: 고2') + fld('학교', 'school', s.school) +
+      fld('학부모 연락처', 'parentPhone', s.parentPhone) + fld('학생 연락처', 'phone', s.phone) + fldSel('상태', 'status', ['재원', '휴원', '퇴원'], s.status) + fld('매월 납입일', 'payDay', s.payDay || '', '1~31', 'num') +
+      fld('입학일', 'joinDate', s.joinDate, '', 'date') + fld('퇴원일', 'leaveDate', s.leaveDate, '', 'date') + fld('아카 학생번호', 'acaNo', s.acaNo, '아카 이전 때 사용') +
+      '<label class="bl-f"><span>홈페이지 학생 연결</span><select class="bl-in" data-p="studentId">' + hpOptions(s.studentId) + '</select></label>' +
+      '<label class="bl-f span4"><span>메모</span><textarea class="bl-in" rows="2" data-p="memo">' + esc(s.memo || '') + '</textarea></label></div>' +
+      '<div style="display:flex;gap:8px;margin-top:12px;"><button class="btn btn-primary btn-sm" onclick="BL.saveProfile()">기본 정보 저장</button>' +
+      '<span class="sp" style="flex:1"></span><button class="btn btn-danger btn-sm" onclick="BL.deleteStudent()">수납 학생 삭제</button></div>';
+
+    box.innerHTML =
+      // 위: 학생 요약 + 큰 기능 버튼 (누르면 창이 따로 열림)
+      '<div class="card bl-sum"><div class="bl-head"><h3>' + esc(s.name) + '</h3><span class="bl-tag">' + esc(s.branch || '관 미지정') + '</span>' +
+      '<span class="bl-tag ' + (s.status === '재원' ? 'gold' : 'gray') + '">' + esc(s.status || '') + '</span>' +
+      '<span class="bl-tag gray">' + esc(classNames(s)) + '</span>' +
+      (s.payDay ? '<span class="bl-tag">매월 ' + s.payDay + '일 납입</span>' : '<span class="bl-tag gray" style="color:var(--bl-red)">납입일 없음 · 자동 발생 안 됨</span>') +
+      (hp ? '<span class="bl-tag gray">' + (hp.status === '퇴원' ? '홈페이지 퇴원' : '홈페이지 연결됨') + '</span>' : '') + '</div>' +
+      '<div class="bl-kpis"><div class="k red"><span>남은 금액</span><b>' + won(openSum) + '원</b><small>' + openC.length + '건' + (overN ? ' · 기한 지남 ' + overN + '건' : '') + '</small></div>' +
+      '<div class="k"><span>총 납입</span><b>' + won(totPaid) + '원</b><small>' + pays.filter((p) => !p.canceled && p.kind !== '환불').length + '번</small></div></div>' +
+      '<div class="bl-acts">' +
+      '<button class="bl-act pay" onclick="BL.paySelected()"><i>💰</i><b>납입 처리</b><small>카드 · 현금 · 계좌이체</small></button>' +
+      '<button class="bl-act" onclick="BL.payLink()"><i>💳</i><b>결제 링크 보내기</b><small>학부모 휴대폰 결제</small></button>' +
+      '<button class="bl-act" onclick="BL.addChargeCur()"><i>➕</i><b>청구 추가</b><small>단기 · 특강 · 과외 · 교재</small></button>' +
+      '<button class="bl-act" onclick="BL.refund()"><i>↩️</i><b>환불 기록</b><small>환불 · 이월</small></button>' +
+      '</div></div>' +
+      // 아래: 탭 — 누른 것 하나만 보임
+      '<div class="card"><div class="bl-tabs" id="blStab">' + tabs.map((x) => '<button type="button" data-t="' + x[0] + '" class="' + (tab === x[0] ? 'on' : '') + '">' + x[1] + (x[2] !== '' ? ' <small>' + x[2] + '</small>' : '') + '</button>').join('') + '</div>' +
+      body + '</div>';
     // 홈페이지와 연결된 학생: 기본 정보는 홈페이지 학생 정보에서만 고침 (여기서는 잠금)
     if (hp) {
       HP_FIELDS.forEach((k) => { const el = box.querySelector('#blProf [data-p="' + k + '"]'); if (el) { el.disabled = true; el.title = '홈페이지 학생 정보(관리자 화면)에서 고치면 자동으로 바뀌어요'; } });
       const pr = $('blProf'); if (pr) pr.insertAdjacentHTML('afterbegin', '<div class="bl-note span4" style="margin-bottom:4px;">이름·관·학년·학교·연락처는 홈페이지 학생 정보가 기준이라 여기서는 잠겨 있어요. 관리자 화면 학생 관리에서 고치면 자동으로 맞춰져요.' + (hp.status === '퇴원' ? ' <b style="color:var(--bl-red)">홈페이지에서 퇴원 처리된 학생이에요.</b>' : '') + '</div>');
     }
 
-    $('blCv').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; u.chargeView = b.dataset.v; renderScard(); };
+    $('blStab').onclick = (e) => { const b = e.target.closest('button[data-t]'); if (!b) return; u.tab = b.dataset.t; renderScard(); };
+    if ($('blCv')) $('blCv').onclick = (e) => { const b = e.target.closest('button'); if (!b) return; u.chargeView = b.dataset.v; renderScard(); };
     const all = $('blCall'); if (all) all.onchange = () => box.querySelectorAll('.blCk').forEach((x) => { x.checked = all.checked; });
   }
   function fld(label, key, v, ph, type) {
@@ -956,9 +1010,9 @@
   BL.paySelected = () => {
     const s = studentById(S.cur.student); if (!s) return;
     const ids = [...document.querySelectorAll('#blScard .blCk:checked')].map((x) => x.value);
-    const list = (S.cur.charges || []).filter((c) => ids.includes(c.id)).sort((a, b) => sortKo(a.dueDate, b.dueDate));
-    if (!list.length) { alert('납입할 청구를 체크해 주세요'); return; }
-    payModal(s, list, () => { renderSlist(); renderScard(); });
+    const open = (S.cur.charges || []).filter((c) => c.status !== '취소' && remain(c) > 0).sort((a, b) => sortKo(a.dueDate, b.dueDate));
+    if (!open.length) { alert('남은 청구가 없어요. 받을 돈이 있으면 먼저 「청구 추가」를 해 주세요.'); return; }
+    payModal(s, open, () => { renderSlist(); renderScard(); }, ids.length ? ids : open.map((c) => c.id));
   };
   // ── 결제 링크 보내기 (아카 「모바일결제」 대체 · 토스페이먼츠) ─────────────
   //   체크한 청구가 있으면 그 청구만, 없으면 남은 청구 전부를 링크로 보냄

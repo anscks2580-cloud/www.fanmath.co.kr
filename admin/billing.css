@@ -50,8 +50,7 @@
 .bl-t tr.off td { color:#A8A3B8; }
 .bl-t td.r, .bl-t th.r { text-align:right; font-variant-numeric:tabular-nums; }
 .bl-t td.c, .bl-t th.c { text-align:center; }
-.bl-t td.wrap { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:90px; max-width:220px; }
-.bl-t td.wrap:hover { white-space:normal; overflow:visible; }
+.bl-t td.wrap { white-space:normal; min-width:90px; max-width:220px; }
 .bl-t tfoot td { position:sticky; bottom:0; background:#F4F2FA; font-weight:700; border-top:1px solid var(--bl-line); }
 .bl-t input[type=checkbox] { accent-color:var(--purple, #5B3FA6); width:15px; height:15px; cursor:pointer; }
 .bl-t .lnk { background:none; border:none; padding:0; color:var(--purple, #5B3FA6); font-weight:600; cursor:pointer; font-family:inherit; font-size:13px; }
@@ -126,3 +125,50 @@
   .bl-kpis { grid-template-columns:1fr; }
   .bl-modal .row, .bl-modal .row.three { grid-template-columns:1fr; }
 }
+
+/* ── 학생 수납: 요약 + 큰 기능 버튼 + 탭 (2026-11-24) ── */
+.bl-sum .bl-head { flex-wrap:wrap; }
+.bl-kpis { display:flex; gap:12px; margin:10px 0 14px; flex-wrap:wrap; }
+.bl-kpis .k { flex:1; min-width:150px; background:var(--bl-soft); border:1px solid var(--bl-line); border-radius:10px; padding:10px 14px; display:flex; flex-direction:column; gap:2px; }
+.bl-kpis .k span { font-size:11px; color:var(--muted); }
+.bl-kpis .k b { font-size:20px; font-variant-numeric:tabular-nums; }
+.bl-kpis .k small { font-size:11px; color:var(--muted); }
+.bl-kpis .k.red b { color:var(--bl-red); }
+.bl-acts { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); gap:10px; }
+.bl-act { display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:12px 14px; border:1px solid var(--bl-line); border-radius:10px; background:#fff; cursor:pointer; font-family:inherit; text-align:left; color:var(--off-white); }
+.bl-act:hover { border-color:var(--purple,#5B3FA6); box-shadow:0 2px 10px rgba(91,63,166,.12); }
+.bl-act i { font-style:normal; font-size:20px; }
+.bl-act b { font-size:14px; }
+.bl-act small { font-size:11px; color:var(--muted); }
+.bl-act.pay { background:var(--purple,#5B3FA6); border-color:var(--purple,#5B3FA6); color:#fff; }
+.bl-act.pay small { color:rgba(255,255,255,.8); }
+@media (max-width:760px) { .bl-acts { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+.bl-tabs { display:flex; gap:2px; border-bottom:2px solid var(--bl-line); margin:-4px 0 14px; overflow-x:auto; }
+.bl-tabs button { padding:9px 16px; border:none; background:none; font-family:inherit; font-size:14px; color:var(--muted); cursor:pointer; border-bottom:3px solid transparent; margin-bottom:-2px; white-space:nowrap; }
+.bl-tabs button.on { color:var(--purple,#5B3FA6); font-weight:700; border-bottom-color:var(--purple,#5B3FA6); }
+.bl-tabs button small { font-size:11px; background:var(--bl-soft); border-radius:8px; padding:1px 6px; margin-left:3px; }
+
+/* ── 납입 처리 창: 단계 · 납입 형태 큰 버튼 ── */
+.bl-pay-who { font-size:15px; margin-bottom:10px; } .bl-pay-who span { color:var(--muted); font-size:12px; }
+.bl-step { font-size:13px; font-weight:700; margin:14px 0 6px; color:var(--purple,#5B3FA6); }
+.bl-step.sm { font-size:12px; margin-top:10px; color:var(--muted); }
+.bl-pick { max-height:190px; overflow:auto; padding:6px 10px; }
+.bl-pick-row { display:flex; align-items:center; gap:10px; padding:6px 2px; border-bottom:1px dashed var(--bl-line); cursor:pointer; font-size:13px; }
+.bl-pick-row:last-child { border-bottom:none; }
+.bl-pick-row input { width:17px; height:17px; accent-color:var(--purple,#5B3FA6); }
+.bl-pick-row .t { flex:1; } .bl-pick-row .t small { color:var(--muted); }
+.bl-mtiles { display:grid; grid-template-columns:repeat(6, minmax(0,1fr)); gap:8px; }
+@media (max-width:760px) { .bl-mtiles { grid-template-columns:repeat(3, minmax(0,1fr)); } }
+.bl-mtile { display:flex; flex-direction:column; align-items:center; gap:2px; padding:12px 6px; border:2px solid var(--bl-line); border-radius:10px; background:#fff; cursor:pointer; font-family:inherit; color:var(--off-white); }
+.bl-mtile i { font-style:normal; font-size:24px; } .bl-mtile b { font-size:14px; } .bl-mtile small { font-size:10.5px; color:var(--muted); text-align:center; }
+.bl-mtile.on.card { border-color:#2463B8; background:#EEF4FC; } .bl-mtile.on.card b { color:#2463B8; }
+.bl-mtile.on.cash { border-color:#23864A; background:#EDF7F1; } .bl-mtile.on.cash b { color:#23864A; }
+.bl-mtile.on.bank { border-color:#0E7490; background:#ECF7FA; } .bl-mtile.on.bank b { color:#0E7490; }
+.bl-mtile.on.online { border-color:#5B3FA6; background:#F3F0FA; } .bl-mtile.on.online b { color:#5B3FA6; }
+.bl-mtile.on.etc { border-color:#6A6878; background:#F4F4F6; }
+.bl-in.big { font-size:18px; font-weight:700; padding:10px 12px; }
+.bl-pay-sum { margin-top:12px; padding:10px 12px; background:var(--bl-soft); border-radius:8px; font-size:14px; }
+/* 납입 형태 배지 (납입 이력 등) */
+.bl-mb { display:inline-block; padding:2px 8px; border-radius:10px; font-size:12px; font-weight:700; white-space:nowrap; }
+.bl-mb.card { background:#EEF4FC; color:#2463B8; } .bl-mb.cash { background:#EDF7F1; color:#23864A; }
+.bl-mb.bank { background:#ECF7FA; color:#0E7490; } .bl-mb.online { background:#F3F0FA; color:#5B3FA6; } .bl-mb.etc { background:#F1F1F4; color:#6A6878; }
