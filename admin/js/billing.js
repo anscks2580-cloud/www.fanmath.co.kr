@@ -29,7 +29,7 @@
   const C = { settings: P + 'billSettings', classes: P + 'billingClasses', students: P + 'billingStudents', charges: P + 'billCharges',
               payments: P + 'billPayments', books: P + 'billBooks', moves: P + 'billBookMoves' };
   window.BL_COLLECTIONS = C;
-  const METHODS = ['현금', '카드', '계좌이체', '결제선생', '기타'];
+  const METHODS = ['현금', '카드', '계좌이체', '온라인결제', '결제선생', '기타'];
   const CASH_METHODS = ['현금', '계좌이체'];
   const ITEMS = ['수강료', '교재비', '기타'];
   const DEFAULT_SETTINGS = {
@@ -345,7 +345,7 @@
         const sync = () => {
           const m = chips.querySelector('.on').dataset.v;
           root.querySelector('[data-k=cardwrap]').hidden = m !== '카드';
-          root.querySelector('[data-k=cashwrap]').hidden = m === '카드' || m === '결제선생';
+          root.querySelector('[data-k=cashwrap]').hidden = m === '카드' || m === '결제선생' || m === '온라인결제';
           root.querySelector('[data-k=cashNeed]').checked = CASH_METHODS.includes(m);
         };
         chips.addEventListener('click', (e) => { const b = e.target.closest('.bl-chip'); if (!b) return; chips.querySelectorAll('.bl-chip').forEach((x) => x.classList.toggle('on', x === b)); sync(); });
@@ -488,11 +488,21 @@
       list.map((p) => '<tr class="' + (p.canceled ? 'off' : '') + '">' +
         (showStudent ? '<td><button class="lnk" onclick="BL.openStudent(\'' + p.bsId + '\')">' + esc(p.studentName) + '</button> <small style="color:var(--muted)">' + branchShort(p.branch) + '</small></td>' : '') +
         '<td>' + dueCell(p) + '</td><td>' + shortD(p.date) + paidLate(p) + '</td><td>' + (p.kind === '환불' ? '<span class="bl-st unpaid">환불</span>' : p.canceled ? '<span class="bl-st cancel">취소</span>' : '납입') + '</td>' +
-        '<td class="r"><b>' + won(p.amount) + '</b></td><td>' + esc(p.method || '') + (p.cardCompany ? ' · ' + esc(p.cardCompany) : '') + '</td>' +
+        '<td class="r"><b>' + won(p.amount) + '</b></td><td>' + esc(p.method || '') + (p.cardCompany ? ' · ' + esc(p.cardCompany) : '') + onlineCell(p) + '</td>' +
         '<td class="wrap">' + esc((p.allocations || []).map((a) => a.title).join(', ') || p.memo || '') + '</td>' +
         '<td>' + cashCell(p) + '</td><td>' + esc(p.by || '') + '</td>' +
         (showStudent ? '' : '<td>' + (p.canceled ? '<small style="color:var(--muted)">' + esc(p.canceledBy || '') + ' 취소</small>' : '<button class="bl-mini red" onclick="BL.cancelPay(\'' + p.id + '\')">납입 취소</button>') + '</td>') +
         '</tr>').join('') + '</tbody></table></div>';
+  }
+  // 온라인 결제(토스) 표시 — 영수증 링크 · 토스에서 취소된 결제 경고 · 초과 납입 경고
+  function onlineCell(p) {
+    const o = p.online; if (!o) return '';
+    let h = '';
+    if (o.receiptUrl) h += ' <a class="bl-mini" href="' + esc(o.receiptUrl) + '" target="_blank" rel="noopener">영수증</a>';
+    if (o.test) h += ' <small class="bl-tag gray">테스트</small>';
+    if (p.onlineCanceled && !p.canceled) h += '<br><b style="color:var(--bl-red)">⚠ 토스에서 ' + esc(p.onlineCanceled.status) + ' (' + won(p.onlineCanceled.amount) + '원) — 확인 후 납입 취소</b>';
+    if (p.overpaid) h += '<br><b style="color:var(--bl-red)">⚠ 초과 납입 ' + won(p.overpaid) + '원</b>';
+    return h;
   }
   // 납입 기록의 납입기한 (연결된 청구에서 · 여러 건이면 가장 빠른 것)
   function payDues(p) {
@@ -641,7 +651,7 @@
       enrollTable(s) + '</div>' +
       // 청구
       '<div class="card"><div class="bl-head"><h3>청구 · 미납</h3><div class="bl-seg" id="blCv"><button type="button" data-v="open" class="' + (u.chargeView === 'open' ? 'on' : '') + '">남은 것 (' + openC.length + ')</button><button type="button" data-v="all" class="' + (u.chargeView !== 'open' ? 'on' : '') + '">전체 (' + charges.length + ')</button></div>' +
-      '<div class="sum"><button class="btn btn-primary btn-sm" onclick="BL.paySelected()">선택 납입 처리</button><button class="btn btn-secondary btn-sm" onclick="BL.addChargeCur()">+ 청구 추가</button><button class="btn btn-secondary btn-sm" onclick="BL.refund()">환불 기록</button></div></div>' +
+      '<div class="sum"><button class="btn btn-primary btn-sm" onclick="BL.paySelected()">선택 납입 처리</button><button class="btn btn-secondary btn-sm" onclick="BL.payLink()" title="체크한 청구만, 체크 안 하면 남은 청구 전부">💳 결제 링크 보내기</button><button class="btn btn-secondary btn-sm" onclick="BL.addChargeCur()">+ 청구 추가</button><button class="btn btn-secondary btn-sm" onclick="BL.refund()">환불 기록</button></div></div>' +
       (shown.length ? '<div class="bl-tw mid"><table class="bl-t"><thead><tr><th class="c"><input type="checkbox" id="blCall"></th><th>내역</th><th>납입기한</th><th>납입일</th><th class="r">청구액</th><th class="r">납입액</th><th class="r">남은 금액</th><th>상태</th><th>미납 사유 · 메모</th><th></th></tr></thead><tbody>' +
         shown.map((c) => { const can = c.status !== '취소' && remain(c) > 0; return '<tr class="' + (c.status === '취소' ? 'off' : '') + '">' +
           '<td class="c">' + (can ? '<input type="checkbox" class="blCk" value="' + c.id + '">' : '') + '</td>' +
@@ -940,6 +950,50 @@
     if (!list.length) { alert('납입할 청구를 체크해 주세요'); return; }
     payModal(s, list, () => { renderSlist(); renderScard(); });
   };
+  // ── 결제 링크 보내기 (아카 「모바일결제」 대체 · 토스페이먼츠) ─────────────
+  //   체크한 청구가 있으면 그 청구만, 없으면 남은 청구 전부를 링크로 보냄
+  //   학부모는 링크를 열 때의 미납 내역을 보고 카드·계좌이체로 결제 → 결제되면 자동으로 납입 처리
+  BL.payLink = () => {
+    const s = studentById(S.cur.student); if (!s) return;
+    const ids = [...document.querySelectorAll('#blScard .blCk:checked')].map((x) => x.value);
+    const open = (S.cur.charges || []).filter((c) => c.status !== '취소' && remain(c) > 0);
+    const list = ids.length ? open.filter((c) => ids.includes(c.id)) : open;
+    if (!list.length) { alert('남은 청구가 없어요. 결제 링크를 보낼 금액이 없습니다.'); return; }
+    const sum = list.reduce((a, c) => a + remain(c), 0);
+    const body =
+      (P ? '<div class="bl-box gold" style="margin-bottom:10px;"><b>테스트 모드</b> — 테스트 키로만 결제돼서 실제 돈이 나가지 않아요. 학부모 번호 대신 <b>직접 입력</b>에 본인 번호를 넣어 테스트해 보세요.</div>' : '') +
+      '<div class="bl-box"><div style="font-size:12px;color:var(--muted);margin-bottom:6px;">' + esc(s.name) + ' · ' + esc(s.branch || '') + ' · ' + (ids.length ? '체크한 청구 ' : '남은 청구 전부 ') + list.length + '건</div>' +
+      list.map((c) => '<div style="display:flex;justify-content:space-between;font-size:13px;padding:2px 0;"><span>' + esc(c.title) + ' <small style="color:var(--muted)">' + shortD(c.dueDate) + '</small></span><b>' + won(remain(c)) + '원</b></div>').join('') +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;border-top:1px solid var(--bl-line);padding-top:8px;"><span>안내 금액</span><span class="bl-total">' + won(sum) + '원</span></div></div>' +
+      '<div class="bl-f"><span>받는 사람</span><div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">' +
+      '<label class="bl-chk"><input type="checkbox" data-k="parent"' + (P ? '' : ' checked') + (s.parentPhone ? '' : ' disabled') + '> 학부모 ' + esc(s.parentPhone || '(번호 없음)') + '</label>' +
+      '<label class="bl-chk"><input type="checkbox" data-k="student"' + (s.phone ? '' : ' disabled') + '> 학생 ' + esc(s.phone || '(번호 없음)') + '</label></div></div>' +
+      '<label class="bl-f"><span>직접 입력 (선택)</span><input class="bl-in" data-k="extra" placeholder="예: 01012345678" inputmode="numeric"></label>' +
+      '<div class="bl-note">문자에는 학생 이름·금액·결제 링크가 들어가요. 학부모가 링크를 열면 <b>그 순간의 미납 내역</b>이 보이고, 결제가 끝나면 이 화면 납입 이력에 「온라인결제」로 자동 기록돼요.' +
+      ' 청구서 화면의 안내 문구는 반·수강료 › 온라인 결제 설정에서 바꿀 수 있어요.</div>' +
+      '<div data-k="result"></div>';
+    const call = async (root, mode) => {
+      const fn = httpsCallable(functionsInstance, 'billLinkSend');
+      const r = await fn({ prefix: P, bsId: s.id, chargeIds: ids.length ? list.map((c) => c.id) : [], sendMode: mode,
+        to: { parent: chk(root, '[data-k=parent]'), student: chk(root, '[data-k=student]'), extra: val(root, '[data-k=extra]') } });
+      const d = r.data || {};
+      root.querySelector('[data-k=result]').innerHTML = '<div class="bl-box gold" style="margin-top:10px;word-break:break-all;"><b>' + (mode === 'send' ? '보냈어요 · ' + esc(d.result || '') : '링크를 만들었어요') + '</b><br>' +
+        '<a href="' + esc(d.url) + '" target="_blank" rel="noopener">' + esc(d.url) + '</a> <button type="button" class="bl-mini" data-k="copy">복사</button></div>';
+      const cp = root.querySelector('[data-k=copy]');
+      if (cp) cp.onclick = () => { navigator.clipboard.writeText(d.url).then(() => toast('링크를 복사했어요')).catch(() => prompt('아래 링크를 복사하세요', d.url)); };
+      if (mode === 'send') toast(s.name + ' 결제 안내를 보냈어요');
+      return false;   // 창은 열어 둠 (링크 확인용)
+    };
+    modal({ title: '결제 링크 보내기 · ' + s.name, body,
+      buttons: [{ label: '닫기' },
+        { label: '링크만 만들기', cls: 'btn-secondary', onClick: (root) => call(root, 'link') },
+        { label: '문자·카톡 보내기', cls: 'btn-primary', onClick: async (root) => {
+          const n = ['parent', 'student'].filter((k) => chk(root, '[data-k=' + k + ']')).length + (val(root, '[data-k=extra]') ? 1 : 0);
+          if (!n) { alert('받는 사람을 골라 주세요'); return false; }
+          if (!confirm(won(sum) + '원 결제 안내를 ' + n + '곳에 보낼까요?')) return false;
+          return call(root, 'send');
+        } }] });
+  };
   const curCharge = (id) => (S.cur.charges || []).find((c) => c.id === id) || S.charges.get(id);
   BL.editCharge = (id) => {
     const c = curCharge(id); if (!c) return;
@@ -1171,7 +1225,9 @@
       '<label class="bl-f span2"><span>카드사 (쉼표로 구분)</span><input class="bl-in" data-s="cardCompanies" value="' + esc((st.cardCompanies || []).join(', ')) + '"></label>' +
       '<label class="bl-f span4"><span>기타 청구 항목 (쉼표로 구분)</span><input class="bl-in" data-s="etcItems" value="' + esc((st.etcItems || []).join(', ')) + '"></label></div>' +
       '<div class="bl-note" style="margin-top:8px;">시작 월보다 이전 달 수강료는 자동으로 만들지 않아요. 아카에서 데이터를 옮긴 뒤 시작 월을 정하면 겹치지 않아요.</div>' +
-      '<div style="margin-top:12px;display:flex;gap:8px;"><button class="btn btn-primary btn-sm" onclick="BL.saveSettings()">설정 저장</button><button class="btn btn-secondary btn-sm" onclick="BL.runAuto()">지금 자동 발생 실행</button></div></div>';
+      '<div style="margin-top:12px;display:flex;gap:8px;"><button class="btn btn-primary btn-sm" onclick="BL.saveSettings()">설정 저장</button><button class="btn btn-secondary btn-sm" onclick="BL.runAuto()">지금 자동 발생 실행</button></div></div>' +
+      '<div class="card" id="blPaySet"><div class="bl-empty">온라인 결제 설정을 불러오는 중...</div></div>';
+    renderPaySettings();
     $('blCb').onchange = (e) => { u.branch = e.target.value; renderClasses(); };
     $('blMc').onchange = (e) => { u.moveCls = e.target.value; renderClasses(); };
   }
@@ -1257,6 +1313,53 @@
       if (leave) { let h = 0; for (const st of list) { if ((await pushHomepageStatus(st, true, d)).includes('홈페이지도')) h++; } if (h) hpMsg = ' · 홈페이지 ' + h + '명도 퇴원'; else if (P) hpMsg = ' · 테스트 모드라 홈페이지는 그대로'; }
       toast(list.length + '명 처리했어요' + hpMsg + (after.length ? ' · 종료일 뒤 청구 ' + after.length + '건은 남아 있어요 (필요하면 학생 수납에서 취소)' : ''));
       renderClasses();
+    } catch (e) { fail(e); }
+  };
+  // ── 온라인 결제 설정 (토스페이먼츠 키 · 청구서 안내 문구) ──────────────
+  //   billPayConfig/main   : academyName · linkDays · notices{평촌관,산본관}
+  //   billPayConfig/secret : live{평촌관:{clientKey,secretKey}, 산본관:{...}} · test{clientKey,secretKey}
+  //   (실제·테스트 공용 설정 — 시크릿 키는 화면에 가려서 보여주고, 새로 입력할 때만 바뀜)
+  const mask = (k) => k ? k.slice(0, 12) + '••••••' + k.slice(-4) : '';
+  async function renderPaySettings() {
+    const box = $('blPaySet'); if (!box) return;
+    let m = {}, sc = {};
+    try { const [a, b] = await Promise.all([getDoc(doc(db, 'billPayConfig', 'main')), getDoc(doc(db, 'billPayConfig', 'secret'))]); m = a.exists() ? a.data() : {}; sc = b.exists() ? b.data() : {}; }
+    catch (e) { box.innerHTML = '<div class="bl-empty">설정을 불러오지 못했어요: ' + esc(e.message) + '</div>'; return; }
+    const live = sc.live || {}, test = sc.test || {}, nt = m.notices || {};
+    const keyRow = (title, k, cur) => '<div class="bl-box" style="margin-bottom:8px;"><b>' + title + '</b>' + (cur.clientKey && cur.secretKey ? ' <span class="bl-tag gold">연결됨' + (/^test_/.test(cur.clientKey) ? ' (테스트 키)' : '') + '</span>' : ' <span class="bl-tag gray">키 없음</span>') +
+      '<div class="row" style="margin-top:6px;"><label class="bl-f"><span>클라이언트 키</span><input class="bl-in" data-pk="' + k + '.clientKey" value="' + esc(cur.clientKey || '') + '" placeholder="live_ck_... 또는 test_ck_..."></label>' +
+      '<label class="bl-f"><span>시크릿 키 (새로 넣을 때만)</span><input class="bl-in" data-pk="' + k + '.secretKey" value="" placeholder="' + esc(mask(cur.secretKey) || 'live_sk_... 또는 test_sk_...') + '"></label></div></div>';
+    box.innerHTML = '<div class="bl-head"><h3>온라인 결제 설정 (토스페이먼츠)</h3></div>' +
+      '<div class="bl-note" style="margin-bottom:10px;">토스페이먼츠 상점관리자 › 개발자센터 › API 키에서 <b>API 개별 연동 키</b>(클라이언트 키·시크릿 키)를 관별로 넣어 주세요. 사업자가 관마다 다르면 키도 관마다 달라요.<br>' +
+      '테스트 화면에서는 아래 테스트 키로만 결제돼요 (비워 두면 토스 문서용 공개 테스트 키 사용).</div>' +
+      keyRow('평촌관 (실제)', 'live.평촌관', live['평촌관'] || {}) + keyRow('산본관 (실제)', 'live.산본관', live['산본관'] || {}) + keyRow('테스트', 'test', test) +
+      '<div class="row"><label class="bl-f"><span>결제 링크 유효 기간 (일)</span><input class="bl-in num" id="blPdays" value="' + esc(m.linkDays || 30) + '"></label>' +
+      '<label class="bl-f"><span>학원 이름 (청구서 맨 위)</span><input class="bl-in" id="blPname" value="' + esc(m.academyName || '송우찬수학학원') + '"></label></div>' +
+      '<div class="row"><label class="bl-f"><span>평촌관 청구서 안내 문구</span><textarea class="bl-in" rows="3" id="blPnPc" placeholder="예: 계좌이체를 원하시면 OO은행 ... 으로 보내 주셔도 됩니다.">' + esc(nt['평촌관'] || '') + '</textarea></label>' +
+      '<label class="bl-f"><span>산본관 청구서 안내 문구</span><textarea class="bl-in" rows="3" id="blPnSb">' + esc(nt['산본관'] || '') + '</textarea></label></div>' +
+      '<div class="bl-note">토스 웹훅 주소 (개발자센터 › 웹훅 › PAYMENT_STATUS_CHANGED): <code>https://asia-northeast3-songmath.cloudfunctions.net/billTossHook</code> — 상점관리자에서 결제를 취소하면 납입 이력에 경고가 떠요.</div>' +
+      '<div style="margin-top:12px;"><button class="btn btn-primary btn-sm" onclick="BL.savePaySettings()">온라인 결제 설정 저장</button></div>';
+  }
+  BL.savePaySettings = async () => {
+    const box = $('blPaySet'); if (!box) return;
+    try {
+      const cur = await getDoc(doc(db, 'billPayConfig', 'secret'));
+      const sc = cur.exists() ? cur.data() : {};
+      sc.live = sc.live || {}; sc.test = sc.test || {};
+      let bad = '';
+      box.querySelectorAll('[data-pk]').forEach((el) => {
+        const v = el.value.trim(); const [a, b, c] = el.dataset.pk.split('.');
+        const tgt = c ? (sc[a][b] = sc[a][b] || {}) : sc[a]; const key = c || b;
+        if (key === 'secretKey' && !v) return;               // 비워 두면 기존 시크릿 키 유지
+        if (v && key === 'clientKey' && !/^(live|test)_(g?ck)_/.test(v)) bad = '클라이언트 키는 live_ck_ 또는 test_ck_ 로 시작해요';
+        if (v && key === 'secretKey' && !/^(live|test)_(g?sk)_/.test(v)) bad = '시크릿 키는 live_sk_ 또는 test_sk_ 로 시작해요';
+        tgt[key] = v;
+      });
+      if (bad) { alert(bad); return; }
+      await setDoc(doc(db, 'billPayConfig', 'secret'), sc);
+      await setDoc(doc(db, 'billPayConfig', 'main'), { linkDays: Math.max(1, Math.min(90, num($('blPdays').value) || 30)), academyName: $('blPname').value.trim() || '송우찬수학학원',
+        notices: { '평촌관': $('blPnPc').value.trim(), '산본관': $('blPnSb').value.trim() } }, { merge: true });
+      toast('온라인 결제 설정을 저장했어요'); renderPaySettings();
     } catch (e) { fail(e); }
   };
   BL.saveSettings = async () => {
