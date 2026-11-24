@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>얼굴 인식 출결 | 송우찬수학학원</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="입구 출결">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#1B1530">
+<link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+<style>
+* { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html, body { margin:0; height:100%; background:#1B1530; color:#fff; font-family:-apple-system, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif; overflow:hidden; -webkit-user-select:none; user-select:none; }
+#stage { position:fixed; inset:0; }
+video { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transform:scaleX(-1); }
+.shade { position:absolute; inset:0; background:radial-gradient(ellipse 30% 42% at 50% 48%, transparent 0 96%, rgba(20,14,40,.72) 100%); pointer-events:none; }
+.ring { position:absolute; left:50%; top:48%; width:min(58vh, 46vw); aspect-ratio:3/4; transform:translate(-50%,-50%); border-radius:50%; border:5px solid rgba(255,255,255,.55); transition:border-color .2s, box-shadow .2s; }
+.ring.seen { border-color:#F5C518; box-shadow:0 0 30px rgba(245,197,24,.45); }
+.ring.ok { border-color:#22B07D; box-shadow:0 0 40px rgba(34,176,125,.6); }
+.top { position:absolute; top:0; left:0; right:0; display:flex; align-items:center; gap:14px; padding:18px 24px; background:linear-gradient(rgba(20,14,40,.85), transparent); }
+.top img { width:46px; height:46px; border-radius:12px; }
+.top .t1 { font-size:22px; font-weight:800; letter-spacing:-.5px; }
+.top .t2 { font-size:14px; opacity:.8; margin-top:2px; }
+.top .clock { margin-left:auto; font-size:34px; font-weight:800; font-variant-numeric:tabular-nums; }
+.bottom { position:absolute; left:0; right:0; bottom:0; padding:22px 24px 28px; text-align:center; background:linear-gradient(transparent, rgba(20,14,40,.9)); }
+.bottom .m { font-size:28px; font-weight:800; letter-spacing:-.5px; }
+.bottom .s { font-size:15px; opacity:.75; margin-top:6px; }
+/* 결과 */
+#result { position:absolute; inset:0; display:none; align-items:center; justify-content:center; background:rgba(20,14,40,.6); }
+#result.on { display:flex; }
+.rc { background:#fff; color:#1B1530; border-radius:28px; padding:36px 56px; text-align:center; min-width:min(520px, 86vw); box-shadow:0 30px 80px rgba(0,0,0,.4); animation:pop .35s cubic-bezier(.2,.9,.3,1.4); }
+.rc .ic { width:96px; height:96px; border-radius:50%; margin:0 auto 14px; display:flex; align-items:center; justify-content:center; font-size:54px; font-weight:900; color:#fff; }
+.rc .nm { font-size:40px; font-weight:900; letter-spacing:-1px; }
+.rc .gr { font-size:16px; color:#77738A; margin-top:2px; }
+.rc .kd { font-size:30px; font-weight:800; margin-top:14px; }
+.rc .tm { font-size:18px; color:#77738A; margin-top:6px; }
+@keyframes pop { from { transform:scale(.6); opacity:0; } to { transform:scale(1); opacity:1; } }
+/* 로그인·안내 */
+#panel { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; background:#1B1530; }
+.lg { width:min(420px, 90vw); background:#fff; color:#1B1530; border-radius:22px; padding:30px 26px; text-align:center; }
+.lg img { width:64px; height:64px; border-radius:16px; }
+.lg h2 { margin:12px 0 4px; font-size:22px; }
+.lg p { font-size:13.5px; color:#77738A; margin:0 0 18px; line-height:1.6; }
+.lg input { width:100%; padding:13px 14px; font-size:16px; border:1.5px solid #DDD8EA; border-radius:12px; margin-bottom:10px; font-family:inherit; }
+.lg button { width:100%; padding:14px; border:0; border-radius:12px; background:#5B3FA6; color:#fff; font-size:16px; font-weight:800; font-family:inherit; }
+.lg .er { color:#C8341F; font-size:13.5px; min-height:20px; margin-top:10px; }
+</style>
+</head>
+<body>
+<div id="stage" style="display:none;">
+  <video id="vid" playsinline muted autoplay></video>
+  <div class="shade"></div>
+  <div class="ring" id="ring"></div>
+  <div class="top">
+    <img src="/assets/icons/apple-touch-icon.png" alt="" id="logo">
+    <div><div class="t1">송우찬수학학원 <span id="brName"></span></div><div class="t2">얼굴 인식 등원 · 하원</div></div>
+    <div class="clock" id="clock"></div>
+  </div>
+  <div class="bottom"><div class="m" id="msg">준비 중…</div><div class="s" id="sub"></div></div>
+  <div id="result"><div class="rc" id="rc"></div></div>
+</div>
+<div id="panel"><div class="lg"><img src="/assets/icons/apple-touch-icon.png" alt=""><h2>입구 출결 화면</h2><p>확인 중…</p></div></div>
+
+<script type="module">
+// ══════════════════════════════════════
+// 입구 아이패드 — 얼굴 인식 등원·하원
+//  · 입구 기기 전용 계정(kiosks/{uid}, 관 지정)으로 로그인
+//  · 그 관 학생의 얼굴 정보(faceProfiles)만 불러와 아이패드 안에서 비교
+//  · 오늘 처음 인식 → 등원(attendance 생성), 등원 후 일정 시간 지나 다시 인식 → 하원
+//  · 기록 형식은 기존 코드 출결과 같음 → 학부모 앱 알림·카톡/문자 자동 발송 그대로
+//  · 로고를 5번 연속 누르면 로그아웃
+// ══════════════════════════════════════
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, setDoc, updateDoc, query, where, onSnapshot, serverTimestamp, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { FIREBASE_CONFIG, DEFAULT_SETTINGS, loadHuman, startCamera, detectMainFace, bestMatch, samplesFromDoc, todayKST, nowKST, esc } from './face-common.js?v=1';
+
+const app = initializeApp(FIREBASE_CONFIG);
+const auth = getAuth(app), db = getFirestore(app);
+setPersistence(auth, browserLocalPersistence).catch(() => {});
+
+const $ = (id) => document.getElementById(id);
+const panel = $('panel'), stage = $('stage');
+let kiosk = null;              // { uid, branch, label }
+let settings = { ...DEFAULT_SETTINGS };
+let profiles = [];             // [{ uid, name, samples }]
+let students = {};             // uid → 학생 문서 (이 관)
+let unsubs = [];
+let running = false;
+let busy = false;              // 결과 표시 중
+const recent = {};             // uid → 마지막 처리 시각 (같은 학생 연속 처리 방지)
+let streak = { uid: null, n: 0 };
+let unknownSince = 0;
+
+function showLogin(err) {
+  stage.style.display = 'none'; panel.style.display = 'flex';
+  panel.innerHTML = `<div class="lg"><img src="/assets/icons/apple-touch-icon.png" alt=""><h2>입구 출결 화면</h2>
+    <p>관리자 페이지에서 만든 <b>입구 기기 계정</b>으로 로그인해 주세요.<br>한 번 로그인하면 계속 유지돼요.</p>
+    <input id="lid" placeholder="아이디 (예: kiosk-pc)" autocapitalize="off" autocorrect="off">
+    <input id="lpw" type="password" placeholder="비밀번호">
+    <button id="lbtn">로그인</button><div class="er" id="ler">${esc(err || '')}</div></div>`;
+  const go = async () => {
+    let id = $('lid').value.trim().toLowerCase(); const pw = $('lpw').value;
+    if (!id || !pw) return;
+    if (!id.includes('@')) id += '@songmath.kr';
+    $('lbtn').disabled = true; $('lbtn').textContent = '확인 중…';
+    try { await signInWithEmailAndPassword(auth, id, pw); }
+    catch (e) { $('ler').textContent = '아이디 또는 비밀번호가 맞지 않아요.'; $('lbtn').disabled = false; $('lbtn').textContent = '로그인'; }
+  };
+  $('lbtn').onclick = go; $('lpw').onkeydown = (e) => { if (e.key === 'Enter') go(); };
+}
+function showPanel(html) { stage.style.display = 'none'; panel.style.display = 'flex'; panel.innerHTML = `<div class="lg">${html}</div>`; }
+
+onAuthStateChanged(auth, async (user) => {
+  unsubs.forEach((u) => { try { u(); } catch (e) {} }); unsubs = [];
+  running = false;
+  if (!user) { showLogin(); return; }
+  const k = await getDoc(doc(db, 'kiosks', user.uid)).catch(() => null);
+  if (!k || !k.exists()) {
+    showPanel(`<h2>입구 기기 계정이 아니에요</h2><p>관리자 페이지 → 얼굴 인식 출결 관리 → 「입구 기기 계정」에서 만든 계정으로 로그인해 주세요.</p><button id="out">로그아웃</button>`);
+    $('out').onclick = () => signOut(auth); return;
+  }
+  kiosk = { uid: user.uid, ...k.data() };
+  start();
+});
+
+async function start() {
+  showPanel(`<h2>${esc(kiosk.branch)} 입구 출결</h2><p id="pst">준비 중…</p>`);
+  const st = (t) => { const e = $('pst'); if (e) e.textContent = t; };
+  try {
+    // 설정 · 학생 · 얼굴 정보 (실시간 — 관리자 화면에서 새로 등록하면 바로 반영)
+    unsubs.push(onSnapshot(doc(db, 'settings', 'faceKiosk'), (d) => { settings = { ...DEFAULT_SETTINGS, ...(d.exists() ? d.data() : {}) }; }, () => {}));
+    unsubs.push(onSnapshot(query(collection(db, 'students'), where('branch', '==', kiosk.branch)), (snap) => {
+      students = {}; snap.forEach((d) => { const s = d.data(); if (s.status !== '퇴원') students[d.id] = s; });
+    }, (e) => console.warn('학생 명단', e)));
+    await new Promise((resolve, reject) => {
+      let first = true;
+      unsubs.push(onSnapshot(query(collection(db, 'faceProfiles'), where('branch', '==', kiosk.branch)), (snap) => {
+        profiles = [];
+        snap.forEach((d) => { const p = d.data(); const samples = samplesFromDoc(p); if (samples.length) profiles.push({ uid: d.id, name: p.name || '', samples }); });
+        if (first) { first = false; resolve(); }
+      }, (e) => { if (first) reject(e); }));
+    });
+    await loadHuman(st);
+    st('카메라 켜는 중…');
+    await startCamera($('vid'));
+  } catch (e) {
+    showPanel(`<h2>시작하지 못했어요</h2><p>${esc(e.message || e.name)}<br><br>카메라 권한을 허용했는지, 인터넷이 연결됐는지 확인해 주세요.</p><button onclick="location.reload()">다시 시도</button>`);
+    return;
+  }
+  panel.style.display = 'none'; stage.style.display = 'block';
+  $('brName').textContent = kiosk.branch;
+  keepAwake();
+  running = true;
+  idle();
+  loop();
+}
+
+// ── 화면 계속 켜두기 ──
+let wakeLock = null;
+async function keepAwake() {
+  try { if ('wakeLock' in navigator) { wakeLock = await navigator.wakeLock.request('screen'); } } catch (e) {}
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && running) keepAwake(); });
+
+// ── 시계 ──
+setInterval(() => { const c = $('clock'); if (c) c.textContent = nowKST(); }, 1000);
+
+// ── 로고 5번 → 로그아웃 ──
+let taps = [];
+$('logo').addEventListener('click', () => {
+  const t = Date.now(); taps = taps.filter((x) => t - x < 2500); taps.push(t);
+  if (taps.length >= 5) { taps = []; if (confirm('입구 출결 화면에서 로그아웃할까요?')) signOut(auth); }
+});
+
+function idle() {
+  $('ring').className = 'ring';
+  $('msg').textContent = '화면을 바라봐 주세요';
+  $('sub').textContent = `등록된 학생 ${profiles.length}명 · 처음 인식은 등원, 수업 후 다시 인식하면 하원`;
+}
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+async function loop() {
+  const video = $('vid');
+  while (running) {
+    if (busy || document.visibilityState !== 'visible') { await sleep(200); continue; }
+    let r;
+    try { r = await detectMainFace(video); } catch (e) { await sleep(300); continue; }
+    if (!running) break;
+    const f = r.face;
+    if (!f || f.box[2] < video.videoWidth * settings.minFaceRatio) {
+      streak = { uid: null, n: 0 }; unknownSince = 0; idle(); await sleep(150); continue;
+    }
+    $('ring').className = 'ring seen';
+    if (settings.spoofCheck && ((typeof f.real === 'number' && f.real < settings.realMin) || (typeof f.live === 'number' && f.live < settings.liveMin))) {
+      $('msg').textContent = '실제 얼굴을 비춰 주세요'; $('sub').textContent = '사진이나 화면으로는 출석할 수 없어요';
+      streak = { uid: null, n: 0 }; await sleep(150); continue;
+    }
+    if (!profiles.length) { $('msg').textContent = '등록된 얼굴이 없어요'; $('sub').textContent = '관리자 페이지에서 얼굴을 먼저 등록해 주세요'; await sleep(500); continue; }
+    const { best, second } = bestMatch(f.embedding, profiles);
+    const okMatch = best && best.sim >= settings.threshold && (!second || best.sim - second.sim >= settings.margin);
+    if (!okMatch) {
+      streak = { uid: null, n: 0 };
+      if (!unknownSince) unknownSince = Date.now();
+      $('msg').textContent = Date.now() - unknownSince > 4000 ? '얼굴을 찾지 못했어요' : '확인 중…';
+      $('sub').textContent = Date.now() - unknownSince > 4000 ? '정면을 바라봐 주세요 · 계속 안 되면 선생님께 말씀해 주세요' : '';
+      await sleep(100); continue;
+    }
+    unknownSince = 0;
+    streak = streak.uid === best.uid ? { uid: best.uid, n: streak.n + 1 } : { uid: best.uid, n: 1 };
+    $('msg').textContent = '확인 중…';
+    if (streak.n < settings.streak) { await sleep(60); continue; }
+    streak = { uid: null, n: 0 };
+    // 같은 학생이 화면 앞에 계속 서 있을 때 반복 처리 방지 (40초)
+    if (recent[best.uid] && Date.now() - recent[best.uid] < 40000) { await sleep(300); continue; }
+    recent[best.uid] = Date.now();
+    await act(best.uid, best.sim);
+  }
+}
+
+async function act(uid, sim) {
+  busy = true;
+  $('ring').className = 'ring ok';
+  const s = students[uid] || {};
+  const p = profiles.find((x) => x.uid === uid) || {};
+  const name = s.name || p.name || '';
+  const today = todayKST();
+  const ref = doc(db, 'attendance', `${uid}_${today}`);
+  let kind = '', time = '', note = '';
+  try {
+    const cur = await getDoc(ref);
+    if (!cur.exists()) {
+      time = nowKST();
+      await setDoc(ref, {
+        uid, name, branch: s.branch || kiosk.branch, grade: s.grade || '', classGroup: s.classGroup || '',
+        date: today, time, method: 'face', faceScore: Math.round(sim * 100) / 100, kioskUid: kiosk.uid, createdAt: serverTimestamp(),
+      });
+      kind = 'in';
+    } else {
+      const a = cur.data();
+      if (a.outTime) { kind = 'done'; time = a.outTime; note = `등원 ${a.time || '-'} · 하원 ${a.outTime}`; }
+      else {
+        const at = a.createdAt && a.createdAt.toDate ? a.createdAt.toDate().getTime() : 0;
+        const mins = at ? (Date.now() - at) / 60000 : 999;
+        if (mins < settings.minOutMinutes) { kind = 'already'; time = a.time || ''; }
+        else {
+          time = nowKST();
+          await updateDoc(ref, { outTime: time, outAt: serverTimestamp(), outMethod: 'face' });
+          kind = 'out'; note = `등원 ${a.time || '-'}`;
+        }
+      }
+    }
+  } catch (e) {
+    kind = 'error'; note = e.code === 'permission-denied' ? '권한이 없어요 (관리부에 알려 주세요)' : '인터넷 연결을 확인해 주세요';
+    delete recent[uid];
+  }
+  const look = {
+    in:      { c: '#5B3FA6', i: '✓', k: '등원 완료', t: `${time} · 부모님께 알림이 가요` },
+    out:     { c: '#22B07D', i: '✓', k: '하원 완료', t: `${time} · ${note} · 조심히 가세요!` },
+    already: { c: '#F5A623', i: '!', k: '이미 등원했어요', t: `${time} 등원 · 하원은 수업 끝나고 다시 찍어 주세요` },
+    done:    { c: '#8A879A', i: '✓', k: '오늘 출결 끝', t: note },
+    error:   { c: '#C8341F', i: '×', k: '기록하지 못했어요', t: note },
+  }[kind];
+  $('rc').innerHTML = `<div class="ic" style="background:${look.c};">${look.i}</div>
+    <div class="nm">${esc(name)}</div><div class="gr">${esc([s.grade, s.classGroup].filter(Boolean).join(' · '))}</div>
+    <div class="kd" style="color:${look.c};">${look.k}</div><div class="tm">${esc(look.t)}</div>`;
+  $('result').classList.add('on');
+  try { if (kind === 'in' || kind === 'out') navigator.vibrate && navigator.vibrate(80); } catch (e) {}
+  await sleep(kind === 'error' ? 3500 : 2600);
+  $('result').classList.remove('on');
+  idle();
+  busy = false;
+}
+</script>
+</body>
+</html>

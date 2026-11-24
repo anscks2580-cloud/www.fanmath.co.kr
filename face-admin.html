@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>얼굴 인식 출결 관리 | 송우찬수학학원</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="style.css">
+<script src="session-limit.js?v=1794920000"></script>
+<style>
+body { background:#F6F5FA; margin:0; font-size:13px; }
+.fa-top { background:#fff; border-bottom:1px solid var(--border); padding:10px 18px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:5; }
+.fa-top h1 { font-size:15px; margin:0; font-weight:800; }
+.fa-top a { font-size:12px; color:var(--purple); text-decoration:none; font-weight:700; }
+.fa-top .sp { flex:1; }
+.fa-wrap { max-width:1100px; margin:0 auto; padding:16px; }
+.fa-tabs { display:flex; gap:4px; margin-bottom:12px; }
+.fa-tabs button { border:1px solid var(--border); background:#fff; padding:7px 14px; font-size:13px; font-weight:700; cursor:pointer; border-radius:4px; font-family:inherit; color:var(--muted); }
+.fa-tabs button.on { background:var(--purple); color:#fff; border-color:var(--purple); }
+.fa-card { background:#fff; border:1px solid var(--border); border-radius:6px; padding:14px 16px; margin-bottom:12px; }
+.fa-card h3 { font-size:14px; margin:0 0 8px; }
+.fa-note { font-size:12px; color:var(--muted); line-height:1.65; }
+.fa-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom:10px; }
+.fa-row select, .fa-row input[type=text], .fa-row input[type=password], .fa-row input[type=number] { padding:6px 8px; border:1px solid var(--border); border-radius:4px; font-size:13px; font-family:inherit; }
+.fa-btn { padding:6px 12px; border:1px solid var(--purple); background:var(--purple); color:#fff; border-radius:4px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; }
+.fa-btn.sub { background:#fff; color:var(--purple); }
+.fa-btn.red { background:#fff; color:#C8341F; border-color:#E0A79C; }
+.fa-btn[disabled] { opacity:.5; cursor:default; }
+table.fa { width:100%; border-collapse:collapse; }
+table.fa th, table.fa td { border-bottom:1px solid #EEECF4; padding:6px 8px; text-align:left; font-size:12.5px; }
+table.fa th { background:#FAF9FD; color:var(--muted); font-weight:700; font-size:12px; }
+.bd { display:inline-block; padding:1px 7px; border-radius:3px; font-size:11.5px; font-weight:700; }
+.bd.ok { background:#E6F6EF; color:#1E8A5F; }
+.bd.no { background:#F2F1F5; color:#8A879A; }
+.bd.pc { color:#5B3FA6; } .bd.sb { color:#B58900; }
+.fa-sum { font-size:12.5px; margin-bottom:8px; }
+/* 등록 창 */
+.fa-modal { position:fixed; inset:0; background:rgba(20,16,40,.55); display:none; align-items:center; justify-content:center; z-index:50; padding:16px; }
+.fa-modal.on { display:flex; }
+.fa-box { background:#fff; border-radius:8px; width:100%; max-width:560px; padding:18px; max-height:96vh; overflow:auto; }
+.fa-box h3 { margin:0 0 4px; font-size:16px; }
+.fa-cam { position:relative; width:100%; aspect-ratio:4/3; background:#111; border-radius:6px; overflow:hidden; margin:10px 0; }
+.fa-cam video { width:100%; height:100%; object-fit:cover; transform:scaleX(-1); }
+.fa-cam .guide { position:absolute; left:50%; top:50%; width:46%; aspect-ratio:3/4; transform:translate(-50%,-52%); border:3px dashed rgba(255,255,255,.7); border-radius:50%; }
+.fa-cam .msg { position:absolute; left:0; right:0; bottom:0; padding:8px; background:rgba(0,0,0,.55); color:#fff; text-align:center; font-weight:700; font-size:14px; }
+.fa-dots { display:flex; gap:6px; justify-content:center; margin:6px 0 10px; }
+.fa-dots span { width:12px; height:12px; border-radius:50%; background:#E3E0EC; }
+.fa-dots span.on { background:#22B07D; }
+.fa-consent { background:#FFF8E1; border:1px solid #F0D98A; border-radius:6px; padding:10px 12px; font-size:12.5px; line-height:1.6; }
+.fa-consent label { display:flex; gap:8px; align-items:flex-start; font-weight:700; margin-top:6px; cursor:pointer; }
+.fa-err { color:#C8341F; font-size:12.5px; min-height:18px; margin-top:6px; }
+</style>
+</head>
+<body>
+<div class="fa-top">
+  <h1>😊 얼굴 인식 출결 관리</h1>
+  <a href="admin.html">← 관리자 페이지</a>
+  <div class="sp"></div>
+  <a href="face-kiosk.html" target="_blank">입구 출결 화면 열기 ↗</a>
+  <span id="faWho" style="font-size:12px;color:var(--muted);"></span>
+</div>
+
+<div class="fa-wrap" id="faApp"><div class="fa-note">확인 중…</div></div>
+
+<!-- 얼굴 등록 창 -->
+<div class="fa-modal" id="regModal">
+  <div class="fa-box">
+    <h3 id="regTitle">얼굴 등록</h3>
+    <div class="fa-note" id="regSub"></div>
+    <div class="fa-consent" id="regConsentBox">
+      얼굴 특징 정보는 <b>개인정보보호법상 민감정보(생체인식정보)</b>입니다.
+      학부모(법정대리인)의 <b>별도 서면 동의</b>를 받은 학생만 등록해 주세요. 사진은 저장되지 않고 특징값(숫자)만 저장되며, 퇴원·동의 철회 시 바로 삭제합니다.
+      <label><input type="checkbox" id="regConsent"> 이 학생의 학부모님께 생체정보 수집·이용 동의서를 받았습니다.</label>
+    </div>
+    <div class="fa-cam"><video id="regVideo" playsinline muted></video><div class="guide"></div><div class="msg" id="regMsg">「촬영 시작」을 눌러 주세요</div></div>
+    <div class="fa-dots" id="regDots"></div>
+    <div class="fa-err" id="regErr"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button class="fa-btn sub" onclick="faCloseReg()">닫기</button>
+      <button class="fa-btn" id="regStart" onclick="faStartCapture()">촬영 시작</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, doc, getDoc, getDocs, setDoc, deleteDoc, Timestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { FIREBASE_CONFIG, BRANCHES, FACE_MODEL, DEFAULT_SETTINGS, loadHuman, startCamera, stopCamera, detectMainFace, bestMatch, packEmbedding, samplesFromDoc, esc } from './face-common.js?v=1';
+
+const app = initializeApp(FIREBASE_CONFIG);
+const auth = getAuth(app), db = getFirestore(app);
+// 키오스크 계정 만들 때 관리자 로그인이 풀리지 않도록 보조 앱 사용
+const auth2 = getAuth(initializeApp(FIREBASE_CONFIG, 'faceSecondary'));
+
+const $app = document.getElementById('faApp');
+let me = null;
+let students = [];      // 재원생
+let withdrawn = [];     // 퇴원생
+let profiles = {};      // uid → faceProfiles 문서
+let kiosks = [];
+let settings = { ...DEFAULT_SETTINGS };
+let tab = 'reg';
+let fBranch = localStorage.getItem('faBranch') || '평촌관';
+let fSearch = '', fOnly = '';
+
+const SAMPLE_N = 5;
+const POSE_HINT = ['정면을 봐 주세요', '고개를 살짝 왼쪽으로', '고개를 살짝 오른쪽으로', '턱을 살짝 들어 주세요', '다시 정면을 봐 주세요'];
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) { location.replace('login.html'); return; }
+  const a = await getDoc(doc(db, 'admins', user.uid)).catch(() => null);
+  if (!a || !a.exists()) { $app.innerHTML = '<div class="fa-card">관리자 계정으로 로그인해야 쓸 수 있어요. <a href="login.html">로그인</a></div>'; return; }
+  me = user;
+  document.getElementById('faWho').textContent = user.email || '';
+  await loadAll();
+});
+
+async function loadAll() {
+  $app.innerHTML = '<div class="fa-note">불러오는 중…</div>';
+  try {
+    const [ss, ps, ks, st] = await Promise.all([
+      getDocs(collection(db, 'students')), getDocs(collection(db, 'faceProfiles')),
+      getDocs(collection(db, 'kiosks')), getDoc(doc(db, 'settings', 'faceKiosk')),
+    ]);
+    students = []; withdrawn = [];
+    ss.forEach((d) => { const s = { id: d.id, ...d.data() }; (s.status === '퇴원' ? withdrawn : students).push(s); });
+    students.sort((a, b) => String(a.name).localeCompare(String(b.name), 'ko'));
+    profiles = {}; ps.forEach((d) => { profiles[d.id] = { id: d.id, ...d.data() }; });
+    kiosks = []; ks.forEach((d) => kiosks.push({ id: d.id, ...d.data() }));
+    settings = { ...DEFAULT_SETTINGS, ...(st.exists() ? st.data() : {}) };
+    await syncProfiles();
+    render();
+  } catch (e) {
+    $app.innerHTML = `<div class="fa-card" style="color:#C8341F;">불러오지 못했어요: ${esc(e.message)}<br><span class="fa-note">파이어스토어 규칙(faceProfiles·kiosks)을 먼저 올렸는지 확인해 주세요.</span></div>`;
+  }
+}
+
+// 학생 정보(이름·관·학년·반)가 바뀌었으면 얼굴 정보에도 맞춰 줌 → 관을 옮긴 학생도 새 관 입구에서 인식됨
+async function syncProfiles() {
+  const byId = Object.fromEntries(students.map((s) => [s.id, s]));
+  for (const p of Object.values(profiles)) {
+    const s = byId[p.id]; if (!s) continue;
+    const want = { name: s.name || '', branch: s.branch || '', grade: s.grade || '', classGroup: s.classGroup || '' };
+    if (Object.keys(want).some((k) => (p[k] || '') !== want[k])) {
+      try { await setDoc(doc(db, 'faceProfiles', p.id), want, { merge: true }); Object.assign(p, want); } catch (e) {}
+    }
+  }
+}
+
+function render() {
+  const tabs = [['reg', '얼굴 등록'], ['kiosk', '입구 기기(키오스크) 계정'], ['set', '인식 설정'], ['help', '사용 방법']];
+  $app.innerHTML = `<div class="fa-tabs">${tabs.map(([k, l]) => `<button class="${tab === k ? 'on' : ''}" onclick="faTab('${k}')">${l}</button>`).join('')}</div><div id="faBody"></div>`;
+  ({ reg: renderReg, kiosk: renderKiosk, set: renderSet, help: renderHelp })[tab]();
+}
+window.faTab = (k) => { tab = k; render(); };
+
+// ── 얼굴 등록 목록 ──
+function renderReg() {
+  const el = document.getElementById('faBody');
+  const orphan = Object.values(profiles).filter((p) => !students.find((s) => s.id === p.id));
+  const inBr = students.filter((s) => s.branch === fBranch);
+  const regN = inBr.filter((s) => profiles[s.id]).length;
+  const q = fSearch.trim();
+  const list = inBr.filter((s) => (!q || String(s.name).includes(q) || String(s.grade || '').includes(q) || String(s.classGroup || '').includes(q))
+    && (!fOnly || (fOnly === 'yes' ? profiles[s.id] : !profiles[s.id])));
+  el.innerHTML = `
+    ${orphan.length ? `<div class="fa-card" style="border-color:#E0A79C;background:#FFF6F4;">
+      <b style="color:#C8341F;">퇴원했거나 삭제된 학생의 얼굴 정보 ${orphan.length}건이 남아 있어요.</b>
+      <span class="fa-note"> (${orphan.map((p) => esc(p.name || p.id)).join(', ')}) — 개인정보 보관 원칙에 따라 바로 지워 주세요.</span>
+      <button class="fa-btn red" style="margin-left:8px;" onclick="faDeleteOrphans()">모두 삭제</button></div>` : ''}
+    <div class="fa-card">
+      <div class="fa-row">
+        <select id="faBr" onchange="faSetBranch(this.value)">${BRANCHES.map((b) => `<option ${b === fBranch ? 'selected' : ''}>${b}</option>`).join('')}</select>
+        <input type="text" id="faQ" placeholder="이름 · 학년 · 반 검색" value="${esc(fSearch)}" oninput="faSearch(this.value)" style="width:180px;">
+        <select onchange="faOnly(this.value)">
+          <option value="" ${!fOnly ? 'selected' : ''}>전체</option>
+          <option value="yes" ${fOnly === 'yes' ? 'selected' : ''}>등록됨</option>
+          <option value="no" ${fOnly === 'no' ? 'selected' : ''}>미등록</option>
+        </select>
+      </div>
+      <div class="fa-sum"><b class="bd ${fBranch === '평촌관' ? 'pc' : 'sb'}">${fBranch}</b> 재원생 ${inBr.length}명 중 <b style="color:#1E8A5F;">등록 ${regN}명</b> · 미등록 ${inBr.length - regN}명</div>
+      <table class="fa"><thead><tr><th>반</th><th>이름</th><th>학년</th><th>상태</th><th>동의 확인</th><th></th></tr></thead><tbody>
+      ${list.map((s) => { const p = profiles[s.id]; return `<tr>
+        <td style="color:var(--muted);">${esc(s.classGroup || '-')}</td>
+        <td><b>${esc(s.name)}</b></td><td>${esc(s.grade || '')}</td>
+        <td>${p ? `<span class="bd ok">등록됨</span> <small style="color:var(--muted);">${fmtDate(p.registeredAt)}</small>` : '<span class="bd no">미등록</span>'}</td>
+        <td style="color:var(--muted);font-size:11.5px;">${p && p.consent ? `${fmtDate(p.consent.at)} · ${esc((p.consent.by || '').split('@')[0])}` : '-'}</td>
+        <td style="text-align:right;white-space:nowrap;">
+          <button class="fa-btn ${p ? 'sub' : ''}" onclick="faOpenReg('${s.id}')">${p ? '다시 등록' : '얼굴 등록'}</button>
+          ${p ? `<button class="fa-btn red" onclick="faDelete('${s.id}')">삭제</button>` : ''}
+        </td></tr>`; }).join('') || '<tr><td colspan="6" style="color:var(--muted);">해당 학생이 없어요.</td></tr>'}
+      </tbody></table>
+    </div>`;
+}
+window.faSetBranch = (b) => { fBranch = b; localStorage.setItem('faBranch', b); renderReg(); };
+window.faSearch = (v) => { fSearch = v; renderReg(); const q = document.getElementById('faQ'); q.focus(); q.setSelectionRange(v.length, v.length); };
+window.faOnly = (v) => { fOnly = v; renderReg(); };
+function fmtDate(t) { try { const d = t && t.toDate ? t.toDate() : null; return d ? `${d.getFullYear() % 100}.${d.getMonth() + 1}.${d.getDate()}` : ''; } catch (e) { return ''; } }
+
+window.faDelete = async (uid) => {
+  const p = profiles[uid]; if (!p) return;
+  if (!confirm(`${p.name} 학생의 얼굴 정보를 삭제(파기)할까요?\n삭제하면 입구에서 얼굴 인식이 안 되고, 다시 등록해야 해요.`)) return;
+  try { await deleteDoc(doc(db, 'faceProfiles', uid)); delete profiles[uid]; renderReg(); }
+  catch (e) { alert('삭제 실패: ' + e.message); }
+};
+window.faDeleteOrphans = async () => {
+  const orphan = Object.values(profiles).filter((p) => !students.find((s) => s.id === p.id));
+  if (!confirm(`퇴원·삭제된 학생 얼굴 정보 ${orphan.length}건을 모두 삭제할까요?`)) return;
+  for (const p of orphan) { try { await deleteDoc(doc(db, 'faceProfiles', p.id)); delete profiles[p.id]; } catch (e) {} }
+  renderReg();
+};
+
+// ── 얼굴 등록 (촬영) ──
+let reg = null; // { stu, stream, running, samples }
+window.faOpenReg = async (uid) => {
+  const s = students.find((x) => x.id === uid); if (!s) return;
+  reg = { stu: s, stream: null, running: false, samples: [] };
+  document.getElementById('regTitle').textContent = `${s.name} 학생 얼굴 등록`;
+  document.getElementById('regSub').textContent = `${s.branch || ''} · ${s.grade || ''} · ${s.classGroup || '반 미배정'}  —  안경을 평소처럼 쓰고, 모자·마스크는 벗고 찍어 주세요.`;
+  document.getElementById('regConsent').checked = !!(profiles[uid] && profiles[uid].consent);
+  document.getElementById('regErr').textContent = '';
+  document.getElementById('regMsg').textContent = '카메라 켜는 중…';
+  document.getElementById('regStart').disabled = true;
+  dots(0);
+  document.getElementById('regModal').classList.add('on');
+  try {
+    await loadHuman((t) => { document.getElementById('regMsg').textContent = t; });
+    reg.stream = await startCamera(document.getElementById('regVideo'));
+    document.getElementById('regMsg').textContent = '「촬영 시작」을 눌러 주세요';
+    document.getElementById('regStart').disabled = false;
+  } catch (e) {
+    document.getElementById('regErr').textContent = '카메라를 켜지 못했어요: ' + (e.message || e.name) + ' (카메라 권한을 허용해 주세요)';
+  }
+};
+window.faCloseReg = () => {
+  if (reg) { reg.running = false; stopCamera(reg.stream); }
+  reg = null;
+  document.getElementById('regModal').classList.remove('on');
+};
+function dots(n) { document.getElementById('regDots').innerHTML = Array.from({ length: SAMPLE_N }, (_, i) => `<span class="${i < n ? 'on' : ''}"></span>`).join(''); }
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+
+window.faStartCapture = async () => {
+  if (!reg || reg.running) return;
+  const err = document.getElementById('regErr'), msg = document.getElementById('regMsg'), btn = document.getElementById('regStart');
+  err.textContent = '';
+  if (!document.getElementById('regConsent').checked) { err.textContent = '학부모 동의서를 받았는지 먼저 체크해 주세요.'; return; }
+  reg.running = true; reg.samples = []; btn.disabled = true; dots(0);
+  const video = document.getElementById('regVideo');
+  let lastAt = 0;
+  const t0 = Date.now();
+  while (reg && reg.running && reg.samples.length < SAMPLE_N) {
+    if (Date.now() - t0 > 60000) { err.textContent = '시간이 너무 오래 걸렸어요. 밝은 곳에서 다시 시도해 주세요.'; break; }
+    msg.textContent = POSE_HINT[reg.samples.length];
+    let r;
+    try { r = await detectMainFace(video); } catch (e) { await sleep(200); continue; }
+    if (!reg || !reg.running) break;
+    if (!r.face) { msg.textContent = '얼굴이 보이지 않아요 — 원 안에 얼굴을 맞춰 주세요'; await sleep(150); continue; }
+    if (r.count > 1) { msg.textContent = '한 명만 화면에 나오게 해 주세요'; await sleep(150); continue; }
+    const f = r.face;
+    if (f.box[2] < video.videoWidth * 0.22) { msg.textContent = '조금 더 가까이 와 주세요'; await sleep(150); continue; }
+    if ((f.faceScore ?? f.score ?? 1) < 0.6) { await sleep(120); continue; }
+    if (settings.spoofCheck && typeof f.real === 'number' && f.real < settings.realMin) { msg.textContent = '실제 얼굴로 촬영해 주세요 (사진·화면 X)'; await sleep(200); continue; }
+    if (Date.now() - lastAt < 900) { await sleep(100); continue; }
+    reg.samples.push(packEmbedding(f.embedding));
+    lastAt = Date.now();
+    dots(reg.samples.length);
+  }
+  if (!reg) return;
+  reg.running = false; btn.disabled = false;
+  if (reg.samples.length < SAMPLE_N) { msg.textContent = '다시 「촬영 시작」을 눌러 주세요'; return; }
+
+  // 다른 학생과 너무 닮게 인식되는지 확인 (같은 관 기준)
+  const others = Object.values(profiles).filter((p) => p.id !== reg.stu.id && p.branch === reg.stu.branch)
+    .map((p) => ({ uid: p.id, name: p.name, samples: samplesFromDoc(p) })).filter((p) => p.samples.length);
+  let warn = '';
+  if (others.length) {
+    let worst = null;
+    for (const e of reg.samples) { const m = bestMatch(e, others).best; if (m && (!worst || m.sim > worst.sim)) worst = m; }
+    if (worst && worst.sim >= settings.threshold) warn = `${worst.name} 학생과 비슷하게 인식돼요(점수 ${worst.sim.toFixed(2)}). 쌍둥이·형제라면 두 학생 모두 밝은 곳에서 다시 등록하는 걸 권해요.\n`;
+  }
+  if (warn && !confirm(warn + '\n그래도 저장할까요?')) { msg.textContent = '저장 안 함 — 다시 촬영할 수 있어요'; return; }
+
+  msg.textContent = '저장 중…';
+  const s = reg.stu;
+  try {
+    const data = {
+      uid: s.id, name: s.name || '', branch: s.branch || '', grade: s.grade || '', classGroup: s.classGroup || '',
+      model: FACE_MODEL, samples: reg.samples.map((v) => ({ v })),
+      consent: { agreed: true, by: me.email || me.uid, at: Timestamp.now() },
+      registeredAt: Timestamp.now(), updatedBy: me.email || me.uid,
+    };
+    await setDoc(doc(db, 'faceProfiles', s.id), data);
+    profiles[s.id] = { id: s.id, ...data };
+    msg.textContent = '✓ 등록 완료!';
+    await sleep(700);
+    faCloseReg(); renderReg();
+  } catch (e) { err.textContent = '저장 실패: ' + e.message; msg.textContent = '저장 실패'; }
+};
+
+// ── 입구 기기(키오스크) 계정 ──
+function renderKiosk() {
+  const el = document.getElementById('faBody');
+  el.innerHTML = `
+    <div class="fa-card">
+      <h3>입구 기기 계정</h3>
+      <div class="fa-note" style="margin-bottom:10px;">입구 아이패드는 관리자 계정이 아니라 <b>이 전용 계정</b>으로 로그인합니다. 이 계정은 자기 관 학생의 얼굴 인식과 등원·하원 기록만 할 수 있어요 (다른 화면·정보는 못 봄).</div>
+      <table class="fa"><thead><tr><th>관</th><th>아이디</th><th>이름</th><th>만든 날</th><th></th></tr></thead><tbody>
+        ${kiosks.map((k) => `<tr><td><b class="bd ${k.branch === '평촌관' ? 'pc' : 'sb'}">${esc(k.branch)}</b></td><td>${esc(k.email || '')}</td><td>${esc(k.label || '')}</td><td>${fmtDate(k.createdAt)}</td>
+          <td style="text-align:right;"><button class="fa-btn red" onclick="faKioskOff('${k.id}')">사용 중지</button></td></tr>`).join('') || '<tr><td colspan="5" style="color:var(--muted);">아직 없어요. 아래에서 관마다 하나씩 만들어 주세요.</td></tr>'}
+      </tbody></table>
+    </div>
+    <div class="fa-card">
+      <h3>새로 만들기</h3>
+      <div class="fa-row">
+        <select id="kBr">${BRANCHES.map((b) => `<option>${b}</option>`).join('')}</select>
+        <input type="text" id="kId" placeholder="아이디 (예: kiosk-pc)" style="width:160px;"> <span class="fa-note">@songmath.kr</span>
+        <input type="password" id="kPw" placeholder="비밀번호 (8자 이상)" style="width:150px;">
+        <input type="text" id="kLabel" placeholder="이름 (예: 평촌관 입구 아이패드)" style="width:200px;">
+        <button class="fa-btn" onclick="faKioskNew()">만들기</button>
+      </div>
+      <div class="fa-err" id="kErr"></div>
+    </div>`;
+  const br = document.getElementById('kBr'), id = document.getElementById('kId'), lb = document.getElementById('kLabel');
+  const fill = () => { id.value = br.value === '평촌관' ? 'kiosk-pc' : 'kiosk-sb'; lb.value = `${br.value} 입구 아이패드`; };
+  br.onchange = fill; fill();
+}
+window.faKioskNew = async () => {
+  const err = document.getElementById('kErr'); err.textContent = '';
+  const branch = document.getElementById('kBr').value;
+  const id = document.getElementById('kId').value.trim().toLowerCase();
+  const pw = document.getElementById('kPw').value;
+  const label = document.getElementById('kLabel').value.trim();
+  if (!/^[a-z0-9._-]{3,30}$/.test(id)) { err.textContent = '아이디는 영문 소문자·숫자·-·_ 3~30자로 써 주세요.'; return; }
+  if (pw.length < 8) { err.textContent = '비밀번호는 8자 이상으로 해 주세요.'; return; }
+  const email = `${id}@songmath.kr`;
+  try {
+    const cred = await createUserWithEmailAndPassword(auth2, email, pw);
+    await setDoc(doc(db, 'kiosks', cred.user.uid), { branch, email, label, createdAt: Timestamp.now(), createdBy: me.email || me.uid });
+    await signOut(auth2).catch(() => {});
+    kiosks.push({ id: cred.user.uid, branch, email, label, createdAt: Timestamp.now() });
+    alert(`만들었어요.\n\n아이디: ${email}\n비밀번호: 방금 입력한 것\n\n입구 아이패드에서 face-kiosk.html 을 열고 이 계정으로 로그인하세요.`);
+    renderKiosk();
+  } catch (e) {
+    err.textContent = e.code === 'auth/email-already-in-use' ? '이미 있는 아이디예요. 다른 아이디를 써 주세요.' : ('만들기 실패: ' + e.message);
+  }
+};
+window.faKioskOff = async (uid) => {
+  const k = kiosks.find((x) => x.id === uid); if (!k) return;
+  if (!confirm(`${k.label || k.email} 계정을 사용 중지할까요?\n그 기기에서는 더 이상 출결 체크가 안 돼요.`)) return;
+  try { await deleteDoc(doc(db, 'kiosks', uid)); kiosks = kiosks.filter((x) => x.id !== uid); renderKiosk(); }
+  catch (e) { alert('실패: ' + e.message); }
+};
+
+// ── 인식 설정 ──
+function renderSet() {
+  const s = settings;
+  document.getElementById('faBody').innerHTML = `
+    <div class="fa-card">
+      <h3>인식 설정 (평촌관·산본관 공통)</h3>
+      <table class="fa" style="max-width:720px;">
+        <tr><td style="width:220px;"><b>같은 사람 기준 점수</b></td><td><input type="number" id="sTh" step="0.01" min="0.4" max="0.85" value="${s.threshold}" style="width:80px;">
+          <span class="fa-note">기본 0.55 · 높이면 다른 학생으로 잘못 찍힐 일은 줄지만 인식이 느려져요</span></td></tr>
+        <tr><td><b>닮은 학생 구분 차이</b></td><td><input type="number" id="sMg" step="0.01" min="0" max="0.3" value="${s.margin}" style="width:80px;"> <span class="fa-note">기본 0.05</span></td></tr>
+        <tr><td><b>연속 인식 횟수</b></td><td><input type="number" id="sSk" min="1" max="8" value="${s.streak}" style="width:80px;"> <span class="fa-note">기본 3</span></td></tr>
+        <tr><td><b>사진·화면 속임 방지</b></td><td><label><input type="checkbox" id="sSp" ${s.spoofCheck ? 'checked' : ''}> 켜기</label>
+          <span class="fa-note">실제 얼굴인데 자꾸 막히면 잠시 끄고 알려 주세요</span></td></tr>
+        <tr><td><b>하원으로 볼 최소 시간</b></td><td><input type="number" id="sOut" min="5" max="240" value="${s.minOutMinutes}" style="width:80px;"> 분
+          <span class="fa-note">등원 후 이 시간 안에 다시 찍으면 「이미 등원」으로만 안내</span></td></tr>
+      </table>
+      <div style="margin-top:10px;"><button class="fa-btn" onclick="faSaveSet()">저장</button> <span class="fa-note" id="sMsg"></span></div>
+    </div>`;
+}
+window.faSaveSet = async () => {
+  const num = (id, d) => { const v = Number(document.getElementById(id).value); return Number.isFinite(v) ? v : d; };
+  const next = {
+    ...settings,
+    threshold: Math.min(0.85, Math.max(0.4, num('sTh', 0.55))),
+    margin: Math.min(0.3, Math.max(0, num('sMg', 0.05))),
+    streak: Math.round(Math.min(8, Math.max(1, num('sSk', 3)))),
+    spoofCheck: document.getElementById('sSp').checked,
+    minOutMinutes: Math.round(Math.min(240, Math.max(5, num('sOut', 30)))),
+  };
+  try { await setDoc(doc(db, 'settings', 'faceKiosk'), { ...next, updatedAt: Timestamp.now() }); settings = next; document.getElementById('sMsg').textContent = '저장했어요. 입구 화면에는 바로 반영돼요.'; }
+  catch (e) { document.getElementById('sMsg').textContent = '저장 실패: ' + e.message; }
+};
+
+function renderHelp() {
+  document.getElementById('faBody').innerHTML = `<div class="fa-card fa-note" style="color:#333;font-size:13px;">
+    <h3>처음 준비</h3>
+    1. 「입구 기기(키오스크) 계정」에서 평촌관·산본관 계정을 하나씩 만듭니다.<br>
+    2. 입구 아이패드 사파리에서 <b>www.fanmath.co.kr/face-kiosk.html</b> 을 열고, 그 관 계정으로 로그인 → 카메라 허용.<br>
+    3. 아이패드 설정 → 손쉬운 사용 → <b>사용법 유도 접근</b>을 켜고, 출결 화면에서 측면 버튼 세 번 → 다른 화면으로 못 나가게 고정. 자동 잠금은 「안 함」, 충전기는 꽂아 둡니다.<br>
+    4. 「얼굴 등록」에서 동의서를 받은 학생부터 등록합니다 (학생당 약 10초).<br><br>
+    <h3>평소 사용</h3>
+    · 학생이 입구 화면을 보면 <b>처음 인식 = 등원, 두 번째 인식(${settings.minOutMinutes}분 이후) = 하원</b>으로 기록되고, 학부모님께 지금처럼 앱 알림 또는 카톡·문자가 갑니다.<br>
+    · 관리자 페이지 「학생 출결 → 등원·하원」 표에 <b>얼굴</b>로 표시됩니다. 잘못 찍힌 건 거기서 취소하면 됩니다.<br>
+    · 등록 안 된 학생, 동의 안 한 학생은 지금처럼 코드 입력이나 관리부 수동 체크를 씁니다.<br><br>
+    <h3>개인정보</h3>
+    · 사진은 저장하지 않고 얼굴 특징값만 저장합니다. 인식은 아이패드 안에서만 이루어집니다.<br>
+    · 퇴원하면 이 화면 위쪽에 「남아 있는 얼굴 정보」가 뜹니다 → 바로 삭제하세요. 동의 철회 시에도 해당 학생 [삭제].<br>
+    · 동의서 원본(종이)은 학원에 보관합니다.
+  </div>`;
+}
+</script>
+</body>
+</html>

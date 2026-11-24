@@ -145,11 +145,11 @@ window.renderCheckInOut = function () {
       const ab = !r && absToday ? absToday[s.id] : null;
       if (ab) nAbs++;
       const inCell = r
-        ? `${ok(cioEsc(r.time))} <small style="color:var(--muted);">${r.method === 'manual' ? '수동' : '앱'}</small>${small('취소', `cioUndo('${s.id}','in')`)}`
+        ? `${ok(cioEsc(r.time))} <small style="color:var(--muted);">${r.method === 'manual' ? '수동' : r.method === 'face' ? '얼굴' : '앱'}</small>${small('취소', `cioUndo('${s.id}','in')`)}`
         : ab ? `<span style="color:#C8541F;font-weight:800;" title="${cioEsc(ab.detail || '')}">결석</span> <small style="color:#C8541F;">📝 ${cioEsc(ab.reason || '')}${ab.source === 'phone' ? ' · 전화' : ''}</small>${small('등원', `cioManualIn('${s.id}')`)}`
         : btn('등원', `cioManualIn('${s.id}')`, '#5B3FA6');
       const outCell = !r ? no('-')
-        : r.outTime ? `${ok(cioEsc(r.outTime))} <small style="color:var(--muted);">${r.outMethod === 'manual' ? '수동' : '앱'}</small>${small('취소', `cioUndo('${s.id}','out')`)}`
+        : r.outTime ? `${ok(cioEsc(r.outTime))} <small style="color:var(--muted);">${r.outMethod === 'manual' ? '수동' : r.outMethod === 'face' ? '얼굴' : '앱'}</small>${small('취소', `cioUndo('${s.id}','out')`)}`
         : btn('하원', `cioManualOut('${s.id}')`, '#2E9E5B');
       const stuCell = sa ? ok('✓ 설치') : no('미설치');
       const parCell = !cioHasParent.has(s.id) ? no('계정 없음')

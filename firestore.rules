@@ -111,6 +111,14 @@ service cloud.firestore {
     function isParentOf(studentId) {
       return isParent() && parentChildId() == studentId;
     }
+    // 입구 출결 기기(아이패드) 전용 계정 — kiosks/{uid} 에 관(branch) 지정. 자기 관 학생 얼굴 인식·등원·하원만 가능
+    function isKiosk() {
+      return isSignedIn() &&
+        exists(/databases/$(database)/documents/kiosks/$(request.auth.uid));
+    }
+    function kioskBranch() {
+      return get(/databases/$(database)/documents/kiosks/$(request.auth.uid)).data.branch;
+    }
 
     // ── admins: 관리자만 접근 (자기 자신 문서 읽기만 예외적으로 허용) ──
     match /admins/{uid} {
@@ -136,7 +144,8 @@ service cloud.firestore {
 
     // ── students: 학생 본인·학부모 읽기, 선생님/관리자는 전체 조회 및 관리 ──
     match /students/{uid} {
-      allow read: if isSignedIn() && (request.auth.uid == uid || isParentOf(uid) || isTeacher() || isAdmin());
+      allow read: if isSignedIn() && (request.auth.uid == uid || isParentOf(uid) || isTeacher() || isAdmin()
+        || (isKiosk() && resource.data.get('branch', '') == kioskBranch()));
       allow write: if isAdmin() || isTeacher();
       // 앱 푸시 토큰: 본인 계정이 parentFcmToken(예전 학부모 방식)·fcmToken(학생 마이페이지 숙제 알림) 필드만 수정하는 건 허용
       // + 학생 앱(app.html)에서 학생이 직접 쓰는 목표 대학(goalUniv·goalDept·goalMsg, 각 40자 이내)
@@ -300,14 +309,36 @@ service cloud.firestore {
     //  · 선생님: 조회
     match /attendance/{docId} {
       allow create: if isSignedIn() &&
-        (request.resource.data.uid == request.auth.uid || isAdmin());
+        (request.resource.data.uid == request.auth.uid || isAdmin()
+          // 입구 얼굴 인식: 자기 관 학생, 얼굴이 등록된 학생만, 문서 id = 학생uid_날짜
+          || (isKiosk() && request.resource.data.method == 'face'
+              && request.resource.data.branch == kioskBranch()
+              && docId == request.resource.data.uid + '_' + request.resource.data.date
+              && exists(/databases/$(database)/documents/faceProfiles/$(request.resource.data.uid))));
       allow read: if isSignedIn() &&
-        (resource == null || resource.data.uid == request.auth.uid || isParentOf(resource.data.uid) || isTeacher() || isAdmin());
+        (resource == null || resource.data.uid == request.auth.uid || isParentOf(resource.data.uid) || isTeacher() || isAdmin()
+          || (isKiosk() && resource.data.get('branch', '') == kioskBranch()));
       allow update: if isAdmin() ||
         (isSignedIn() && resource.data.uid == request.auth.uid
           && resource.data.get('outTime', null) == null
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['outTime', 'outAt', 'outMethod'])) ||
+        (isKiosk() && resource.data.get('branch', '') == kioskBranch()
+          && resource.data.get('outTime', null) == null
+          && request.resource.data.outMethod == 'face'
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['outTime', 'outAt', 'outMethod']));
       allow delete: if isAdmin();
+    }
+
+    // kiosks: 입구 출결 기기 계정 (관 지정) — 기기 본인은 자기 문서만 읽음, 만들기·중지는 관리자
+    match /kiosks/{uid} {
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+      allow write: if isAdmin();
+    }
+
+    // faceProfiles: 학생 얼굴 특징값 (사진 아님, 민감정보) — 관리자만 등록·삭제, 입구 기기는 자기 관 것만 읽음
+    match /faceProfiles/{uid} {
+      allow read: if isAdmin() || (isKiosk() && resource.data.get('branch', '') == kioskBranch());
+      allow write: if isAdmin();
     }
 
     // absences: 결석 사유서
@@ -617,6 +648,57 @@ service cloud.firestore {
       allow update: if isAdmin();
       allow delete: if isAdmin() || (isTeacher() && resource.data.teacherUid == request.auth.uid
         && resource.data.status == '요청');
+    }
+
+    // ══ 메신저 (업무 프로그램 desk/chat.html · 2026.11.23) ══════════════════════════
+    // 선생님·조교(teachers)·관리부/원장(admins) 직원만 사용. 학생·학부모는 전혀 접근 불가
+    //  · chatUsers/{uid}  : 메신저 사람 목록(이름·역할·관·접속 시각) — 직원 모두 읽기, 본인 것만 쓰기
+    //  · chatReads/{uid}  : 방별 마지막으로 읽은 시각 — 본인만
+    //  · chatRooms/{id}   : 학원 고정 방(group + fixed — 서버 스크립트 _계정정리/채팅방_구성.bat 으로만 만들고 구성원 변경) · 1:1(dm) · 단체(group)
+    //      (예전 공용 방 channel 은 2026.11.23 없앰 — 새로 만들 수 없음)
+    //      공용 방은 직원 모두, 1:1·단체는 참여자(members)만 읽기
+    //      마지막 메시지 표시(lastText·lastAt·lastBy·lastName)는 참여자 누구나 수정,
+    //      단체방 이름·참여자 변경은 만든 사람·관리자, 초대(사람 추가)·나가기(본인만 빠지기)는 참여자 누구나
+    //  · chatRooms/{id}/messages/{id} : 볼 수 있는 방의 직원만 읽기·쓰기, 수정(삭제 표시)·삭제는 보낸 사람 본인
+    //  · 3개월 지난 대화는 서버 함수 chatCleanup 이 매일 새벽 지움
+    function isStaff() {
+      return isAdmin() || isTeacher();
+    }
+    function canSeeRoom(roomId) {
+      let r = get(/databases/$(database)/documents/chatRooms/$(roomId)).data;
+      return r.type == 'channel' || request.auth.uid in r.members;
+    }
+    match /chatUsers/{uid} {
+      allow read: if isStaff();
+      allow write: if isStaff() && request.auth.uid == uid;
+    }
+    match /chatReads/{uid} {
+      allow read, write: if isStaff() && request.auth.uid == uid;
+    }
+    match /chatRooms/{roomId} {
+      allow read: if isStaff() && (resource.data.type == 'channel' || request.auth.uid in resource.data.members);
+      allow create: if isStaff() && (
+        (request.resource.data.type in ['dm', 'group']
+            && request.resource.data.get('fixed', false) != true
+            && request.auth.uid in request.resource.data.members
+            && request.resource.data.members.size() <= 80));
+      allow update: if isStaff() && (resource.data.type == 'channel' || request.auth.uid in resource.data.members) && (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastText', 'lastAt', 'lastBy', 'lastName'])
+        || (resource.data.type == 'group' && resource.data.get('fixed', false) != true && (request.auth.uid == resource.data.createdBy || isAdmin()))
+        || (resource.data.type == 'group' && resource.data.get('fixed', false) != true
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members'])
+            && request.resource.data.members.toSet() == resource.data.members.toSet().difference([request.auth.uid].toSet()))
+        || (resource.data.type == 'group' && resource.data.get('fixed', false) != true
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['members', 'memberNames'])
+            && request.resource.data.members.toSet().hasAll(resource.data.members)
+            && request.resource.data.members.size() <= 80));
+      allow delete: if (isAdmin() && resource.data.get('fixed', false) != true) || (resource.data.type == 'group' && resource.data.get('fixed', false) != true && request.auth.uid == resource.data.createdBy);
+      match /messages/{msgId} {
+        allow read: if isStaff() && canSeeRoom(roomId);
+        allow create: if isStaff() && canSeeRoom(roomId) && request.resource.data.uid == request.auth.uid
+          && request.resource.data.get('text', '').size() <= 4000;
+        allow update, delete: if isStaff() && resource.data.uid == request.auth.uid;
+      }
     }
 
     // ── 그 외 정의되지 않은 컬렉션: 기본적으로 관리자만 접근 가능 ──
