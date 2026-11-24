@@ -1716,7 +1716,8 @@
         list.forEach((p) => { if (p !== exact) { p.match = ''; p.action = 'new'; p.dupWarn = true; } });
       });
       // 아카 자료 기준일: 엑셀 안의 가장 늦은 날짜(오늘 이전) — 이 날짜까지의 수강료는 아카 자료로, 그 뒤부터 자동 발생
-      const cutoff = lines.map((L) => [L.due, L.paidDate && L.paidDate <= t ? L.paidDate : '']).flat().filter(Boolean).sort().pop() || t;
+      // 기준일(전체): 엑셀 안의 오늘까지 날짜 중 가장 늦은 날. 학생마다 아카에 이미 만들어진 앞으로의 청구가 있으면 그 날짜까지는 아카 자료 (studentCut)
+      const cutoff = lines.map((L) => [L.due, L.paidDate]).flat().filter((d) => d && d <= t).sort().pop() || t;
       const acaNames = new Set(plan.map((p) => p.match).filter(Boolean));
       const notInAca = S.students.filter((s) => s.status === '재원' && !acaNames.has(s.id));
       S.imp = { plan, found, cutoff, notInAca, counts: { current: got.current.length, paid: got.paid.length, unpaid: lines.filter((L) => L.kind === 'unpaid').length } };
@@ -1771,6 +1772,11 @@
     const data = { name, branch, category: guessCategory(branch, name), teacherName: '', fee: fee || 0, active: true };
     const ref = await addDoc(collection(db, C.classes), data); c = { id: ref.id, ...data }; S.classes.push(c); return c;
   }
+  // 학생별 자동 발생 기준일 = max(전체 기준일, 이 학생 아카 수강료 중 가장 늦은 납입기한)
+  function studentCut(p) {
+    const last = (p.rows || []).filter((L) => L.item === '수강료' && L.due).map((L) => L.due).sort().pop() || '';
+    return last > S.imp.cutoff ? last : S.imp.cutoff;
+  }
   async function runImport() {
     const plan = S.imp.plan;
     const todo = plan.filter((p) => p.action !== 'skip');
@@ -1801,12 +1807,12 @@
           if (p.rows.length && p.rows.every((L) => exist.has('aca_' + L.key)) && p.status !== '재원') { nSkip += p.rows.length; continue; }
           const ref = doc(collection(db, C.students));
           const data = { name: p.name, studentId: '', branch: p.branch, grade: String(p.grade || ''), school: p.school, phone: p.phone, parentPhone: p.parentPhone, status: p.status,
-            payDay: p.payDay || null, autoFrom: p.autoFrom || '', autoAfter: p.status === '재원' ? S.imp.cutoff : '', acaNo: '', memo: '아카에서 가져옴', joinDate: p.joinDate, leaveDate: p.leaveDate, enrollments,
+            payDay: p.payDay || null, autoFrom: p.autoFrom || '', autoAfter: p.status === '재원' ? studentCut(p) : '', acaNo: '', memo: '아카에서 가져옴', joinDate: p.joinDate, leaveDate: p.leaveDate, enrollments,
             createdAt: F.serverTimestamp(), createdBy: who() + ' (아카 가져오기)' };
           await setDoc(ref, data); s = { id: ref.id, ...data }; S.students.push(s); nNew++;
         } else {
           const patch = { status: p.status };
-          if (p.status === '재원') { patch.enrollments = enrollments; if (p.payDay) patch.payDay = p.payDay; if (p.autoFrom) patch.autoFrom = p.autoFrom; patch.autoAfter = S.imp.cutoff; }
+          if (p.status === '재원') { patch.enrollments = enrollments; if (p.payDay) patch.payDay = p.payDay; if (p.autoFrom) patch.autoFrom = p.autoFrom; patch.autoAfter = studentCut(p); }
           else { patch.enrollments = (s.enrollments || []).map((e) => e.end ? e : { ...e, end: p.leaveDate || today() }); }
           ['joinDate', 'leaveDate', 'parentPhone', 'phone', 'school'].forEach((k) => { if (p[k] && !s[k]) patch[k] = p[k]; });
           if (p.grade && !s.grade) patch.grade = String(p.grade);
