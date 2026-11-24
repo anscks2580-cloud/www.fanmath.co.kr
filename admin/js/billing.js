@@ -1575,18 +1575,20 @@
     if (/결제선생|모바일|링크/.test(t)) return { method: '결제선생', card: '' };
     return { method: '기타', card: t };
   }
-  async function readRows(file) {
+  // 엑셀 한 개 → 시트별 줄 (아카에서 여러 자료를 한 파일의 시트로 받은 경우도 읽음)
+  async function readSheets(file) {
     const wb = XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: true });
-    return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '', raw: true });
+    return wb.SheetNames.map((n) => ({ sheet: n, rows: XLSX.utils.sheet_to_json(wb.Sheets[n], { header: 1, defval: '', raw: true }) }));
   }
+  async function readRows(file) { return (await readSheets(file))[0].rows; }
   // 엑셀 종류 알아내기 (첫 줄부터 데이터 — 아카 기본 내보내기 형식)
   function detectKind(rows, fname) {
     const n = fname || '';
     if (/입학상담/.test(n)) return 'consult';
-    if (/납입/.test(n) && !/미납/.test(n)) return 'paid';
+    if ((/납입/.test(n) && !/미납/.test(n)) || /누계/.test(n)) return 'paid';
     if (/미납/.test(n)) return 'unpaid';
     if (/퇴원/.test(n)) return 'left';
-    if (/신규/.test(n)) return 'new';
+    if (/신규|신입/.test(n)) return 'new';
     if (/재원/.test(n)) return 'current';
     const r = rows.find((x) => x && x.filter((v) => v !== '').length >= 5) || [];
     if (isDate(r[0]) && isDate(r[1]) && typeof r[2] === 'string') return 'left';
@@ -1625,12 +1627,23 @@
       const got = { current: [], paid: [], unpaid: [], left: [], new: [] };
       const found = [];
       for (const f of files) {
-        const rows = (await readRows(f)).filter(dataRow);
-        // 맨 아래 합계 줄 빼기 (첫 칸이 숫자)
-        const body = rows.filter((r) => !(typeof r[0] === 'number' && r.slice(1).filter((v) => v !== '').length <= 4 && !isDate(r[0])));
-        const k = detectKind(body, f.name);
-        found.push({ name: f.name, kind: k, n: body.length });
-        if (got[k]) got[k].push(...body);
+        const sheets = await readSheets(f);
+        for (const sh of sheets) {
+          const rows = sh.rows.filter(dataRow);
+          // 맨 아래 합계 줄 빼기 (첫 칸이 숫자)
+          let body = rows.filter((r) => !(typeof r[0] === 'number' && r.slice(1).filter((v) => v !== '').length <= 4 && !isDate(r[0])));
+          if (!body.length) continue;
+          // 시트가 여러 개면 시트 이름으로, 하나면 파일 이름으로 종류 판단
+          const k = detectKind(body, sheets.length > 1 ? sh.sheet : f.name) || detectKind(body, '');
+          // 재원생 새 형식 (이름 · 연락처 · 반 · 담임 · 입학일 · 요일 · 학교 · 학년, 반마다 한 줄) → 기존 형식으로 바꿔서 합침
+          if (k === 'current' && body[0] && isPhone(body[0][1]) && !isPhone(body[0][2])) {
+            const m = new Map();
+            body.forEach((r) => { const key = normName(r[0]); const cur = m.get(key) || [r[0], r[1], '', [], r[4], r[6], r[7]]; cur[3].push(r[2]); m.set(key, cur); });
+            body = [...m.values()].map((x) => [x[0], x[1], x[2], x[3].filter(Boolean).join(', '), x[4], x[5], x[6]]);
+          }
+          found.push({ name: f.name + (sheets.length > 1 ? ' › ' + sh.sheet : ''), kind: k, n: body.length });
+          if (got[k]) got[k].push(...body);
+        }
       }
       // ── 학생 목록 ──
       const studs = new Map(); // 이름 → 학생
