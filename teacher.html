@@ -3596,7 +3596,7 @@ let clinicStudentsAll = [];
 let clinicSelectedId   = '';
 let clinicSelectedName = '';
 
-// 토요일 목록: 이번 주 토요일(기본 선택) ~ 2주 뒤 토요일, 아래에 지난 토요일 2개(늦게 입력할 때)
+// 토요일 선택: 월~일을 한 주로 보고, 접속한 날이 속한 주의 토요일 하나만 표시
 const CLINIC_DOW = ['일','월','화','수','목','금','토'];
 function clinicYmd(d) { return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function clinicSatLabel(ymd) {
@@ -3606,16 +3606,13 @@ function clinicSatLabel(ymd) {
 }
 function fillClinicSaturdays(sel) {
   if (!sel) return;
-  const keep = sel.value;
   const today = new Date(); today.setHours(0,0,0,0);
-  const thisSat = new Date(today); thisSat.setDate(today.getDate() + ((6 - today.getDay() + 7) % 7));   // 오늘이 토요일이면 오늘
-  const satAt = (w) => { const d = new Date(thisSat); d.setDate(thisSat.getDate() + 7 * w); return clinicYmd(d); };
-  const isToday = clinicYmd(thisSat) === clinicYmd(today);
-  const opt = (ymd, tag) => `<option value="${ymd}">${clinicSatLabel(ymd)} · ${tag}</option>`;
-  let html = opt(satAt(0), isToday ? '이번 주 (오늘)' : '이번 주') + opt(satAt(1), '다음 주') + opt(satAt(2), '2주 뒤');
-  html += '<optgroup label="지난 토요일 (늦게 입력할 때)">' + opt(satAt(-1), '지난주') + opt(satAt(-2), '2주 전') + '</optgroup>';
-  sel.innerHTML = html;
-  sel.value = (keep && [...sel.options].some(o => o.value === keep)) ? keep : satAt(0);
+  const monday = new Date(today); monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));   // 이번 주 월요일 (일요일이면 6일 전 월요일)
+  const sat = new Date(monday); sat.setDate(monday.getDate() + 5);
+  const ymd = clinicYmd(sat);
+  const tag = ymd === clinicYmd(today) ? '이번 주 (오늘)' : '이번 주';
+  sel.innerHTML = `<option value="${ymd}">${clinicSatLabel(ymd)} · ${tag}</option>`;
+  sel.value = ymd;
 }
 
 window.initClinicTab = function() {
