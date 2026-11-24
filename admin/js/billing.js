@@ -177,8 +177,12 @@
     const limit = Number(t.slice(8, 10)) >= gd ? dueOf(addMonths(ymOf(t), 1), 31) : dueOf(ymOf(t), 31);
     const lower = [S.settings.autoStartMonth || ymOf(t), addMonths(ymOf(t), -2)].sort().pop();
     const out = [];
+    // 아카 등에서 이미 들어온 같은 반·같은 달 수강료가 있으면 자동으로 또 만들지 않음 (중복 방지)
+    const have = new Set();
+    S.charges.forEach((c) => { if (!c.auto && c.item === '수강료' && c.status !== '취소') have.add(c.bsId + '|' + (c.className || '') + '|' + c.month); });
     S.students.forEach((s) => {
-      if (s.status !== '재원' || !s.payDay) return;
+      if (s.status !== '재원') return;
+      if (!s.payDay && !(s.enrollments || []).some((e) => e.payDay)) return;
       // 아카에서 옮겨 온 학생은 아카 마지막 청구 다음 달부터 (autoFrom)
       const low = s.autoFrom && s.autoFrom > lower ? s.autoFrom : lower;
       (s.enrollments || []).forEach((e) => {
@@ -186,8 +190,12 @@
         const amount = (Number(e.fee) || 0) - (Number(e.discount) || 0);
         if (amount <= 0) return;
         const startM = e.start ? ymOf(e.start) : low;
+        // 납입일: 반마다 다를 수 있음 (반 납입일 → 없으면 학생 납입일)
+        const pd = Number(e.payDay || s.payDay);
+        if (!pd) return;
         monthsBetween(startM > low ? startM : low, ymOf(limit)).forEach((m) => {
-          const due = dueOf(m, Number(s.payDay));
+          const due = dueOf(m, pd);
+          if (have.has(s.id + '|' + (e.className || '') + '|' + m)) return;
           if (due > limit) return;
           if (e.start && due < e.start) return;
           if (e.end && due > e.end) return;
@@ -782,10 +790,10 @@
     const list = (s.enrollments || []).slice().sort((a, b) => sortKo(b.start || '', a.start || ''));
     if (!list.length) return '<div class="bl-empty">수강반이 없어요. "+ 수강반 추가"로 반과 수강료를 넣어 주세요.</div>';
     const t = today();
-    return '<div class="bl-tw"><table class="bl-t"><thead><tr><th>반</th><th>시작</th><th>종료</th><th class="r">수강료</th><th class="r">할인</th><th>할인 사유</th><th class="r">매달 청구</th><th class="c">자동</th><th></th></tr></thead><tbody>' +
+    return '<div class="bl-tw"><table class="bl-t"><thead><tr><th>반</th><th>시작</th><th>종료</th><th class="r">수강료</th><th class="r">할인</th><th>할인 사유</th><th class="r">매달 청구</th><th class="c">납입일</th><th class="c">자동</th><th></th></tr></thead><tbody>' +
       list.map((e) => { const ended = e.end && e.end < t; return '<tr class="' + (ended ? 'off' : '') + '"><td><b>' + esc(e.className) + '</b></td><td>' + shortD(e.start) + '</td><td>' + (e.end ? '<span style="color:var(--bl-red)">' + shortD(e.end) + '</span>' : '수강 중') + '</td>' +
         '<td class="r">' + won(e.fee) + '</td><td class="r">' + (e.discount ? won(e.discount) : '') + '</td><td>' + esc(e.discountReason || '') + '</td>' +
-        '<td class="r"><b>' + won((e.fee || 0) - (e.discount || 0)) + '</b></td><td class="c">' + (e.auto === false ? '꺼짐' : '<span style="color:var(--bl-green);font-weight:700">켜짐</span>') + '</td>' +
+        '<td class="r"><b>' + won((e.fee || 0) - (e.discount || 0)) + '</b></td><td class="c">' + (e.payDay ? '매월 ' + e.payDay + '일' : (s.payDay ? '<span style="color:var(--muted)">' + s.payDay + '일 (학생)</span>' : '')) + '</td><td class="c">' + (e.auto === false ? '꺼짐' : '<span style="color:var(--bl-green);font-weight:700">켜짐</span>') + '</td>' +
         '<td><button class="bl-mini" onclick="BL.editEnroll(\'' + e.id + '\')">수정</button> ' + (e.end ? '' : '<button class="bl-mini" onclick="BL.endEnroll(\'' + e.id + '\')">수강 종료</button> ') + '<button class="bl-mini" onclick="BL.chargeForEnroll(\'' + e.id + '\')">수강료 발생</button></td></tr>'; }).join('') +
       '</tbody></table></div>';
   }
@@ -901,6 +909,7 @@
       '<label class="bl-f"><span>할인 사유</span><input class="bl-in" data-k="dr" value="' + esc(e.discountReason || '') + '" placeholder="예: 장기할인"></label></div>' +
       '<div class="row"><label class="bl-f"><span>수강 시작일</span><input type="date" class="bl-in" data-k="st" value="' + esc(e.start || '') + '"></label>' +
       '<label class="bl-f"><span>수강 종료일 (비우면 수강 중)</span><input type="date" class="bl-in" data-k="en" value="' + esc(e.end || '') + '"></label></div>' +
+      '<div class="row"><label class="bl-f"><span>이 반 매월 납입일 (비우면 학생 납입일 ' + (s.payDay || '-') + '일)</span><input class="bl-in num" data-k="pd" value="' + esc(e.payDay || '') + '" placeholder="1~31"></label></div>' +
       '<label class="bl-chk"><input type="checkbox" data-k="auto"' + (e.auto === false ? '' : ' checked') + '> 매달 납입일에 수강료 자동 발생</label>' +
       (isNew ? '<div class="bl-box gold"><label class="bl-chk"><input type="checkbox" data-k="first"> 첫 수강료 지금 발생</label> <input type="date" class="bl-in w140" data-k="fd" value="' + today() + '"> <span class="bl-note">납입 기한</span>' +
         '<div class="bl-note" style="margin-top:6px;">중간에 들어온 학생처럼 이번 달 수강료를 바로 받아야 할 때 체크하세요. 같은 달은 자동 발생과 겹치지 않아요.</div></div>' : ''),
@@ -911,7 +920,8 @@
         const c = classById(val(r, '[data-k=cls]'));
         if (!c) { alert('반을 골라 주세요'); return false; }
         const ne = { id: e.id || uid(), classId: c.id, className: c.name, fee: num(val(r, '[data-k=fee]')), discount: num(val(r, '[data-k=dc]')),
-          discountReason: val(r, '[data-k=dr]'), start: val(r, '[data-k=st]'), end: val(r, '[data-k=en]'), auto: chk(r, '[data-k=auto]') };
+          discountReason: val(r, '[data-k=dr]'), start: val(r, '[data-k=st]'), end: val(r, '[data-k=en]'), auto: chk(r, '[data-k=auto]'),
+          payDay: Math.max(0, Math.min(31, num(val(r, '[data-k=pd]')))) || null };
         const list = (s.enrollments || []).filter((x) => x.id !== ne.id).concat([ne]);
         await saveStudent(s, { enrollments: list });
         if (isNew && chk(r, '[data-k=first]')) {
@@ -1687,7 +1697,7 @@
             if (last && (!autoFrom || addMonths(ymOf(last.due), 1) > autoFrom)) autoFrom = addMonths(ymOf(last.due), 1);
             // 한 달 수강료를 여러 번 나눠 낸 경우(같은 납입기한 여러 줄)는 합쳐서 한 달 청구액으로
             const fee = last ? tu.filter((L) => L.due === last.due).reduce((x, L) => x + L.claim, 0) : 0;
-            enr.push({ aca: c, branch: clsBranch(c), className: clsName(c), fee, lastDue: last ? last.due : '', auto: !isTutorCls(c) });
+            enr.push({ aca: c, branch: clsBranch(c), className: clsName(c), fee, payDay: day || null, lastDue: last ? last.due : '', auto: !isTutorCls(c) });
           });
         }
         const open = s.rows.reduce((a, L) => a + (L.claim - L.paid > 0 && L.kind === 'unpaid' ? L.claim : 0), 0);
@@ -1706,7 +1716,7 @@
         list.forEach((p) => { if (p !== exact) { p.match = ''; p.action = 'new'; p.dupWarn = true; } });
       });
       // 아카 자료 기준일: 엑셀 안의 가장 늦은 날짜(오늘 이전) — 이 날짜까지의 수강료는 아카 자료로, 그 뒤부터 자동 발생
-      const cutoff = lines.map((L) => [L.due, L.paidDate]).flat().filter((d) => d && d <= t).sort().pop() || t;
+      const cutoff = lines.map((L) => [L.due, L.paidDate && L.paidDate <= t ? L.paidDate : '']).flat().filter(Boolean).sort().pop() || t;
       const acaNames = new Set(plan.map((p) => p.match).filter(Boolean));
       const notInAca = S.students.filter((s) => s.status === '재원' && !acaNames.has(s.id));
       S.imp = { plan, found, cutoff, notInAca, counts: { current: got.current.length, paid: got.paid.length, unpaid: lines.filter((L) => L.kind === 'unpaid').length } };
@@ -1785,7 +1795,7 @@
         for (const e of p.enr) {
           const c = await ensureClass(e.branch, e.className, e.fee);
           const old = s && (s.enrollments || []).find((x) => x.classId === c.id);
-          enrollments.push({ id: old ? old.id : uid(), classId: c.id, className: c.name, fee: e.fee, discount: 0, discountReason: '', start: old && old.start ? old.start : '', end: '', auto: e.auto });
+          enrollments.push({ id: old ? old.id : uid(), classId: c.id, className: c.name, fee: e.fee, payDay: e.payDay || null, discount: 0, discountReason: '', start: old && old.start ? old.start : '', end: '', auto: e.auto });
         }
         if (!s) {
           if (p.rows.length && p.rows.every((L) => exist.has('aca_' + L.key)) && p.status !== '재원') { nSkip += p.rows.length; continue; }
