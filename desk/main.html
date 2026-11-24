@@ -160,7 +160,7 @@ body{display:flex;height:100vh;overflow:hidden;background:#fff}
 <script type="module">
 import { auth, db, APP, IN_PROGRAM, requireStaff, signOut, collection, doc, getDocs, query, where, onSnapshot,
   esc, ymd, pad, normBr, openWork, openDeskWindow, toast } from './desk-fb.js?v=4';
-import { ADMIN_GROUPS, ROLE_PRESETS, TEACHER_GROUPS, TA_GROUPS } from './menu.js?v=4';
+import { ADMIN_GROUPS, ROLE_PRESETS, TEACHER_GROUPS, TA_GROUPS } from './menu.js?v=5';
 
 const $ = (id) => document.getElementById(id);
 let P = null, GROUPS = [], PAGE = 'admin.html', view = 'all';
@@ -284,6 +284,9 @@ function render() {
 function openItem(id) {
   if (id === '@today') return inner.show('today');
   if (id === '@chat') return openDeskWindow('chat');
+  // 수납처럼 따로 있는 화면 (메뉴에 url 이 있으면 이 창 안의 탭으로 열림)
+  const um = allItems().find((x) => x.id === id && x.url);
+  if (um) { writeArr(REC_KEY(), [id].concat(readArr(REC_KEY()).filter((x) => x !== id)).slice(0, 12)); openViewTab(location.origin + um.url, um.label); return; }
   writeArr(REC_KEY(), [id].concat(readArr(REC_KEY()).filter((x) => x !== id)).slice(0, 12));
   openTab(PAGE, id);
 }

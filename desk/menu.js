@@ -36,6 +36,12 @@ export const ADMIN_GROUPS = [
     { id: 'covers', label: '교재 표지 · 안내문', k: '표지 안내문 인쇄' },
     { id: 'records', label: '기록 조회', k: '기록 이력 지난' },
   ] },
+  { id: 'billing', label: '수납', color: '#0E7490', items: [
+    { id: '@bill:billstudent', label: '학생 수납 (테스트)', url: '/p-e02aac283561d66a.html#billstudent', k: '수납 결제 납입 미납 모의 카드 링크' },
+    { id: '@bill:billtoday', label: '수납 현황 (테스트)', url: '/p-e02aac283561d66a.html#billtoday', k: '수납 현황 납부' },
+    { id: '@bill:billunpaid', label: '납입·미납 조회 (테스트)', url: '/p-e02aac283561d66a.html#billunpaid', k: '미납 납입 조회' },
+    { id: '@bill:billbooks', label: '교재 (테스트)', url: '/p-e02aac283561d66a.html#billbooks', k: '교재 판매 입고 재고' },
+  ] },
   { id: 'consult', label: '상담', color: '#16A34A', items: [
     { id: 'consult', label: '상담 신청', k: '상담 문의 입학 QR 설문' },
     { id: 'consultdeck', label: '상담자료 관리', k: '상담자료 프레젠테이션 설명회 학교별' },
@@ -68,7 +74,7 @@ export const ADMIN_GROUPS = [
   ] },
 ];
 // 관리부 계정 기본 노출 그룹 (admin/js/nav.js ROLE_PRESETS 와 같게)
-export const ROLE_PRESETS = { master: null, office: ['home', 'student', 'reports', 'consult', 'office', 'notice'] };
+export const ROLE_PRESETS = { master: null, office: ['home', 'student', 'billing', 'reports', 'consult', 'office', 'notice'] };
 
 export const TEACHER_GROUPS = [
   { id: 'home', label: '오늘', color: '#5B3FA6', items: [
