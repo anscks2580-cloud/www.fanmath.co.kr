@@ -172,3 +172,7 @@
 .bl-mb { display:inline-block; padding:2px 8px; border-radius:10px; font-size:12px; font-weight:700; white-space:nowrap; }
 .bl-mb.card { background:#EEF4FC; color:#2463B8; } .bl-mb.cash { background:#EDF7F1; color:#23864A; }
 .bl-mb.bank { background:#ECF7FA; color:#0E7490; } .bl-mb.online { background:#F3F0FA; color:#5B3FA6; } .bl-mb.etc { background:#F1F1F4; color:#6A6878; }
+/* 창(모달)은 .bl-wrap 밖에 붙어서 색 변수를 따로 둠 */
+.bl-modal-bg { --bl-red:#D64545; --bl-red-bg:rgba(214,69,69,0.08); --bl-green:#2E9E5B; --bl-green-bg:rgba(46,158,91,0.09);
+  --bl-amber:#C9700F; --bl-amber-bg:rgba(217,123,26,0.1); --bl-line:rgba(30,24,56,0.14); --bl-soft:rgba(30,24,56,0.04); }
+.bl-mtile { border-color:#D9D6E3; }
