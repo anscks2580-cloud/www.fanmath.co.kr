@@ -985,14 +985,22 @@
       return false;   // 창은 열어 둠 (링크 확인용)
     };
     modal({ title: '결제 링크 보내기 · ' + s.name, body,
-      buttons: [{ label: '닫기' },
+      buttons: [{ label: '닫기' }].concat(P ? [{ label: '바로 모의 카드 결제', cls: 'btn-primary', onClick: async (root) => {
+          // 테스트 모드 전용: 문자 없이 결제 화면을 바로 열어 테스트 카드로 결제 → 실제 수납과 같은 결과가 나오는지 확인
+          const w = window.open('about:blank', '_blank');
+          await call(root, 'link');
+          const a = root.querySelector('[data-k=result] a');
+          if (a) { if (w && !w.closed) w.location.href = a.href; else window.open(a.href, '_blank'); }
+          else if (w) w.close();
+          return false;
+        } }] : []).concat([
         { label: '링크만 만들기', cls: 'btn-secondary', onClick: (root) => call(root, 'link') },
         { label: '문자·카톡 보내기', cls: 'btn-primary', onClick: async (root) => {
           const n = ['parent', 'student'].filter((k) => chk(root, '[data-k=' + k + ']')).length + (val(root, '[data-k=extra]') ? 1 : 0);
           if (!n) { alert('받는 사람을 골라 주세요'); return false; }
           if (!confirm(won(sum) + '원 결제 안내를 ' + n + '곳에 보낼까요?')) return false;
           return call(root, 'send');
-        } }] });
+        } }]) });
   };
   const curCharge = (id) => (S.cur.charges || []).find((c) => c.id === id) || S.charges.get(id);
   BL.editCharge = (id) => {
