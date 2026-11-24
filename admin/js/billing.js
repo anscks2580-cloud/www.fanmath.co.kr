@@ -1697,6 +1697,14 @@
           enr, payDay, autoFrom, rows: s.rows, open, paid: paidSum, openN: s.rows.filter((L) => L.kind === 'unpaid').length, paidN: s.rows.filter((L) => L.kind === 'paid').length,
           match: m ? m.id : '', action: m ? 'link' : 'new' };
       }).sort((a, b) => sortKo((a.status === '재원' ? '0' : '1') + (a.match ? '1' : '0') + a.name, (b.status === '재원' ? '0' : '1') + (b.match ? '1' : '0') + b.name));
+      // 아카 학생 두 명이 같은 수납 학생에 연결되면 안 됨 (예: 김나경 · 김나경(s)) → 이름이 정확히 같은 쪽만 연결, 나머지는 새로 만들기
+      const byMatch = new Map();
+      plan.forEach((p) => { if (p.match) (byMatch.get(p.match) || byMatch.set(p.match, []).get(p.match)).push(p); });
+      byMatch.forEach((list, id) => {
+        if (list.length < 2) return;
+        const st = studentById(id); const exact = list.find((p) => st && normName(p.name) === normName(st.name));
+        list.forEach((p) => { if (p !== exact) { p.match = ''; p.action = 'new'; p.dupWarn = true; } });
+      });
       // 아카 자료 기준일: 엑셀 안의 가장 늦은 날짜(오늘 이전) — 이 날짜까지의 수강료는 아카 자료로, 그 뒤부터 자동 발생
       const cutoff = lines.map((L) => [L.due, L.paidDate]).flat().filter((d) => d && d <= t).sort().pop() || t;
       const acaNames = new Set(plan.map((p) => p.match).filter(Boolean));
@@ -1705,13 +1713,16 @@
       drawPlan();
     } catch (e) { fail(e); }
   }
+  // 괄호만 뺀 이름 ("김나경(s)" → "김나경s", "신성민(P)" → "신성민p") — 홈페이지는 보통 이렇게 등록됨
+  const flatName = (n) => normName(n).replace(/[()]/g, '').toLowerCase();
   function matchStudent(row) {
-    const n = normName(row.name), b = baseName(row.name);
+    const n = normName(row.name), b = baseName(row.name), f = flatName(row.name);
     const same = (s) => !row.branch || !s.branch || s.branch === row.branch;
     let c = S.students.filter((s) => normName(s.name) === n && same(s));
     if (c.length === 1) return c[0];
     c = S.students.filter((s) => normName(s.name) === n);
     if (c.length === 1) return c[0];
+    if (f !== n) { c = S.students.filter((s) => flatName(s.name) === f && same(s)); if (c.length === 1) return c[0]; }
     if (b !== n) { c = S.students.filter((s) => normName(s.name) === b && same(s)); if (c.length === 1) return c[0]; }
     return null;
   }
