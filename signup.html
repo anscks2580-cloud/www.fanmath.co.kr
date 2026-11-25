@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>회원가입 | 송우찬수학학원</title>
+<meta name="robots" content="noindex,nofollow">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="mobile.css?v=1">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#4B3391">
+<link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+<style>
+body { display:flex; align-items:flex-start; justify-content:center; min-height:100vh; padding:28px 16px; }
+.su-wrap { width:100%; max-width:440px; }
+.su-card {
+  background: linear-gradient(145deg, #F0EEF8 0%, #F7F6FB 100%);
+  border:1px solid rgba(245,197,24,0.2); border-radius:20px; padding:36px 30px;
+  box-shadow: 0 1px 0 rgba(245,197,24,0.5), 0 24px 60px rgba(30,24,56,0.15);
+}
+.su-logo { display:flex; align-items:center; gap:10px; justify-content:center; margin-bottom:22px; }
+.su-logo img { height:34px; width:34px; }
+.su-logo span { font-size:16px; font-weight:700; color:var(--off-white); }
+.su-title { text-align:center; font-size:21px; font-weight:700; margin-bottom:6px; letter-spacing:-0.5px; }
+.su-sub { text-align:center; font-size:13px; color:var(--muted); margin-bottom:22px; line-height:1.7; }
+.scr { display:none; }
+.scr.on { display:block; }
+.sns { display:flex; flex-direction:column; gap:9px; }
+.sns button { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; padding:13px; border-radius:10px; font:700 15px/1 inherit; font-family:inherit; cursor:pointer; border:1px solid transparent; }
+.sns button b { width:20px; text-align:center; font-size:15px; }
+.sns-k { background:#FEE500; color:#191600; }
+.sns-n { background:#03C75A; color:#fff; }
+.sns-g { background:#fff; color:#1E1838; border-color:rgba(30,24,56,0.15) !important; }
+.sns button:disabled { opacity:.55; cursor:not-allowed; }
+.or { display:flex; align-items:center; gap:10px; margin:22px 0 16px; color:var(--muted); font-size:12px; }
+.or::before, .or::after { content:''; flex:1; height:1px; background:rgba(30,24,56,0.1); }
+.fg { margin-bottom:14px; }
+.fg > label { display:block; font-size:12px; color:var(--muted); margin-bottom:7px; font-weight:600; }
+.fg input, .fg select {
+  width:100%; padding:12px 14px; background:rgba(30,24,56,0.05); border:1px solid rgba(30,24,56,0.1);
+  border-radius:8px; color:var(--off-white); font-size:15px; font-family:inherit; outline:none;
+}
+.fg input:focus, .fg select:focus { border-color:rgba(245,197,24,0.6); }
+.fg input[readonly] { background:rgba(46,158,91,0.07); }
+.row2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.inl { display:flex; gap:7px; }
+.inl input { flex:1; min-width:0; }
+.seg { display:flex; gap:7px; }
+.seg button { flex:1; padding:11px 6px; border-radius:8px; border:1px solid rgba(30,24,56,0.14); background:#fff; color:var(--off-white); font:600 14px/1 inherit; font-family:inherit; cursor:pointer; }
+.seg button.on { background:var(--purple); border-color:var(--purple); color:#fff; }
+.btn-main { width:100%; padding:14px; background:var(--gold); color:var(--on-gold); font-size:15px; font-weight:700; border:none; border-radius:8px; cursor:pointer; font-family:inherit; }
+.btn-main:disabled { opacity:.6; cursor:not-allowed; }
+.btn-sub { padding:0 13px; white-space:nowrap; border-radius:8px; border:1px solid var(--purple); background:#fff; color:var(--purple); font:700 13px/1 inherit; font-family:inherit; cursor:pointer; }
+.btn-sub:disabled { opacity:.5; cursor:not-allowed; }
+.ok-pill { display:inline-block; padding:10px 16px; border-radius:8px; background:rgba(46,158,91,0.12); color:#2E9E5B; font-weight:700; font-size:14px; }
+.agree { display:flex; gap:8px; align-items:flex-start; font-size:13px; color:var(--muted); margin:6px 0 16px; line-height:1.6; }
+.agree input { margin-top:3px; accent-color:var(--purple); }
+.agree a { color:var(--purple); }
+.msg { display:none; margin-top:12px; padding:11px 14px; border-radius:8px; font-size:13px; text-align:center; line-height:1.6; }
+.msg.err { display:block; background:rgba(214,69,69,0.1); border:1px solid rgba(214,69,69,0.3); color:#D64545; }
+.msg.ok { display:block; background:rgba(46,158,91,0.1); border:1px solid rgba(46,158,91,0.3); color:#2E9E5B; }
+.links { text-align:center; margin-top:18px; font-size:13px; color:var(--muted); line-height:2; }
+.links a, .links button { color:var(--purple); background:none; border:none; font:inherit; cursor:pointer; text-decoration:none; padding:0; }
+.big-ic { font-size:44px; text-align:center; margin:4px 0 8px; }
+.info { background:#fff; border:1px solid rgba(30,24,56,0.08); border-radius:10px; padding:12px 14px; font-size:13px; line-height:1.9; color:var(--off-white); margin:14px 0; }
+.info b { color:var(--purple); }
+.hint { font-size:12px; color:var(--muted); margin-top:6px; line-height:1.6; }
+</style>
+</head>
+<body>
+<div class="su-wrap">
+  <div class="su-card">
+    <div class="su-logo"><img src="swc-logo.svg" alt="SWC"><span>송우찬수학학원</span></div>
+
+    <!-- 불러오는 중 -->
+    <div class="scr on" id="scr-load"><div class="su-sub" style="margin:30px 0;">잠시만 기다려 주세요…</div></div>
+
+    <!-- 1단계: 가입 방법 -->
+    <div class="scr" id="scr-start">
+      <div class="su-title">회원가입</div>
+      <div class="su-sub">새로 등록한 학생 · 학부모님은 직접 가입해 주세요.<br>학원에서 확인 후 승인하면 바로 쓸 수 있어요.</div>
+      <div class="sns">
+        <button type="button" class="sns-k" data-sns="kakao"><b>K</b>카카오로 시작하기</button>
+        <button type="button" class="sns-n" data-sns="naver"><b>N</b>네이버로 시작하기</button>
+        <button type="button" class="sns-g" data-sns="google"><b>G</b>구글로 시작하기</button>
+      </div>
+      <div class="or">또는 아이디로 가입</div>
+      <div class="fg"><label>아이디 (영문 소문자 · 숫자 4~20자)</label><input id="u-id" autocomplete="username" autocapitalize="off" spellcheck="false"></div>
+      <div class="fg"><label>비밀번호 (6자 이상)</label><input type="password" id="u-pw" autocomplete="new-password"></div>
+      <div class="fg"><label>비밀번호 확인</label><input type="password" id="u-pw2" autocomplete="new-password"></div>
+      <button class="btn-main" id="u-btn">다음</button>
+      <div class="msg" id="m-start"></div>
+      <div class="links">이미 계정이 있나요? <a href="login.html">로그인</a><br><a href="index.html">← 홈으로</a></div>
+    </div>
+
+    <!-- 2단계: 가입 정보 + 휴대폰 인증 -->
+    <div class="scr" id="scr-profile">
+      <div class="su-title">가입 정보 입력</div>
+      <div class="su-sub">휴대폰 인증까지 마치고 가입 신청을 눌러 주세요.</div>
+      <div class="fg"><label>구분</label>
+        <div class="seg" id="seg-want"><button type="button" data-v="student" class="on">학생</button><button type="button" data-v="parent">학부모</button></div>
+      </div>
+      <div class="fg"><label>다니는 관</label>
+        <div class="seg" id="seg-branch"><button type="button" data-v="평촌관">평촌관</button><button type="button" data-v="산본관">산본관</button></div>
+      </div>
+      <div class="fg"><label id="l-name">학생 이름</label><input id="p-name" maxlength="20" autocomplete="off"></div>
+      <div class="row2">
+        <div class="fg"><label>학교</label><input id="p-school" maxlength="30" placeholder="예) 평촌중"></div>
+        <div class="fg"><label>학년</label>
+          <select id="p-grade"><option value="">선택</option><option>초4</option><option>초5</option><option>초6</option><option>중1</option><option>중2</option><option>중3</option><option>고1</option><option>고2</option><option>고3</option><option>N수</option></select>
+        </div>
+      </div>
+      <div class="fg"><label id="l-phone">휴대폰 번호 (학생 본인 번호)</label>
+        <div class="inl"><input id="p-phone" inputmode="tel" placeholder="010-0000-0000" maxlength="13"><button type="button" class="btn-sub" id="b-send">인증번호 받기</button></div>
+        <div class="hint" id="h-phone">한 번호로는 한 계정만 가입할 수 있어요.</div>
+      </div>
+      <div class="fg" id="f-code"><label>인증번호</label>
+        <div class="inl"><input id="p-code" inputmode="numeric" maxlength="6" placeholder="문자로 받은 6자리" autocomplete="one-time-code"><button type="button" class="btn-sub" id="b-verify">인증하기</button></div>
+      </div>
+      <div id="rcv"></div>
+      <label class="agree"><input type="checkbox" id="p-agree"><span>학원 이용을 위한 개인정보(이름 · 학교 · 학년 · 휴대폰 번호) 수집에 동의합니다. <a href="privacy.html" target="_blank">개인정보처리방침</a></span></label>
+      <button class="btn-main" id="p-btn">가입 신청</button>
+      <div class="msg" id="m-profile"></div>
+      <div class="links"><button type="button" class="b-logout">다른 계정으로 하기 (로그아웃)</button></div>
+    </div>
+
+    <!-- 3단계: 승인 대기 -->
+    <div class="scr" id="scr-wait">
+      <div class="big-ic">⏳</div>
+      <div class="su-title">가입 승인을 기다리고 있어요</div>
+      <div class="info" id="w-info"></div>
+      <div class="su-sub" style="margin-bottom:0;">학원에서 확인 후 승인하면 로그인해서 바로 쓸 수 있어요.<br>문의: <span id="w-tel"></span></div>
+      <div class="links"><a href="index.html">홈으로</a> · <button type="button" class="b-logout">로그아웃</button></div>
+    </div>
+
+    <!-- 거절됨 -->
+    <div class="scr" id="scr-reject">
+      <div class="big-ic">⚠️</div>
+      <div class="su-title">가입 신청이 승인되지 않았어요</div>
+      <div class="su-sub">입력한 정보가 학원 명단과 달라 승인되지 않았어요.<br>학원으로 문의해 주세요.<br>평촌관 <a href="tel:031-386-8899">031-386-8899</a> · 산본관 <a href="tel:031-346-8899">031-346-8899</a></div>
+      <div class="links"><button type="button" class="b-logout">로그아웃</button></div>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithCustomToken, signInWithPopup, GoogleAuthProvider, RecaptchaVerifier, signInWithPhoneNumber, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-functions.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyD_eYNKzfa-aT41E3Dqt_HyJc6UeSR5ErA",
+  authDomain: "songmath.firebaseapp.com",
+  projectId: "songmath",
+  storageBucket: "songmath.firebasestorage.app",
+  messagingSenderId: "936295436575",
+  appId: "1:936295436575:web:d1e201508719850cfbe02a"
+};
+// ── 간편 가입 키 (카카오 REST API 키 · 네이버 Client ID) — 비어 있으면 그 버튼은 「준비 중」 ──
+const SNS_KEYS = { kakao: '', naver: '' };
+const REDIRECT = location.origin + '/signup.html';
+const TEL = { '평촌관': '031-386-8899', '산본관': '031-346-8899' };
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const fns = getFunctions(app, 'asia-northeast3');
+// 문자 확인 전용 보조 앱 — 가입한 계정에 번호를 붙이지 않고 번호가 본인 것인지만 확인
+const phoneApp = initializeApp(firebaseConfig, 'phonev');
+const phoneAuth = getAuth(phoneApp);
+phoneAuth.languageCode = 'ko';
+
+const IN_APP = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true || /SongmathApp/.test(navigator.userAgent) || !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+const $ = (id) => document.getElementById(id);
+const digits = (v) => String(v || '').replace(/[^0-9]/g, '');
+const fmtPhone = (v) => { const d = digits(v); return d.length === 11 ? d.replace(/(\d{3})(\d{4})(\d{4})/, '$1-$2-$3') : d.length === 10 ? d.replace(/(\d{3})(\d{3})(\d{4})/, '$1-$2-$3') : d; };
+const e164 = (v) => { const d = digits(v); return d.startsWith('0') ? '+82' + d.slice(1) : '+' + d; };
+const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+function show(id) { document.querySelectorAll('.scr').forEach((s) => s.classList.toggle('on', s.id === id)); window.scrollTo(0, 0); }
+function msg(id, text, ok) { const el = $(id); el.className = 'msg ' + (text ? (ok ? 'ok' : 'err') : ''); el.textContent = text || ''; }
+
+let BUSY = false;          // 가입 · 간편 로그인 처리 중에는 상태 변화로 화면을 바꾸지 않음
+let LOGIN_ID = '';         // 아이디로 가입한 경우 그 아이디
+
+// ── 로그인된 계정을 보고 어디로 보낼지 ──
+async function route(user) {
+  const uid = user.uid;
+  const get = async (c) => { try { return await getDoc(doc(db, c, uid)); } catch (e) { return null; } };
+  const ad = await get('admins'); if (ad && ad.exists()) { location.replace('admin.html'); return; }
+  const te = await get('teachers'); if (te && te.exists()) { location.replace(te.data().role === 'ta' ? 'ta.html' : 'teacher.html'); return; }
+  const stu = await get('students'); if (stu && stu.exists()) { location.replace(IN_APP ? 'app.html' : 'index.html'); return; }
+  const pa = await get('parents'); if (pa && pa.exists()) { location.replace('parent.html'); return; }
+  const su = await get('signups');
+  if (su && su.exists()) {
+    const d = su.data();
+    if (d.status === 'rejected') { show('scr-reject'); return; }
+    $('w-info').innerHTML = `구분 <b>${d.want === 'parent' ? '학부모' : '학생'}</b> · ${esc(d.branch)}<br>${d.want === 'parent' ? '자녀' : '학생'} 이름 <b>${esc(d.name)}</b> (${esc(d.school)} ${esc(d.grade)})<br>휴대폰 ${esc(fmtPhone(d.phone))}`;
+    $('w-tel').innerHTML = `${esc(d.branch)} <a href="tel:${TEL[d.branch] || ''}">${TEL[d.branch] || ''}</a>`;
+    show('scr-wait'); return;
+  }
+  openProfile(user);
+}
+
+function openProfile(user) {
+  if (user && user.displayName && !$('p-name').value) $('p-name').value = user.displayName.replace(/\s*학부모\s*$/, '');
+  show('scr-profile');
+}
+
+onAuthStateChanged(auth, async (user) => {
+  if (BUSY) return;
+  if (!user) { if (!handlingReturn) show('scr-start'); return; }
+  try { await route(user); } catch (e) { console.error(e); show('scr-start'); }
+});
+
+// ── 카카오 · 네이버 로그인 후 돌아온 경우 ──
+let handlingReturn = false;
+(async () => {
+  const q = new URLSearchParams(location.search);
+  const code = q.get('code'), state = q.get('state');
+  if (q.get('error')) { history.replaceState(null, '', location.pathname); show('scr-start'); msg('m-start', '간편 로그인을 취소했어요.'); return; }
+  if (!code || !/^(kakao|naver)$/.test(state || '')) return;
+  handlingReturn = true; BUSY = true;
+  history.replaceState(null, '', location.pathname);
+  show('scr-load');
+  try {
+    const r = await httpsCallable(fns, 'socialLogin')({ provider: state, code, redirectUri: REDIRECT, state });
+    const cred = await signInWithCustomToken(auth, r.data.token);
+    if (r.data.name && !$('p-name').value) $('p-name').value = r.data.name;
+    BUSY = false; await route(cred.user);
+  } catch (e) {
+    console.error(e); BUSY = false; handlingReturn = false; show('scr-start');
+    msg('m-start', (state === 'kakao' ? '카카오' : '네이버') + ' 로그인에 실패했어요. 잠시 후 다시 해 주세요.');
+  }
+})();
+
+// ── 간편 가입 버튼 ──
+document.querySelectorAll('[data-sns]').forEach((b) => b.addEventListener('click', async () => {
+  const v = b.dataset.sns; msg('m-start', '');
+  if (v === 'google') {
+    BUSY = true;
+    try { const cred = await signInWithPopup(auth, new GoogleAuthProvider()); BUSY = false; await route(cred.user); }
+    catch (e) {
+      BUSY = false;
+      if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request')
+        msg('m-start', IN_APP ? '앱에서는 구글 가입이 안 될 수 있어요. 카카오 · 네이버 · 아이디로 가입해 주세요.' : '구글 로그인에 실패했어요. (' + (e.code || '오류') + ')');
+    }
+    return;
+  }
+  const key = SNS_KEYS[v];
+  if (!key) { msg('m-start', (v === 'kakao' ? '카카오' : '네이버') + ' 가입은 준비 중이에요. 다른 방법으로 가입해 주세요.'); return; }
+  location.href = v === 'kakao'
+    ? `https://kauth.kakao.com/oauth/authorize?response_type=code&client_id=${encodeURIComponent(key)}&redirect_uri=${encodeURIComponent(REDIRECT)}&state=kakao`
+    : `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${encodeURIComponent(key)}&redirect_uri=${encodeURIComponent(REDIRECT)}&state=naver`;
+}));
+// 로그인 화면의 카카오 · 네이버 버튼에서 넘어온 경우 (signup.html?sns=kakao) — 바로 그 로그인 화면으로 이동
+{ const s = new URLSearchParams(location.search).get('sns'); if (s === 'kakao' || s === 'naver') { history.replaceState(null, '', location.pathname); const b = document.querySelector(`[data-sns="${s}"]`); if (b) b.click(); } }
+
+// ── 아이디로 가입 ──
+$('u-btn').addEventListener('click', async () => {
+  const id = $('u-id').value.trim().toLowerCase(), pw = $('u-pw').value, pw2 = $('u-pw2').value;
+  if (!/^[a-z0-9]{4,20}$/.test(id)) { msg('m-start', '아이디는 영문 소문자 · 숫자 4~20자로 만들어 주세요.'); return; }
+  if (pw.length < 6) { msg('m-start', '비밀번호는 6자 이상이에요.'); return; }
+  if (pw !== pw2) { msg('m-start', '비밀번호 확인이 달라요.'); return; }
+  const b = $('u-btn'); b.disabled = true; BUSY = true; msg('m-start', '');
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, id + '@songmath.kr', pw);
+    LOGIN_ID = id; BUSY = false; openProfile(cred.user);
+  } catch (e) {
+    BUSY = false;
+    msg('m-start', e.code === 'auth/email-already-in-use' ? '이미 있는 아이디예요. 다른 아이디로 해 주세요.' : e.code === 'auth/weak-password' ? '비밀번호가 너무 쉬워요.' : '가입하지 못했어요. (' + (e.code || '오류') + ')');
+  } finally { b.disabled = false; }
+});
+
+// ── 구분 · 관 선택 ──
+let WANT = 'student', BRANCH = '';
+function seg(id, cb) { $(id).querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { $(id).querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); cb(b.dataset.v); })); }
+seg('seg-want', (v) => {
+  WANT = v;
+  $('l-name').textContent = v === 'parent' ? '자녀(학생) 이름' : '학생 이름';
+  $('l-phone').textContent = v === 'parent' ? '휴대폰 번호 (학부모님 본인 번호)' : '휴대폰 번호 (학생 본인 번호)';
+});
+seg('seg-branch', (v) => { BRANCH = v; });
+
+// ── 휴대폰 인증 ──
+let RCV = null, CONF = null, CONF_PH = '', VERIFIED = '';
+$('b-send').addEventListener('click', async () => {
+  const ph = digits($('p-phone').value);
+  if (!/^01[0-9]{8,9}$/.test(ph)) { msg('m-profile', '휴대폰 번호를 확인해 주세요.'); return; }
+  const b = $('b-send'); b.disabled = true; msg('m-profile', '');
+  try {
+    if (!RCV) RCV = new RecaptchaVerifier(phoneAuth, 'rcv', { size: 'invisible' });
+    CONF = await signInWithPhoneNumber(phoneAuth, e164(ph), RCV);
+    CONF_PH = ph; b.textContent = '다시 받기';
+    msg('m-profile', '인증번호를 보냈어요. 가장 마지막에 받은 번호를 넣어 주세요.', true);
+    $('p-code').focus();
+  } catch (e) {
+    console.error(e);
+    msg('m-profile', e.code === 'auth/too-many-requests' ? '요청이 너무 많아요. 잠시 후 다시 해 주세요.' : e.code === 'auth/invalid-phone-number' ? '휴대폰 번호를 확인해 주세요.' : '문자를 보내지 못했어요. (' + (e.code || '오류') + ')');
+    try { RCV && RCV.clear(); } catch (_) {} RCV = null; $('rcv').innerHTML = '';
+  } finally { setTimeout(() => { if (!VERIFIED) b.disabled = false; }, 3000); }
+});
+$('b-verify').addEventListener('click', async () => {
+  const code = $('p-code').value.trim();
+  if (!CONF) { msg('m-profile', '먼저 인증번호를 받아 주세요.'); return; }
+  if (!/^\d{6}$/.test(code)) { msg('m-profile', '인증번호 6자리를 넣어 주세요.'); return; }
+  if (digits($('p-phone').value) !== CONF_PH) { msg('m-profile', '인증번호를 받은 번호와 지금 적힌 번호가 달라요.'); return; }
+  const b = $('b-verify'); b.disabled = true; msg('m-profile', '');
+  try {
+    const r = await CONF.confirm(code);
+    try { await deleteUser(r.user); } catch (_) { await signOut(phoneAuth).catch(() => {}); } // 확인용 계정은 바로 지움
+  } catch (e) {
+    b.disabled = false;
+    msg('m-profile', e.code === 'auth/code-expired' ? '인증번호 시간이 지났어요. 다시 받아 주세요.' : e.code === 'auth/invalid-verification-code' ? '인증번호가 맞지 않아요. 가장 마지막에 받은 번호를 넣어 주세요.' : '인증하지 못했어요. (' + (e.code || '오류') + ')');
+    return;
+  }
+  // 번호당 계정 1개 — phones/{번호} 를 먼저 차지 (이미 있으면 다른 계정이 쓰는 번호)
+  const uid = auth.currentUser.uid;
+  try { await setDoc(doc(db, 'phones', CONF_PH), { uid, at: serverTimestamp() }); }
+  catch (e) {
+    let mine = false;
+    try { const s = await getDoc(doc(db, 'phones', CONF_PH)); mine = s.exists() && s.data().uid === uid; } catch (_) {}
+    if (!mine) { b.disabled = false; msg('m-profile', '이미 가입된 휴대폰 번호예요. ' + (WANT === 'parent' ? '학부모님 본인 번호로 가입해 주세요.' : '본인 번호로 가입해 주세요.')); return; }
+  }
+  VERIFIED = CONF_PH;
+  $('p-phone').readOnly = true; $('b-send').disabled = true;
+  $('f-code').innerHTML = '<label>인증번호</label><div class="ok-pill">✓ 인증됨</div>';
+  $('h-phone').textContent = '';
+  msg('m-profile', '인증됐어요. 가입 신청을 눌러 주세요.', true);
+});
+
+// ── 가입 신청 ──
+$('p-btn').addEventListener('click', async () => {
+  const name = $('p-name').value.trim().replace(/\s+/g, ''), school = $('p-school').value.trim(), grade = $('p-grade').value;
+  if (!BRANCH) { msg('m-profile', '다니는 관(평촌관 · 산본관)을 골라 주세요.'); return; }
+  if (!name) { msg('m-profile', (WANT === 'parent' ? '자녀' : '학생') + ' 이름을 넣어 주세요.'); return; }
+  if (!school) { msg('m-profile', '학교를 넣어 주세요.'); return; }
+  if (!grade) { msg('m-profile', '학년을 골라 주세요.'); return; }
+  if (!VERIFIED) { msg('m-profile', '휴대폰 인증을 먼저 마쳐 주세요.'); return; }
+  if (!$('p-agree').checked) { msg('m-profile', '개인정보 수집에 동의해 주세요.'); return; }
+  const u = auth.currentUser; if (!u) { show('scr-start'); return; }
+  const via = u.uid.startsWith('kakao:') ? 'kakao' : u.uid.startsWith('naver:') ? 'naver'
+    : (u.providerData || []).some((p) => p.providerId === 'google.com') ? 'google' : 'id';
+  const loginId = via === 'id' ? (LOGIN_ID || String(u.email || '').split('@')[0]) : '';
+  const b = $('p-btn'); b.disabled = true; msg('m-profile', '');
+  try {
+    await setDoc(doc(db, 'signups', u.uid), {
+      uid: u.uid, want: WANT, branch: BRANCH, name, school, grade, phone: VERIFIED,
+      via, loginId, email: u.email || '', status: 'pending', createdAt: serverTimestamp(),
+    });
+    await route(u);
+  } catch (e) { console.error(e); b.disabled = false; msg('m-profile', '가입 신청을 저장하지 못했어요. (' + (e.code || '오류') + ')'); }
+});
+
+document.querySelectorAll('.b-logout').forEach((b) => b.addEventListener('click', async () => { await signOut(auth); location.replace('signup.html'); }));
+</script>
+</body>
+</html>

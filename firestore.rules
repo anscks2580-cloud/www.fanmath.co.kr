@@ -336,9 +336,14 @@ service cloud.firestore {
     }
 
     // faceProfiles: 학생 얼굴 특징값 (사진 아님, 민감정보) — 관리자만 등록·삭제, 입구 기기는 자기 관 것만 읽음
+    //  · 입구 기기는 자동 학습 칸(learned·learnedAt)만 고칠 수 있음 (최대 10장)
     match /faceProfiles/{uid} {
       allow read: if isAdmin() || (isKiosk() && resource.data.get('branch', '') == kioskBranch());
-      allow write: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() ||
+        (isKiosk() && resource.data.get('branch', '') == kioskBranch()
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['learned', 'learnedAt'])
+          && request.resource.data.learned is list && request.resource.data.learned.size() <= 10);
     }
 
     // absences: 결석 사유서
@@ -699,6 +704,35 @@ service cloud.firestore {
           && request.resource.data.get('text', '').size() <= 4000;
         allow update, delete: if isStaff() && resource.data.uid == request.auth.uid;
       }
+    }
+
+    // ══ 회원가입 (signup.html · 2026.11.25) ══════════════════════════
+    // 새로 온 학생·학부모가 직접 가입(카카오·네이버·구글·아이디) → 휴대폰 문자 인증 → 가입 신청 → 관리자 승인(admin 「가입 승인」)
+    //  · phones/{휴대폰번호}: 번호당 계정 1개. 본인 uid로 「만들기」만 가능(이미 있으면 실패 = 다른 계정이 쓰는 번호), 본인 것만 읽기, 지우기는 관리자(거절 때 풀어 줌)
+    //  · signups/{uid}: 본인 가입 신청 — 본인만 만들기(승인 대기 상태로만, 인증한 번호가 본인 것이어야 함)·읽기, 승인·거절은 관리자
+    //    (승인 뒤 students/{uid} · parents/{uid} 는 관리자가 만듦 — 위 규칙 그대로)
+    match /phones/{num} {
+      allow create: if isSignedIn() && num.matches('^01[0-9]{8,9}$')
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'at']);
+      allow get: if isSignedIn() && resource != null && resource.data.uid == request.auth.uid;
+      allow read, delete: if isAdmin();
+    }
+    match /signups/{uid} {
+      allow get: if isSignedIn() && request.auth.uid == uid;
+      allow create: if isSignedIn() && request.auth.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.want in ['student', 'parent']
+        && request.resource.data.branch in ['평촌관', '산본관']
+        && request.resource.data.name is string && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 20
+        && request.resource.data.school is string && request.resource.data.school.size() >= 1 && request.resource.data.school.size() <= 30
+        && request.resource.data.grade is string && request.resource.data.grade.size() <= 10
+        && request.resource.data.phone is string && request.resource.data.phone.matches('^01[0-9]{8,9}$')
+        && get(/databases/$(database)/documents/phones/$(request.resource.data.phone)).data.uid == uid
+        && request.resource.data.keys().hasOnly(['uid', 'want', 'branch', 'name', 'school', 'grade', 'phone', 'via', 'loginId', 'email', 'status', 'createdAt']);
+      allow read, update, delete: if isAdmin();
     }
 
     // ── 그 외 정의되지 않은 컬렉션: 기본적으로 관리자만 접근 가능 ──

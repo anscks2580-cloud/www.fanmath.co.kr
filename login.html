@@ -108,6 +108,16 @@ body { display:flex; align-items:center; justify-content:center; min-height:100v
   font-size:12px; color:var(--muted); line-height:1.9;
 }
 .login-footer a { color:var(--purple, #5B3FA6); text-decoration:none; }
+/* 간편 로그인 · 회원가입 (signup.html) */
+.sns-or { display:flex; align-items:center; gap:10px; margin:20px 0 12px; color:var(--muted); font-size:12px; }
+.sns-or::before, .sns-or::after { content:''; flex:1; height:1px; background:rgba(30,24,56,0.1); }
+.sns-row { display:flex; gap:8px; }
+.sns-row a { flex:1; display:flex; align-items:center; justify-content:center; gap:6px; padding:11px 4px; border-radius:8px; font-size:13px; font-weight:700; text-decoration:none; border:1px solid transparent; }
+.sns-row .k { background:#FEE500; color:#191600; }
+.sns-row .n { background:#03C75A; color:#fff; }
+.sns-row .g { background:#fff; color:#1E1838; border-color:rgba(30,24,56,0.15); }
+.btn-join { display:block; margin-top:12px; padding:12px; text-align:center; border-radius:8px; border:1px solid var(--purple, #5B3FA6); color:var(--purple, #5B3FA6); font-size:14px; font-weight:700; text-decoration:none; background:#fff; }
+.join-hint { text-align:center; font-size:12px; color:var(--muted); margin-top:7px; }
 </style>
 <!-- 앱 설치(PWA) -->
 <link rel="manifest" href="/manifest.webmanifest">
@@ -176,6 +186,16 @@ html.pwa-splashing,html.pwa-splashing body{overflow:hidden!important;background:
       <button class="btn-login" id="s-btn" onclick="loginStudent()">로그인</button>
       <div class="error-msg" id="s-err"></div>
 
+      <!-- 간편 로그인 · 회원가입 (새로 온 학생 · 학부모 본인 가입 → 관리자 승인) -->
+      <div class="sns-or">간편 로그인</div>
+      <div class="sns-row">
+        <a class="k" href="signup.html?sns=kakao">카카오</a>
+        <a class="n" href="signup.html?sns=naver">네이버</a>
+        <a class="g" href="#" onclick="loginGoogle();return false;">구글</a>
+      </div>
+      <a class="btn-join" href="signup.html">회원가입</a>
+      <div class="join-hint">새로 등록한 학생 · 학부모님은 회원가입 후 학원 승인을 받아 주세요</div>
+
       <!-- 비밀번호 변경 폼 (로그인 버튼 아래 펼쳐짐) -->
       <div class="pw-change-wrap">
         <div class="pw-change-body" id="pw-change-body">
@@ -212,7 +232,7 @@ html.pwa-splashing,html.pwa-splashing body{overflow:hidden!important;background:
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, reauthenticateWithCredential, EmailAuthProvider, updatePassword, setPersistence, browserSessionPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, reauthenticateWithCredential, EmailAuthProvider, updatePassword, setPersistence, browserSessionPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 
@@ -344,14 +364,27 @@ window.loginStudent = async function() {
     }
     if (!cred) throw lastErr;
     if (await routeUser(cred.user)) return;
-    showErr('s-err','등록되지 않은 계정입니다. 원장님께 문의해주세요.');
-    await auth.signOut();
-    btn.disabled = false; btn.textContent = '로그인';
+    // 직접 가입한 계정(아직 승인 전 · 가입 정보 입력 전) → 회원가입 화면에서 이어서
+    window.location.replace('signup.html');
+    return;
   } catch(e) {
     showErr('s-err', e && e.code === 'auth/user-disabled'
       ? '퇴원 처리되어 사용이 중지된 계정입니다. 학원으로 문의해주세요.'
       : '아이디 또는 비밀번호가 올바르지 않습니다.');
     btn.disabled = false; btn.textContent = '로그인';
+  }
+};
+
+// 구글 간편 로그인 (팝업은 버튼을 누른 이 화면에서 바로 열어야 막히지 않음) → 계정 종류대로 이동, 처음이면 회원가입 화면
+window.loginGoogle = async function() {
+  try {
+    await setPersistence(auth, browserLocalPersistence);
+    const cred = await signInWithPopup(auth, new GoogleAuthProvider());
+    if (await routeUser(cred.user)) return;
+    window.location.replace('signup.html');
+  } catch (e) {
+    if (e.code !== 'auth/popup-closed-by-user' && e.code !== 'auth/cancelled-popup-request')
+      showErr('s-err', IN_APP ? '앱에서는 구글 로그인이 안 될 수 있어요. 카카오 · 네이버 · 아이디로 로그인해 주세요.' : '구글 로그인에 실패했어요. (' + (e.code || '오류') + ')');
   }
 };
 
