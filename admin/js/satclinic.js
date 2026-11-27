@@ -45,15 +45,23 @@ function scGradeOf(r) {
   return s?.grade || '';
 }
 
+// 오늘이 속한 주(월~일)의 토요일 — 선생님 페이지 입력 기준과 같음 (일요일이면 어제 토요일)
+function scThisSat() {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const monday = new Date(today); monday.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+  const sat = new Date(monday); sat.setDate(monday.getDate() + 5);
+  return scYmd(sat);
+}
+
 window.initSatClinicTab = async function () {
   if (typeof loadStudents === 'function' && !studentsCache.length) { try { await loadStudents(); } catch (e) {} }
-  const today = new Date();
-  const lastSat = new Date(today);
-  lastSat.setDate(today.getDate() - ((today.getDay() + 1) % 7));   // 가장 최근 토요일
+  // 오늘이 속한 주(월~일)의 토요일부터만 고를 수 있음 — 지난주 이전 것은 안 보임
+  const minSat = scThisSat();
   const fromInput = document.getElementById('clinicDateFrom');
   const toInput = document.getElementById('clinicDateTo');
-  if (!fromInput.value) fromInput.value = scYmd(lastSat);
-  if (!toInput.value) toInput.value = scYmd(lastSat);
+  fromInput.min = minSat; toInput.min = minSat;
+  if (!fromInput.value || fromInput.value < minSat) fromInput.value = minSat;
+  if (!toInput.value || toInput.value < minSat) toInput.value = minSat;
   document.getElementById('clinicBranch').value = scBranch;
   scFillTeachers();
 };
@@ -97,6 +105,15 @@ window.loadSatClinicAdmin = async function () {
   const toVal = document.getElementById('clinicDateTo').value;
   const resEl = document.getElementById('clinicAdminResult');
   if (!fromVal || !toVal) { showMsg('clinicAdminMsg', '날짜 범위를 선택해주세요.', 'error'); return; }
+  const minSat = scThisSat();
+  if (fromVal < minSat || toVal < minSat) {
+    const fi = document.getElementById('clinicDateFrom'), ti = document.getElementById('clinicDateTo');
+    fi.min = minSat; ti.min = minSat;
+    if (fi.value < minSat) fi.value = minSat;
+    if (ti.value < minSat) ti.value = minSat;
+    showMsg('clinicAdminMsg', `이번 주 토요일(${scDateLabel(minSat)})부터만 조회할 수 있어요. 날짜를 이번 주로 맞췄으니 다시 조회해 주세요.`, 'error');
+    return;
+  }
   showMsg('clinicAdminMsg', '조회 중...', 'success');
   resEl.innerHTML = '';
   try {
