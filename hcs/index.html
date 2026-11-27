@@ -702,7 +702,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none!importa
           <div><label>출제자</label><input id="f_author" value=""></div>
         </div>
         <div class="frow">
-          <div><label>학년 선택</label><select id="f_grade"><option>초4</option><option>초5</option><option>초6</option><option>중1</option><option>중2</option><option>중3</option><option>고1</option><option>고2</option><option>고3</option><option>N수</option></select></div>
+          <div><label>학년 선택</label><select id="f_grade"><option>초1</option><option>초2</option><option>초3</option><option>초4</option><option>초5</option><option>초6</option><option>중1</option><option>중2</option><option>중3</option><option>고1</option><option>고2</option><option>고3</option><option>N수</option></select></div>
           <div></div><div></div>
         </div>
         <label>학습지 태그</label>
@@ -1423,7 +1423,7 @@ function fillStep3Defaults(){
   const sel=SEL.map(byId).filter(Boolean); if(!sel.length) return;
   const subj=subjShort(curSubject);
   if(!$('f_title').value) $('f_title').value=chapText(sel)||rangeText(sel);
-  const g={'초5-1':'초5','초6-1':'초6','중1-1':'중1','중2-1':'중2','중3-1':'중3','공통수학1':'고1','공통수학2':'고1','대수':'고2','미적분1':'고2'}[subj]; if(g) $('f_grade').value=g;
+  const gm=subj.match(/^(초|중)(\d)-\d/); const g=gm?gm[1]+gm[2]:({'공통수학1':'고1','공통수학2':'고1','대수':'고2','미적분Ⅰ':'고2','미적분1':'고2','확률과 통계':'고3'}[subj]); if(g) $('f_grade').value=g;
   if(ME) $('f_author').value=ME.name;
 }
 function sheetOpts(){ return {title:$('f_title').value,author:$('f_author').value,color,fs:$('f_fs').value+'px',gap:$('f_gap').value+'px',sgap:$('f_sgap').value+'px',space:$('f_space').checked,showType:$('f_type').checked,key:$('f_key').checked,sol:$('f_sol').checked,solq:$('f_solq').checked,pgno:$('f_pgno').checked,solref:$('f_solref').checked,teacher:$('f_teacher').checked}; }
