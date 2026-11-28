@@ -130,6 +130,8 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 const kindOf = (i) => ((task.kinds || [])[i] === 'o' ? 'o' : 's');
+// 교재 숙제(HCS 「교재」에서 낸 것)는 문항마다 「9쪽 예제 01」 같은 이름표가 있음
+const kdOf = (i) => { const l = (task.labels || [])[i]; const k = kindOf(i) === 'o' ? '객관식' : '주관식'; return l ? `<b style="color:var(--p);font-weight:800;">${esc(l)}</b> · ${k}` : k; };
 const filled = () => ans.filter((a) => String(a).trim()).length;
 function head() {
   $('title').textContent = task.title || '시험지';
@@ -144,18 +146,18 @@ function render() {
     if (d && !isNaN(d)) when = `${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
     $('progBar').style.display = 'none'; $('foot').style.display = 'none';
     $('body').innerHTML = `<div class="done-card"><div class="em">✅</div><b>답안을 제출했어요</b><div style="font-size:13px;color:var(--ink2);margin-top:6px;line-height:1.7;">${when ? when + ' 제출 · ' : ''}선생님이 확인하고 수업 시간에 알려 주세요.<br>제출한 답은 고칠 수 없어요.</div></div>` +
-      ans.map((a, i) => `<div class="q filled"><div class="no">${i + 1}</div><div class="bd"><div class="kd">${kindOf(i) === 'o' ? '객관식' : '주관식'}</div><div class="ro ${a ? '' : 'empty'}">${a ? (kindOf(i) === 'o' ? esc(a.split('').map((c) => CIRC[+c - 1] || c).join(' ')) : pretty(a)) : '답 없음'}</div></div></div>`).join('');
+      ans.map((a, i) => `<div class="q filled"><div class="no">${i + 1}</div><div class="bd"><div class="kd">${kdOf(i)}</div><div class="ro ${a ? '' : 'empty'}">${a ? (kindOf(i) === 'o' ? esc(a.split('').map((c) => CIRC[+c - 1] || c).join(' ')) : pretty(a)) : '답 없음'}</div></div></div>`).join('');
     return;
   }
   $('foot').style.display = '';
-  $('body').innerHTML = `<div class="note">프린트(시험지)를 푼 다음 <b>답만</b> 적어 제출하세요. 객관식은 번호를 누르고(답이 두 개면 두 개 다), 주관식은 칸을 누르면 아래에 입력 도구가 나와요.<br><b>분수</b>와 <b>루트</b>는 보라색 단추를 눌러 칸에 수만 넣으면 되고, 적은 답은 바로 아래에 수학 모양으로 보여요. 중간에 나가도 적은 답은 이 기기에 남아 있어요.</div>` +
+  $('body').innerHTML = `<div class="note">${task.kind === 'book' ? '교재에서 아래 <b>쪽 · 번호</b>의 문제를 푼 다음' : '프린트(시험지)를 푼 다음'} <b>답만</b> 적어 제출하세요. 객관식은 번호를 누르고(답이 두 개면 두 개 다), 주관식은 칸을 누르면 아래에 입력 도구가 나와요.<br><b>분수</b>와 <b>루트</b>는 보라색 단추를 눌러 칸에 수만 넣으면 되고, 적은 답은 바로 아래에 수학 모양으로 보여요. 중간에 나가도 적은 답은 이 기기에 남아 있어요.</div>` +
     ans.map((a, i) => qHtml(i)).join('');
   count();
 }
 function qHtml(i) {
   const a = ans[i];
-  if (kindOf(i) === 'o') return `<div class="q ${a ? 'filled' : ''}" id="q${i}"><div class="no">${i + 1}</div><div class="bd"><div class="kd">객관식</div><div class="ch">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="${a.includes(String(n)) ? 'on' : ''}" onclick="pick(${i},${n})">${CIRC[n - 1]}</button>`).join('')}</div></div></div>`;
-  return `<div class="q ${a.trim() ? 'filled' : ''} ${active === i ? 'on' : ''}" id="q${i}"><div class="no">${i + 1}</div><div class="bd"><div class="kd">주관식</div>
+  if (kindOf(i) === 'o') return `<div class="q ${a ? 'filled' : ''}" id="q${i}"><div class="no">${i + 1}</div><div class="bd"><div class="kd">${kdOf(i)}</div><div class="ch">${[1, 2, 3, 4, 5].map((n) => `<button type="button" class="${a.includes(String(n)) ? 'on' : ''}" onclick="pick(${i},${n})">${CIRC[n - 1]}</button>`).join('')}</div></div></div>`;
+  return `<div class="q ${a.trim() ? 'filled' : ''} ${active === i ? 'on' : ''}" id="q${i}"><div class="no">${i + 1}</div><div class="bd"><div class="kd">${kdOf(i)}</div>
     <input type="text" id="in${i}" value="${esc(a)}" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="답을 적으세요" onfocus="focusQ(${i})" oninput="typeQ(${i},this.value)">
     <div class="pv" id="pv${i}"><small>이렇게 제출돼요</small><span>${pretty(a)}</span></div>
     <div class="keys"><button type="button" class="tool" onmousedown="event.preventDefault()" onclick="openMk(${i},'fr')">분수 넣기</button><button type="button" class="tool" onmousedown="event.preventDefault()" onclick="openMk(${i},'rt')">루트 넣기</button>${KEYS.map(([l, v]) => `<button type="button" onmousedown="event.preventDefault()" onclick="key(${i},'${v}')">${l}</button>`).join('')}
@@ -214,7 +216,7 @@ window.key = (i, v) => {
 };
 window.submitSheet = async () => {
   const empty = ans.map((a, i) => (String(a).trim() ? 0 : i + 1)).filter(Boolean);
-  const msg = (empty.length ? `아직 답을 적지 않은 문제가 ${empty.length}개 있어요 (${empty.slice(0, 12).join(', ')}${empty.length > 12 ? ' …' : ''}번).\n\n` : '') + '제출하면 답을 고칠 수 없어요. 제출할까요?';
+  const msg = (empty.length ? `아직 답을 적지 않은 문제가 ${empty.length}개 있어요${task.kind === 'book' ? '' : ` (${empty.slice(0, 12).join(', ')}${empty.length > 12 ? ' …' : ''}번)`}.\n\n` : '') + '제출하면 답을 고칠 수 없어요. 제출할까요?';
   if (!confirm(msg)) return;
   const btn = $('submitBtn'); btn.disabled = true; btn.textContent = '제출 중…';
   try {

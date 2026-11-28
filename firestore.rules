@@ -626,6 +626,13 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // ── bookMarks/{교재}_{학생uid}: HCS 「교재」에서 선생님이 직접 채점한 교재 문항별 정오(○ ✕) — 2026.11.28
+    // { book, studentId, studentName, branch, teacherUid, marks: { 문항id: 'o' | 'x' } }
+    // 숙제로 내서 학생이 앱으로 제출한 것은 여기가 아니라 dailyTestResults에 있음. 선생님·관리자만 읽고 씀(학생·학부모는 못 봄)
+    match /bookMarks/{docId} {
+      allow read, write: if isTeacher() || isAdmin();
+    }
+
     // ── sheetTasks/{시험id}_{학생uid}: HCS에서 출제한 시험지(학생별 1건, 정답 없음) — 2026.11 HCS ↔ 학원 시스템 연동
     // 읽기: 본인·자기 아이 학부모·선생님·관리자. 만들기·수정·삭제: 출제한 선생님 본인·관리자.
     // 학생 본인은 아직 제출하지 않은 시험지에 답(answers)을 적어 제출(submitted, submittedAt)하는 것만 가능 — 제출 뒤에는 못 고침
