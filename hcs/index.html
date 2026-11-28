@@ -619,6 +619,70 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none!importa
 .baprobs .chip:not(.on){text-decoration:line-through;color:#aaa;background:#f5f5f5}
 #m_bwrong input[type=radio]{width:auto;height:auto;margin:0 8px 0 0;vertical-align:middle}
 #m_bwrong label.chk{display:flex;align-items:center}
+.bkbar .bkname{font-size:16px}
+.bkq{cursor:pointer;user-select:none}
+.bkq:hover{filter:brightness(.985)}
+.bkq .pvb{width:30px;height:30px;padding:0;border-radius:6px;color:#9aa0a8;font-size:11px;flex:none}
+.bkq .lb{cursor:inherit;min-width:80px}
+.bkq .bd{flex:none;min-width:64px;text-align:center;padding:6px 10px;border-radius:6px;font-size:13px;color:#aab0b8;border:1px dashed #d5d9df;background:#fff}
+.bkq .bd.o{background:#1a56db;color:#fff;border:1px solid #1a56db;font-size:16px;font-weight:700}
+.bkq .bd.x{background:var(--bad);color:#fff;border:1px solid var(--bad);font-size:16px;font-weight:700}
+.bkq .bd.r,.bkq .bd.p{background:var(--y2);color:#9a6b00;border:1px solid #f3dca0}
+.bkpv{padding-left:132px}
+.bkcards{flex:1;overflow:auto;padding:18px;display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;align-content:start}
+.bkcard{border:1px solid var(--line);border-radius:12px;padding:18px;cursor:pointer;transition:border-color .12s,box-shadow .12s;background:#fff}
+.bkcard:hover{border-color:var(--p3);box-shadow:0 4px 14px rgba(91,63,209,.08)}
+.bkcard h3{margin:0 0 4px;font-size:16.5px}
+.bkcard .bar{height:6px;border-radius:99px;background:#eef0f3;overflow:hidden;margin:12px 0 6px}
+.bkcard .bar i{display:block;height:100%;background:var(--acc)}
+.bkcard .ln{display:flex;justify-content:space-between;font-size:13.5px;color:#555;padding:3px 0}
+.bkcard .ln b{color:var(--txt)}
+.bkcard .ln b.bad{color:var(--bad)}
+.bkcard .ft{display:flex;align-items:center;margin-top:10px}
+.bkcard .ft button{margin-left:auto;padding:3px 8px;font-size:12px;color:#9aa0a8;border-color:transparent}
+.bkcard .ft button:hover{color:var(--bad)}
+.bkst{flex:1;min-width:0;overflow:auto}
+.bkst table{width:100%;border-collapse:collapse;font-size:14px}
+.bkst th{position:sticky;top:0;background:#f8f9fa;font-weight:500;color:#666;font-size:13px;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:center;z-index:1}
+.bkst td{padding:10px 12px;border-bottom:1px solid var(--line2);text-align:center;white-space:nowrap}
+.bkst th.l,.bkst td.l{text-align:left}
+.bkst tbody tr{cursor:pointer}
+.bkst tbody tr:hover{background:#fafbfc}
+.bkst tbody tr.on{background:var(--p2)}
+.bkst tr.gr td{background:#f3f4f6;text-align:left;font-weight:600;color:#555;padding:6px 12px;cursor:default}
+.bkst td.rate{font-weight:700}
+.bkst td.hi{color:var(--bad);background:#fdf0ef}
+.bkst td.mid{color:#9a6b00;background:var(--y2)}
+.bkst .mbar{display:inline-block;width:70px;height:6px;border-radius:99px;background:#eef0f3;overflow:hidden;vertical-align:middle;margin-right:6px}
+.bkst .mbar i{display:block;height:100%;background:var(--acc)}
+.bplv{font-weight:700;font-size:15px;margin:16px 0 8px}
+.bplv:first-child{margin-top:4px}
+.bpgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.bpi{border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;position:relative}
+.bpi:hover{border-color:var(--p3)}
+.bpi.on{border-color:var(--acc);background:var(--p2)}
+.bpi.dis{opacity:.5;cursor:default;background:#f7f8fa}
+.bpi b{display:block;font-size:15px}
+.bpi small{color:var(--sub);font-size:12.5px}
+.bpi .pill{position:absolute;right:10px;top:10px}
+.bwpick{display:flex;align-items:flex-end;gap:14px;margin:0 0 6px}
+.bwpick .tilde{font-size:22px;color:#aaa;padding-bottom:52px}
+.wheelbox{position:relative;width:130px}
+.wheelbox label{margin-top:4px}
+.wheel{box-sizing:content-box;height:132px;overflow-y:auto;scroll-snap-type:y mandatory;border:1px solid var(--line);border-radius:10px;scrollbar-width:none;background:#fff}
+.wheel::-webkit-scrollbar{display:none}
+.wheel .pad{height:44px}
+.wheel .it{height:44px;line-height:44px;text-align:center;scroll-snap-align:center;color:#b9bdc5;font-size:15px;cursor:pointer}
+.wheel .it.on{color:var(--acc);font-weight:700;font-size:19px}
+.wheel .it small{color:var(--bad);font-size:11px;margin-left:5px;font-weight:600}
+.wheelbox:after{content:'';position:absolute;left:8px;right:8px;bottom:44px;height:44px;border-top:2px solid var(--p3);border-bottom:2px solid var(--p3);pointer-events:none}
+.bwsum{flex:1;align-self:center;text-align:center;line-height:1.7}
+.bwsum b{display:block;font-size:22px}
+.bwsum em{font-style:normal;color:var(--bad);font-weight:700;font-size:17px}
+.bwh{display:flex;align-items:center;gap:10px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;margin-top:6px;font-size:13.5px}
+.bwh b{min-width:92px}
+.bwh span{color:var(--sub)}
+.bwh button{margin-left:auto;padding:4px 10px;font-size:12.5px}
 </style>
 </head>
 <body>
@@ -668,7 +732,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none!importa
   </div>
 </div>
 
-<!-- ===== 교재: 숙제 내기 · 채점 · 현황 · 오답 뽑기 (학원 자체교재 세쌍둥이) ===== -->
+<!-- ===== 교재: 교재 출제 · 채점 · 학생별 현황 · 오답 학습지 (학원 자체교재 세쌍둥이) ===== -->
 <div class="view" id="v_book">
   <div class="bk">
     <div class="card bkstu">
@@ -677,15 +741,7 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none!importa
       <div class="body" id="bkStu"><div class="empty-note">로그인하면 담당 학생이 보여요.</div></div>
     </div>
     <div class="card bkmain">
-      <div class="bkbar">
-        <select id="bkBook" onchange="bkSetBook(this.value)"></select>
-        <div class="seg" id="bkMode"><button class="on" data-m="grade">채점</button><button data-m="grid">현황</button></div>
-        <span class="who" id="bkWho"></span><span class="note" id="bkSave"></span>
-        <span style="flex:1"></span>
-        <button class="sm" onclick="bkReload()">새로고침</button>
-        <button class="yel" onclick="bkOpenWrong()">오답 학습지</button>
-        <button class="pri" onclick="bkOpenAssign()">숙제 내기</button>
-      </div>
+      <div class="bkbar" id="bkBar"><b>교재</b></div>
       <div class="bkbody" id="bkBody"><div class="empty-note" style="flex:1">로그인하면 교재가 보여요.</div></div>
     </div>
   </div>
@@ -897,6 +953,13 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none!importa
   <div class="mf"><button onclick="$('m_make').classList.remove('on')">취소</button><button class="pri" onclick="confirmMake()">만들기</button></div>
 </div></div>
 
+<!-- ===== 교재 출제하기(학생에게 교재 배정) ===== -->
+<div class="modal" id="m_bpick"><div class="box w">
+  <div class="mh">교재 출제하기 <span class="note" id="bp_title"></span><button class="sm ghost" onclick="$('m_bpick').classList.remove('on')">✕</button></div>
+  <div class="mb" id="bp_list"></div>
+  <div class="mf"><label class="chk" style="margin:0 auto 0 0;display:flex;align-items:center;gap:8px" id="bp_clsWrap"><input type="checkbox" id="bp_cls" style="width:18px;height:18px"><span id="bp_clsTxt"></span></label><span class="note" id="bp_sel"></span><button class="pri" id="bp_go" onclick="bkPickSave()">출제하기</button></div>
+</div></div>
+
 <!-- ===== 교재 숙제 내기 ===== -->
 <div class="modal" id="m_bassign"><div class="box w">
   <div class="mh">교재 숙제 내기 <span class="note" id="ba_title"></span><button class="sm ghost" onclick="$('m_bassign').classList.remove('on')">✕</button></div>
@@ -913,25 +976,20 @@ body.dragging,body.dragging *{cursor:grabbing!important;user-select:none!importa
   <div class="mf"><span class="note" id="ba_sel" style="margin-right:auto">선택된 학생 없음</span><button class="pri" id="ba_go" onclick="bkSaveAssign()">숙제 내기</button></div>
 </div></div>
 
-<!-- ===== 교재 오답 학습지 ===== -->
-<div class="modal" id="m_bwrong"><div class="box" style="width:680px">
-  <div class="mh">교재 오답 학습지 <span class="note" id="bw_title"></span><button class="sm ghost" onclick="$('m_bwrong').classList.remove('on')">✕</button></div>
+<!-- ===== 교재 오답 학습지: 쪽 범위를 돌려서 고르고 총 문제 수만 정함 (한 학생 / 반 전체) ===== -->
+<div class="modal" id="m_bwrong"><div class="box" style="width:640px">
+  <div class="mh"><span id="bw_head">교재 오답 학습지</span> <span class="note" id="bw_title"></span><button class="sm ghost" onclick="$('m_bwrong').classList.remove('on')">✕</button></div>
   <div class="mb">
-    <div class="note" id="bw_sum"></div>
-    <div class="baprobs" id="bw_probs"></div>
-    <div class="note">번호를 누르면 이번 학습지에서 빠져요. 범위는 채점 화면 왼쪽에서 쪽이나 단원을 체크해서 정해요(체크가 없으면 교재 전체).</div>
-    <label>학습지 구성</label>
-    <div style="display:flex;flex-direction:column;gap:6px">
-      <label class="chk" style="margin:0"><input type="radio" name="bw_mode" value="same" onchange="bkWrongRender()"> 틀린 문제 그대로</label>
-      <label class="chk" style="margin:0"><input type="radio" name="bw_mode" value="both" checked onchange="bkWrongRender()"> 틀린 문제 그대로 + 같은 유형 문제</label>
-      <label class="chk" style="margin:0"><input type="radio" name="bw_mode" value="sim" onchange="bkWrongRender()"> 같은 유형 문제만</label>
+    <div class="bwpick">
+      <div class="wheelbox"><label>시작 쪽</label><div class="wheel" id="bw_from" onscroll="bkWheel('from',this)"></div></div>
+      <div class="tilde">~</div>
+      <div class="wheelbox"><label>끝 쪽</label><div class="wheel" id="bw_to" onscroll="bkWheel('to',this)"></div></div>
+      <div class="bwsum" id="bw_sum"></div>
     </div>
-    <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:10px">
-      <div>같은 유형 문제 <select id="bw_n" style="width:auto" onchange="bkWrongRender()"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select> 개씩</div>
-      <label class="chk" style="margin:0"><input type="checkbox" id="bw_mk" checked> 같은 유형 문제는 시중교재에서만</label>
-    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:12px"><b id="bw_totalLab" style="white-space:nowrap">총 문제 수</b><input type="number" id="bw_total" min="1" max="200" style="width:130px" oninput="bkWrongSum()"><span class="note">비우면 오답 수만큼 · 오답마다 변형·유사 문제를 고르게 나눠 넣어요</span></div>
+    <div id="bw_hist"></div>
   </div>
-  <div class="mf"><span class="note" id="bw_cnt" style="margin-right:auto"></span><button class="pri" onclick="bkMakeWrong()">학습지 구성하기</button></div>
+  <div class="mf"><span class="note" id="bw_cnt" style="margin-right:auto"></span><button class="pri" onclick="bkMakeWrong()">오답 학습지 만들기</button></div>
 </div></div>
 
 <!-- ===== 출제하기 ===== -->
@@ -1011,9 +1069,11 @@ window.FB = {
   async patchResult(id, patch) { await setDoc(doc(db, 'dailyTestResults', id), { ...patch, updatedAt: serverTimestamp() }, { merge: true }); },
   async syncSheets(me) { return SC ? SC.syncSubmitted(db, { teacherUid: me.uid }) : 0; },
   async updateTest(testId, patch) { await updateDoc(doc(db, 'dailyTests', testId), patch); },
-  // 교재 직접 채점 기록(bookMarks/{교재}_{학생uid}) — 숙제로 내지 않고 선생님이 ○ ✕로 적은 것
-  async bookMarks(book) { const snap = await getDocs(query(collection(db, 'bookMarks'), where('book', '==', book))); const out = []; snap.forEach((d) => out.push({ id: d.id, ...d.data() })); return out; },
-  async saveBookMark(id, data) { await setDoc(doc(db, 'bookMarks', id), { ...data, updatedAt: serverTimestamp() }); },
+  // 교재 기록(bookMarks/{교재}_{학생uid}) — 교재 출제 여부, 선생님 직접 채점(○ ✕), 오답 학습지 범위
+  async bookMarks(book) { const snap = await getDocs(query(collection(db, 'bookMarks'), where('book', '==', book))); const out = []; snap.forEach((d) => out.push(d.data())); return out; },
+  async bookMarksOf(studentId) { const snap = await getDocs(query(collection(db, 'bookMarks'), where('studentId', '==', studentId))); const out = []; snap.forEach((d) => out.push(d.data())); return out; },
+  // 넘긴 칸만 통째로 바꿈(marks를 넘기면 지운 번호도 지워지고, 안 넘긴 칸은 그대로)
+  async saveBookMark(id, data) { await setDoc(doc(db, 'bookMarks', id), { ...data, updatedAt: serverTimestamp() }, { mergeFields: [...Object.keys(data), 'updatedAt'] }); },
 };
 onAuthStateChanged(auth, async (user) => {
   if (!user) { window.onLogout && onLogout(); return; }
@@ -1163,7 +1223,7 @@ window.onLogin=async function(me){
   await Promise.all([pW,pS,loadAssignments()]); renderAsg();
   if($('v_book').classList.contains('on')) bkEnter();
 };
-window.onLogout=function(){ ME=null; STUDENTS=[]; WS=WS.filter(w=>!w.id); WSSEL.clear(); try{ localStorage.removeItem('hcs:lastUid'); }catch(e){} TESTS=[]; RESULTS=[]; $('whoami').textContent='로그인 안 됨'; $('loginBtn').textContent='로그인'; $('loginBtn').onclick=openLogin; renderWS(); renderStudents(); renderAsg(); BK.stu=''; BK.marks={}; BK.sel.clear(); BK.opened=false; BK.open.clear(); bkRenderStu(); $('bkWho').textContent=''; $('bkBody').innerHTML='<div class="empty-note" style="flex:1">로그인하면 교재가 보여요.</div>'; };
+window.onLogout=function(){ ME=null; STUDENTS=[]; WS=WS.filter(w=>!w.id); WSSEL.clear(); try{ localStorage.removeItem('hcs:lastUid'); }catch(e){} TESTS=[]; RESULTS=[]; $('whoami').textContent='로그인 안 됨'; $('loginBtn').textContent='로그인'; $('loginBtn').onclick=openLogin; renderWS(); renderStudents(); renderAsg(); BK.stu=''; BK.book=''; MK.clear(); BK.sel.clear(); BK.open.clear(); bkRender(); $('bkBody').innerHTML='<div class="empty-note" style="flex:1">로그인하면 교재가 보여요.</div>'; };
 function openLogin(){ $('m_login').classList.add('on'); $('l_err').textContent=''; setTimeout(()=>$('l_email').focus(),50); }
 async function doLogin(){ $('l_err').textContent=''; const id=$('l_email').value.trim(); const email=id.includes('@')?id:id+'@songmath.kr'; // 홈페이지 login.html과 같은 규칙: 이름 → 이름@songmath.kr
   try{ await FB.login(email,$('l_pw').value); }catch(e){ $('l_err').textContent='로그인 실패: 아이디(이름)·비밀번호를 확인해 주세요.'; } }
@@ -1788,7 +1848,7 @@ async function loadAssignments(){ if(!ME) return;
   try{ const n=await FB.syncSheets(ME); if(n) toast(`학생이 제출한 답안 ${n}건을 자동 채점했어요`); }catch(e){ console.warn(e); }
   try{ [TESTS,RESULTS]=await Promise.all([FB.tests(ME),FB.results(ME)]); USED=new Set(TESTS.flatMap(t=>t.problemIds||[])); }catch(e){ console.warn(e); $('asgnote').textContent='출제 목록 오류: '+e.message; }
   try{ TASKS=await FB.tasks(ME); }catch(e){ TASKS=[]; }
-  renderAsg(); autoWrongSheets(); if($('v_book').classList.contains('on')&&BKPG.length) bkRender(); }
+  renderAsg(); autoWrongSheets(); if($('v_book').classList.contains('on')) bkRender(); }
 // 오답 시험지에 넣을 문제: 틀린 문제마다 변형(없으면 같은 주제유형의 다른 문제) 1개 + 유사 1개
 function wrongPick(ids){ const out=[]; ids.forEach(id=>{ const p=byId(id); if(!p) return; const base=p.parent?byId(p.parent)||p:p;
   const fam=kidsOf(base.id).filter(x=>x.variant==='similar'||x.variant==='1'); const sim=DB.filter(x=>sameKind(x,base)&&!x.parent&&x.id!==base.id&&!ids.includes(x.id));
@@ -1940,144 +2000,208 @@ function exportJSON(){ if(DB.some(p=>!p._full)) toast('불러온 단원만 내�
 $('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const arr=JSON.parse(r.result);let n=0;arr.forEach(p=>{if(!byId(p.id)){DB.push(Object.assign(p,{_full:1}));n++;}});buildCnt();renderDB();toast(n+'문항 추가됨');}catch(err){alert('JSON 형식 오류');}};r.readAsText(f);};
 
 
-// =================== 교재: 숙제 내기 · 채점 · 현황 · 오답 뽑기 (2026.11.28) ===================
-// 학원 자체교재(세쌍둥이, source '학원교재')를 쪽·단원 단위로 숙제로 내고, 학생별 정오를 모아 오답 학습지를 뽑는다.
-// · 숙제: 학습지 출제와 같은 곳에 저장 — dailyTests(source 'worksheet', kind 'book', book, labels[]) + dailyTestResults + sheetTasks
-//         → 학생 앱 답 입력·자동 채점·선생님 페이지·관리부·원장 페이지·오답 시험지 자동 생성이 그대로 이어짐
-// · 직접 채점(숙제로 내지 않은 문제): bookMarks/{교재}_{학생uid} { book, studentId, marks:{문항id:'o'|'x'} }
+// =================== 교재: 교재 출제 · 채점 · 학생별 현황 · 오답 학습지 (2026.11.28) ===================
+// 학원 자체교재(세쌍둥이, source '학원교재'). 흐름: 학생 고르기 → 「교재 출제하기」(팝업) → 출제된 교재 카드 → 교재를 누르면 채점
+// · 교재 출제·직접 채점·오답 학습지 기록: bookMarks/{교재}_{학생uid}
+//     { book, studentId, studentName, branch, teacherUid, assigned, assignedAt, marks:{문항id:'o'|'x'}, wrongSheets:[{from,to,date,count,total,wsId}] }
+// · 숙제(학생 앱 제출): 학습지 출제와 같은 곳 — dailyTests(source 'worksheet', kind 'book', book, labels[]) + dailyTestResults + sheetTasks
+//     → 학생 앱 답 입력·자동 채점·선생님 페이지·관리부·원장 페이지·오답 시험지 자동 생성이 그대로 이어짐
 // · 문항별 상태는 「채점된 숙제 결과 > 직접 채점 > 아직 안 낸 숙제」 순으로 합쳐서 보여 줌
-const BK={book:'',mode:'grade',branch:'',q:'',stu:'',page:null,sel:new Set(),marks:{},marksErr:'',open:new Set(),opened:false,pv:'',tried:false};
-let BKP=[], BKPG=[];   // 고른 교재의 문제(쪽 순서) · 쪽 목록 [{page, unit, ps[]}]
+const BK={book:'',mode:'grade',branch:'',q:'',stu:'',page:null,sel:new Set(),err:'',open:new Set(),pv:'',tried:false,wasX:new Set()};
+const MK=new Map();    // `${교재}|${학생uid}` → bookMarks 문서
+const BKC=new Map();   // 교재 → {P:문제(쪽 순서), PG:[{page, unit, ps[]}]}
+let BKP=[], BKPG=[];   // 열어 둔 교재의 문제 · 쪽 목록
 const bkIsBook=p=>p.source==='학원교재'&&!p.parent;
 const bkUnitName=u=>{ const s=SEC_BY_CODE[u]; return s?s.name:u; };
 const bkMarkId=(book,sid)=>`${book.replace(/[\s\/]+/g,'_')}_${sid}`;
+const bkKey=(book,sid)=>book+'|'+sid;
 function bkBooks(){ const seen=new Map(); DB.forEach(p=>{ if(bkIsBook(p)&&!seen.has(p.book)) seen.set(p.book,p.unit); });
   const ord=c=>{ const i=SECS.findIndex(s=>s.code===c); return i<0?9999:i; };
   return [...seen.entries()].map(([book,unit])=>({book,unit,subj:subjShort(subjectOf(unit))||'기타',o:ord(unit)})).sort((a,b)=>a.o-b.o||(/개념/.test(a.book)?0:1)-(/개념/.test(b.book)?0:1)); }
+function bkData(book){ let d=BKC.get(book); if(d) return d;
+  const P=DB.filter(p=>bkIsBook(p)&&p.book===book).map((p,i)=>[p,i]).sort((a,b)=>(+a[0].page||0)-(+b[0].page||0)||a[1]-b[1]).map(x=>x[0]);
+  const PG=[]; P.forEach(p=>{ let g=PG[PG.length-1]; if(!g||g.page!==p.page){ g={page:p.page,unit:p.unit,ps:[]}; PG.push(g); } g.ps.push(p); });
+  d={P,PG}; if(P.length) BKC.set(book,d); return d; }
 // 'G1-예제01' → '예제 01', 'U3-017' → '017'
 function bkLabel(p){ const s=String(p.num||'').replace(/^[A-Za-z]+\d+-/,''); const m=/^(\D+?)\s*(\d+)$/.exec(s); return m?`${m[1]} ${m[2]}`:s; }
-function bkGradeKey(){ const m=/(초|중)(\d)-\d/.exec(BK.book); return m?m[1]+m[2]:''; }
+function bkGradeKey(book){ const m=/(초|중)(\d)-\d/.exec(book||BK.book); return m?m[1]+m[2]:''; }
 const bkStuOf=()=>STUDENTS.find(s=>s.id===BK.stu);
 function bkStuList(){ const q=BK.q.trim(); return STUDENTS.filter(s=>(!BK.branch||s.branch===BK.branch)&&(!q||(s.name||'').includes(q)||clsOf(s).includes(q))); }
+const bkPageIdx=(pg,PG)=>(PG||BKPG).findIndex(g=>String(g.page)===String(pg));
+function bkRangeOf(a,b,PG){ PG=PG||BKPG; if(!PG[a]||!PG[b]) return ''; return a===b?`${PG[a].page}쪽`:`${PG[a].page}~${PG[b].page}쪽`; }
 // 9~12, 15쪽 — 교재 쪽 목록에서 이어진 쪽끼리 묶음
 function bkRangeText(gs){ const idx=gs.map(g=>BKPG.indexOf(g)).filter(i=>i>=0).sort((a,b)=>a-b); if(!idx.length) return ''; const out=[]; let s=0;
   for(let i=1;i<=idx.length;i++){ if(i===idx.length||idx[i]!==idx[i-1]+1){ out.push(s===i-1?`${BKPG[idx[s]].page}`:`${BKPG[idx[s]].page}~${BKPG[idx[i-1]].page}`); s=i; } } return out.join(', ')+'쪽'; }
+function bkDoc(book,sid,make){ const k=bkKey(book,sid); let d=MK.get(k); if(!d&&make){ d={book,studentId:sid,marks:{}}; MK.set(k,d); } if(d&&!d.marks) d.marks={}; return d; }
+function bkIdent(book,sid){ const s=STUDENTS.find(x=>x.id===sid)||{}; return { book, studentId:sid, studentName:s.name||'', branch:s.branch||'', teacherUid:s.teacherUid||ME.uid }; }
+function bkTake(list){ list.forEach(d=>{ if(!d.book||!d.studentId) return; const k=bkKey(d.book,d.studentId); if(bkDirty.has(k)) return; MK.set(k,d); }); }
+// 이 학생에게 출제된 교재: 출제 기록이 있거나(취소한 것은 빼고), 이 교재로 낸 숙제가 있는 것
+function bkAssigned(sid){ const out=new Set(); MK.forEach(d=>{ if(d.studentId===sid&&d.assigned!==false) out.add(d.book); });
+  const ri=bkRI||(bkRI=new Map(RESULTS.map(r=>[r.id,r]))); TESTS.forEach(t=>{ if(t.kind==='book'&&t.book&&ri.has(`${t.id}_${sid}`)){ const d=MK.get(bkKey(t.book,sid)); if(!d||d.assigned!==false) out.add(t.book); } }); return out; }
+const bkClassmates=stu=>STUDENTS.filter(s=>clsOf(s)===clsOf(stu)&&(s.branch||'')===(stu.branch||'')&&(s.teacherUid||'')===(stu.teacherUid||''));
 
 function bkEnter(){
   if(!ME){ $('bkBody').innerHTML='<div class="empty-note" style="flex:1">로그인하면 교재가 보여요.</div>'; needLogin(); return; }
   if(REMOTE&&!DB.length){ $('bkBody').innerHTML='<div class="empty-note" style="flex:1">문제 데이터를 받는 중…</div>'; if(BK.tried) return; BK.tried=true; loadCore().then(()=>{ BK.tried=false; if(DB.length) bkEnter(); },e=>{ BK.tried=false; toast('문제 데이터를 못 받았어요: '+e.message); }); return; }
-  const books=bkBooks(); const sel=$('bkBook');
-  if(!books.length){ $('bkBody').innerHTML='<div class="empty-note" style="flex:1">문제 DB에 올라온 학원 교재가 아직 없어요.</div>'; return; }
-  if(sel.dataset.n!==String(books.length)){ const by={}; books.forEach(b=>(by[b.subj]=by[b.subj]||[]).push(b)); sel.innerHTML=Object.keys(by).map(k=>`<optgroup label="${esc(k)}">${by[k].map(b=>`<option value="${esc(b.book)}">${esc(b.book)}</option>`).join('')}</optgroup>`).join(''); sel.dataset.n=String(books.length); }
-  if(!BK.opened){ BK.opened=true; if(ME.role!=='admin') groups(STUDENTS).forEach(g=>BK.open.add(g[0])); }
-  if(!BK.book||!books.some(b=>b.book===BK.book)){ let last=''; try{ last=localStorage.getItem('hcs:bk')||''; }catch(e){} BK.book=books.some(b=>b.book===last)?last:books[0].book; }
-  sel.value=BK.book; bkSetBook(BK.book,true);
+  bkRender(); if(BK.stu) bkLoadStu(BK.stu).then(bkRender);
 }
-async function bkSetBook(book,keep){
-  if(BK.book&&BK.book!==book) await bkFlush();
-  BK.book=book; try{ localStorage.setItem('hcs:bk',book); }catch(e){}
-  BKP=DB.filter(p=>bkIsBook(p)&&p.book===book).map((p,i)=>[p,i]).sort((a,b)=>(+a[0].page||0)-(+b[0].page||0)||a[1]-b[1]).map(x=>x[0]);
-  BKPG=[]; BKP.forEach(p=>{ let g=BKPG[BKPG.length-1]; if(!g||g.page!==p.page){ g={page:p.page,unit:p.unit,ps:[]}; BKPG.push(g); } g.ps.push(p); });
-  if(!keep||!BKPG.some(g=>g.page===BK.page)) BK.page=BKPG.length?BKPG[0].page:null;
-  BK.sel.clear(); BK.pv=''; bkRender();
+async function bkLoadStu(sid){ if(!ME||!sid) return; try{ bkTake(await FB.bookMarksOf(sid)); BK.err=''; }catch(e){ console.warn('[교재] 학생 기록',e); BK.err=e.code||e.message; } }
+async function bkLoadBook(book){ if(!ME||!book) return; try{ bkTake(await FB.bookMarks(book)); BK.err=''; }catch(e){ console.warn('[교재] 교재 기록',e); BK.err=e.code||e.message; } }
+async function bkReload(){ if(needLogin()) return; await bkFlush(); await loadAssignments(); if(BK.stu) await bkLoadStu(BK.stu); if(BK.book) await bkLoadBook(BK.book); bkRender(); toast('새로 불러왔어요'); }
+async function bkPickStu(id){ await bkFlush(); BK.stu=BK.stu===id?'':id; BK.wasX.clear(); BK.pv=''; bkRI=null;
+  if(BK.stu){ const g=groups(bkStuList()).find(x=>x[1].some(s=>s.id===BK.stu)); if(g) BK.open.add(g[0]); }
+  bkRender(); if(!BK.stu){ BK.book=''; bkRender(); return; }
+  const sid=BK.stu; await bkLoadStu(sid); if(BK.stu!==sid) return;
+  if(BK.book&&!bkAssigned(sid).has(BK.book)) BK.book='';
+  if(BK.book) bkGoProgress();
+  bkRender(); }
+// 교재를 열면 아직 다 채점하지 않은 첫 쪽으로
+function bkGoProgress(){ const st=bkStat(BK.stu,BK.book); const g=BKPG.find(x=>{ const m=bkPageSum(st,x); return m.done+m.r<m.t; })||BKPG[0]; BK.page=g?g.page:null; }
+async function bkOpenBook(book){ if(!BK.stu) return; await bkFlush(); BK.book=book; const d=bkData(book); BKP=d.P; BKPG=d.PG; BK.sel.clear(); BK.pv=''; BK.mode='grade'; BK.wasX.clear(); bkRI=null; bkGoProgress(); bkRender();
   bkNeedFull(()=>{ if(BK.book===book) bkRenderBody(); });
-  await bkLoadMarks(); if(BK.book===book) bkRenderBody();
-}
+  await bkLoadBook(book); if(BK.book===book) bkRender(); }
+async function bkCloseBook(){ await bkFlush(); BK.book=''; BK.sel.clear(); bkRender(); }
+function bkSetMode(m){ BK.mode=m; bkRender(); }
 // 정답은 이 교재 파일(세쌍둥이 폴더)만 받아 옴 — 같은 단원의 시중교재 파일까지 받지 않음
 function bkNeedFull(cb){ const fs=[...new Set(BKP.filter(p=>!p._full).flatMap(p=>(FILES[p.unit]||[]).filter(f=>/^세쌍둥이/.test(f))))].filter(f=>!LOADED.has(f));
   if(!fs.length){ cb&&cb(); return; } Promise.all(fs.map(loadFile)).then(()=>cb&&cb()); }
-async function bkLoadMarks(){ const book=BK.book; BK.marksErr=''; if(!ME||!book) return;
-  try{ const l=await FB.bookMarks(book); if(BK.book!==book) return; const m={}; l.forEach(d=>{ m[d.studentId]=d.marks||{}; }); BK.marks=m; }
-  catch(e){ console.warn('[교재] 직접 채점 기록',e); if(BK.book===book){ BK.marks={}; BK.marksErr=e.code||e.message; } } }
-async function bkReload(){ if(needLogin()) return; await bkFlush(); await loadAssignments(); await bkLoadMarks(); bkRender(); toast('새로 불러왔어요'); }
 
 // ── 학생별 문항 상태: Map(문항id → {v:'o'|'x'|'r'(확인 필요)|'p'(숙제 중), src:'test'|'mark', r, t, n, sa}) ──
 let bkRI=null;   // dailyTestResults 색인(그릴 때마다 한 번 만듦)
-const bkBookTests=()=>TESTS.filter(t=>t.kind==='book'&&t.book===BK.book).sort((a,b)=>((a.date||'')+a.id).localeCompare((b.date||'')+b.id));
-function bkStat(sid,tests){ const m=new Map(); const ri=bkRI||(bkRI=new Map(RESULTS.map(r=>[r.id,r])));
-  (tests||bkBookTests()).forEach(t=>{ const r=ri.get(`${t.id}_${sid}`); if(!r||r.absent) return; const w=new Set(r.wrong||[]), rv=new Set(r.needReview||[]), sa=r.studentAnswers||[];
+const bkBookTests=book=>TESTS.filter(t=>t.kind==='book'&&t.book===book).sort((a,b)=>((a.date||'')+a.id).localeCompare((b.date||'')+b.id));
+function bkStat(sid,book,tests){ const m=new Map(); const ri=bkRI||(bkRI=new Map(RESULTS.map(r=>[r.id,r])));
+  (tests||bkBookTests(book)).forEach(t=>{ const r=ri.get(`${t.id}_${sid}`); if(!r||r.absent) return; const w=new Set(r.wrong||[]), rv=new Set(r.needReview||[]), sa=r.studentAnswers||[];
     (t.problemIds||[]).forEach((pid,i)=>{ const n=i+1; if(r.graded) m.set(pid,{v:rv.has(n)?'r':w.has(n)?'x':'o',src:'test',r,t,n,sa:String(sa[i]||''),k:(t.kinds||[])[i]}); else if(!m.has(pid)) m.set(pid,{v:'p',src:'test',r,t,n,sa:''}); }); });
-  const mk=BK.marks[sid]||{}; for(const pid in mk){ const c=m.get(pid); if(!c||c.v==='p') m.set(pid,{v:mk[pid],src:'mark',sa:''}); }
+  const d=MK.get(bkKey(book,sid)); const mk=(d&&d.marks)||{}; for(const pid in mk){ const c=m.get(pid); if(!c||c.v==='p') m.set(pid,{v:mk[pid],src:'mark',sa:''}); }
   return m; }
 function bkPageSum(st,g){ let o=0,x=0,r=0,p=0; g.ps.forEach(q=>{ const s=st.get(q.id); if(!s) return; s.v==='o'?o++:s.v==='x'?x++:s.v==='r'?r++:p++; }); return {o,x,r,p,t:g.ps.length,done:o+x}; }
 function bkPill(s){ if(s.r) return '<span class="pill y">확인 필요</span>'; if(s.x) return `<span class="pill r">오답 ${s.x}</span>`; if(s.t&&s.done===s.t) return '<span class="pill g">다 맞음</span>'; if(s.p) return '<span class="pill y">숙제 중</span>'; if(s.done) return `<span class="pill" style="background:#f3f4f6;color:#666">${s.done}/${s.t}</span>`; return ''; }
+// 학생 한 명의 교재 한 권 요약: 채점한 문제·오답·오답률·진도·단원별
+function bkSum(sid,book,tests){ const PG=bkData(book).PG; const st=bkStat(sid,book,tests); let g=0,x=0,p=0,r=0,t=0,last=-1; const units=new Map();
+  PG.forEach((pg,i)=>{ const m=bkPageSum(st,pg); t+=m.t; g+=m.done; x+=m.x; p+=m.p; r+=m.r; if(m.done||m.r) last=i; const u=units.get(pg.unit)||units.set(pg.unit,{g:0,x:0}).get(pg.unit); u.g+=m.done; u.x+=m.x; });
+  const d=MK.get(bkKey(book,sid)); const ws=(d&&d.wrongSheets)||[];
+  return {g,x,p,r,t,last,lastPage:last>=0?PG[last].page:null,rate:g?Math.round(x/g*100):null,units,ws}; }
 
 // ── 그리기 ──
-function bkRender(){ bkRI=null; bkRenderStu(); bkRenderBody(); }
+function bkRender(){ bkRI=null; bkRenderStu(); bkRenderBar(); bkRenderBody(); }
 function bkRenderStu(){ const el=$('bkStu'); if(!el) return;
   if(!ME){ el.innerHTML='<div class="empty-note">로그인하면 담당 학생이 보여요.</div>'; return; }
   const list=bkStuList(); if(!list.length){ el.innerHTML='<div class="empty-note">학생이 없어요.</div>'; return; }
-  el.innerHTML=groups(list).map(([k,arr])=>{ const op=BK.open.has(k)||!!BK.q.trim()||arr.some(s=>s.id===BK.stu);
-    return `<div class="grp ${op?'open':''}"><div class="gh" onclick="bkTogGrp('${esc(k)}')">${esc(k)}<small>${arr.length}명</small></div><div class="gb">${arr.map(s=>`<div class="st ${s.id===BK.stu?'on':''}" onclick="bkPickStu('${s.id}')">${esc(s.name)}<small>${esc(s.grade||'')} ${brTag(s.branch)}</small></div>`).join('')}</div></div>`; }).join('');
-  const stu=bkStuOf(); $('bkWho').textContent=stu?`${stu.name} 학생`:''; }
+  // 반은 접어 두고, 누르면 펼침(검색 중이면 모두 펼침)
+  el.innerHTML=groups(list).map(([k,arr])=>{ const op=BK.open.has(k)||!!BK.q.trim();
+    return `<div class="grp ${op?'open':''}"><div class="gh" onclick="bkTogGrp('${esc(k)}')">${esc(k)}<small>${arr.length}명</small></div><div class="gb">${arr.map(s=>`<div class="st ${s.id===BK.stu?'on':''}" onclick="bkPickStu('${s.id}')">${esc(s.name)}<small>${esc(s.grade||'')} ${brTag(s.branch)}</small></div>`).join('')}</div></div>`; }).join(''); }
 function bkTogGrp(k){ BK.open.has(k)?BK.open.delete(k):BK.open.add(k); bkRenderStu(); }
-function bkSearch(v){ BK.q=v; bkRenderStu(); if(BK.mode==='grid') bkRenderBody(); }
-function bkPickStu(id){ BK.stu=BK.stu===id?'':id; bkRender(); }
-function bkPickPage(i){ const g=BKPG[i]; if(!g) return; BK.page=g.page; BK.pv=''; bkRenderBody(); const pl=$('bkPl'); if(pl) pl.scrollTop=0; }
+function bkSearch(v){ BK.q=v; bkRenderStu(); if(BK.book&&BK.mode==='stat') bkRenderBody(); }
+function bkRenderBar(){ const el=$('bkBar'); if(!el) return; const stu=bkStuOf();
+  if(!ME||!stu){ el.innerHTML='<b style="font-size:16px">교재</b><span class="note">왼쪽에서 반을 눌러 학생을 고르면, 그 학생에게 출제된 교재가 보여요.</span>'; return; }
+  if(!BK.book){ el.innerHTML=`<span class="who" style="font-size:17px">${esc(stu.name)}</span><span class="note">${esc(stu.grade||'')} · ${esc(clsOf(stu))}</span>${brTag(stu.branch)}<span style="flex:1"></span><button class="sm" onclick="bkReload()">새로고침</button><button class="pri" onclick="bkOpenPick()">＋ 교재 출제하기</button>`; return; }
+  el.innerHTML=`<button class="sm" onclick="bkCloseBook()">← 교재 목록</button><b class="bkname">${esc(BK.book)}</b><span class="who">${esc(stu.name)}</span>
+    <div class="seg"><button class="${BK.mode==='grade'?'on':''}" onclick="bkSetMode('grade')">채점</button><button class="${BK.mode==='stat'?'on':''}" onclick="bkSetMode('stat')">학생별 현황</button></div>
+    <span class="note" id="bkSave"></span><span style="flex:1"></span><button class="sm" onclick="bkReload()">새로고침</button><button class="yel" onclick="bkOpenWrong(false)">오답 학습지</button><button class="yel" onclick="bkOpenWrong(true)">반별 오답</button><button class="pri" onclick="bkOpenAssign()">숙제 내기</button>`; }
+const bkWarn=()=>BK.err?`<div class="bkwarn" style="margin:14px 18px 0">교재 기록을 불러오지 못했어요 (${esc(BK.err)}). Firebase 규칙에 bookMarks가 올라가야 교재 출제와 직접 채점이 저장돼요.</div>`:'';
+function bkPickPage(i){ const g=BKPG[i]; if(!g) return; BK.page=g.page; BK.pv=''; BK.wasX.clear(); bkRenderBody(); const pl=$('bkPl'); if(pl) pl.scrollTop=0; }
 function bkSelPage(i,on){ const g=BKPG[i]; if(!g) return; on?BK.sel.add(g.page):BK.sel.delete(g.page); bkRenderBody(); }
 function bkSelUnit(u,on){ BKPG.forEach(g=>{ if(g.unit===u) on?BK.sel.add(g.page):BK.sel.delete(g.page); }); bkRenderBody(); }
 function bkSelClear(){ BK.sel.clear(); bkRenderBody(); }
 function bkTogPv(id){ BK.pv=BK.pv===id?'':id; bkRenderBody(); }
-function bkGo(sid,i){ BK.stu=sid; BK.mode='grade'; document.querySelectorAll('#bkMode button').forEach(b=>b.classList.toggle('on',b.dataset.m==='grade')); const g=BKPG[i]; if(g) BK.page=g.page; BK.pv=''; bkRender(); }
-function bkRenderBody(){ const el=$('bkBody'); if(!el||!ME) return; bkRI=null;
-  if(!BK.book||!BKPG.length){ el.innerHTML='<div class="empty-note" style="flex:1">이 교재의 문제가 없어요.</div>'; return; }
-  if(BK.mode==='grid') return bkRenderGrid(el);
-  const y1=($('bkPages')||{}).scrollTop||0, y2=($('bkPl')||{}).scrollTop||0;
-  const stu=bkStuOf(); const st=stu?bkStat(stu.id):null;
+function bkRenderBody(){ const el=$('bkBody'); if(!el||!ME) return; bkRI=null; const stu=bkStuOf();
+  if(!stu){ el.innerHTML='<div class="empty-note" style="flex:1">학생을 고르면 여기에 출제된 교재가 보여요.<br>교재를 누르면 채점 화면이 열려요.</div>'; return; }
+  if(!BK.book) return bkRenderCards(el,stu);
+  if(BK.mode==='stat') return bkRenderStat(el);
+  if(!BKPG.length){ el.innerHTML='<div class="empty-note" style="flex:1">이 교재의 문제가 없어요.</div>'; return; }
+  const y1=($('bkPages')||{}).scrollTop||0, y2=($('bkPl')||{}).scrollTop||0; const st=bkStat(stu.id,BK.book);
   let lastU=null; const pages=BKPG.map((g,i)=>{ let h=''; if(g.unit!==lastU){ lastU=g.unit; const all=BKPG.filter(x=>x.unit===g.unit).every(x=>BK.sel.has(x.page)); h=`<div class="uh"><input type="checkbox" ${all?'checked':''} onchange="bkSelUnit('${esc(g.unit)}',this.checked)" title="이 단원의 쪽을 모두 골라요">${esc(bkUnitName(g.unit))}</div>`; }
-    return h+`<div class="pg ${g.page===BK.page?'on':''}" onclick="bkPickPage(${i})"><input type="checkbox" ${BK.sel.has(g.page)?'checked':''} onclick="event.stopPropagation()" onchange="bkSelPage(${i},this.checked)"><b>${esc(g.page)}쪽</b><small>${g.ps.length}문제</small>${st?bkPill(bkPageSum(st,g)):''}</div>`; }).join('');
+    return h+`<div class="pg ${g.page===BK.page?'on':''}" onclick="bkPickPage(${i})"><input type="checkbox" ${BK.sel.has(g.page)?'checked':''} onclick="event.stopPropagation()" onchange="bkSelPage(${i},this.checked)"><b>${esc(g.page)}쪽</b><small>${g.ps.length}문제</small>${bkPill(bkPageSum(st,g))}</div>`; }).join('');
   const g=BKPG.find(x=>x.page===BK.page)||BKPG[0]; const gi=BKPG.indexOf(g);
-  const rows=g.ps.map(p=>{ const s=st&&st.get(p.id); const v=s?s.v:'';
+  const rows=g.ps.map(p=>{ const s=st.get(p.id); const v=s?s.v:'';
     const ans=p._full?aK(String(p.answer||'')):'<span class="note">정답 불러오는 중…</span>';
     const sa=s&&s.sa?`<span class="sa">학생 답 ${esc(fmtStuAns(s.sa,s.k))}</span>`:'';
-    const tg=v==='p'?' <span class="pill y">숙제 중</span>':v==='r'?' <span class="pill y">확인 필요</span>':'';
-    return `<div class="bkq ${v}"><div class="lb" onclick="bkTogPv('${p.id}')" title="${esc(mfOf(p)||p.type||'')} — 누르면 문제 보기"><span class="pv">▶</span>${esc(bkLabel(p))}</div><div class="an">${ans}${sa}${tg}</div>${stu?`<div class="ox"><button class="o ${v==='o'?'on':''}" onclick="bkMark('${p.id}','o')">○</button><button class="x ${v==='x'?'on':''}" onclick="bkMark('${p.id}','x')">✕</button></div>`:''}</div>${BK.pv===p.id?`<div class="bkpv">${p._full?qK(p):'<span class="note">불러오는 중…</span>'}${p.figure?`<img src="${p.figure}">`:''}</div>`:''}`; }).join('');
-  const head=`<div class="ph"><b class="pgn">${esc(g.page)}쪽</b><span class="note">${esc(bkUnitName(g.unit))} · ${g.ps.length}문제</span>${stu?`<span class="note">· 누르는 즉시 저장돼요</span><span style="flex:1"></span><button class="sm" onclick="bkAll('')">전체 취소</button><button class="sm" style="color:#1a56db;border-color:#bcd0f7" onclick="bkAll('o')">전체 정답</button><button class="sm" style="color:var(--bad);border-color:#f3c2bd" onclick="bkAll('x')">전체 오답</button>`:'<span class="note">· 왼쪽에서 학생을 고르면 이 쪽을 채점할 수 있어요</span><span style="flex:1"></span>'}<button class="sm" ${gi<=0?'disabled':''} onclick="bkPickPage(${gi-1})">← 이전 쪽</button><button class="sm" ${gi>=BKPG.length-1?'disabled':''} onclick="bkPickPage(${gi+1})">다음 쪽 →</button></div>`;
-  const warn=BK.marksErr&&stu?`<div class="bkwarn">직접 채점 기록을 불러오지 못했어요 (${esc(BK.marksErr)}). Firebase 규칙에 bookMarks가 올라간 뒤부터 직접 채점이 저장돼요. 숙제 내기와 학생 앱 제출 채점은 지금도 돼요.</div>`:'';
+    const bd=v==='o'?'<span class="bd o">○</span>':v==='x'?'<span class="bd x">✕</span>':v==='r'?'<span class="bd r">확인 필요</span>':v==='p'?'<span class="bd p">숙제 중</span>':'<span class="bd">미채점</span>';
+    return `<div class="bkq ${v}" onclick="bkTap('${p.id}')" title="${esc(mfOf(p)||p.type||'')}"><button class="pvb" onclick="event.stopPropagation();bkTogPv('${p.id}')" title="문제 보기">${BK.pv===p.id?'▼':'▶'}</button><div class="lb">${esc(bkLabel(p))}</div><div class="an">${ans}${sa}</div>${bd}</div>${BK.pv===p.id?`<div class="bkpv">${p._full?qK(p):'<span class="note">불러오는 중…</span>'}${p.figure?`<img src="${p.figure}">`:''}</div>`:''}`; }).join('');
+  const head=`<div class="ph"><b class="pgn">${esc(g.page)}쪽</b><span class="note">${esc(bkUnitName(g.unit))} · ${g.ps.length}문제 · 번호 줄을 누르면 <b style="color:var(--bad)">오답</b> → 미채점 → <b style="color:#1a56db">정답</b> 순으로 바뀌고 바로 저장돼요</span><span style="flex:1"></span><button class="sm" style="color:#1a56db;border-color:#bcd0f7" onclick="bkRest()" title="아직 채점하지 않은 번호만 정답으로">나머지 정답</button><button class="sm" onclick="bkAll('o')">전체 정답</button><button class="sm" onclick="bkAll('')">전체 취소</button><button class="sm" ${gi<=0?'disabled':''} onclick="bkPickPage(${gi-1})">← 이전 쪽</button><button class="sm" ${gi>=BKPG.length-1?'disabled':''} onclick="bkPickPage(${gi+1})">다음 쪽 →</button></div>`;
   const selG=BKPG.filter(x=>BK.sel.has(x.page));
-  const bar=selG.length?`<div class="bkselbar"><b>${bkRangeText(selG)} · ${selG.reduce((a,x)=>a+x.ps.length,0)}문제 선택됨</b><button class="yel" onclick="bkOpenWrong()">오답 학습지</button><button class="pri" onclick="bkOpenAssign()">숙제 내기</button><button class="sm ghost" onclick="bkSelClear()">✕</button></div>`:'';
-  el.innerHTML=`<div class="bkpages" id="bkPages">${pages}</div><div class="bkprobs">${head}${warn}<div class="pl" id="bkPl">${rows}</div>${bar}</div>`;
+  const bar=selG.length?`<div class="bkselbar"><b>${bkRangeText(selG)} · ${selG.reduce((a,x)=>a+x.ps.length,0)}문제 선택됨</b><button class="pri" onclick="bkOpenAssign()">숙제 내기</button><button class="sm ghost" onclick="bkSelClear()">✕</button></div>`:'';
+  el.innerHTML=`<div class="bkpages" id="bkPages">${pages}</div><div class="bkprobs">${head}${bkWarn()}<div class="pl" id="bkPl">${rows}</div>${bar}</div>`;
   $('bkPages').scrollTop=y1; $('bkPl').scrollTop=y2;
 }
-// 현황: 학생(줄) × 쪽(칸)
-function bkRenderGrid(el){ const list=bkStuList(); if(!list.length){ el.innerHTML='<div class="empty-note" style="flex:1">학생이 없어요.</div>'; return; }
-  const y=(el.querySelector('.wrap')||{}).scrollTop||0, x=(el.querySelector('.wrap')||{}).scrollLeft||0; const tests=bkBookTests();
-  let uh='', n=0; BKPG.forEach((g,i)=>{ n++; const nx=BKPG[i+1]; if(!nx||nx.unit!==g.unit){ uh+=`<th class="u" colspan="${n}" title="${esc(bkUnitName(g.unit))}">${esc(bkUnitName(g.unit))}</th>`; n=0; } });
-  const ph=BKPG.map(g=>`<th>${esc(g.page)}</th>`).join('');
-  const rows=groups(list).map(([k,arr])=>`<tr class="gr"><td colspan="${BKPG.length+2}">${esc(k)}</td></tr>`+arr.map(s=>{ const st=bkStat(s.id,tests); let xs=0, any=false;
-    const tds=BKPG.map((g,i)=>{ const m=bkPageSum(st,g); xs+=m.x; const c=m.r?['r','확인']:m.x?['x',m.x]:(m.t&&m.done===m.t)?['o','○']:m.p?['p','숙제']:m.done?['h',`${m.done}/${m.t}`]:['','']; if(c[0]) any=true;
-      return `<td class="c ${c[0]}" onclick="bkGo('${s.id}',${i})">${c[1]}</td>`; }).join('');
-    return `<tr><th class="nm" onclick="bkGo('${s.id}',${Math.max(0,BKPG.findIndex(g=>g.page===BK.page))})">${esc(s.name)} ${brTag(s.branch)}</th><td class="sum">${any?xs:''}</td>${tds}</tr>`; }).join('')).join('');
-  el.innerHTML=`<div class="bkgrid"><div class="lg"><span>칸을 누르면 그 학생의 그 쪽 채점 화면으로 가요.</span><span><i style="color:var(--bad)">숫자</i> 오답 수</span><span><i style="color:#1b7a3e">○</i> 다 맞음</span><span><i style="color:#9a6b00">숙제</i> 낸 숙제를 아직 안 냄</span><span><i style="color:#9a6b00">확인</i> 주관식 확인 필요</span><span><i>2/3</i> 일부만 채점</span></div>
-    <div class="wrap"><table><thead><tr><th class="nm" rowspan="2">학생</th><th rowspan="2" style="min-width:54px">오답 합</th>${uh}</tr><tr class="pr">${ph}</tr></thead><tbody>${rows}</tbody></table></div></div>`;
-  const w=el.querySelector('.wrap'); w.scrollTop=y; w.scrollLeft=x;
-}
+// 학생에게 출제된 교재 카드
+function bkRenderCards(el,stu){ const have=bkAssigned(stu.id); const books=bkBooks().filter(b=>have.has(b.book));
+  if(!books.length){ el.innerHTML=`<div style="flex:1">${bkWarn()}<div class="empty-note">${esc(stu.name)} 학생에게 출제된 교재가 아직 없어요.<br><br><button class="pri" onclick="bkOpenPick()">＋ 교재 출제하기</button></div></div>`; return; }
+  el.innerHTML=`<div style="flex:1;display:flex;flex-direction:column;min-height:0">${bkWarn()}<div class="bkcards">${books.map(b=>{ const s=bkSum(stu.id,b.book); const PG=bkData(b.book).PG; const w=s.ws[s.ws.length-1];
+    return `<div class="bkcard" onclick="bkOpenBook('${esc(b.book)}')"><h3>${esc(b.book)}</h3><span class="note">${PG.length?`${PG[0].page}~${PG[PG.length-1].page}쪽 · `:''}${s.t}문제</span>
+      <div class="bar"><i style="width:${s.t?Math.round(s.g/s.t*100):0}%"></i></div>
+      <div class="ln"><span>채점한 문제</span><b>${s.g} / ${s.t}${s.lastPage!=null?` · ${s.lastPage}쪽까지`:''}</b></div>
+      <div class="ln"><span>오답</span><b class="${s.x?'bad':''}">${s.x}개${s.rate!=null?` · 오답률 ${s.rate}%`:''}</b></div>
+      ${s.p?`<div class="ln"><span>숙제 중</span><b>${s.p}문제</b></div>`:''}${s.r?`<div class="ln"><span>주관식 확인 필요</span><b>${s.r}문제</b></div>`:''}
+      <div class="ln"><span>오답 학습지</span><b>${w?`${esc(w.from)}~${esc(w.to)}쪽 나감 (${esc(shortDate(w.date))})`:'아직 안 나감'}</b></div>
+      <div class="ft"><span class="note">눌러서 채점하기 →</span><button onclick="event.stopPropagation();bkUnassign('${esc(b.book)}')">출제 취소</button></div></div>`; }).join('')}</div></div>`; }
+// 학생별 현황: 이 교재가 출제된 학생들의 진도·오답률·단원별 오답률
+function bkRenderStat(el){ const tests=bkBookTests(BK.book); const list=bkStuList().filter(s=>bkAssigned(s.id).has(BK.book));
+  const units=[...new Set(BKPG.map(g=>g.unit))];
+  if(!list.length){ el.innerHTML='<div class="empty-note" style="flex:1">이 교재가 출제된 학생이 없어요.</div>'; return; }
+  const rate=(x,g)=>g?Math.round(x/g*100):null; const rc=r=>r==null?'':r>=40?'hi':r>=20?'mid':'';
+  const rows=groups(list).map(([k,arr])=>`<tr class="gr"><td colspan="${7+units.length}">${esc(k)}</td></tr>`+arr.map(s=>{ const m=bkSum(s.id,BK.book,tests); const w=m.ws[m.ws.length-1];
+    return `<tr class="${s.id===BK.stu?'on':''}" onclick="bkStatGo('${s.id}')"><td class="l"><b>${esc(s.name)}</b> ${brTag(s.branch)}</td><td class="l"><span class="mbar"><i style="width:${m.t?Math.round(m.g/m.t*100):0}%"></i></span>${m.g}/${m.t}${m.lastPage!=null?` · ${esc(m.lastPage)}쪽`:''}</td><td>${m.g?m.x:''}</td><td class="rate ${rc(m.rate)}">${m.rate==null?'–':m.rate+'%'}</td><td>${m.p||''}</td>${units.map(u=>{ const q=m.units.get(u)||{g:0,x:0}; const r=rate(q.x,q.g); return `<td class="${rc(r)}" title="${q.x}/${q.g}">${r==null?'':r+'%'}</td>`; }).join('')}<td>${w?`${esc(w.from)}~${esc(w.to)}쪽`:''}</td><td>${m.r?`<span class="pill y">확인 ${m.r}</span>`:''}</td></tr>`; }).join('')).join('');
+  el.innerHTML=`<div class="bkst"><table><thead><tr><th class="l">학생</th><th class="l">진도 (채점한 문제 · 마지막 쪽)</th><th>오답</th><th>오답률</th><th>숙제 중</th>${units.map(u=>`<th title="${esc(bkUnitName(u))} 오답률">${esc(bkUnitName(u).replace(/^\d+\s*/,'').slice(0,9))}</th>`).join('')}<th>오답 학습지</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="note" style="padding:12px 14px">단원 칸은 그 단원에서 채점한 문제 중 틀린 비율이에요(20% 이상 노랑, 40% 이상 빨강). 학생을 누르면 그 학생의 채점 화면으로 가요.</div></div>`; }
+async function bkStatGo(sid){ if(sid!==BK.stu){ BK.stu=''; await bkPickStu(sid); } BK.mode='grade'; bkRender(); }
+
+// ── 교재 출제하기(팝업) ──
+const BP={sel:new Set()};
+function bkOpenPick(){ if(needLogin()) return; const stu=bkStuOf(); if(!stu){ toast('왼쪽에서 학생을 먼저 골라 주세요'); return; } BP.sel=new Set(); $('bp_cls').checked=false; $('bp_title').textContent=`${stu.name} · ${stu.grade||''} ${clsOf(stu)}`; bkPickRender(); $('m_bpick').classList.add('on'); }
+function bkPickRender(){ const stu=bkStuOf(); if(!stu) return; const have=bkAssigned(stu.id); const lv=b=>{ const m=/^(초|중)(\d)/.exec(b.subj); return m?m[1]+m[2]:'고등'; };
+  const by=new Map(); bkBooks().forEach(b=>{ const k=lv(b); (by.get(k)||by.set(k,[]).get(k)).push(b); });
+  const mine=gradeKey(stu.grade)||(/고|N수/.test(stu.grade||'')?'고등':''); const keys=[...by.keys()].sort((a,b)=>(a===mine?0:1)-(b===mine?0:1));
+  $('bp_list').innerHTML=keys.map(k=>`<div class="bplv">${k===mine?'⭐ ':''}${esc(k)}</div><div class="bpgrid">${by.get(k).map(b=>{ const PG=bkData(b.book).PG, n=bkData(b.book).P.length; const h=have.has(b.book);
+    return `<div class="bpi ${h?'dis':BP.sel.has(b.book)?'on':''}" ${h?'':`onclick="bkPickTog('${esc(b.book)}')"`}><b>${esc(b.book.replace('세쌍둥이 ',''))}</b><small>세쌍둥이 · ${PG.length?`${PG[0].page}~${PG[PG.length-1].page}쪽 · `:''}${n}문제</small>${h?'<span class="pill g">출제됨</span>':''}</div>`; }).join('')}</div>`).join('')||'<div class="empty-note">문제 DB에 올라온 학원 교재가 아직 없어요.</div>';
+  const cm=bkClassmates(stu); $('bp_clsWrap').style.display=cm.length>1?'flex':'none'; $('bp_clsTxt').textContent=`같은 반(${clsOf(stu)}) 학생 ${cm.length}명 모두에게 출제`;
+  $('bp_sel').textContent=BP.sel.size?`${BP.sel.size}권 선택`:''; }
+function bkPickTog(book){ BP.sel.has(book)?BP.sel.delete(book):BP.sel.add(book); bkPickRender(); }
+async function bkPickSave(){ const stu=bkStuOf(); if(!stu) return; if(!BP.sel.size){ toast('출제할 교재를 골라 주세요'); return; }
+  const who=$('bp_cls').checked?bkClassmates(stu):[stu]; const btn=$('bp_go'); btn.disabled=true;
+  try{ const jobs=[]; who.forEach(s=>BP.sel.forEach(book=>{ const d=bkDoc(book,s.id); if(d&&d.assigned===true) return; jobs.push({s,book}); }));
+    await Promise.all(jobs.map(({s,book})=>FB.saveBookMark(bkMarkId(book,s.id),{ ...bkIdent(book,s.id), assigned:true, assignedAt:todayStr() })));
+    jobs.forEach(({s,book})=>{ const d=bkDoc(book,s.id,true); d.assigned=true; d.assignedAt=todayStr(); }); BK.err='';
+    $('m_bpick').classList.remove('on'); toast(`${who.length>1?who.length+'명에게 ':''}교재 ${BP.sel.size}권을 출제했어요`); bkRender();
+  }catch(e){ console.warn(e); toast('교재 출제 실패: '+(e.code||e.message)+(/permission/i.test(e.code||e.message||'')?' — Firebase 규칙(bookMarks)을 올려야 해요':'')); }
+  finally{ btn.disabled=false; } }
+async function bkUnassign(book){ const stu=bkStuOf(); if(!stu) return; const s=bkSum(stu.id,book);
+  if(!confirm(`${stu.name} 학생의 「${book}」 출제를 취소할까요?\n\n교재 목록에서만 빠지고, 채점 기록(${s.g}문제)은 지워지지 않아요. 다시 출제하면 그대로 보여요.`)) return;
+  try{ await FB.saveBookMark(bkMarkId(book,stu.id),{ ...bkIdent(book,stu.id), assigned:false }); bkDoc(book,stu.id,true).assigned=false; toast('출제를 취소했어요'); bkRender(); }catch(e){ toast('실패: '+(e.code||e.message)); } }
 
 // ── 채점(누르는 즉시 저장) ──
-const bkDirtyM=new Set(), bkDirtyR=new Map(); let bkTimer=0;
+const bkDirty=new Set(), bkDirtyR=new Map(); let bkTimer=0;
 const bkSaveNote=t=>{ const e=$('bkSave'); if(e) e.textContent=t; };
 // 숙제로 채점된 문제는 그 채점 결과를 고치고(선생님 페이지 점수·오답 시험지에 그대로 반영), 아니면 직접 채점 기록에 적음
 function bkPut(pid,v,st){ const s=st.get(pid);
   if(s&&s.src==='test'&&s.v!=='p'){ if(!v) return false; const r=s.r, n=s.n; const w=new Set(r.wrong||[]), rv=new Set(r.needReview||[]); rv.delete(n); v==='x'?w.add(n):w.delete(n);
     r.wrong=[...w].sort((a,b)=>a-b); r.needReview=[...rv].sort((a,b)=>a-b); const N=r.total||(s.t.problemIds||[]).length; r.total=N; r.score=N-r.wrong.length; r.percentage=N?Math.round(r.score/N*100):null; r.graded=true; bkDirtyR.set(r.id,r); return true; }
-  const sid=BK.stu; const m=BK.marks[sid]||(BK.marks[sid]={}); if(v) m[pid]=v; else { if(!(pid in m)) return false; delete m[pid]; } bkDirtyM.add(sid); return true; }
-function bkMark(pid,v){ if(!BK.stu) return; const st=bkStat(BK.stu); const s=st.get(pid); if(s&&s.src==='mark'&&s.v===v) v='';   // 같은 단추를 다시 누르면 지움
-  if(bkPut(pid,v,st)){ bkRenderBody(); bkQueueSave(); } }
-function bkAll(v){ if(!BK.stu) return; const g=BKPG.find(x=>x.page===BK.page); if(!g) return; const st=bkStat(BK.stu); let n=0; g.ps.forEach(p=>{ if(bkPut(p.id,v,st)) n++; });
-  if(n){ bkRenderBody(); bkQueueSave(); } else if(!v) toast('숙제로 채점된 문제는 취소되지 않아요. ○ ✕로 고쳐 주세요'); }
+  const d=bkDoc(BK.book,BK.stu,true); if(v) d.marks[pid]=v; else { if(!(pid in d.marks)) return false; delete d.marks[pid]; } bkDirty.add(bkKey(BK.book,BK.stu)); return true; }
+// 번호 줄을 누를 때마다: 오답 → 미채점 → 정답 → 오답 … (처음 누르면 오답). 숙제로 채점된 문제는 정답 ↔ 오답만
+function bkTap(pid){ if(!BK.stu||!BK.book) return; const st=bkStat(BK.stu,BK.book); const s=st.get(pid); const cur=s?s.v:''; let v;
+  if(s&&s.src==='test'&&cur!=='p') v=cur==='o'?'x':cur==='x'?'o':'x';
+  else if(cur==='x'){ v=''; BK.wasX.add(pid); }
+  else if(cur==='o') v='x';
+  else { v=BK.wasX.has(pid)?'o':'x'; BK.wasX.delete(pid); }
+  if(bkPut(pid,v,st)){ bkRI=null; bkRenderBody(); bkQueueSave(); } }
+function bkAll(v){ if(!BK.stu) return; const g=BKPG.find(x=>x.page===BK.page); if(!g) return; const st=bkStat(BK.stu,BK.book); let n=0; g.ps.forEach(p=>{ if(bkPut(p.id,v,st)) n++; }); BK.wasX.clear();
+  if(n){ bkRenderBody(); bkQueueSave(); } else if(!v) toast('숙제로 채점된 문제는 취소되지 않아요. 눌러서 정답·오답만 바꿀 수 있어요'); }
+function bkRest(){ if(!BK.stu) return; const g=BKPG.find(x=>x.page===BK.page); if(!g) return; const st=bkStat(BK.stu,BK.book); let n=0; g.ps.forEach(p=>{ const s=st.get(p.id); if((!s||s.v==='p')&&bkPut(p.id,'o',st)) n++; }); BK.wasX.clear();
+  if(n){ bkRenderBody(); bkQueueSave(); } else toast('미채점인 번호가 없어요'); }
 function bkQueueSave(){ clearTimeout(bkTimer); bkSaveNote('저장 중…'); bkTimer=setTimeout(bkFlush,500); }
-async function bkFlush(){ clearTimeout(bkTimer); if(!ME||(!bkDirtyM.size&&!bkDirtyR.size)) return; const ms=[...bkDirtyM], rs=[...bkDirtyR.values()], book=BK.book, marks=BK.marks; bkDirtyM.clear(); bkDirtyR.clear();
-  try{ await Promise.all([...ms.map(sid=>{ const s=STUDENTS.find(x=>x.id===sid)||{}; return FB.saveBookMark(bkMarkId(book,sid),{ book, studentId:sid, studentName:s.name||'', branch:s.branch||'', teacherUid:s.teacherUid||ME.uid, marks:marks[sid]||{}, updatedBy:ME.name||'' }); }),
+async function bkFlush(){ clearTimeout(bkTimer); if(!ME||(!bkDirty.size&&!bkDirtyR.size)) return; const ks=[...bkDirty], rs=[...bkDirtyR.values()]; bkDirty.clear(); bkDirtyR.clear();
+  try{ await Promise.all([...ks.map(k=>{ const d=MK.get(k); if(!d) return null; if(d.assigned===undefined){ d.assigned=true; d.assignedAt=todayStr(); }
+        return FB.saveBookMark(bkMarkId(d.book,d.studentId),{ ...bkIdent(d.book,d.studentId), assigned:d.assigned, assignedAt:d.assignedAt||todayStr(), marks:d.marks||{}, updatedBy:ME.name||'' }); }),
       ...rs.map(r=>FB.patchResult(r.id,{ wrong:r.wrong, needReview:r.needReview, score:r.score, percentage:r.percentage, total:r.total, graded:true }))]);
-    bkSaveNote('저장됨'); if(rs.length){ renderAsg(); autoWrongSheets(); } }
-  catch(e){ console.warn('[교재] 저장',e); if(BK.book===book) ms.forEach(x=>bkDirtyM.add(x)); rs.forEach(r=>bkDirtyR.set(r.id,r)); bkSaveNote('저장 실패'); toast('저장 실패: '+(e.code||e.message)+(/permission/i.test(e.code||e.message||'')?' — Firebase 규칙(bookMarks)을 올려야 해요':'')); } }
-window.addEventListener('beforeunload',()=>{ if(bkDirtyM.size||bkDirtyR.size) bkFlush(); });
+    bkSaveNote('저장됨'); BK.err=''; if(rs.length){ renderAsg(); autoWrongSheets(); } }
+  catch(e){ console.warn('[교재] 저장',e); ks.forEach(k=>bkDirty.add(k)); rs.forEach(r=>bkDirtyR.set(r.id,r)); bkSaveNote('저장 실패'); toast('저장 실패: '+(e.code||e.message)+(/permission/i.test(e.code||e.message||'')?' — Firebase 규칙(bookMarks)을 올려야 해요':'')); } }
+window.addEventListener('beforeunload',()=>{ if(bkDirty.size||bkDirtyR.size) bkFlush(); });
 
-// ── 숙제 내기 ──
+// ── 숙제 내기(학생 앱으로 답 받기) ──
 const BA={pages:[],ex:new Set(),sel:new Set(),branch:''};
 const bkTargetPages=()=>BK.sel.size?BKPG.filter(g=>BK.sel.has(g.page)):BKPG.filter(g=>g.page===BK.page);
-function bkOpenAssign(){ if(needLogin()) return; if(!BKPG.length){ toast('교재를 먼저 골라 주세요'); return; } const gs=bkTargetPages(); if(!gs.length){ toast('쪽을 골라 주세요'); return; }
-  bkNeedFull(()=>{ BA.pages=gs; BA.ex=new Set(); BA.sel=new Set(BK.stu?[BK.stu]:[]); BA.branch=BK.branch;
+function bkOpenAssign(){ if(needLogin()) return; if(!BK.book||!BKPG.length){ toast('교재를 먼저 열어 주세요'); return; } const gs=bkTargetPages(); if(!gs.length){ toast('쪽을 골라 주세요'); return; }
+  bkNeedFull(()=>{ BA.pages=gs; BA.ex=new Set(); BA.sel=new Set(BK.stu?[BK.stu]:[]); BA.branch='';
     document.querySelectorAll('#m_bassign .chip[data-b]').forEach(c=>c.classList.toggle('on',c.dataset.b===BA.branch));
     $('ba_title').textContent=BK.book; $('ba_date').value=todayStr(); $('ba_due').value=''; $('ba_q').value=''; bkAsgProbs(); bkAsgList(); $('m_bassign').classList.add('on'); }); }
 const bkAsgPs=()=>BA.pages.flatMap(g=>g.ps).filter(p=>!BA.ex.has(p.id));
@@ -2088,9 +2212,9 @@ function bkAsgEx(id){ BA.ex.has(id)?BA.ex.delete(id):BA.ex.add(id); bkAsgProbs()
 function bkAsgGrp(v,ids){ ids.split(',').forEach(id=>v?BA.sel.add(id):BA.sel.delete(id)); bkAsgList(); }
 function bkAsgOne(id,v){ v?BA.sel.add(id):BA.sel.delete(id); bkAsgList(); }
 function bkAsgList(){ const q=($('ba_q').value||'').trim(); const list=STUDENTS.filter(s=>(!BA.branch||s.branch===BA.branch)&&(!q||(s.name||'').includes(q)));
-  const gk=bkGradeKey(), rec=gk?list.filter(s=>gradeKey(s.grade)===gk):[];
+  const rec=list.filter(s=>bkAssigned(s.id).has(BK.book));   // 이 교재가 출제된 학생을 맨 위에
   const lab=(s,sm)=>`<label class="st" style="cursor:pointer;min-width:150px;white-space:nowrap;border:0"><input type="checkbox" ${BA.sel.has(s.id)?'checked':''} onchange="bkAsgOne('${s.id}',this.checked)">${esc(s.name)} <small>${esc(sm)}</small></label>`;
-  const recH=rec.length&&!q?`<div class="grp open rec"><div class="gh"><input type="checkbox" ${rec.every(s=>BA.sel.has(s.id))?'checked':''} onchange="bkAsgGrp(this.checked,'${rec.map(s=>s.id).join(',')}')">⭐ 추천 학생 · ${esc(gk)} <small>${rec.length}명</small></div><div class="gb" style="display:flex;flex-wrap:wrap;gap:4px 10px">${rec.map(s=>lab(s,clsOf(s)+(s.branch?' · '+s.branch:''))).join('')}</div></div>`:'';
+  const recH=rec.length&&!q?`<div class="grp open rec"><div class="gh"><input type="checkbox" ${rec.every(s=>BA.sel.has(s.id))?'checked':''} onchange="bkAsgGrp(this.checked,'${rec.map(s=>s.id).join(',')}')">⭐ 이 교재가 출제된 학생 <small>${rec.length}명</small></div><div class="gb" style="display:flex;flex-wrap:wrap;gap:4px 10px">${rec.map(s=>lab(s,clsOf(s)+(s.branch?' · '+s.branch:''))).join('')}</div></div>`:'';
   $('ba_list').innerHTML=recH+groups(list).map(([k,arr])=>`<div class="grp open"><div class="gh"><input type="checkbox" ${arr.every(s=>BA.sel.has(s.id))?'checked':''} onchange="bkAsgGrp(this.checked,'${arr.map(s=>s.id).join(',')}')">${esc(k)}<small>${arr.length}명</small></div><div class="gb" style="display:flex;flex-wrap:wrap;gap:4px 10px">${arr.map(s=>lab(s,(s.grade||'')+(s.branch?' · '+s.branch:''))).join('')}</div></div>`).join('')||'<div class="empty-note">학생이 없어요.</div>';
   $('ba_sel').textContent=BA.sel.size?`${BA.sel.size}명 선택: ${[...BA.sel].map(id=>(STUDENTS.find(s=>s.id===id)||{}).name).filter(Boolean).slice(0,8).join(', ')}${BA.sel.size>8?' …':''}`:'선택된 학생 없음'; }
 async function bkSaveAssign(){
@@ -2112,40 +2236,87 @@ async function bkSaveAssign(){
     await FB.writeResults(stus.map(s=>({ id:`${testId}_${s.id}`, data:{ testId, source:'worksheet', kind:'book', book, worksheetId:'', teacherUid:ME.uid, teacherName:ME.name, studentId:s.id, studentName:s.name||'', studentGrade:s.grade||'', branch:s.branch||'', date, grade, classGroup:clsOf(s), testTitle:title, sessionId, sheetLabel:'A', total:ps.length, wrong:[], absent:false, graded:false, score:null, percentage:null, submitted:false, dueDate:dueOf(s), logId:'', retakeOf:'' } })));
     try{ await FB.createTasks(stus.map(s=>({ id:`${testId}_${s.id}`, data:{ testId, worksheetId:'', kind:'book', book, labels, studentId:s.id, studentName:s.name||'', studentGrade:s.grade||'', teacherUid:ME.uid, teacherName:ME.name, branch:s.branch||'', classGroup:clsOf(s), date, title, range, count:ps.length, kinds, dueDate:dueOf(s), logId:'', answers:[], submitted:false, submittedAt:null, synced:false, retakeOf:'' } }))); }
     catch(e){ console.warn(e); toast('학생 앱 연동 저장 실패(출제는 됨): '+e.message); }
+    // 이 교재가 아직 출제되지 않은 학생은 교재도 함께 출제해 둠
+    try{ await Promise.all(stus.filter(s=>{ const d=bkDoc(book,s.id); return !d||d.assigned!==true; }).map(s=>FB.saveBookMark(bkMarkId(book,s.id),{ ...bkIdent(book,s.id), assigned:true, assignedAt:todayStr() }).then(()=>{ const d=bkDoc(book,s.id,true); d.assigned=true; d.assignedAt=todayStr(); }))); }catch(e){ console.warn(e); }
     $('m_bassign').classList.remove('on'); BK.sel.clear(); toast(`${stus.length}명에게 ${range} 숙제를 냈어요`); await loadAssignments(); bkRender();
   }catch(e){ console.warn(e); toast('숙제 내기 실패: '+e.message); }
   finally{ btn.disabled=false; }
 }
 
-// ── 오답 학습지: 고른 학생이 (고른 쪽·단원에서) 틀린 문제 → 그대로 / 같은 유형 문제를 붙여 학습지 편집 화면으로 ──
-const BW={ps:[],ex:new Set(),gs:[]};
-function bkOpenWrong(){ if(needLogin()) return; const stu=bkStuOf(); if(!stu){ toast('왼쪽에서 학생을 먼저 골라 주세요'); return; } if(!BKPG.length) return;
-  bkRI=null; const st=bkStat(stu.id); BW.gs=BK.sel.size?BKPG.filter(g=>BK.sel.has(g.page)):BKPG; BW.ex=new Set();
-  BW.ps=BW.gs.flatMap(g=>g.ps).filter(p=>{ const s=st.get(p.id); return s&&s.v==='x'; }); BW.rv=BW.gs.flatMap(g=>g.ps).filter(p=>{ const s=st.get(p.id); return s&&s.v==='r'; }).length;
-  $('bw_title').textContent=`${stu.name} · ${BK.book}`; bkWrongRender(); $('m_bwrong').classList.add('on'); }
-function bkWrongRender(){ const ps=BW.ps.filter(p=>!BW.ex.has(p.id)); const rng=BK.sel.size?bkRangeText(BW.gs):'교재 전체';
-  $('bw_sum').innerHTML=`<b style="color:var(--txt);font-size:15px">${esc(rng)} · 틀린 문제 ${BW.ps.length}개</b>${BW.rv?` <span style="color:#b45309">(주관식 확인 필요 ${BW.rv}개는 빠져 있어요)</span>`:''}`;
-  const by=new Map(); BW.ps.forEach(p=>{ (by.get(p.page)||by.set(p.page,[]).get(p.page)).push(p); });
-  $('bw_probs').innerHTML=BW.ps.length?[...by.entries()].map(([pg,l])=>`<div class="row"><b>${esc(pg)}쪽</b><div>${l.map(p=>`<span class="chip ${BW.ex.has(p.id)?'':'on'}" onclick="bkWrongEx('${p.id}')">${esc(bkLabel(p))}</span>`).join('')}</div></div>`).join(''):'<div class="note" style="padding:10px 0">이 범위에 틀린 문제가 없어요.</div>';
-  const mode=(document.querySelector('input[name="bw_mode"]:checked')||{}).value||'both', n=+$('bw_n').value||1; $('bw_n').disabled=mode==='same'; $('bw_mk').disabled=mode==='same';
-  $('bw_cnt').textContent=ps.length?`학습지 문제 수 ${mode==='same'?ps.length:mode==='sim'?'최대 '+ps.length*n:'최대 '+ps.length*(1+n)}개`:''; }
-function bkWrongEx(id){ BW.ex.has(id)?BW.ex.delete(id):BW.ex.add(id); bkWrongRender(); }
-function bkMakeWrong(){ const stu=bkStuOf(); const ps=BW.ps.filter(p=>!BW.ex.has(p.id)); if(!stu||!ps.length){ toast('틀린 문제가 없어요'); return; }
-  const mode=(document.querySelector('input[name="bw_mode"]:checked')||{}).value||'both', n=+$('bw_n').value||1, only=$('bw_mk').checked; const rng=BK.sel.size?bkRangeText(BW.gs):'전체';
-  const out=[], used=new Set(ps.map(p=>p.id)); let miss=0;
-  ps.forEach(p=>{ if(mode!=='sim') out.push(p.id);
-    if(mode!=='same'){ const pre=p.unit.split('-')[0]; const cand=shuffle(DB.filter(x=>!x.parent&&!used.has(x.id)&&(!only||x.source!=='학원교재')&&x.unit.startsWith(pre)&&sameKind(x,p))).slice(0,n); if(cand.length<n) miss++; cand.forEach(x=>{ used.add(x.id); out.push(x.id); }); } });
-  if(!out.length){ toast('같은 유형 문제를 찾지 못했어요'); return; }
-  needUnits([...new Set(out.map(id=>(byId(id)||{}).unit).filter(Boolean))],()=>{
-    SEL=out; curQ=null; curSubject=subjectOf((byId(SEL[0])||{}).unit)||curSubject; curLvl=lvlOf(curSubject);
-    window.WRONG_SRC={ id:'', studentId:stu.id, studentName:stu.name||'' };   // 저장한 뒤 「출제하기」에서 이 학생이 미리 골라짐
-    $('m_bwrong').classList.remove('on'); $('wiz').classList.add('on'); renderLvlChips(); renderTree(); goStep(2);
-    $('f_title').value=`[오답] ${stu.name} · ${BK.book} ${rng}`; document.querySelectorAll('#tagRow .chip').forEach(c=>c.classList.toggle('on',c.textContent==='오답'));
-    toast(`틀린 ${ps.length}문제로 ${out.length}문제를 구성했어요${miss?` (같은 유형이 모자란 문제 ${miss}개)`:''}`);
-  });
+// ── 오답 학습지: 쪽 범위를 돌려서 고르고 총 문제 수만 정하면, 그 범위의 오답마다 변형·유사 문제를 고르게 나눠 학습지를 바로 만듦 ──
+// · 한 학생 / 반 전체(학생마다 자기 오답으로 한 장씩) · 만든 학습지는 그 학생에게 맞춰져 「출제하기」에서 미리 골라짐
+// · 처음 범위는 「아직 오답 학습지가 안 나간 첫 쪽 ~ 마지막으로 채점한 쪽」, 지난 범위는 목록에서 「같은 범위로」 다시 고름
+const BW={from:0,to:0,xs:[],t:0,cls:false,who:[],sts:new Map()}; const BW_H=44;
+function bkOpenWrong(cls){ if(needLogin()) return; const stu=bkStuOf(); if(!stu||!BK.book||!BKPG.length){ toast('학생과 교재를 먼저 골라 주세요'); return; }
+  bkRI=null; BW.cls=!!cls; const tests=bkBookTests(BK.book);
+  BW.who=cls?bkClassmates(stu).filter(s=>bkAssigned(s.id).has(BK.book)):[stu]; if(!BW.who.length) BW.who=[stu];
+  BW.sts=new Map(BW.who.map(s=>[s.id,bkStat(s.id,BK.book,tests)]));
+  const isX=(s,p)=>(BW.sts.get(s.id).get(p.id)||{}).v==='x';
+  BW.xs=BKPG.map(g=>BW.who.reduce((a,s)=>a+g.ps.filter(p=>isX(s,p)).length,0));
+  const st=BW.sts.get(stu.id)||new Map(); const d=bkDoc(BK.book,stu.id); const hist=(d&&d.wrongSheets)||[];
+  let last=-1; BKPG.forEach((g,i)=>{ if(BW.who.some(s=>g.ps.some(p=>{ const v=(BW.sts.get(s.id).get(p.id)||{}).v; return v&&v!=='p'; }))) last=i; });
+  let from=0, to=last>=0?last:BKPG.length-1;
+  if(BK.sel.size){ const ix=BKPG.map((g,i)=>BK.sel.has(g.page)?i:-1).filter(i=>i>=0); from=ix[0]; to=ix[ix.length-1]; }
+  else if(hist.length){ const mx=Math.max(...hist.map(h=>bkPageIdx(h.to))); if(mx+1<=to) from=mx+1; else { const h=hist[hist.length-1]; const a=bkPageIdx(h.from), b=bkPageIdx(h.to); if(a>=0&&b>=a){ from=a; to=b; } } }
+  BW.from=from; BW.to=Math.max(from,to);
+  const items=BKPG.map((g,i)=>`<div class="it" onclick="bkWheelSet(this.parentNode,${i})">${esc(g.page)}쪽${BW.xs[i]?`<small>✕${BW.xs[i]}</small>`:''}</div>`).join('');
+  $('bw_from').innerHTML=$('bw_to').innerHTML=`<div class="pad"></div>${items}<div class="pad"></div>`; $('bw_from').dataset.i=$('bw_to').dataset.i='';
+  $('bw_head').textContent=cls?'반별 오답 학습지':'교재 오답 학습지';
+  $('bw_title').textContent=cls?`${clsOf(stu)} ${BW.who.length}명 · ${BK.book}`:`${stu.name} · ${BK.book}`;
+  $('bw_total').value=''; $('bw_totalLab').textContent=cls?'학생마다 총 문제 수':'총 문제 수';
+  $('bw_hist').innerHTML=(cls?`<div class="note" style="margin-top:8px">${esc(clsOf(stu))}에서 이 교재가 출제된 학생마다, 자기 오답으로 학습지가 한 장씩 만들어져요. 이 범위에 오답이 없는 학생은 건너뛰어요.</div>`:'')+
+    (hist.length?`<label>${cls?esc(stu.name)+' 학생의 ':''}지난 오답 학습지 <small class="note" style="font-weight:400">같은 범위로 다시 만들 수 있어요</small></label>`+hist.map((h,i)=>({h,i})).reverse().slice(0,5).map(({h,i})=>`<div class="bwh"><b>${esc(h.from)}~${esc(h.to)}쪽</b><span>${esc(shortDate(h.date))} · 오답 ${h.count}개${h.total?` → ${h.total}문제`:''}</span><button onclick="bkWrongRange(${i})">같은 범위로</button></div>`).join(''):(cls?'':'<div class="note" style="margin-top:8px">이 교재로 만든 오답 학습지가 아직 없어요. 한 번 만들면 범위가 여기에 남고, 다음에는 그 다음 쪽부터 맞춰져요.</div>'));
+  $('m_bwrong').classList.add('on');
+  // 팝업이 뜨면서 바퀴가 맨 위로 맞춰지는 동안의 스크롤은 무시하고, 정해 둔 범위로 돌려 놓음
+  const f0=BW.from, t0=BW.to; BW.lock=true; requestAnimationFrame(()=>{ BW.from=f0; BW.to=t0; $('bw_from').scrollTop=f0*BW_H; $('bw_to').scrollTop=t0*BW_H; BW.lock=false; bkWrongSum(); });
 }
+function bkWheelSet(el,i){ el.scrollTo({top:i*BW_H,behavior:'smooth'}); }
+function bkWheel(k,el){ if(BW.lock) return; const i=Math.max(0,Math.min(BKPG.length-1,Math.round(el.scrollTop/BW_H))); if(BW[k]===i&&el.dataset.i===String(i)) return; BW[k]=i; el.dataset.i=String(i);
+  clearTimeout(BW.t); BW.t=setTimeout(()=>{   // 멈춘 뒤에 반대쪽 바퀴를 맞춤(시작 ≤ 끝)
+    if(BW.from>BW.to){ if(k==='from'){ BW.to=BW.from; $('bw_to').scrollTo({top:BW.to*BW_H,behavior:'smooth'}); } else { BW.from=BW.to; $('bw_from').scrollTo({top:BW.from*BW_H,behavior:'smooth'}); } } bkWrongSum(); },140);
+  bkWrongSum(); }
+function bkWrongRange(i){ const stu=bkStuOf(); const d=stu&&bkDoc(BK.book,stu.id); const h=d&&(d.wrongSheets||[])[i]; if(!h) return; const a=bkPageIdx(h.from), b=bkPageIdx(h.to); if(a<0||b<a) return; BW.from=a; BW.to=b;
+  $('bw_from').scrollTo({top:a*BW_H,behavior:'smooth'}); $('bw_to').scrollTo({top:b*BW_H,behavior:'smooth'}); bkWrongSum(); }
+// 고른 범위에서 학생별 오답 문제
+function bkWrongJobs(){ const a=Math.min(BW.from,BW.to), b=Math.max(BW.from,BW.to); const ps=BKPG.slice(a,b+1).flatMap(g=>g.ps);
+  return BW.who.map(s=>{ const st=BW.sts.get(s.id); return { s, ps:ps.filter(p=>(st.get(p.id)||{}).v==='x'), rv:ps.filter(p=>(st.get(p.id)||{}).v==='r').length }; }); }
+function bkWrongSum(){ [['bw_from',BW.from],['bw_to',BW.to]].forEach(([id,i])=>{ $(id).querySelectorAll('.it').forEach((e,j)=>e.classList.toggle('on',j===i)); });
+  const a=Math.min(BW.from,BW.to), b=Math.max(BW.from,BW.to); const jobs=bkWrongJobs(); const tot=jobs.reduce((x,j)=>x+j.ps.length,0), rv=jobs.reduce((x,j)=>x+j.rv,0), has=jobs.filter(j=>j.ps.length);
+  $('bw_sum').innerHTML=`<b>${esc(bkRangeOf(a,b))}</b><em>오답 ${tot}개</em>${BW.cls?`<div class="note">오답 있는 학생 ${has.length}명 / ${jobs.length}명<br>${has.slice(0,8).map(j=>`${esc(j.s.name)} ${j.ps.length}`).join(' · ')}${has.length>8?' …':''}</div>`:''}${rv?`<div class="note">주관식 확인 필요 ${rv}개는 빠져 있어요</div>`:''}`;
+  const N=Math.max(0,Math.floor(+$('bw_total').value||0)); $('bw_total').placeholder=BW.cls?'오답 수만큼':String(tot||'');
+  $('bw_cnt').textContent=!tot?'이 범위에는 오답이 없어요':BW.cls?`학습지 ${has.length}장 · 학생마다 ${N||'자기 오답 수만큼'}${N?'문제':''}`:`학습지 ${N||tot}문제`; }
+// 오답 ps를 총 N문제로: 오답마다 변형(없으면 같은 유형의 시중교재 → 학원교재 문제)을 고르게 나눠 뽑음
+const bkPool=new Map();
+function bkCands(p){ let c=bkPool.get(p.id); if(c) return c; const pre=p.unit.split('-')[0]; const fam=kidsOf(p.id).filter(x=>x.variant==='similar'||x.variant==='1');
+  const sim=DB.filter(x=>!x.parent&&x.id!==p.id&&x.unit.startsWith(pre)&&sameKind(x,p)); c={fam,mk:sim.filter(x=>x.source!=='학원교재'),fan:sim.filter(x=>x.source==='학원교재')}; bkPool.set(p.id,c); return c; }
+function bkVariants(ps,N){ let order=ps; if(N<ps.length){ const pick=new Set(shuffle(ps.slice()).slice(0,N)); order=ps.filter(p=>pick.has(p)); }
+  const k=order.length; const quota=order.map((p,i)=>Math.floor(N/k)+(i<N%k?1:0)); const used=new Set(ps.map(p=>p.id));
+  const pools=order.map(p=>{ const c=bkCands(p); return [...shuffle(c.fam.slice()),...shuffle(c.mk.slice()),...shuffle(c.fan.slice())]; }); const out=order.map(()=>[]); let short=0;
+  order.forEach((p,i)=>{ for(const x of pools[i]){ if(out[i].length>=quota[i]) break; if(used.has(x.id)) continue; used.add(x.id); out[i].push(x.id); } short+=quota[i]-out[i].length; });
+  for(let g=0;g<6&&short>0;g++){ let got=0; order.forEach((p,i)=>{ if(short<=0) return; for(const x of pools[i]){ if(used.has(x.id)) continue; used.add(x.id); out[i].push(x.id); short--; got++; break; } }); if(!got) break; }
+  order.forEach((p,i)=>{ if(!out[i].length) out[i].push(p.id); });   // 변형·유사가 하나도 없는 문제는 원래 문제를 넣음
+  return out.flat(); }
+async function bkMakeWrong(){ if(!ME) return; const jobs=bkWrongJobs().filter(j=>j.ps.length); if(!jobs.length){ toast('이 범위에는 오답이 없어요'); return; }
+  const a=Math.min(BW.from,BW.to), b=Math.max(BW.from,BW.to); const rng=bkRangeOf(a,b); const Nin=Math.max(0,Math.floor(+$('bw_total').value||0)); const book=BK.book, fromP=BKPG[a].page, toP=BKPG[b].page;
+  const dt=new Date(); const md=`${dt.getMonth()+1}/${dt.getDate()}`; $('m_bwrong').classList.remove('on'); busy(true); let made=0, fail=0; bkPool.clear();
+  try{ for(const j of jobs){ await idle();
+      const ids=bkVariants(j.ps,Nin||j.ps.length);
+      await new Promise(res=>needUnits([...new Set(ids.map(id=>(byId(id)||{}).unit).filter(Boolean))],res,true));
+      const sel=ids.map(byId).filter(Boolean); if(!sel.length) continue;
+      const title=`[오답] ${md} ${j.s.name} ${book} ${rng}`; const dist={}; sel.forEach(p=>{ const l=lvOfSel(p); dist[l]=(dist[l]||0)+1; });
+      const w={ teacherUid:ME.uid, teacherName:ME.name, title, grade:bkGradeKey(book)||gradeKey(j.s.grade)||'', subject:subjectOf(sel[0].unit)||'', tags:['오답'], level:'중', count:sel.length, levelDist:dist, range:rangeText(sel),
+        problemIds:sel.map(p=>p.id), items:sel.map((p,i)=>({n:i+1,id:p.id,type:mfOf(p),subType:p.type,unit:p.unit,unitName:unitNameOf(p),level:lvOfSel(p),diff:diffOf(lvOfSel(p)),kind:p.kind,answer:String(p.answer||'')})),
+        opts:{...sheetOpts(), title, author:ME.name}, createdAtStr:todayStr(), createdAtMs:Date.now(), bookWrong:{book,from:fromP,to:toP,count:j.ps.length}, sourceResultId:'', forStudentId:j.s.id, forStudentName:j.s.name||'' };
+      try{ w.id=await FB.saveWorksheet(w); WS.unshift(w); made++; await bkWrongSaved({book,sid:j.s.id,from:fromP,to:toP,count:j.ps.length},w); }catch(e){ console.warn(e); fail++; }
+    } }
+  finally{ busy(false); }
+  renderWS(); bkRender();
+  toast(made?`오답 학습지 ${made}장을 만들었어요${fail?` (실패 ${fail})`:''} — 「수업 준비」 목록 맨 위에 있고, 「출제하기」를 누르면 그 학생이 골라져 있어요`:'오답 학습지를 만들지 못했어요');
+}
+// 오답 학습지를 만들면 그 학생·교재의 범위 기록에 남김(다음에 이어서 / 같은 범위로 다시)
+async function bkWrongSaved(bk,w){ try{ const d=bkDoc(bk.book,bk.sid,true); d.wrongSheets=(d.wrongSheets||[]).concat([{ from:bk.from, to:bk.to, date:todayStr(), count:bk.count, total:w.count||0, wsId:w.id||'' }]).slice(-20);
+    await FB.saveBookMark(bkMarkId(bk.book,bk.sid),{ ...bkIdent(bk.book,bk.sid), wrongSheets:d.wrongSheets }); }catch(e){ console.warn('[교재] 오답 학습지 범위 기록',e); } }
 document.querySelectorAll('#v_book .bkstu .hd .chip').forEach(c=>c.onclick=()=>{ document.querySelectorAll('#v_book .bkstu .hd .chip').forEach(x=>x.classList.remove('on')); c.classList.add('on'); BK.branch=c.dataset.b; bkRender(); });
-document.querySelectorAll('#bkMode button').forEach(b=>b.onclick=()=>{ document.querySelectorAll('#bkMode button').forEach(x=>x.classList.remove('on')); b.classList.add('on'); BK.mode=b.dataset.m; bkRenderBody(); });
 document.querySelectorAll('#m_bassign .chip[data-b]').forEach(c=>c.onclick=()=>{ document.querySelectorAll('#m_bassign .chip[data-b]').forEach(x=>x.classList.remove('on')); c.classList.add('on'); BA.branch=c.dataset.b; bkAsgList(); });
 
 // =================== 메뉴 ===================

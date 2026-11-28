@@ -626,8 +626,8 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
-    // ── bookMarks/{교재}_{학생uid}: HCS 「교재」에서 선생님이 직접 채점한 교재 문항별 정오(○ ✕) — 2026.11.28
-    // { book, studentId, studentName, branch, teacherUid, marks: { 문항id: 'o' | 'x' } }
+    // ── bookMarks/{교재}_{학생uid}: HCS 「교재」 — 학생에게 출제한 교재, 선생님이 직접 채점한 문항별 정오(○ ✕), 오답 학습지 범위 기록 — 2026.11.28
+    // { book, studentId, studentName, branch, teacherUid, assigned(교재 출제 여부), marks: { 문항id: 'o' | 'x' }, wrongSheets: [오답 학습지 범위] }
     // 숙제로 내서 학생이 앱으로 제출한 것은 여기가 아니라 dailyTestResults에 있음. 선생님·관리자만 읽고 씀(학생·학부모는 못 봄)
     match /bookMarks/{docId} {
       allow read, write: if isTeacher() || isAdmin();
